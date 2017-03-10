@@ -12,18 +12,17 @@
     "knex": "^0.12.7"
   },
   "devDependencies": {
+    "eslint": "^3.17.1",
+    "eslint-config-onelint": "^2.0.0",
     "knex": "^0.12.7",
     "mocha": "^3.2.0",
     "nyc": "^10.1.2",
-    "proxyquire": "^1.7.11"
+    "proxyquire": "^1.7.11",
+    "unexpected": "^10.26.3",
+    "unexpected-sinon": "^10.7.0"
   },
   "directories": {
     "test": "test"
-  },
-  "dependencies": {
-    "knex": "^0.12.7",
-    "nyc": "^10.1.2",
-    "proxyquire": "^1.7.11"
   },
   "keywords": [
     "knex",
