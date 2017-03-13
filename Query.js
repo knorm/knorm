@@ -1,77 +1,7 @@
+const WithKnex = require('./lib/WithKnex');
 const { camelCase, difference } = require('lodash');
-const QueryBuilder = require('knex/lib/query/builder');
-const knex = require('../services/knex')();
-const Field = require('./Field');
-const newModels = require('./')();
 
-const isObject = value => typeof value === 'object' && value !== null;
-const isString = value => typeof value === 'string';
-
-const getModel = name => {
-    const model = newModels[name];
-    if (!model) {
-        throw new Error(`unknown model '${name}'`);
-    }
-    return model;
-};
-
-const getField = (model, name) => {
-    const field = model.fields[name];
-    if (!field) {
-        throw new Error(`unknown field '${model.name}.${name}'`);
-    }
-    return field;
-};
-
-const getColumn = (model, field, aliases = {}) => {
-    if (isString(field)) {
-        field = getField(model, field);
-    }
-
-    let column = field.column;
-    let table = aliases.model || field.model.table;
-
-    return `${table}.${column}`;
-};
-
-const getAliasedColumn = (model, field, aliases = {}) => {
-    if (isString(field)) {
-        field = getField(model, field);
-    }
-
-    const column = getColumn(model, field, aliases);
-    let alias = aliases.field || field.name;
-
-    if (aliases.model) {
-        alias = `${aliases.model}.${alias}`;
-    }
-
-    return `${column} as ${alias}`;
-};
-
-const getColumns = (model, fields, aliases = {}) => {
-    if (isString(fields) || fields instanceof Field) {
-        fields = [ fields ];
-    }
-
-    if (Array.isArray(fields)) {
-        return fields.map(field => {
-            return getAliasedColumn(model, field, aliases);
-        });
-    }
-
-    if (isObject(fields)) {
-        return Object.keys(fields).map(name => {
-            const alias = fields[name];
-            if (isString(alias)) {
-                aliases.field = fields[name];
-            }
-            return getAliasedColumn(model, name, aliases);
-        });
-    }
-};
-
-class Query {
+class Query extends WithKnex {
     constructor(model) {
         if (!model) {
             throw new Error('Query requires a DbModel class');
@@ -85,8 +15,10 @@ class Query {
             throw new Error(`'${model.name}.table' is not set`);
         }
 
+        super();
+
         this.model = model;
-        this.builder = knex(model.table);
+        this.builder = this.constructor.knex(model.table);
         this.joins = {
             model,
             alias: model.table
@@ -94,13 +26,13 @@ class Query {
         this.aliases = 0;
     }
 
-    columns(columns) {
+    _columns(columns) {
         this.builder.columns(columns);
         return this;
     }
 
     fields(fields) {
-        this.columns(getColumns(this.model, fields));
+        this._columns(getColumns(this.model, fields));
         return this;
     }
 
@@ -250,7 +182,7 @@ class Query {
             fields = to.model.fields;
         }
         if (fields) {
-            this.columns(getColumns(to.model, fields, aliases));
+            this._columns(getColumns(to.model, fields, aliases));
         }
 
         if (to.where) {
@@ -319,16 +251,11 @@ class Query {
     }
 
     where(where) {
-        // TODO: remove support for this
-        if (where instanceof QueryBuilder) {
-            this.builder = where;
-        } else if (isObject(where)) {
-            Object.keys(where).forEach(field => {
-                const column = getColumn(this.model, field);
-                const value = where[field];
-                this._where(column, value);
-            });
-        }
+        Object.keys(where).forEach(field => {
+            const column = getColumn(this.model, field);
+            const value = where[field];
+            this._where(column, value);
+        });
         return this;
     }
 
@@ -390,7 +317,7 @@ class Query {
         } else {
             model.updatedAt = undefined;
             model.setDefaults({ fields: [ 'updatedAt' ] });
-            const filledFields = fields.filter(field => model[name] !== undefined);
+            const filledFields = fields.filter(name => model[name] !== undefined);
             fieldsToSave = difference(filledFields, [ 'id', 'createdAt' ]);
         }
 
@@ -594,6 +521,73 @@ class Query {
     }
 }
 
+const isObject = value => typeof value === 'object' && value !== null;
+const isString = value => typeof value === 'string';
+
+const getModel = name => {
+    const model = Query.models[name];
+    if (!model) {
+        throw new Error(`unknown model '${name}'`);
+    }
+    return model;
+};
+
+const getField = (model, name) => {
+    const field = model.fields[name];
+    if (!field) {
+        throw new Error(`unknown field '${model.name}.${name}'`);
+    }
+    return field;
+};
+
+const getColumn = (model, field, aliases = {}) => {
+    if (isString(field)) {
+        field = getField(model, field);
+    }
+
+    let column = field.column;
+    let table = aliases.model || field.model.table;
+
+    return `${table}.${column}`;
+};
+
+const getAliasedColumn = (model, field, aliases = {}) => {
+    if (isString(field)) {
+        field = getField(model, field);
+    }
+
+    const column = getColumn(model, field, aliases);
+    let alias = aliases.field || field.name;
+
+    if (aliases.model) {
+        alias = `${aliases.model}.${alias}`;
+    }
+
+    return `${column} as ${alias}`;
+};
+
+const getColumns = (model, fields, aliases = {}) => {
+    if (isString(fields) || fields instanceof DbModel.Field) {
+        fields = [ fields ];
+    }
+
+    if (Array.isArray(fields)) {
+        return fields.map(field => {
+            return getAliasedColumn(model, field, aliases);
+        });
+    }
+
+    if (isObject(fields)) {
+        return Object.keys(fields).map(name => {
+            const alias = fields[name];
+            if (isString(alias)) {
+                aliases.field = fields[name];
+            }
+            return getAliasedColumn(model, name, aliases);
+        });
+    }
+};
+
 module.exports = Query;
 
-const DbModel = require('./DbModel');
+const DbModel = require('./DbModel'); // circular dep

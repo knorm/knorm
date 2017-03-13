@@ -18,6 +18,7 @@
     "mocha": "^3.2.0",
     "nyc": "^10.1.2",
     "proxyquire": "^1.7.11",
+    "sinon": "^1.17.7",
     "unexpected": "^10.26.3",
     "unexpected-sinon": "^10.7.0"
   },
@@ -29,5 +30,8 @@
     "orm",
     "erm",
     "database"
-  ]
+  ],
+  "dependencies": {
+    "lodash": "^4.17.4"
+  }
 }

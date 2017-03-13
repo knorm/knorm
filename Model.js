@@ -1,4 +1,5 @@
-const Field = require('./Field');
+const Field = require('./lib/Field');
+const Virtual = require('./lib/Virtual');
 
 class Model {
     static get references() {
@@ -35,18 +36,15 @@ class Model {
         this._getVirtualNames().forEach(name => {
             if (this[name] !== undefined) {
                 throw new Error(
-                    `virtual name '${this.constructor.name}.${name}' is a reserved instance property name`
+                    `virtual-name '${this.constructor.name}.${name}' is a reserved instance property name`
                 );
             }
 
-            let { get, set } = this.constructor.virtuals[name];
+            const virtual = this.constructor.virtuals[name];
+            let { get, set } = virtual;
 
-            if (get) {
-                get = get.bind(this);
-            }
-            if (set) {
-                set = set.bind(this);
-            }
+            if (get) { get = get.bind(this); }
+            if (set) { set = set.bind(this); }
 
             Object.defineProperty(this, name, {
                 get,
@@ -75,7 +73,7 @@ class Model {
                 const field = this.constructor.fields[name];
                 if (!field) {
                     throw new Error(
-                        `cannot set default value for unknown field '${name}'`
+                        `cannot set default value for unknown field '${this.constructor.name}.${name}'`
                     );
                 }
                 if (field.hasDefault()) {
@@ -96,17 +94,15 @@ class Model {
                 this[name] = value;
             } else {
                 const virtual = this.constructor.virtuals[name];
-                if (virtual) {
-                    if (virtual.set) {
-                        virtual.set.call(this, value);
-                    } else {
-                        throw new Error(
-                            `virtual '${this.constructor.name}.${name}' has no setter`
-                        );
-                    }
-                } else {
-                    throw new Error(`cannot populate unknown field '${name}'`);
+                if (!virtual) {
+                    throw new Error(`cannot set data for unknown field or virtual '${this.constructor.name}.${name}'`);
                 }
+                if (!virtual.hasSetter) {
+                    throw new Error(
+                        `virtual '${this.constructor.name}.${name}' has no setter`
+                    );
+                }
+                this[name] = value;
             }
         });
 
@@ -119,7 +115,7 @@ class Model {
 
         const data = fields.reduce((data, name) => {
             if (!this.constructor.fields[name]) {
-                throw new Error(`cannot get data for unknown field '${name}'`);
+                throw new Error(`cannot get data for unknown field '${this.constructor.name}.${name}'`);
             }
             const value = this[name];
             if (value !== undefined) {
@@ -160,7 +156,7 @@ class Model {
         await Promise.all(fields.map(name => {
             const field = this.constructor.fields[name];
             if (!field) {
-                throw new Error(`cannot validate unknown field '${name}'`);
+                throw new Error(`cannot validate unknown field '${this.constructor.name}.${name}'`);
             }
             const value = this[name];
             return field.validate(value, this);
@@ -189,21 +185,18 @@ const createFields = model => {
             writable: true
         });
 
-        Object.defineProperty(model, '_fieldsModel', {
-            writable: true,
-            value: model.name
+        Object.defineProperty(model, '_fieldsClassName', {
+            value: model.name,
+            writable: true
         });
     }
 
-    if (model._fieldsModel !== model.name) {
-        const fields = model._fields;
-        model._fields = {};
-        Object.values(fields).forEach(field => {
-            const clone = field.clone();
-            clone.setModel(model);
-            model._fields[clone.name] = clone;
-        });
-        model._fieldsModel = model.name;
+    if (model._fieldsClassName !== model.name) {
+        model._fields = Object.values(model._fields).reduce((fields, field) => {
+            fields[field.name] = field.clone().setModel(model);
+            return fields;
+        }, {});
+        model._fieldsClassName = model.name;
     }
 };
 
@@ -224,36 +217,13 @@ const createVirtuals = model => {
 
 const addVirtuals = (model, virtuals) => {
     Object.keys(virtuals).forEach(name  => {
-        let descriptor = virtuals[name];
+        const descriptor = virtuals[name];
 
-        if (typeof descriptor === 'function') {
-            descriptor = {
-                get: descriptor
-            };
-        }
-
-        if (!descriptor.get && !descriptor.set) {
-            throw new Error(
-                `virtual '${model.name}.${name}' has no setter or getter`
-            );
-        }
-
-        if (descriptor.get) {
-            if (typeof descriptor.get !== 'function') {
-                throw new Error(
-                    `getter for '${model.name}.${name}' virtual is not a function`
-                );
-            }
-        }
-        if (descriptor.set) {
-            if (typeof descriptor.set !== 'function') {
-                throw new Error(
-                    `setter for '${model.name}.${name}' virtual is not a function`
-                );
-            }
-        }
-
-        model._virtuals[name] = descriptor;
+        model._virtuals[name] = new Virtual({
+            name,
+            model,
+            descriptor
+        });
     });
 };
 

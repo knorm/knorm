@@ -1,23 +1,23 @@
 const createError = require('../helpers/createErrors');
-const knex = require('../services/knex')();
 const Model = require('./Model');
 
 class DbModel extends Model {
-    async fetch(options = {}) {
+    async fetch(options) {
         const where = await this.getData();
-
-        options = Object.assign({}, options, {
-            where,
-            require: true
-        });
-
-        const data = await this.constructor.fetchRow(options);
+        const data = await this.constructor.query
+            .options(options)
+            .where(where)
+            .require()
+            .row()
+            .fetch();
 
         return this.setData(data);
     }
 
     async save(options) {
-        return this.constructor.save(this, options);
+        return this.constructor.query
+            .options(options)
+            .save(this);
     }
 
     static get errors() {
@@ -34,69 +34,34 @@ class DbModel extends Model {
         return new Query(this);
     }
 
-    static async save(model, options) {
-        return this.query.save(model, options);
-    }
-
-    static async count(options) {
-        return this.query.count(options);
-    }
-
-    static async fetchRow(options) {
-        return this.query.fetchRow(options);
-    }
-
-    static async fetchOne(options) {
-        return this.query.fetchOne(options);
-    }
-
-    static async fetchRows(options) {
-        return this.query.fetchRows(options);
-    }
-
-    static async fetchAll(options) {
-        return this.query.fetchAll(options);
+    static set query(val) {
+        throw new Error(`${this.constructor.name}.query cannot be overwriten`);
     }
 
     static async fetchById(id, options) {
-        options = Object.assign({}, options, {
-            require: true,
-            where: { id }
-        });
-        return this.fetchOne(options);
-    }
-
-    static async fetchByUserId(userId, options) {
-        options = Object.assign({}, options, {
-            require: true,
-            where: { userId }
-        });
-        return this.fetchOne(options);
-    }
-
-    static async transact(callback) {
-        return knex.transaction(async transaction => {
-            return Promise.resolve(callback(transaction))
-                .then(transaction.commit)
-                .catch(transaction.rollback);
-        });
+        return this.query
+            .options(options)
+            .where({ id })
+            .require()
+            .first()
+            .fetch();
     }
 }
 
 const createErrors = (model) => {
     if (!model._errors) {
         Object.defineProperty(model, '_errors', {
-            configurable: true,
-            value: getDefaultErrors(model)
+            value: getDefaultErrors(model),
+            writable: true
         });
         Object.defineProperty(model, '_errorsClassName', {
-            writable: true,
-            value: model.name
+            value: model.name,
+            writable: true
         });
     }
 
     if (model._errorsClassName !== model.name) {
-        addErrors(model, getDefaultErrors(model));
+        model._errors = getDefaultErrors(model);
         model._errorsClassName = model.name;
     }
 };
@@ -137,4 +102,4 @@ const getDefaultErrors = (model) => {
 
 module.exports = DbModel;
 
-const Query = require('./Query');
+const Query = require('./Query'); // circular dep
