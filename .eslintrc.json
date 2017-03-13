@@ -11,7 +11,8 @@
     "ecmaVersion": 2017
   },
   "rules": {
-    "no-unused-vars": [2, { "args": "after-used" }],
-    "no-multiple-empty-lines": ["error", { "max": 1, "maxBOF": 0, "maxEOF": 0 }]
+    "comma-dangle": ["error", "always-multiline"],
+    "no-multiple-empty-lines": ["error", { "max": 1, "maxBOF": 0, "maxEOF": 0 }],
+    "no-unused-vars": [2, { "args": "after-used" }]
   }
 }
