@@ -1,14 +1,14 @@
-const WithKnex = require('./lib/WithKnex');
 const { camelCase, difference } = require('lodash');
+const WithKnex = require('./lib/WithKnex');
 
 class Query extends WithKnex {
     constructor(model) {
         if (!model) {
-            throw new Error('Query requires a DbModel class');
+            throw new Error('Query requires a Model class');
         }
 
-        if (!(model.prototype instanceof DbModel)) {
-            throw new Error('Query requires a DbModel sub-class');
+        if (!(model.prototype instanceof Model)) {
+            throw new Error('Query requires a subclass of Model');
         }
 
         if (!model.table) {
@@ -19,20 +19,23 @@ class Query extends WithKnex {
 
         this.model = model;
         this.builder = this.constructor.knex(model.table);
+        this._fields = [];
+        this._orderBy = [];
+        this._with = [];
         this.joins = {
             model,
-            alias: model.table
+            alias: model.table,
         };
         this.aliases = 0;
     }
 
-    _columns(columns) {
+    _addColumns(columns) {
         this.builder.columns(columns);
         return this;
     }
 
     fields(fields) {
-        this._columns(getColumns(this.model, fields));
+        this._addColumns(getAliasedColumns(this.model, fields));
         return this;
     }
 
@@ -130,7 +133,7 @@ class Query extends WithKnex {
             alias,
             fields,
             where,
-            whereNot
+            whereNot,
         };
 
         into.models = into.models || [];
@@ -182,7 +185,7 @@ class Query extends WithKnex {
             fields = to.model.fields;
         }
         if (fields) {
-            this._columns(getColumns(to.model, fields, aliases));
+            this._addColumns(getAliasedColumns(to.model, fields, aliases));
         }
 
         if (to.where) {
@@ -269,7 +272,7 @@ class Query extends WithKnex {
     }
 
     returning(fields) {
-        this.builder.returning(getColumns(this.model, fields));
+        this.builder.returning(getAliasedColumns(this.model, fields));
         return this;
     }
 
@@ -279,7 +282,7 @@ class Query extends WithKnex {
         if (error) {
             throw new TheError({
                 message: error.message,
-                data: { error }
+                data: { error },
             });
         }
 
@@ -423,10 +426,8 @@ class Query extends WithKnex {
     }
 
     _forge(row) {
-        const Model = this.model;
-
         if (!this.joins.models) {
-            return new Model(row);
+            return new this.model(row); // eslint-disable-line new-cap
         }
 
         const data = Object.keys(row).reduce((data, field) => {
@@ -473,7 +474,7 @@ class Query extends WithKnex {
             });
         };
 
-        const instance = new Model(data.root);
+        const instance = new this.model(data.root); // eslint-disable-line new-cap
 
         forge(this.joins, instance);
 
@@ -494,7 +495,7 @@ class Query extends WithKnex {
 
     async count(options = {}) {
         options = Object.assign({
-            _includeFields: false
+            _includeFields: false,
         }, options);
 
         this._prepareQuery(options);
@@ -566,8 +567,8 @@ const getAliasedColumn = (model, field, aliases = {}) => {
     return `${column} as ${alias}`;
 };
 
-const getColumns = (model, fields, aliases = {}) => {
-    if (isString(fields) || fields instanceof DbModel.Field) {
+const getAliasedColumns = (model, fields, aliases = {}) => {
+    if (isString(fields) || fields instanceof Model.Field) {
         fields = [ fields ];
     }
 
@@ -590,4 +591,4 @@ const getColumns = (model, fields, aliases = {}) => {
 
 module.exports = Query;
 
-const DbModel = require('./DbModel'); // circular dep
+const Model = require('./Model'); // circular dep

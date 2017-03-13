@@ -5,7 +5,7 @@ const knex = require('../../../lib/services/knex')();
 const proxyquire = require('proxyquire');
 const newModelsMock = {};
 const Query = proxyquire('../../../lib/newModels/Query', {
-    './': () => newModelsMock
+    './': () => newModelsMock,
 });
 
 const sinon = require('sinon');
@@ -34,26 +34,26 @@ User.table = 'user';
 User.fields = {
     name: {
         type: Field.types.string,
-        required: true
+        required: true,
     },
     description: {
-        type: Field.types.string
+        type: Field.types.string,
     },
     age: {
         type: Field.types.integer,
-        default: null
+        default: null,
     },
     confirmed: {
         type: Field.types.boolean,
         required: true,
-        default: false
+        default: false,
     },
     dateOfBirth: {
-        type: Field.types.dateTime
+        type: Field.types.dateTime,
     },
     dbDefault: {
-        type: Field.types.string
-    }
+        type: Field.types.string,
+    },
 };
 newModelsMock.User = User;
 
@@ -72,8 +72,8 @@ ImageCategory.table = 'image_category';
 ImageCategory.fields = {
     name: {
         type: Field.types.string,
-        required: true
-    }
+        required: true,
+    },
 };
 newModelsMock.ImageCategory = ImageCategory;
 
@@ -93,12 +93,12 @@ Image.table = 'image';
 Image.fields = {
     userId: {
         type: Field.types.integer,
-        references: User.fields.id
+        references: User.fields.id,
     },
     categoryId: {
         type: Field.types.integer,
-        references: ImageCategory.fields.id
-    }
+        references: ImageCategory.fields.id,
+    },
 };
 newModelsMock.Image = Image;
 
@@ -107,16 +107,16 @@ Dummy.table = 'dummy_table';
 Dummy.fields = {
     fieldOne: {
         type: Field.types.integer,
-        references: User.fields.id
+        references: User.fields.id,
     },
     fieldTwo: {
         type: Field.types.integer,
-        references: User.fields.createdAt
+        references: User.fields.createdAt,
     },
     fieldThree: {
         type: Field.types.integer,
-        references: User.fields.updatedAt
-    }
+        references: User.fields.updatedAt,
+    },
 };
 newModelsMock.Dummy = Dummy;
 
@@ -228,7 +228,7 @@ describe('lib/newModels/Query', function () {
             expect(returningSpy, 'to have calls satisfying', () => {
                 returningSpy([
                     'user.date_of_birth as dob',
-                    'user.name as nomenclature'
+                    'user.name as nomenclature',
                 ]);
             });
         });
@@ -245,7 +245,7 @@ describe('lib/newModels/Query', function () {
                     'user.age as age',
                     'user.confirmed as confirmed',
                     'user.date_of_birth as dateOfBirth',
-                    'user.db_default as dbDefault'
+                    'user.db_default as dbDefault',
                 ]);
             });
         });
@@ -277,7 +277,7 @@ describe('lib/newModels/Query', function () {
             );
             await expect(knex('user').select(), 'to be fulfilled with', [{
                 name: 'John Doe',
-                confirmed: false
+                confirmed: false,
             }]);
         });
 
@@ -294,7 +294,7 @@ describe('lib/newModels/Query', function () {
             const user = new User({ name: 'John Doe' });
             await expect(query.save(user), 'to be fulfilled');
             await expect(knex('user').select(), 'to be fulfilled with', [{
-                name: 'John Doe'
+                name: 'John Doe',
             }]);
         });
 
@@ -314,7 +314,7 @@ describe('lib/newModels/Query', function () {
                     name: 'John Doe',
                     description: 'The description',
                     age: 123,
-                    confirmed: true
+                    confirmed: true,
                 }),
                 'to be fulfilled with',
                 new User({
@@ -326,7 +326,7 @@ describe('lib/newModels/Query', function () {
                     description: 'The description',
                     age: 123,
                     confirmed: true,
-                    dbDefault: 'set-by-db'
+                    dbDefault: 'set-by-db',
                 })
             );
         });
@@ -339,7 +339,7 @@ describe('lib/newModels/Query', function () {
                 spy({
                     date_of_birth: dateOfBirth,
                     name: 'John Doe',
-                    confirmed: true
+                    confirmed: true,
                 });
             });
             spy.restore();
@@ -375,7 +375,7 @@ describe('lib/newModels/Query', function () {
                 await expect(knex('user').select(), 'to be fulfilled with', [{
                     id: 1,
                     name: 'John Doe',
-                    confirmed: false
+                    confirmed: false,
                 }]);
             });
 
@@ -384,7 +384,7 @@ describe('lib/newModels/Query', function () {
                 await expect(knex('user').select(), 'to be fulfilled with', [{
                     name: 'John Doe',
                     age: null,
-                    confirmed: false
+                    confirmed: false,
                 }]);
             });
 
@@ -395,7 +395,7 @@ describe('lib/newModels/Query', function () {
                 await expect(knex('user').select(), 'to be fulfilled with', [{
                     name: 'John Doe',
                     created_at: now,
-                    updated_at: now
+                    updated_at: now,
                 }]);
                 clock.restore();
             });
@@ -403,17 +403,17 @@ describe('lib/newModels/Query', function () {
             it('validates the data before saving', async function () {
                 await expect(query.save({
                     name: 'John Doe',
-                    age: 'cause error'
+                    age: 'cause error',
                 }), 'to be rejected with', {
                     BadRequest: true,
-                    InvalidUserAgeTypeError: true
+                    InvalidUserAgeTypeError: true,
                 });
             });
 
             it('sets the id of the model after inserting', async function () {
                 const user = await query.save({
                     name: 'John Doe',
-                    confirmed: false
+                    confirmed: false,
                 });
                 expect(user.id, 'to be', 1);
             });
@@ -430,7 +430,7 @@ describe('lib/newModels/Query', function () {
                         InternalServerError: true,
                         UserSaveError: true,
                         message: 'insert error',
-                        data: { error: new Error('insert error') }
+                        data: { error: new Error('insert error') },
                     }
                 );
                 stub.restore();
@@ -444,7 +444,7 @@ describe('lib/newModels/Query', function () {
                     {
                         DatabaseError: true,
                         InternalServerError: true,
-                        UserNotInsertedError: true
+                        UserNotInsertedError: true,
                     }
                 );
                 stub.restore();
@@ -470,12 +470,12 @@ describe('lib/newModels/Query', function () {
 
             it('updates an existing row', async function () {
                 await expect(knex('user').select(), 'to be fulfilled with', [{
-                    name: 'John Doe'
+                    name: 'John Doe',
                 }]);
                 user.name = 'Jane Doe';
                 await expect(query.save(user), 'to be fulfilled');
                 await expect(knex('user').select(), 'to be fulfilled with', [{
-                    name: 'Jane Doe'
+                    name: 'Jane Doe',
                 }]);
             });
 
@@ -483,19 +483,19 @@ describe('lib/newModels/Query', function () {
                 // allows sending an update without having fetched the model
                 const newUser = new User({
                     id: user.id,
-                    confirmed: true
+                    confirmed: true,
                 });
                 await expect(knex('user').select(), 'to be fulfilled with', [{
                     id: user.id,
                     name: 'John Doe',
-                    confirmed: false
+                    confirmed: false,
                 }]);
                 // this passes even though 'name' is required and hasn't been set
                 await expect(query.save(newUser), 'to be fulfilled');
                 await expect(knex('user').select(), 'to be fulfilled with', [{
                     id: user.id,
                     name: 'John Doe',
-                    confirmed: true
+                    confirmed: true,
                 }]);
             });
 
@@ -509,7 +509,7 @@ describe('lib/newModels/Query', function () {
                 expect(user.updatedAt, 'to equal', new Date(1000));
                 await expect(knex('user').select(), 'to be fulfilled with', [{
                     created_at: new Date(0),
-                    updated_at: new Date(1000)
+                    updated_at: new Date(1000),
                 }]);
             });
 
@@ -523,7 +523,7 @@ describe('lib/newModels/Query', function () {
                     InternalServerError: true,
                     UserSaveError: true,
                     message: 'update error',
-                    data: { error: new Error('update error') }
+                    data: { error: new Error('update error') },
                 });
                 stub.restore();
             });
@@ -534,7 +534,7 @@ describe('lib/newModels/Query', function () {
                 await expect(query.save(user), 'to be rejected with', {
                     DatabaseError: true,
                     InternalServerError: true,
-                    UserNotUpdatedError: true
+                    UserNotUpdatedError: true,
                 });
                 stub.restore();
             });
@@ -585,7 +585,7 @@ describe('lib/newModels/Query', function () {
 
         it('accepts a QueryBuilder instance', function () {
             const where = knex('user').where({
-                name: 'User 2'
+                name: 'User 2',
             });
             query.where(where);
             expect(
@@ -700,7 +700,7 @@ describe('lib/newModels/Query', function () {
                     confirmed: false,
                     description: 'this is user 1',
                     age: 10,
-                    date_of_birth: null
+                    date_of_birth: null,
                 },
                 {
                     id: 2,
@@ -708,8 +708,8 @@ describe('lib/newModels/Query', function () {
                     confirmed: true,
                     description: 'this is user 2',
                     age: 10,
-                    date_of_birth: null
-                }
+                    date_of_birth: null,
+                },
             ]);
         });
 
@@ -766,7 +766,7 @@ describe('lib/newModels/Query', function () {
                 InternalServerError: true,
                 UserCountError: true,
                 message: 'fetch error',
-                data: { error: new Error('fetch error') }
+                data: { error: new Error('fetch error') },
             });
             stub.restore();
         });
@@ -837,7 +837,7 @@ describe('lib/newModels/Query', function () {
             expect(columnsSpy, 'to have calls satisfying', () => {
                 columnsSpy([
                     'user.date_of_birth as dob',
-                    'user.name as nomenclature'
+                    'user.name as nomenclature',
                 ]);
             });
         });
@@ -854,7 +854,7 @@ describe('lib/newModels/Query', function () {
                     'user.age as age',
                     'user.confirmed as confirmed',
                     'user.date_of_birth as dateOfBirth',
-                    'user.db_default as dbDefault'
+                    'user.db_default as dbDefault',
                 ]);
             });
         });
@@ -893,7 +893,7 @@ describe('lib/newModels/Query', function () {
             query.with(Image);
             expect(leftJoinSpy, 'to have calls satisfying', () => {
                 leftJoinSpy('image as t1', {
-                    't1.user_id': 'user.id'
+                    't1.user_id': 'user.id',
                 });
             });
             expect(innerJoinSpy, 'was not called');
@@ -903,7 +903,7 @@ describe('lib/newModels/Query', function () {
             query.with({ Image: { require: true } });
             expect(innerJoinSpy, 'to have calls satisfying', () => {
                 innerJoinSpy('image as t1', {
-                    't1.user_id': 'user.id'
+                    't1.user_id': 'user.id',
                 });
             });
             expect(leftJoinSpy, 'was not called');
@@ -920,7 +920,7 @@ describe('lib/newModels/Query', function () {
                 imageQuery.with(User);
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('user as t1', {
-                        't1.id': 'image.user_id'
+                        't1.id': 'image.user_id',
                     });
                 });
                 expect(innerJoinSpy, 'was not called');
@@ -930,10 +930,10 @@ describe('lib/newModels/Query', function () {
                 imageQuery.with({ User: { require: true } });
                 expect(innerJoinSpy, 'to have calls satisfying', () => {
                     innerJoinSpy('user as t1', {
-                        't1.id': 'image.user_id'
+                        't1.id': 'image.user_id',
                     });
                 });
-                expect(leftJoinSpy, 'was not called');;
+                expect(leftJoinSpy, 'was not called');
             });
         });
 
@@ -958,7 +958,7 @@ describe('lib/newModels/Query', function () {
             query.with('Image');
             expect(leftJoinSpy, 'to have calls satisfying', () => {
                 leftJoinSpy('image as t1', {
-                    't1.user_id': 'user.id'
+                    't1.user_id': 'user.id',
                 });
             });
         });
@@ -975,7 +975,7 @@ describe('lib/newModels/Query', function () {
             query.with({ Image: 'userImage' });
             expect(leftJoinSpy, 'to have calls satisfying', () => {
                 leftJoinSpy('image as t1', {
-                    't1.user_id': 'user.id'
+                    't1.user_id': 'user.id',
                 });
             });
         });
@@ -992,10 +992,10 @@ describe('lib/newModels/Query', function () {
             query.with([ Image, Image ]);
             expect(leftJoinSpy, 'to have calls satisfying', () => {
                 leftJoinSpy('image as t1', {
-                    't1.user_id': 'user.id'
+                    't1.user_id': 'user.id',
                 });
                 leftJoinSpy('image as t2', {
-                    't2.user_id': 'user.id'
+                    't2.user_id': 'user.id',
                 });
             });
         });
@@ -1003,14 +1003,14 @@ describe('lib/newModels/Query', function () {
         it('accepts an object array to allow multiple joins with aliases', function () {
             query.with([
                 { Image: 'image1' },
-                { Image: 'image2' }
+                { Image: 'image2' },
             ]);
             expect(leftJoinSpy, 'to have calls satisfying', () => {
                 leftJoinSpy('image as t1', {
-                    't1.user_id': 'user.id'
+                    't1.user_id': 'user.id',
                 });
                 leftJoinSpy('image as t2', {
-                    't2.user_id': 'user.id'
+                    't2.user_id': 'user.id',
                 });
             });
         });
@@ -1021,7 +1021,7 @@ describe('lib/newModels/Query', function () {
                 leftJoinSpy('dummy_table as t1', {
                     't1.field_one': 'user.id',
                     't1.field_two': 'user.created_at',
-                    't1.field_three': 'user.updated_at'
+                    't1.field_three': 'user.updated_at',
                 });
             });
         });
@@ -1031,7 +1031,7 @@ describe('lib/newModels/Query', function () {
                 query.with({ Dummy: { on: 'fieldTwo' } });
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('dummy_table as t1', {
-                        't1.field_two': 'user.created_at'
+                        't1.field_two': 'user.created_at',
                     });
                 });
             });
@@ -1048,7 +1048,7 @@ describe('lib/newModels/Query', function () {
                 query.with({ Dummy: { on: Dummy.fieldTwo } });
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('dummy_table as t1', {
-                        't1.field_two': 'user.created_at'
+                        't1.field_two': 'user.created_at',
                     });
                 });
             });
@@ -1058,7 +1058,7 @@ describe('lib/newModels/Query', function () {
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('dummy_table as t1', {
                         't1.field_two': 'user.created_at',
-                        't1.field_three': 'user.updated_at'
+                        't1.field_three': 'user.updated_at',
                     });
                 });
             });
@@ -1077,7 +1077,7 @@ describe('lib/newModels/Query', function () {
                     dummyQuery.with({ User: { on: 'createdAt' } });
                     expect(leftJoinSpy, 'to have calls satisfying', () => {
                         leftJoinSpy('user as t1', {
-                            't1.created_at': 'dummy_table.field_two'
+                            't1.created_at': 'dummy_table.field_two',
                         });
                     });
                 });
@@ -1087,7 +1087,7 @@ describe('lib/newModels/Query', function () {
                     dummyQuery.with({ User: { on: User.createdAt } });
                     expect(leftJoinSpy, 'to have calls satisfying', () => {
                         leftJoinSpy('user as t1', {
-                            't1.created_at': 'dummy_table.field_two'
+                            't1.created_at': 'dummy_table.field_two',
                         });
                     });
                 });
@@ -1098,7 +1098,7 @@ describe('lib/newModels/Query', function () {
                     dummyQuery.with({ User: { on: Dummy.fieldTwo } });
                     expect(leftJoinSpy, 'to have calls satisfying', () => {
                         leftJoinSpy('user as t1', {
-                            't1.created_at': 'dummy_table.field_two'
+                            't1.created_at': 'dummy_table.field_two',
                         });
                     });
                 });
@@ -1110,7 +1110,7 @@ describe('lib/newModels/Query', function () {
             query.with(Image);
             expect(leftJoinSpy, 'to have calls satisfying', () => {
                 leftJoinSpy('image as t1', {
-                    't1.user_id': 'user.id'
+                    't1.user_id': 'user.id',
                 });
             });
             expect(columnsSpy, 'to have calls satisfying', () => {
@@ -1119,7 +1119,7 @@ describe('lib/newModels/Query', function () {
                     't1.created_at as t1.createdAt',
                     't1.updated_at as t1.updatedAt',
                     't1.user_id as t1.userId',
-                    't1.category_id as t1.categoryId'
+                    't1.category_id as t1.categoryId',
                 ]);
             });
             columnsSpy.restore();
@@ -1143,12 +1143,12 @@ describe('lib/newModels/Query', function () {
             it('adds the fields to the query builder columns', function () {
                 query.with({
                     Image: {
-                        fields: [ Image.fields.userId ]
-                    }
+                        fields: [ Image.fields.userId ],
+                    },
                 });
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('image as t1', {
-                        't1.user_id': 'user.id'
+                        't1.user_id': 'user.id',
                     });
                 });
                 expect(columnsSpy, 'to have calls satisfying', () => {
@@ -1159,12 +1159,12 @@ describe('lib/newModels/Query', function () {
             it("does not add any fields if 'fields' is set to false", function () {
                 query.with({
                     Image: {
-                        fields: false
-                    }
+                        fields: false,
+                    },
                 });
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('image as t1', {
-                        't1.user_id': 'user.id'
+                        't1.user_id': 'user.id',
                     });
                 });
                 expect(columnsSpy, 'was not called');
@@ -1198,13 +1198,13 @@ describe('lib/newModels/Query', function () {
                 query.with({
                     Image: {
                         where: {
-                            categoryId: 1
-                        }
-                    }
+                            categoryId: 1,
+                        },
+                    },
                 });
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('image as t1', {
-                        't1.user_id': 'user.id'
+                        't1.user_id': 'user.id',
                     });
                 });
                 expect(whereSpy, 'to have calls satisfying', () => {
@@ -1218,9 +1218,9 @@ describe('lib/newModels/Query', function () {
                         query.with({
                             Image: {
                                 where: {
-                                    name: 'User 1'
-                                }
-                            }
+                                    name: 'User 1',
+                                },
+                            },
                         });
                     },
                     'to throw',
@@ -1248,13 +1248,13 @@ describe('lib/newModels/Query', function () {
                 query.with({
                     Image: {
                         whereNot: {
-                            categoryId: 1
-                        }
-                    }
+                            categoryId: 1,
+                        },
+                    },
                 });
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('image as t1', {
-                        't1.user_id': 'user.id'
+                        't1.user_id': 'user.id',
                     });
                 });
                 expect(whereNotSpy, 'to have calls satisfying', () => {
@@ -1268,9 +1268,9 @@ describe('lib/newModels/Query', function () {
                         query.with({
                             Image: {
                                 whereNot: {
-                                    name: 'User 1'
-                                }
-                            }
+                                    name: 'User 1',
+                                },
+                            },
                         });
                     },
                     'to throw',
@@ -1283,15 +1283,15 @@ describe('lib/newModels/Query', function () {
             it('adds the nested reference to the query builder joins', function () {
                 query.with({
                     Image: {
-                        with: ImageCategory
-                    }
+                        with: ImageCategory,
+                    },
                 });
                 expect(leftJoinSpy, 'to have calls satisfying', () => {
                     leftJoinSpy('image as t1', {
-                        't1.user_id': 'user.id'
+                        't1.user_id': 'user.id',
                     });
                     leftJoinSpy('image_category as t2', {
-                        't2.id': 't1.category_id'
+                        't2.id': 't1.category_id',
                     });
                 });
             });
@@ -1302,16 +1302,16 @@ describe('lib/newModels/Query', function () {
                     imageQuery.with({
                         User: {
                             with: {
-                                Dummy: { on: 'fieldTwo' }
-                            }
-                        }
+                                Dummy: { on: 'fieldTwo' },
+                            },
+                        },
                     });
                     expect(leftJoinSpy, 'to have calls satisfying', () => {
                         leftJoinSpy('user as t1', {
-                            't1.id': 'image.user_id'
+                            't1.id': 'image.user_id',
                         });
                         leftJoinSpy('dummy_table as t2', {
-                            't2.field_two': 't1.created_at'
+                            't2.field_two': 't1.created_at',
                         });
                     });
                 });
@@ -1322,18 +1322,18 @@ describe('lib/newModels/Query', function () {
                     query.with({
                         Image: {
                             with: {
-                                ImageCategory: { require: true }
-                            }
-                        }
+                                ImageCategory: { require: true },
+                            },
+                        },
                     });
                     expect(leftJoinSpy, 'to have calls satisfying', () => {
                         leftJoinSpy('image as t1', {
-                            't1.user_id': 'user.id'
+                            't1.user_id': 'user.id',
                         });
                     });
                     expect(innerJoinSpy, 'to have calls satisfying', () => {
                         innerJoinSpy('image_category as t2', {
-                            't2.id': 't1.category_id'
+                            't2.id': 't1.category_id',
                         });
                     });
                 });
@@ -1360,17 +1360,17 @@ describe('lib/newModels/Query', function () {
                             fields: [ 'userId' ],
                             with: {
                                 ImageCategory: {
-                                    fields: [ 'name' ]
-                                }
-                            }
-                        }
+                                    fields: [ 'name' ],
+                                },
+                            },
+                        },
                     });
                     expect(leftJoinSpy, 'to have calls satisfying', () => {
                         leftJoinSpy('image as t1', {
-                            't1.user_id': 'user.id'
+                            't1.user_id': 'user.id',
                         });
                         leftJoinSpy('image_category as t2', {
-                            't2.id': 't1.category_id'
+                            't2.id': 't1.category_id',
                         });
                     });
                     expect(columnsSpy, 'to have calls satisfying', () => {
@@ -1387,17 +1387,17 @@ describe('lib/newModels/Query', function () {
                             with: {
                                 ImageCategory: {
                                     as: 'imageCategory',
-                                    fields: [ 'name' ]
-                                }
-                            }
-                        }
+                                    fields: [ 'name' ],
+                                },
+                            },
+                        },
                     });
                     expect(leftJoinSpy, 'to have calls satisfying', () => {
                         leftJoinSpy('image as t1', {
-                            't1.user_id': 'user.id'
+                            't1.user_id': 'user.id',
                         });
                         leftJoinSpy('image_category as t2', {
-                            't2.id': 't1.category_id'
+                            't2.id': 't1.category_id',
                         });
                     });
                     expect(columnsSpy, 'to have calls satisfying', () => {
@@ -1459,7 +1459,7 @@ describe('lib/newModels/Query', function () {
                     confirmed: false,
                     description: 'this is user 1',
                     age: 10,
-                    date_of_birth: new Date(1000)
+                    date_of_birth: new Date(1000),
                 },
                 {
                     id: 2,
@@ -1467,21 +1467,21 @@ describe('lib/newModels/Query', function () {
                     confirmed: true,
                     description: 'this is user 2',
                     age: 20,
-                    date_of_birth: new Date(2000)
-                }
+                    date_of_birth: new Date(2000),
+                },
             ]);
             await knex('image_category').insert([
                 {
                     id: 1,
-                    name: 'User images'
-                }
+                    name: 'User images',
+                },
             ]);
             await knex('image').insert([
                 {
                     id: 1,
                     user_id: 1,
-                    category_id: 1
-                }
+                    category_id: 1,
+                },
             ]);
         });
 
@@ -1509,7 +1509,7 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     }
                 );
             });
@@ -1523,7 +1523,7 @@ describe('lib/newModels/Query', function () {
                     {
                         id: 1,
                         name: 'User 1',
-                        description: 'this is user 1'
+                        description: 'this is user 1',
                     }
                 );
             });
@@ -1541,7 +1541,7 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     }
                 );
             });
@@ -1555,7 +1555,7 @@ describe('lib/newModels/Query', function () {
                     {
                         id: 2,
                         name: 'User 2',
-                        description: 'this is user 2'
+                        description: 'this is user 2',
                     }
                 );
             });
@@ -1575,7 +1575,7 @@ describe('lib/newModels/Query', function () {
                         confirmed: undefined,
                         description: undefined,
                         age: undefined,
-                        dbDefault: undefined
+                        dbDefault: undefined,
                     }
                 );
             });
@@ -1604,7 +1604,7 @@ describe('lib/newModels/Query', function () {
                         't2.id': 1,
                         't2.createdAt': null,
                         't2.updatedAt': null,
-                        't2.name': 'User images'
+                        't2.name': 'User images',
                     }
                 );
             });
@@ -1617,7 +1617,7 @@ describe('lib/newModels/Query', function () {
                     'to be rejected with',
                     {
                         NotFound: true,
-                        UserNotFoundError: true
+                        UserNotFoundError: true,
                     }
                 );
             });
@@ -1648,7 +1648,7 @@ describe('lib/newModels/Query', function () {
                 InternalServerError: true,
                 UserFetchRowError: true,
                 message: 'fetch error',
-                data: { error: new Error('fetch error') }
+                data: { error: new Error('fetch error') },
             });
             stub.restore();
         });
@@ -1665,7 +1665,7 @@ describe('lib/newModels/Query', function () {
                     confirmed: false,
                     description: 'this is user 1',
                     age: 10,
-                    date_of_birth: new Date(1000)
+                    date_of_birth: new Date(1000),
                 },
                 {
                     id: 2,
@@ -1673,21 +1673,21 @@ describe('lib/newModels/Query', function () {
                     confirmed: true,
                     description: 'this is user 2',
                     age: 20,
-                    date_of_birth: new Date(2000)
-                }
+                    date_of_birth: new Date(2000),
+                },
             ]);
             await knex('image_category').insert([
                 {
                     id: 1,
-                    name: 'User images'
-                }
+                    name: 'User images',
+                },
             ]);
             await knex('image').insert([
                 {
                     id: 1,
                     user_id: 1,
-                    category_id: 1
-                }
+                    category_id: 1,
+                },
             ]);
         });
 
@@ -1724,7 +1724,7 @@ describe('lib/newModels/Query', function () {
                     dateOfBirth: new Date(1000),
                     createdAt: null,
                     updatedAt: null,
-                    dbDefault: 'set-by-db'
+                    dbDefault: 'set-by-db',
                 })
             );
         });
@@ -1748,20 +1748,20 @@ describe('lib/newModels/Query', function () {
                     description: 'this is user 1',
                     age: 10,
                     dateOfBirth: new Date(1000),
-                    dbDefault: 'set-by-db'
+                    dbDefault: 'set-by-db',
                 });
                 user1.image = new Image({
                     id: 1,
                     createdAt: null,
                     updatedAt: null,
                     userId: 1,
-                    categoryId: 1
+                    categoryId: 1,
                 });
                 user1.image.imageCategory = new ImageCategory({
                     id: 1,
                     createdAt: null,
                     updatedAt: null,
-                    name: 'User images'
+                    name: 'User images',
                 });
                 await expect(
                     query.fetchOne({ with: { Image: { with: ImageCategory } } }),
@@ -1781,20 +1781,20 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.image = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
                     user1.image.imageCategory = new ImageCategory({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
-                        name: 'User images'
+                        name: 'User images',
                     });
 
                     await expect(
@@ -1803,9 +1803,9 @@ describe('lib/newModels/Query', function () {
                             with: {
                                 Image: {
                                     require: true,
-                                    with: ImageCategory
-                                }
-                            }
+                                    with: ImageCategory,
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('to exhaustively satisfy', user1)
@@ -1820,11 +1820,11 @@ describe('lib/newModels/Query', function () {
                                 Image: {
                                     with: {
                                         ImageCategory: {
-                                            require: true
-                                        }
-                                    }
-                                }
-                            }
+                                            require: true,
+                                        },
+                                    },
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('to exhaustively satisfy', user1)
@@ -1838,9 +1838,9 @@ describe('lib/newModels/Query', function () {
                             with: {
                                 Image: {
                                     require: true,
-                                    with: ImageCategory
-                                }
-                            }
+                                    with: ImageCategory,
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         undefined
@@ -1855,11 +1855,11 @@ describe('lib/newModels/Query', function () {
                                 Image: {
                                     with: {
                                         ImageCategory: {
-                                            require: true
-                                        }
-                                    }
-                                }
-                            }
+                                            require: true,
+                                        },
+                                    },
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         undefined
@@ -1878,17 +1878,17 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.image = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
                     user1.image.imageCategory = new ImageCategory({
-                        name: 'User images'
+                        name: 'User images',
                     });
 
                     await expect(
@@ -1897,11 +1897,11 @@ describe('lib/newModels/Query', function () {
                                 Image: {
                                     with: {
                                         ImageCategory: {
-                                            fields: ImageCategory.fields.name
-                                        }
-                                    }
-                                }
-                            }
+                                            fields: ImageCategory.fields.name,
+                                        },
+                                    },
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('to exhaustively satisfy', user1)
@@ -1919,7 +1919,7 @@ describe('lib/newModels/Query', function () {
                             description: 'this is user 1',
                             age: 10,
                             dateOfBirth: new Date(1000),
-                            dbDefault: 'set-by-db'
+                            dbDefault: 'set-by-db',
                         });
                         user1.image = undefined;
 
@@ -1927,9 +1927,9 @@ describe('lib/newModels/Query', function () {
                             query.fetchOne({
                                 with: {
                                     Image: {
-                                        fields: false
-                                    }
-                                }
+                                        fields: false,
+                                    },
+                                },
                             }),
                             'to be fulfilled with',
                             expect.it('to exhaustively satisfy', user1)
@@ -1946,7 +1946,7 @@ describe('lib/newModels/Query', function () {
                             description: 'this is user 1',
                             age: 10,
                             dateOfBirth: new Date(1000),
-                            dbDefault: 'set-by-db'
+                            dbDefault: 'set-by-db',
                         });
                         user1.image = undefined;
 
@@ -1955,9 +1955,9 @@ describe('lib/newModels/Query', function () {
                                 with: {
                                     Image: {
                                         fields: false,
-                                        with: ImageCategory
-                                    }
-                                }
+                                        with: ImageCategory,
+                                    },
+                                },
                             }),
                             'to be fulfilled with',
                             expect.it('to exhaustively satisfy', user1)
@@ -1977,14 +1977,14 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 2',
                         age: 20,
                         dateOfBirth: new Date(2000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.image = undefined;
 
                     await expect(
                         query.fetchOne({
                             where: { id: 2 },
-                            with: Image
+                            with: Image,
                         }),
                         'to be fulfilled with',
                         expect.it('to exhaustively satisfy', user1)
@@ -2003,14 +2003,14 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.theImage = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
 
                     await expect(
@@ -2023,7 +2023,7 @@ describe('lib/newModels/Query', function () {
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
-                        name: 'User images'
+                        name: 'User images',
                     });
 
                     const newQuery = new Query(User);
@@ -2034,10 +2034,10 @@ describe('lib/newModels/Query', function () {
                                 Image: {
                                     as: 'theImage',
                                     with: {
-                                        ImageCategory: 'theImageCategory'
-                                    }
-                                }
-                            }
+                                        ImageCategory: 'theImageCategory',
+                                    },
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('to exhaustively satisfy', user1)
@@ -2054,29 +2054,29 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.image1 = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
                     user1.image2 = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
 
                     await expect(
                         query.fetchOne({
                             with: [
                                 { Image: 'image1' },
-                                { Image: 'image2' }
-                            ]
+                                { Image: 'image2' },
+                            ],
                         }),
                         'to be fulfilled with',
                         expect.it('to exhaustively satisfy', user1)
@@ -2087,13 +2087,13 @@ describe('lib/newModels/Query', function () {
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
-                        name: 'User images'
+                        name: 'User images',
                     });
                     user1.image1.imageCategory2 = new ImageCategory({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
-                        name: 'User images'
+                        name: 'User images',
                     });
 
                     const newQuery = new Query(User);
@@ -2105,10 +2105,10 @@ describe('lib/newModels/Query', function () {
                                     as: 'image1',
                                     with: [
                                         { ImageCategory: 'imageCategory1' },
-                                        { ImageCategory: 'imageCategory2' }
-                                    ]
-                                }
-                            }
+                                        { ImageCategory: 'imageCategory2' },
+                                    ],
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('to exhaustively satisfy', user1)
@@ -2129,7 +2129,7 @@ describe('lib/newModels/Query', function () {
                     confirmed: false,
                     description: 'this is user 1',
                     age: 10,
-                    date_of_birth: new Date(1000)
+                    date_of_birth: new Date(1000),
                 },
                 {
                     id: 2,
@@ -2137,21 +2137,21 @@ describe('lib/newModels/Query', function () {
                     confirmed: true,
                     description: 'this is user 2',
                     age: 10,
-                    date_of_birth: new Date(2000)
-                }
+                    date_of_birth: new Date(2000),
+                },
             ]);
             await knex('image_category').insert([
                 {
                     id: 1,
-                    name: 'User images'
-                }
+                    name: 'User images',
+                },
             ]);
             await knex('image').insert([
                 {
                     id: 1,
                     user_id: 1,
-                    category_id: 1
-                }
+                    category_id: 1,
+                },
             ]);
         });
 
@@ -2180,7 +2180,7 @@ describe('lib/newModels/Query', function () {
                             description: 'this is user 1',
                             age: 10,
                             dateOfBirth: new Date(1000),
-                            dbDefault: 'set-by-db'
+                            dbDefault: 'set-by-db',
                         },
                         {
                             id: 2,
@@ -2191,8 +2191,8 @@ describe('lib/newModels/Query', function () {
                             description: 'this is user 2',
                             age: 10,
                             dateOfBirth: new Date(2000),
-                            dbDefault: 'set-by-db'
-                        }
+                            dbDefault: 'set-by-db',
+                        },
                     ])
                 );
             });
@@ -2207,8 +2207,8 @@ describe('lib/newModels/Query', function () {
                         {
                             id: 1,
                             name: 'User 1',
-                            description: 'this is user 1'
-                        }
+                            description: 'this is user 1',
+                        },
                     ])
                 );
             });
@@ -2227,7 +2227,7 @@ describe('lib/newModels/Query', function () {
                             description: 'this is user 1',
                             age: 10,
                             dateOfBirth: new Date(1000),
-                            dbDefault: 'set-by-db'
+                            dbDefault: 'set-by-db',
                         },
                         {
                             id: 2,
@@ -2238,8 +2238,8 @@ describe('lib/newModels/Query', function () {
                             description: 'this is user 2',
                             age: 10,
                             dateOfBirth: new Date(2000),
-                            dbDefault: 'set-by-db'
-                        }
+                            dbDefault: 'set-by-db',
+                        },
                     ])
                 );
             });
@@ -2254,8 +2254,8 @@ describe('lib/newModels/Query', function () {
                         {
                             id: 2,
                             name: 'User 2',
-                            description: 'this is user 2'
-                        }
+                            description: 'this is user 2',
+                        },
                     ])
                 );
             });
@@ -2270,13 +2270,13 @@ describe('lib/newModels/Query', function () {
                         {
                             id: 2,
                             name: 'User 2',
-                            description: 'this is user 2'
+                            description: 'this is user 2',
                         },
                         {
                             id: 1,
                             name: 'User 1',
-                            description: 'this is user 1'
-                        }
+                            description: 'this is user 1',
+                        },
                     ]
                 );
             });
@@ -2297,7 +2297,7 @@ describe('lib/newModels/Query', function () {
                             confirmed: undefined,
                             description: undefined,
                             age: undefined,
-                            dbDefault: undefined
+                            dbDefault: undefined,
                         },
                         {
                             id: 2,
@@ -2308,8 +2308,8 @@ describe('lib/newModels/Query', function () {
                             confirmed: undefined,
                             description: undefined,
                             age: undefined,
-                            dbDefault: undefined
-                        }
+                            dbDefault: undefined,
+                        },
                     ])
                 );
             });
@@ -2339,7 +2339,7 @@ describe('lib/newModels/Query', function () {
                             't2.id': 1,
                             't2.createdAt': null,
                             't2.updatedAt': null,
-                            't2.name': 'User images'
+                            't2.name': 'User images',
                         },
                         {
                             id: 2,
@@ -2359,8 +2359,8 @@ describe('lib/newModels/Query', function () {
                             't2.id': null,
                             't2.createdAt': null,
                             't2.updatedAt': null,
-                            't2.name': null
-                        }
+                            't2.name': null,
+                        },
                     ])
                 );
             });
@@ -2371,12 +2371,12 @@ describe('lib/newModels/Query', function () {
                 await expect(
                     query.fetchRows({
                         where: { id: 1, 'name': 'User 2' },
-                        require: true
+                        require: true,
                     }),
                     'to be rejected with',
                     {
                         NotFound: true,
-                        UsersNotFoundError: true
+                        UsersNotFoundError: true,
                     }
                 );
             });
@@ -2385,7 +2385,7 @@ describe('lib/newModels/Query', function () {
                 await expect(
                     query.fetchRows({
                         where: { id: 1, 'name': 'User 2' },
-                        require: false
+                        require: false,
                     }),
                     'to be fulfilled with',
                     []
@@ -2410,7 +2410,7 @@ describe('lib/newModels/Query', function () {
                 InternalServerError: true,
                 UserFetchRowsError: true,
                 message: 'fetch error',
-                data: { error: new Error('fetch error') }
+                data: { error: new Error('fetch error') },
             });
             stub.restore();
         });
@@ -2437,7 +2437,7 @@ describe('lib/newModels/Query', function () {
                     confirmed: false,
                     description: 'this is user 1',
                     age: 10,
-                    date_of_birth: new Date(1000)
+                    date_of_birth: new Date(1000),
                 },
                 {
                     id: 2,
@@ -2445,21 +2445,21 @@ describe('lib/newModels/Query', function () {
                     confirmed: true,
                     description: 'this is user 2',
                     age: 10,
-                    date_of_birth: new Date(2000)
-                }
+                    date_of_birth: new Date(2000),
+                },
             ]);
             await knex('image_category').insert([
                 {
                     id: 1,
-                    name: 'User images'
-                }
+                    name: 'User images',
+                },
             ]);
             await knex('image').insert([
                 {
                     id: 1,
                     user_id: 1,
-                    category_id: 1
-                }
+                    category_id: 1,
+                },
             ]);
         });
 
@@ -2497,7 +2497,7 @@ describe('lib/newModels/Query', function () {
                         dateOfBirth: new Date(1000),
                         createdAt: null,
                         updatedAt: null,
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     }),
                     new User({
                         id: 2,
@@ -2508,8 +2508,8 @@ describe('lib/newModels/Query', function () {
                         dateOfBirth: new Date(2000),
                         createdAt: null,
                         updatedAt: null,
-                        dbDefault: 'set-by-db'
-                    })
+                        dbDefault: 'set-by-db',
+                    }),
                 ])
             );
         });
@@ -2533,20 +2533,20 @@ describe('lib/newModels/Query', function () {
                     description: 'this is user 1',
                     age: 10,
                     dateOfBirth: new Date(1000),
-                    dbDefault: 'set-by-db'
+                    dbDefault: 'set-by-db',
                 });
                 user1.image = new Image({
                     id: 1,
                     createdAt: null,
                     updatedAt: null,
                     userId: 1,
-                    categoryId: 1
+                    categoryId: 1,
                 });
                 user1.image.imageCategory = new ImageCategory({
                     id: 1,
                     createdAt: null,
                     updatedAt: null,
-                    name: 'User images'
+                    name: 'User images',
                 });
 
                 const user2 = new User({
@@ -2558,7 +2558,7 @@ describe('lib/newModels/Query', function () {
                     dateOfBirth: new Date(2000),
                     createdAt: null,
                     updatedAt: null,
-                    dbDefault: 'set-by-db'
+                    dbDefault: 'set-by-db',
                 });
                 user2.image = undefined;
 
@@ -2567,7 +2567,7 @@ describe('lib/newModels/Query', function () {
                     'to be fulfilled with',
                     expect.it('when sorted by id', 'to exhaustively satisfy', [
                         user1,
-                        user2
+                        user2,
                     ])
                 );
             });
@@ -2583,20 +2583,20 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.image = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
                     user1.image.imageCategory = new ImageCategory({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
-                        name: 'User images'
+                        name: 'User images',
                     });
 
                     await expect(
@@ -2604,13 +2604,13 @@ describe('lib/newModels/Query', function () {
                             with: {
                                 Image: {
                                     require: true,
-                                    with: ImageCategory
-                                }
-                            }
+                                    with: ImageCategory,
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('when sorted by id', 'to exhaustively satisfy', [
-                            user1
+                            user1,
                         ])
                     );
 
@@ -2622,15 +2622,15 @@ describe('lib/newModels/Query', function () {
                                 Image: {
                                     with: {
                                         ImageCategory: {
-                                            require: true
-                                        }
-                                    }
-                                }
-                            }
+                                            require: true,
+                                        },
+                                    },
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('when sorted by id', 'to exhaustively satisfy', [
-                            user1
+                            user1,
                         ])
                     );
                 });
@@ -2647,18 +2647,18 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 2',
                         age: 10,
                         dateOfBirth: new Date(2000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user2.image = undefined;
 
                     await expect(
                         query.fetchAll({
                             where: { id: 2 },
-                            with: Image
+                            with: Image,
                         }),
                         'to be fulfilled with',
                         expect.it('when sorted by id', 'to exhaustively satisfy', [
-                            user2
+                            user2,
                         ])
                     );
                 });
@@ -2675,17 +2675,17 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.image = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
                     user1.image.imageCategory = new ImageCategory({
-                        name: 'User images'
+                        name: 'User images',
                     });
 
                     const user2 = new User({
@@ -2697,7 +2697,7 @@ describe('lib/newModels/Query', function () {
                         dateOfBirth: new Date(2000),
                         createdAt: null,
                         updatedAt: null,
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user2.image = undefined;
 
@@ -2707,16 +2707,16 @@ describe('lib/newModels/Query', function () {
                                 Image: {
                                     with: {
                                         ImageCategory: {
-                                            fields: ImageCategory.fields.name
-                                        }
-                                    }
-                                }
-                            }
+                                            fields: ImageCategory.fields.name,
+                                        },
+                                    },
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('when sorted by id', 'to exhaustively satisfy', [
                             user1,
-                            user2
+                            user2,
                         ])
                     );
                 });
@@ -2732,7 +2732,7 @@ describe('lib/newModels/Query', function () {
                             description: 'this is user 1',
                             age: 10,
                             dateOfBirth: new Date(1000),
-                            dbDefault: 'set-by-db'
+                            dbDefault: 'set-by-db',
                         });
                         user1.image = undefined;
 
@@ -2745,7 +2745,7 @@ describe('lib/newModels/Query', function () {
                             dateOfBirth: new Date(2000),
                             createdAt: null,
                             updatedAt: null,
-                            dbDefault: 'set-by-db'
+                            dbDefault: 'set-by-db',
                         });
                         user2.image = undefined;
 
@@ -2753,14 +2753,14 @@ describe('lib/newModels/Query', function () {
                             query.fetchAll({
                                 with: {
                                     Image: {
-                                        fields: false
-                                    }
-                                }
+                                        fields: false,
+                                    },
+                                },
                             }),
                             'to be fulfilled with',
                             expect.it('when sorted by id', 'to exhaustively satisfy', [
                                 user1,
-                                user2
+                                user2,
                             ])
                         );
                     });
@@ -2775,7 +2775,7 @@ describe('lib/newModels/Query', function () {
                             description: 'this is user 1',
                             age: 10,
                             dateOfBirth: new Date(1000),
-                            dbDefault: 'set-by-db'
+                            dbDefault: 'set-by-db',
                         });
                         user1.image = undefined;
 
@@ -2788,7 +2788,7 @@ describe('lib/newModels/Query', function () {
                             dateOfBirth: new Date(2000),
                             createdAt: null,
                             updatedAt: null,
-                            dbDefault: 'set-by-db'
+                            dbDefault: 'set-by-db',
                         });
                         user2.image = undefined;
 
@@ -2797,14 +2797,14 @@ describe('lib/newModels/Query', function () {
                                 with: {
                                     Image: {
                                         fields: false,
-                                        with: ImageCategory
-                                    }
-                                }
+                                        with: ImageCategory,
+                                    },
+                                },
                             }),
                             'to be fulfilled with',
                             expect.it('when sorted by id', 'to exhaustively satisfy', [
                                 user1,
-                                user2
+                                user2,
                             ])
                         );
                     });
@@ -2822,14 +2822,14 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.theImage = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
 
                     const user2 = new User({
@@ -2841,7 +2841,7 @@ describe('lib/newModels/Query', function () {
                         dateOfBirth: new Date(2000),
                         createdAt: null,
                         updatedAt: null,
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user2.theImage = undefined;
 
@@ -2850,7 +2850,7 @@ describe('lib/newModels/Query', function () {
                         'to be fulfilled with',
                         expect.it('when sorted by id', 'to exhaustively satisfy', [
                             user1,
-                            user2
+                            user2,
                         ])
                     );
 
@@ -2858,7 +2858,7 @@ describe('lib/newModels/Query', function () {
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
-                        name: 'User images'
+                        name: 'User images',
                     });
 
                     const newQuery = new Query(User);
@@ -2869,15 +2869,15 @@ describe('lib/newModels/Query', function () {
                                 Image: {
                                     as: 'theImage',
                                     with: {
-                                        ImageCategory: 'theImageCategory'
-                                    }
-                                }
-                            }
+                                        ImageCategory: 'theImageCategory',
+                                    },
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('when sorted by id', 'to exhaustively satisfy', [
                             user1,
-                            user2
+                            user2,
                         ])
                     );
                 });
@@ -2892,21 +2892,21 @@ describe('lib/newModels/Query', function () {
                         description: 'this is user 1',
                         age: 10,
                         dateOfBirth: new Date(1000),
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user1.image1 = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
                     user1.image2 = new Image({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
                         userId: 1,
-                        categoryId: 1
+                        categoryId: 1,
                     });
 
                     const user2 = new User({
@@ -2918,7 +2918,7 @@ describe('lib/newModels/Query', function () {
                         dateOfBirth: new Date(2000),
                         createdAt: null,
                         updatedAt: null,
-                        dbDefault: 'set-by-db'
+                        dbDefault: 'set-by-db',
                     });
                     user2.image1 = undefined;
                     user2.image2 = undefined;
@@ -2927,13 +2927,13 @@ describe('lib/newModels/Query', function () {
                         query.fetchAll({
                             with: [
                                 { Image: 'image1' },
-                                { Image: 'image2' }
-                            ]
+                                { Image: 'image2' },
+                            ],
                         }),
                         'to be fulfilled with',
                         expect.it('when sorted by id', 'to exhaustively satisfy', [
                             user1,
-                            user2
+                            user2,
                         ])
                     );
 
@@ -2942,13 +2942,13 @@ describe('lib/newModels/Query', function () {
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
-                        name: 'User images'
+                        name: 'User images',
                     });
                     user1.image1.imageCategory2 = new ImageCategory({
                         id: 1,
                         createdAt: null,
                         updatedAt: null,
-                        name: 'User images'
+                        name: 'User images',
                     });
 
                     const newQuery = new Query(User);
@@ -2960,15 +2960,15 @@ describe('lib/newModels/Query', function () {
                                     as: 'image1',
                                     with: [
                                         { ImageCategory: 'imageCategory1' },
-                                        { ImageCategory: 'imageCategory2' }
-                                    ]
-                                }
-                            }
+                                        { ImageCategory: 'imageCategory2' },
+                                    ],
+                                },
+                            },
                         }),
                         'to be fulfilled with',
                         expect.it('when sorted by id', 'to exhaustively satisfy', [
                             user1,
-                            user2
+                            user2,
                         ])
                     );
                 });

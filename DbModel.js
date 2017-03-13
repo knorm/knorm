@@ -1,4 +1,4 @@
-const createError = require('../helpers/createErrors');
+const createError = require('../lib/createErrors');
 const Model = require('./Model');
 
 class DbModel extends Model {
@@ -8,7 +8,7 @@ class DbModel extends Model {
             .options(options)
             .where(where)
             .require()
-            .row()
+            .forge(false)
             .fetch();
 
         return this.setData(data);
@@ -52,11 +52,11 @@ const createErrors = (model) => {
     if (!model._errors) {
         Object.defineProperty(model, '_errors', {
             value: getDefaultErrors(model),
-            writable: true
+            writable: true,
         });
         Object.defineProperty(model, '_errorsClassName', {
             value: model.name,
-            writable: true
+            writable: true,
         });
     }
 
@@ -96,7 +96,7 @@ const getDefaultErrors = (model) => {
         ),
         RowsNotFoundError: createError(
             `${model.name}sNotFoundError`, 'NotFound' // TODO: proper pluralizing
-        )
+        ),
     };
 };
 

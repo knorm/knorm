@@ -11,7 +11,7 @@ const expect = require('unexpected')
         const error = new CustomError();
         return expect(error, 'to satisfy', {
             name,
-            [name]: true
+            [name]: true,
         });
     });
 
@@ -35,26 +35,26 @@ User.table = 'user';
 User.fields = {
     name: {
         type: Field.types.string,
-        required: true
+        required: true,
     },
     description: {
-        type: Field.types.string
+        type: Field.types.string,
     },
     age: {
         type: Field.types.integer,
-        default: null
+        default: null,
     },
     confirmed: {
         type: Field.types.boolean,
         required: true,
-        default: false
+        default: false,
     },
     dateOfBirth: {
-        type: Field.types.dateTime
+        type: Field.types.dateTime,
     },
     dbDefault: {
-        type: Field.types.string
-    }
+        type: Field.types.string,
+    },
 };
 
 describe('lib/newModels/DbModel', function () {
@@ -94,7 +94,7 @@ describe('lib/newModels/DbModel', function () {
                     RowNotInsertedError: expect.it('to be an error named', 'DbModelNotInsertedError'),
                     RowNotUpdatedError: expect.it('to be an error named', 'DbModelNotUpdatedError'),
                     RowNotFoundError: expect.it('to be an error named', 'DbModelNotFoundError'),
-                    RowsNotFoundError: expect.it('to be an error named', 'DbModelsNotFoundError')
+                    RowsNotFoundError: expect.it('to be an error named', 'DbModelsNotFoundError'),
                 });
 
                 expect(User.errors, 'to exhaustively satisfy', {
@@ -105,17 +105,17 @@ describe('lib/newModels/DbModel', function () {
                     RowNotInsertedError: expect.it('to be an error named', 'UserNotInsertedError'),
                     RowNotUpdatedError: expect.it('to be an error named', 'UserNotUpdatedError'),
                     RowNotFoundError: expect.it('to be an error named', 'UserNotFoundError'),
-                    RowsNotFoundError: expect.it('to be an error named', 'UsersNotFoundError')
+                    RowsNotFoundError: expect.it('to be an error named', 'UsersNotFoundError'),
                 });
             });
         });
 
         describe('as a setter', function () {
             it("adds the errors passed to the model's default errors", function () {
-                class Student extends User {};
+                class Student extends User {}
 
                 Student.errors = {
-                    StudentFooError: { studentFoo: 'bar' }
+                    StudentFooError: { studentFoo: 'bar' },
                 };
 
                 expect(Student.errors, 'to exhaustively satisfy', {
@@ -127,20 +127,20 @@ describe('lib/newModels/DbModel', function () {
                     RowNotUpdatedError: expect.it('to be an error named', 'StudentNotUpdatedError'),
                     RowNotFoundError: expect.it('to be an error named', 'StudentNotFoundError'),
                     RowsNotFoundError: expect.it('to be an error named', 'StudentsNotFoundError'),
-                    StudentFooError: { studentFoo: 'bar' }
+                    StudentFooError: { studentFoo: 'bar' },
                 });
             });
 
             describe('when a model is subclassed', function () {
                 it("doesn't overwrite the parent's errors", function () {
                     User.errors = {
-                        UserFooError: { userFoo: 'bar' }
+                        UserFooError: { userFoo: 'bar' },
                     };
 
-                    class Student extends User {};
+                    class Student extends User {}
 
                     Student.errors = {
-                        StudentFooError: { studentFoo: 'bar' }
+                        StudentFooError: { studentFoo: 'bar' },
                     };
 
                     expect(Student.errors, 'to exhaustively satisfy', {
@@ -153,7 +153,7 @@ describe('lib/newModels/DbModel', function () {
                         RowNotFoundError: expect.it('to be an error named', 'StudentNotFoundError'),
                         RowsNotFoundError: expect.it('to be an error named', 'StudentsNotFoundError'),
                         UserFooError: { userFoo: 'bar' },
-                        StudentFooError: { studentFoo: 'bar' }
+                        StudentFooError: { studentFoo: 'bar' },
                     });
 
                     delete User.errors.UserFooError;
@@ -217,7 +217,7 @@ describe('lib/newModels/DbModel', function () {
 
         it('resolves with the result returned by the callback', async function () {
             await expect(
-                User.transact(transaction => 'foo'),
+                User.transact(() => 'foo'),
                 'to be fulfilled with',
                 'foo'
             );
@@ -225,7 +225,7 @@ describe('lib/newModels/DbModel', function () {
 
         it('rejects with the error returned by the callback', async function () {
             await expect(
-                User.transact(transaction => { throw new Error('foo'); }),
+                User.transact(() => { throw new Error('foo'); }),
                 'to be rejected with',
                 new Error('foo')
             );
@@ -240,12 +240,12 @@ describe('lib/newModels/DbModel', function () {
                 }),
                 'to be fulfilled with',
                 {
-                    name: 'Jane'
+                    name: 'Jane',
                 }
             );
             await expect(knex('user').select(), 'to be fulfilled with', [{
                 id: user.id,
-                name: 'Jane'
+                name: 'Jane',
             }]);
         });
 
@@ -273,7 +273,7 @@ describe('lib/newModels/DbModel', function () {
             const user = new User({ name: 'John Doe' });
             await expect(user.save(), 'to be fulfilled');
             await expect(knex('user').select(), 'to be fulfilled with', [{
-                name: 'John Doe'
+                name: 'John Doe',
             }]);
         });
 
@@ -310,7 +310,7 @@ describe('lib/newModels/DbModel', function () {
                     confirmed: false,
                     description: 'this is user 1',
                     age: 10,
-                    date_of_birth: new Date(1000)
+                    date_of_birth: new Date(1000),
                 },
                 {
                     id: 2,
@@ -318,8 +318,8 @@ describe('lib/newModels/DbModel', function () {
                     confirmed: true,
                     description: 'this is user 2',
                     age: 20,
-                    date_of_birth: new Date(2000)
-                }
+                    date_of_birth: new Date(2000),
+                },
             ]);
         });
 
@@ -339,7 +339,7 @@ describe('lib/newModels/DbModel', function () {
                 dateOfBirth: new Date(1000),
                 createdAt: null,
                 updatedAt: null,
-                dbDefault: 'set-by-db'
+                dbDefault: 'set-by-db',
             }));
         });
 
@@ -349,7 +349,7 @@ describe('lib/newModels/DbModel', function () {
             await expect(user.fetch(), 'to be fulfilled with', {
                 id: 1,
                 name: 'User 1',
-                iKnowWhoIam: 'me'
+                iKnowWhoIam: 'me',
             });
         });
 

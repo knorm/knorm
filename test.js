@@ -21,7 +21,7 @@ module.exports = async () => {
                 Image.query
                     .as('privateImage')
                     .on(Image.fields.userId)
-                    .where({ public: false })
+                    .where({ public: false }),
             ])
             .transaction(transaction, { forUpdate: true })
             .fetch();
