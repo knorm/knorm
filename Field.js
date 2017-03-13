@@ -1,5 +1,5 @@
 const { camelCase, snakeCase } = require('lodash');
-const createError = require('../lib/createErrors');
+const createError = require('./lib/createError');
 
 class Field {
     constructor(config = {}) {
@@ -13,43 +13,36 @@ class Field {
             validate,
             minLength,
             maxLength,
-            oneOf
+            oneOf,
         } = config;
 
         if (!name) {
-            throw new Error('field name is not configured');
+            throw new Error('Field requires a name');
         }
 
-        if (!model) {
-            throw new Error(`field '${name}' has no model configured`);
-        }
-
-        if (!model.name) {
-            throw new Error(
-                `model name for field '${name}' is not configured`
-            );
+        if (!model || !(model.prototype instanceof Model)) {
+            throw new Error(`Field '${name}' requires a subclass of Model`);
         }
 
         if (!type) {
             throw new Error(
-                `field '${model.name}.${name}' has no type configured`
+                `Field '${model.name}.${name}' has no type configured`
             );
         }
 
         if (!typesArray.includes(type)) {
             throw new Error(
-                `field '${model.name}.${name}' has an invalid type ('${type}')`
+                `Field '${model.name}.${name}' has an invalid type ('${type}')`
             );
         }
 
         if (validate && typeof validate !== 'function') {
             throw new Error(
-                `custom validator for '${model.name}.${name}' should be a function`
+                `Custom validator for field '${model.name}.${name}' should be a function`
             );
         }
 
         this.name = name;
-        this.column = this.constructor.getColumnName(name);
         this.default = defaultValue;
         this.type = type;
         this.validators = {
@@ -58,8 +51,10 @@ class Field {
             minLength,
             maxLength,
             oneOf,
-            validate
+            validate,
         };
+
+        this.column = this.getColumnName();
 
         this.setModel(model);
 
@@ -68,13 +63,17 @@ class Field {
         }
     }
 
+    getColumnName() {
+        return snakeCase(this.name);
+    }
+
     clone() {
         const clone = new this.constructor({
             name: this.name,
             type: this.type,
             model: this.model,
             default: this.default,
-            references: this.references
+            references: this.references,
         });
         clone.validators = this.validators;
         return clone;
@@ -251,7 +250,7 @@ class Field {
             minLength,
             maxLength,
             oneOf,
-            validate
+            validate,
         } = validators;
 
         if (required) {
@@ -309,6 +308,8 @@ class Field {
         reference.model.referenced[this.model.name][reference.name] = this;
 
         this.references = reference;
+
+        return this;
     }
 
     setModel(model) {
@@ -341,8 +342,10 @@ class Field {
             ),
             Custom: createError(
                 `Invalid${ModelField}Error`, 'BadRequest'
-            )
+            ),
         };
+
+        return this;
     }
 }
 
@@ -365,12 +368,13 @@ const types = {
     string: 'string',
     boolean: 'boolean',
     integer: 'integer',
-    dateTime: 'dateTime'
+    dateTime: 'dateTime',
 };
 
 const typesArray = Object.values(types);
 
 Field.types = types;
-Field.getColumnName = field => snakeCase(field);
 
 module.exports = Field;
+
+const Model = require('./Model'); // circular dep
