@@ -4,7 +4,10 @@
   "description": "A purely class-based ORM for Knex.js",
   "main": "index.js",
   "scripts": {
-    "test": "nyc mocha"
+    "test": "mocha",
+    "coverage": "nyc mocha",
+    "lint": "eslint .",
+    "travis": "npm-run-all lint coverage"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -16,6 +19,7 @@
     "eslint-config-onelint": "^2.0.0",
     "knex": "^0.12.7",
     "mocha": "^3.2.0",
+    "npm-run-all": "^4.0.2",
     "nyc": "^10.1.2",
     "proxyquire": "^1.7.11",
     "sinon": "^1.17.7",
