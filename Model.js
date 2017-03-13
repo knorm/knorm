@@ -1,7 +1,161 @@
-const Field = require('./lib/Field');
-const Virtual = require('./lib/Virtual');
-
 class Model {
+    constructor(data = {}) {
+        Object.values(this.constructor.virtuals).forEach(virtual => {
+            const name = virtual.name;
+
+            if (this[name] !== undefined) {
+                throw new Error(
+                    `Cannot add Getter/Setter for virtual '${this.constructor.name}.${name}' ` +
+                    `(${this.constructor.name}.prototype.${name} is already assigned)`
+                );
+            }
+
+            let { get, set } = virtual;
+            if (get) { get = get.bind(this); }
+            if (set) { set = set.bind(this); }
+
+            Object.defineProperty(this, name, {
+                get,
+                set,
+                enumerable: true,
+            });
+        });
+
+        this.setData(data);
+    }
+
+    _getField(name) {
+        const field = this.constructor.fields[name];
+        if (!field) {
+            throw new Error(`Unknown field '${this.constructor.name}.${name}'`);
+        }
+        return field;
+    }
+
+    _getFields(fields) {
+        if (!fields || !fields.length) {
+            return Object.values(this.constructor.fields);
+        }
+        return fields.map(field => {
+            if (typeof field === 'string') {
+                field = this._getField(field);
+            }
+            return field;
+        });
+    }
+
+    setDefaults({ fields } = {}) {
+        this._getFields(fields).forEach(field => {
+            const name = field.name;
+
+            if (this[name] === undefined) {
+                if (field.hasDefault()) {
+                    this[name] = field.getDefault(this);
+                }
+            }
+        });
+
+        return this;
+    }
+
+    setData(data) {
+        Object.keys(data).forEach(name => {
+            const value = data[name];
+            const field = this.constructor.fields[name];
+
+            if (field) {
+                this[name] = value;
+            } else {
+                const virtual = this.constructor.virtuals[name];
+                if (!virtual) {
+                    throw new Error(`Unknown field or virtual '${this.constructor.name}.${name}'`);
+                }
+                if (!virtual.hasSetter()) {
+                    throw new Error(
+                        `Virtual '${this.constructor.name}.${name}' has no setter`
+                    );
+                }
+                this[name] = value;
+            }
+        });
+
+        return this;
+    }
+
+    async getData({ fields, virtuals } = {}) {
+        const data = this._getFields(fields).reduce((data, field) => {
+            const name = field.name;
+            const value = this[name];
+
+            if (value !== undefined) {
+                data[name] = value;
+            }
+
+            return data;
+        }, {});
+
+        if (virtuals) {
+            if (!Array.isArray(virtuals) || !virtuals.length) {
+                virtuals = Object.values(this.constructor.virtuals)
+                    .filter(virtual => virtual.hasGetter())
+                    .map(virtual => virtual.name);
+            }
+            const virtualsData = await Promise.all(
+                virtuals.map(async name => {
+                    const virtual = this.constructor.virtuals[name];
+                    if (!virtual.get) {
+                        throw new Error(
+                            `Virtual '${this.constructor.name}.${name}' has no getter`
+                        );
+                    }
+                    return virtual.get.call(this);
+                })
+            );
+            virtuals.forEach((name, index) => {
+                data[name] = virtualsData[index];
+            });
+        }
+
+        return data;
+    }
+
+    async validate({ fields } = {}) {
+        await Promise.all(this._getFields(fields).map(field => {
+            const name = field.name;
+            const value = this[name];
+            return field.validate(value, this);
+        }));
+
+        return this;
+    }
+
+    async fetch(options) {
+        const where = await this.getData();
+        const data = await this.constructor.query
+            .options(options)
+            .where(where)
+            .require()
+            .forge(false)
+            .fetch();
+
+        return this.setData(data);
+    }
+
+    async save(options) {
+        return this.constructor.query
+            .options(options)
+            .save(this);
+    }
+
+    static async fetchById(id, options) {
+        return this.query
+            .options(options)
+            .where({ id })
+            .require()
+            .first()
+            .fetch();
+    }
+
     static get references() {
         createReferences(this);
         return this._references;
@@ -32,137 +186,22 @@ class Model {
         addVirtuals(this, virtuals);
     }
 
-    constructor(data = {}) {
-        this._getVirtualNames().forEach(name => {
-            if (this[name] !== undefined) {
-                throw new Error(
-                    `virtual-name '${this.constructor.name}.${name}' is a reserved instance property name`
-                );
-            }
-
-            const virtual = this.constructor.virtuals[name];
-            let { get, set } = virtual;
-
-            if (get) { get = get.bind(this); }
-            if (set) { set = set.bind(this); }
-
-            Object.defineProperty(this, name, {
-                get,
-                set,
-                enumerable: true
-            });
-        });
-
-        this.setData(data);
+    static get errors() {
+        createErrors(this);
+        return this._errors;
     }
 
-    _getFieldNames() {
-        return Object.keys(this.constructor.fields);
+    static set errors(errors) {
+        createErrors(this);
+        addErrors(this, errors);
     }
 
-    _getVirtualNames() {
-        return Object.keys(this.constructor.virtuals);
+    static get query() {
+        return new this.Query(this);
     }
 
-    setDefaults({ fields } = {}) {
-        fields = fields || [];
-        fields = fields.length ? fields : this._getFieldNames();
-
-        fields.forEach(name => {
-            if (this[name] === undefined) {
-                const field = this.constructor.fields[name];
-                if (!field) {
-                    throw new Error(
-                        `cannot set default value for unknown field '${this.constructor.name}.${name}'`
-                    );
-                }
-                if (field.hasDefault()) {
-                    this[name] = field.getDefault(this);
-                }
-            }
-        });
-
-        return this;
-    }
-
-    setData(data) {
-        Object.keys(data).forEach(name => {
-            const value = data[name];
-            const field = this.constructor.fields[name];
-
-            if (field) {
-                this[name] = value;
-            } else {
-                const virtual = this.constructor.virtuals[name];
-                if (!virtual) {
-                    throw new Error(`cannot set data for unknown field or virtual '${this.constructor.name}.${name}'`);
-                }
-                if (!virtual.hasSetter) {
-                    throw new Error(
-                        `virtual '${this.constructor.name}.${name}' has no setter`
-                    );
-                }
-                this[name] = value;
-            }
-        });
-
-        return this;
-    }
-
-    async getData({ fields, virtuals } = {}) {
-        fields = fields || [];
-        fields = fields.length ? fields : this._getFieldNames();
-
-        const data = fields.reduce((data, name) => {
-            if (!this.constructor.fields[name]) {
-                throw new Error(`cannot get data for unknown field '${this.constructor.name}.${name}'`);
-            }
-            const value = this[name];
-            if (value !== undefined) {
-                data[name] = value;
-            }
-            return data;
-        }, {});
-
-        if (virtuals) {
-            if (!Array.isArray(virtuals) || !virtuals.length) {
-                virtuals = this._getVirtualNames().filter(name => {
-                    return !!this.constructor.virtuals[name].get;
-                });
-            }
-            const virtualsData = await Promise.all(
-                virtuals.map(async name => {
-                    const virtual = this.constructor.virtuals[name];
-                    if (!virtual.get) {
-                        throw new Error(
-                            `virtual '${this.constructor.name}.${name}' has no getter`
-                        );
-                    }
-                    return virtual.get.call(this);
-                })
-            );
-            virtuals.forEach((name, index) => {
-                data[name] = virtualsData[index];
-            });
-        }
-
-        return data;
-    }
-
-    async validate({ fields } = {}) {
-        fields = fields || [];
-        fields = fields.length ? fields : this._getFieldNames();
-
-        await Promise.all(fields.map(name => {
-            const field = this.constructor.fields[name];
-            if (!field) {
-                throw new Error(`cannot validate unknown field '${this.constructor.name}.${name}'`);
-            }
-            const value = this[name];
-            return field.validate(value, this);
-        }));
-
-        return this;
+    static set query(val) {
+        throw new Error(`${this.constructor.name}.query cannot be overwriten`);
     }
 }
 
@@ -182,12 +221,12 @@ const createFields = model => {
     if (!model._fields) {
         Object.defineProperty(model, '_fields', {
             value: {},
-            writable: true
+            writable: true,
         });
 
         Object.defineProperty(model, '_fieldsClassName', {
             value: model.name,
-            writable: true
+            writable: true,
         });
     }
 
@@ -203,7 +242,7 @@ const createFields = model => {
 const addFields = (model, fields) => {
     Object.keys(fields).forEach(name => {
         const fieldConfig = Object.assign({ name, model }, fields[name]);
-        const field = new Field(fieldConfig);
+        const field = new model.Field(fieldConfig);
 
         model._fields[name] = field;
     });
@@ -219,12 +258,55 @@ const addVirtuals = (model, virtuals) => {
     Object.keys(virtuals).forEach(name  => {
         const descriptor = virtuals[name];
 
-        model._virtuals[name] = new Virtual({
+        model._virtuals[name] = new model.Virtual({
             name,
             model,
-            descriptor
+            descriptor,
         });
     });
 };
 
+const createErrors = (model) => {
+    if (!model._errors) {
+        Object.defineProperty(model, '_errors', {
+            value: getDefaultErrors(model),
+            writable: true,
+        });
+        Object.defineProperty(model, '_errorsClassName', {
+            value: model.name,
+            writable: true,
+        });
+    }
+
+    if (model._errorsClassName !== model.name) {
+        model._errors = getDefaultErrors(model);
+        model._errorsClassName = model.name;
+    }
+};
+
+const addErrors = (model, errors) => {
+    Object.assign(model._errors, errors);
+};
+
+const createError = require('./lib/createError');
+
+const getDefaultErrors = (model) => {
+    const DatabaseError = createError('DatabaseError', 'InternalServerError');
+    return {
+        SaveError: createError(`${model.name}SaveError`, DatabaseError),
+        CountError: createError(`${model.name}CountError`, DatabaseError),
+        FetchRowError: createError(`${model.name}FetchRowError`, DatabaseError),
+        FetchRowsError: createError(`${model.name}FetchRowsError`, DatabaseError),
+        RowNotInsertedError: createError(`${model.name}NotInsertedError`, DatabaseError),
+        RowNotUpdatedError: createError(`${model.name}NotUpdatedError`, DatabaseError),
+        RowNotFoundError: createError(`${model.name}NotFoundError`, 'NotFound'),
+        RowsNotFoundError: createError(`${model.name}sNotFoundError`, 'NotFound'), // TODO: proper pluralizing
+    };
+};
+
 module.exports = Model;
+
+// circular deps
+Model.Field = require('./Field');
+Model.Virtual = require('./Virtual');
+Model.Query = require('./Query');
