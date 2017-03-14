@@ -82,13 +82,13 @@ class Field {
         return clone;
     }
 
-    _validateIsRequired(value) {
+    validateIsRequired(value) {
         if (!isSet(value)) {
             throw new this.errors.Required();
         }
     }
 
-    _validateTypeWith(value, validate) {
+    validateWith(value, validate) {
         if (!isSet(value)) {
             return true;
         }
@@ -97,58 +97,58 @@ class Field {
         }
     }
 
-    _validateIsText(value) {
-        this._validateTypeWith(value, value => typeof value === 'string');
+    validateIsText(value) {
+        this.validateWith(value, value => typeof value === 'string');
     }
 
-    _validateIsBinary(value) {
-        this._validateTypeWith(value, value => value instanceof Buffer);
+    validateIsBinary(value) {
+        this.validateWith(value, value => value instanceof Buffer);
     }
 
-    _validateIsString(value) {
-        this._validateIsText(value);
+    validateIsString(value) {
+        this.validateIsText(value);
     }
 
-    _validateIsInteger(value) {
-        this._validateTypeWith(value, value => Number.isInteger(value));
+    validateIsInteger(value) {
+        this.validateWith(value, value => Number.isInteger(value));
     }
 
-    _validateIsBoolean(value) {
-        this._validateTypeWith(value, value => typeof value === 'boolean');
+    validateIsBoolean(value) {
+        this.validateWith(value, value => typeof value === 'boolean');
     }
 
-    _validateIsDateTime(value) {
-        this._validateTypeWith(value, value => value instanceof Date);
+    validateIsDateTime(value) {
+        this.validateWith(value, value => value instanceof Date);
     }
 
-    _validateWithRegex(value, pattern) {
-        this._validateTypeWith(value, value => pattern.test(value));
+    validateWithRegex(value, pattern) {
+        this.validateWith(value, value => pattern.test(value));
     }
 
-    _validateIsUuid(value) {
+    validateIsUuid(value) {
         // source: https://github.com/chriso/validator.js/blob/6.2.1/src/lib/isUUID.js
-        this._validateWithRegex(
+        this.validateWithRegex(
             value,
             /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i
         );
     }
 
-    _validateIsUuidV4(value) {
+    validateIsUuidV4(value) {
         // source: https://github.com/chriso/validator.js/blob/6.2.1/src/lib/isUUID.js
-        this._validateWithRegex(
+        this.validateWithRegex(
             value,
             /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i
         );
     }
 
-    _validateIsDecimal(value) {
+    validateIsDecimal(value) {
         // source: https://github.com/chriso/validator.js/blob/6.2.1/src/lib/isDecimal.js
-        this._validateWithRegex(value, /^[-+]?([0-9]+|\.[0-9]+|[0-9]+\.[0-9]+)$/);
+        this.validateWithRegex(value, /^[-+]?([0-9]+|\.[0-9]+|[0-9]+\.[0-9]+)$/);
     }
 
-    _validateIsJson(value) {
-        this._validateIsText(value);
-        this._validateTypeWith(value, value => {
+    validateIsJson(value) {
+        this.validateIsText(value);
+        this.validateWith(value, value => {
             let object;
 
             try {
@@ -162,44 +162,44 @@ class Field {
         });
     }
 
-    _validateTypeIs(value, type) {
+    validateTypeIs(value, type) {
         switch (type) {
         case types.text:
-            return this._validateIsText(value);
+            return this.validateIsText(value);
 
         case types.binary:
-            return this._validateIsBinary(value);
+            return this.validateIsBinary(value);
 
         case types.string:
-            return this._validateIsString(value);
+            return this.validateIsString(value);
 
         case types.integer:
-            return this._validateIsInteger(value);
+            return this.validateIsInteger(value);
 
         case types.boolean:
-            return this._validateIsBoolean(value);
+            return this.validateIsBoolean(value);
 
         case types.dateTime:
-            return this._validateIsDateTime(value);
+            return this.validateIsDateTime(value);
 
         case types.uuid:
-            return this._validateIsUuid(value);
+            return this.validateIsUuid(value);
 
         case types.uuidV4:
-            return this._validateIsUuidV4(value);
+            return this.validateIsUuidV4(value);
 
         case types.json:
-            return this._validateIsJson(value);
+            return this.validateIsJson(value);
 
         case types.decimal:
-            return this._validateIsDecimal(value);
+            return this.validateIsDecimal(value);
 
         default:
             throw new Error(`no validator has been added for '${type}' types`);
         }
     }
 
-    _validateMinLengthIs(value, minLength) {
+    validateMinLengthIs(value, minLength) {
         if (!isSet(value)) {
             return true;
         }
@@ -209,7 +209,7 @@ class Field {
         }
     }
 
-    _validateMaxLengthIs(value, maxLength) {
+    validateMaxLengthIs(value, maxLength) {
         if (!isSet(value)) {
             return true;
         }
@@ -219,7 +219,7 @@ class Field {
         }
     }
 
-    _validateIsOneOf(value, oneOf) {
+    validateIsOneOf(value, oneOf) {
         if (!isSet(value)) {
             return true;
         }
@@ -229,7 +229,7 @@ class Field {
         }
     }
 
-    async _validateWithCustom(value, validate, modelInstance) {
+    async validateWithCustom(value, validate, modelInstance) {
         if (!isSet(value)) {
             return true;
         }
@@ -241,11 +241,11 @@ class Field {
         }
 
         if (typeof returnValue === 'object') {
-            return this._validateWith(value, returnValue, modelInstance);
+            return this.validateWithValidators(value, returnValue, modelInstance);
         }
     }
 
-    async _validateWith(value, validators, modelInstance) {
+    async validateWithValidators(value, validators, modelInstance) {
         const {
             required,
             type,
@@ -256,32 +256,32 @@ class Field {
         } = validators;
 
         if (required) {
-            this._validateIsRequired(value);
+            this.validateIsRequired(value);
         }
 
         if (type) {
-            this._validateTypeIs(value, type);
+            this.validateTypeIs(value, type);
         }
 
         if (minLength) {
-            this._validateMinLengthIs(value, minLength);
+            this.validateMinLengthIs(value, minLength);
         }
 
         if (maxLength) {
-            this._validateMaxLengthIs(value, maxLength);
+            this.validateMaxLengthIs(value, maxLength);
         }
 
         if (oneOf) {
-            this._validateIsOneOf(value, oneOf);
+            this.validateIsOneOf(value, oneOf);
         }
 
         if (validate) {
-            await this._validateWithCustom(value, validate, modelInstance);
+            await this.validateWithCustom(value, validate, modelInstance);
         }
     }
 
     async validate(value, modelInstance) {
-        await this._validateWith(value, this.validators, modelInstance);
+        await this.validateWithValidators(value, this.validators, modelInstance);
     }
 
     hasDefault() {
@@ -360,6 +360,7 @@ const upperCamelCase = string => {
 const isSet = value => value !== undefined && value !== null;
 
 // TODO: add password field
+// TODO: allow adding types
 const types = {
     text: 'text',
     json: 'json',
