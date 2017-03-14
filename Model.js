@@ -142,12 +142,26 @@ class Model {
     }
 
     async save(options) {
-        return this.constructor.query
+        return this.constructor.save(this, options);
+    }
+
+    static async save(data, options) {
+        return this.query
             .options(options)
-            .save(this);
+            .save(data);
+    }
+
+    static async fetch(options) {
+        return this.query
+            .options(options)
+            .fetch();
     }
 
     static async fetchById(id, options) {
+        if (!this.fields.id) {
+            throw new Error(`${this.name} has no id field configured`);
+        }
+
         return this.query
             .options(options)
             .where({ id })
@@ -201,7 +215,7 @@ class Model {
     }
 
     static set query(val) {
-        throw new Error(`${this.constructor.name}.query cannot be overwriten`);
+        throw new Error(`${this.name}.query cannot be overwriten`);
     }
 }
 
@@ -270,7 +284,7 @@ const createErrors = (model) => {
     if (!model._errors) {
         Object.defineProperty(model, '_errors', {
             value: getDefaultErrors(model),
-            writable: true,
+            configurable: true,
         });
         Object.defineProperty(model, '_errorsClassName', {
             value: model.name,
@@ -279,7 +293,7 @@ const createErrors = (model) => {
     }
 
     if (model._errorsClassName !== model.name) {
-        model._errors = getDefaultErrors(model);
+        addErrors(model, getDefaultErrors(model));
         model._errorsClassName = model.name;
     }
 };

@@ -1,12 +1,14 @@
 const Model = require('../Model');
 const Field = require('../Field');
 const Virtual = require('../Virtual');
+const Query = require('../Query');
 
 const sinon = require('sinon');
 const expect = require('unexpected')
     .clone()
     .use(require('unexpected-sinon'))
-    .use(require('./lib/unexpected-unexpected-bug'));
+    .use(require('./lib/unexpected-error'))
+    .use(require('./lib/unexpected-workaround'));
 
 describe('Model', function () {
     describe('constructor', function () {
@@ -1089,6 +1091,445 @@ describe('Model', function () {
         it("is a getter that returns the model's back-references", function () {
             class Foo extends Model {}
             expect(Foo.referenced, 'to equal', {});
+        });
+    });
+
+    describe('Model.query', function () {
+        class User extends Model {}
+
+        before(function () {
+            User.Query = sinon.stub().named('Query');
+        });
+
+        beforeEach(function () {
+            User.Query.reset().returns(sinon.createStubInstance(Query));
+        });
+
+        describe('as a getter', function () {
+            it('returns a Query instance', function () {
+                expect(User.query, 'to be a', Query);
+            });
+
+            it('configures the Query instance with the model', function () {
+                User.query;
+                expect(User.Query, 'to have calls satisfying', () => {
+                    new User.Query(expect.it('to be model class', User));
+                });
+            });
+
+            it("returns a new Query every time it's accessed", function () {
+                User.query;
+                User.query;
+
+                expect(User.Query, 'to have calls satisfying', () => {
+                    new User.Query(expect.it('not to be undefined'));
+                    new User.Query(expect.it('not to be undefined'));
+                });
+            });
+        });
+
+        describe('as a setter', function () {
+            it('throws an error', function () {
+                expect(
+                    () => User.query = 'foo',
+                    'to throw',
+                    new Error('User.query cannot be overwriten')
+                );
+            });
+        });
+    });
+
+    describe('Model.errors', function () {
+        describe('as a getter', function () {
+            it("returns the model's errors", function () {
+                class User extends Model {}
+
+                expect(Model.errors, 'to exhaustively satisfy', {
+                    CountError: expect.it('to be an error named', 'ModelCountError'),
+                    FetchRowError: expect.it('to be an error named', 'ModelFetchRowError'),
+                    FetchRowsError: expect.it('to be an error named', 'ModelFetchRowsError'),
+                    SaveError: expect.it('to be an error named', 'ModelSaveError'),
+                    RowNotInsertedError: expect.it('to be an error named', 'ModelNotInsertedError'),
+                    RowNotUpdatedError: expect.it('to be an error named', 'ModelNotUpdatedError'),
+                    RowNotFoundError: expect.it('to be an error named', 'ModelNotFoundError'),
+                    RowsNotFoundError: expect.it('to be an error named', 'ModelsNotFoundError'),
+                });
+
+                expect(User.errors, 'to exhaustively satisfy', {
+                    CountError: expect.it('to be an error named', 'UserCountError'),
+                    FetchRowError: expect.it('to be an error named', 'UserFetchRowError'),
+                    FetchRowsError: expect.it('to be an error named', 'UserFetchRowsError'),
+                    SaveError: expect.it('to be an error named', 'UserSaveError'),
+                    RowNotInsertedError: expect.it('to be an error named', 'UserNotInsertedError'),
+                    RowNotUpdatedError: expect.it('to be an error named', 'UserNotUpdatedError'),
+                    RowNotFoundError: expect.it('to be an error named', 'UserNotFoundError'),
+                    RowsNotFoundError: expect.it('to be an error named', 'UsersNotFoundError'),
+                });
+            });
+        });
+
+        describe('as a setter', function () {
+            it("adds the errors passed to the model's default errors", function () {
+                class User extends Model {}
+
+                User.errors = {
+                    UserFooError: { studentFoo: 'bar' },
+                };
+
+                expect(User.errors, 'to exhaustively satisfy', {
+                    CountError: expect.it('to be an error named', 'UserCountError'),
+                    FetchRowError: expect.it('to be an error named', 'UserFetchRowError'),
+                    FetchRowsError: expect.it('to be an error named', 'UserFetchRowsError'),
+                    SaveError: expect.it('to be an error named', 'UserSaveError'),
+                    RowNotInsertedError: expect.it('to be an error named', 'UserNotInsertedError'),
+                    RowNotUpdatedError: expect.it('to be an error named', 'UserNotUpdatedError'),
+                    RowNotFoundError: expect.it('to be an error named', 'UserNotFoundError'),
+                    RowsNotFoundError: expect.it('to be an error named', 'UsersNotFoundError'),
+                    UserFooError: { studentFoo: 'bar' },
+                });
+            });
+
+            describe('when a model is subclassed', function () {
+                it("adds the new errors to the the parent's errors", function () {
+                    class User extends Model {}
+                    User.errors = {
+                        UserFooError: { userFoo: 'bar' },
+                    };
+
+                    expect(User.errors, 'to satisfy', {
+                        UserFooError: { userFoo: 'bar' },
+                    });
+
+                    class Student extends User {}
+                    Student.errors = {
+                        StudentFooError: { studentFoo: 'bar' },
+                    };
+
+                    expect(User.errors, 'to satisfy', {
+                        UserFooError: { userFoo: 'bar' },
+                    });
+                    expect(Student.errors, 'to satisfy', {
+                        UserFooError: { userFoo: 'bar' },
+                        StudentFooError: { studentFoo: 'bar' },
+                    });
+                });
+            });
+        });
+    });
+
+    // TODO: write better tests for Query-related methods once Query is complete
+    describe('Model.save', function () {
+        class User extends Model {}
+        const query = {};
+
+        before(function () {
+            query.options = sinon.stub().named('options').returns(query);
+            query.save = sinon.stub().named('save');
+
+            User.Query = sinon.stub().named('Query').returns(query);
+        });
+
+        beforeEach(function () {
+            query.options.reset();
+            query.save.reset();
+        });
+
+        it('calls Query.prototype.options with any options passed', async function () {
+            await User.save({ foo: 'bar' }, { require: true });
+            await expect(query.options, 'to have calls satisfying', () => {
+                query.options({ require: true });
+            });
+        });
+
+        it('calls Query.prototype.save with the data passed', async function () {
+            await User.save({ foo: 'bar' });
+            await expect(query.save, 'to have calls satisfying', () => {
+                query.save({ foo: 'bar' });
+            });
+        });
+
+        it("resolves with Query.prototype.save's fulfillment value", async function () {
+            query.save.returns(Promise.resolve('the saved user'));
+            await expect(User.save(), 'to be fulfilled with', 'the saved user');
+        });
+
+        it('rejects with any error from Query.prototype.save', async function () {
+            query.save.returns(Promise.reject(new Error('foo happens')));
+            await expect(
+                User.save(),
+                'to be rejected with',
+                new Error('foo happens')
+            );
+        });
+    });
+
+    describe('Model.prototype.save', function () {
+        class User extends Model {}
+
+        User.fields = {
+            id: {
+                type: Field.types.integer,
+            },
+            name: {
+                type: Field.types.string,
+            },
+        };
+
+        User.save = sinon.stub().named('save');
+        User.Query = sinon.stub().named('Query');
+
+        beforeEach(function () {
+            User.save.reset().returns(Promise.resolve());
+        });
+
+        it('calls Model.save with its data and any options passed', async function () {
+            const user = new User({ id: 1, name: 'Foo Bar' });
+            await user.save({ require: true });
+            await expect(User.save, 'to have calls satisfying', () => {
+                User.save(new User({ id: 1, name: 'Foo Bar' }), { require: true });
+            });
+        });
+
+        it("resolves with Model.save's fulfillment value", async function () {
+            User.save.returns(Promise.resolve('the saved user'));
+            await expect(User.save(), 'to be fulfilled with', 'the saved user');
+        });
+
+        it('rejects with any error from Query.prototype.save', async function () {
+            User.save.returns(Promise.reject(new Error('foo happens')));
+            await expect(
+                User.save(),
+                'to be rejected with',
+                new Error('foo happens')
+            );
+        });
+    });
+
+    describe('Model.fetch', function () {
+        class User extends Model {}
+        const query = {};
+
+        before(function () {
+            query.options = sinon.stub().named('options').returns(query);
+            query.fetch = sinon.stub().named('fetch');
+
+            User.Query = sinon.stub().named('Query').returns(query);
+        });
+
+        beforeEach(function () {
+            query.options.reset();
+            query.fetch.reset();
+        });
+
+        it('calls Query.prototype.options with any options passed', async function () {
+            await User.fetch({ foo: 'bar' });
+            await expect(query.options, 'to have calls satisfying', () => {
+                query.options({ foo: 'bar' });
+            });
+        });
+
+        it('calls Query.prototype.fetch', async function () {
+            await User.fetch();
+            await expect(query.fetch, 'to have calls satisfying', () => {
+                query.fetch();
+            });
+        });
+
+        it("resolves with Query.prototype.fetch's fulfillment value", async function () {
+            query.fetch.returns(Promise.resolve('the fetched user'));
+            await expect(User.fetch(), 'to be fulfilled with', 'the fetched user');
+        });
+
+        it('rejects with any error from Query.prototype.fetch', async function () {
+            query.fetch.returns(Promise.reject(new Error('foo happens')));
+            await expect(
+                User.fetch(),
+                'to be rejected with',
+                new Error('foo happens')
+            );
+        });
+    });
+
+    describe('Model.prototype.fetch', function () {
+        class User extends Model {}
+
+        User.fields = {
+            id: {
+                type: Field.types.integer,
+            },
+            name: {
+                type: Field.types.string,
+            },
+        };
+
+        const query = {};
+
+        before(function () {
+            query.options = sinon.stub().named('options').returns(query);
+            query.where = sinon.stub().named('where').returns(query);
+            query.require = sinon.stub().named('require').returns(query);
+            query.forge = sinon.stub().named('forge').returns(query);
+            query.fetch = sinon.stub().named('fetch');
+
+            User.Query = sinon.stub().named('Query').returns(query);
+        });
+
+        beforeEach(function () {
+            query.options.reset();
+            query.where.reset();
+            query.require.reset();
+            query.forge.reset();
+            query.fetch.reset().returns(Promise.resolve({}));
+        });
+
+        it('calls Query.prototype.where with the data set on the instance', async function () {
+            const user = new User({ id: 1 });
+            await user.fetch();
+            await expect(query.where, 'to have calls satisfying', () => {
+                query.where({ id: 1 });
+            });
+        });
+
+        it('calls Query.prototype.options with any options passed', async function () {
+            const user = new User({ id: 1 });
+            await user.fetch({ foo: 'bar' });
+            await expect(query.options, 'to have calls satisfying', () => {
+                query.options({ foo: 'bar' });
+            });
+        });
+
+        it('calls Query.prototype.require', async function () {
+            const user = new User({ id: 1 });
+            await user.fetch();
+            await expect(query.require, 'to have calls satisfying', () => {
+                query.require();
+            });
+        });
+
+        it('calls Query.prototype.forge with false', async function () {
+            const user = new User({ id: 1 });
+            await user.fetch();
+            await expect(query.forge, 'to have calls satisfying', () => {
+                query.forge(false);
+            });
+        });
+
+        it('calls Query.prototype.fetch', async function () {
+            const user = new User({ id: 1 });
+            await user.fetch();
+            await expect(query.fetch, 'to have calls satisfying', () => {
+                query.fetch();
+            });
+        });
+
+        it('resolves with the instance populated with data from Query.prototype.fetch', async function () {
+            query.fetch.returns(Promise.resolve({ name: 'Foo Bar' }));
+            const user = new User({ id: 1 });
+            await user.fetch();
+            await expect(
+                user.fetch(),
+                'to be fulfilled with',
+                new User({ id: 1, name: 'Foo Bar' })
+            );
+        });
+
+        it('rejects with any error from Query.prototype.fetch', async function () {
+            query.fetch.returns(Promise.reject(new Error('foo happens')));
+            const user = new User({ id: 1 });
+            await expect(
+                user.fetch(),
+                'to be rejected with',
+                new Error('foo happens')
+            );
+        });
+    });
+
+    describe('Model.fetchById', function () {
+        class User extends Model {}
+
+        User.fields = {
+            id: {
+                type: Field.types.integer,
+            },
+        };
+
+        const query = {};
+
+        before(function () {
+            query.options = sinon.stub().named('options').returns(query);
+            query.where = sinon.stub().named('where').returns(query);
+            query.require = sinon.stub().named('require').returns(query);
+            query.first = sinon.stub().named('first').returns(query);
+            query.fetch = sinon.stub().named('fetch');
+
+            User.Query = sinon.stub().named('Query').returns(query);
+        });
+
+        beforeEach(function () {
+            query.options.reset();
+            query.where.reset();
+            query.require.reset();
+            query.first.reset();
+            query.fetch.reset();
+        });
+
+        it('rejects with an error if no id field configured', async function () {
+            class Foo extends Model {}
+            Foo.Query = sinon.stub();
+            return expect(
+                Foo.fetchById(1),
+                'to be rejected with',
+                new Error('Foo has no id field configured')
+            );
+        });
+
+        it('calls Query.prototype.where with the id', async function () {
+            await User.fetchById(1);
+            await expect(query.where, 'to have calls satisfying', () => {
+                query.where({ id: 1 });
+            });
+        });
+
+        it('calls Query.prototype.options with any options passed', async function () {
+            await User.fetchById(1, { foo: 'bar' });
+            await expect(query.options, 'to have calls satisfying', () => {
+                query.options({ foo: 'bar' });
+            });
+        });
+
+        it('calls Query.prototype.require', async function () {
+            await User.fetchById(1);
+            await expect(query.require, 'to have calls satisfying', () => {
+                query.require();
+            });
+        });
+
+        it('calls Query.prototype.first', async function () {
+            await User.fetchById(1);
+            await expect(query.first, 'to have calls satisfying', () => {
+                query.first();
+            });
+        });
+
+        it('calls Query.prototype.fetch', async function () {
+            await User.fetchById(1);
+            await expect(query.fetch, 'to have calls satisfying', () => {
+                query.fetch();
+            });
+        });
+
+        it("resolves with Query.prototype.fetch's fulfillment value", async function () {
+            query.fetch.returns(Promise.resolve('the fetched user'));
+            await expect(User.fetchById(1), 'to be fulfilled with', 'the fetched user');
+        });
+
+        it('rejects with any error from Query.prototype.fetch', async function () {
+            query.fetch.returns(Promise.reject(new Error('foo happens')));
+            await expect(
+                User.fetchById(1),
+                'to be rejected with',
+                new Error('foo happens')
+            );
         });
     });
 });
