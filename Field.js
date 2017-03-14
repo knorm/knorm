@@ -107,7 +107,6 @@ class Field {
 
     _validateIsString(value) {
         this._validateIsText(value);
-        this._validateMaxLengthIs(value, 255);
     }
 
     _validateIsInteger(value) {

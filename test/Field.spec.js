@@ -1045,28 +1045,6 @@ describe('Field', function () {
                 await expect(field.validate(), 'to be fulfilled');
             });
         });
-
-        it('validates maxLength: 255 by default for string types', async function () {
-            const field = new Field({
-                name: 'firstName',
-                model: User,
-                type: Field.types.string,
-            });
-
-            await expect(
-                field.validate(new Array(255).fill('a').join('')),
-                'to be fulfilled'
-            );
-
-            await expect(
-                field.validate(new Array(256).fill('a').join('')),
-                'to be rejected with',
-                {
-                    BadRequest: true,
-                    UserFirstNameTooLongError: true,
-                }
-            );
-        });
     });
 
     describe('Field.prototype.setReference', function () {
