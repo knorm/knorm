@@ -3,18 +3,7 @@ const createError = require('./lib/createError');
 
 class Field {
     constructor(config = {}) {
-        const {
-            name,
-            model,
-            default: defaultValue,
-            type,
-            references,
-            required,
-            validate,
-            minLength,
-            maxLength,
-            oneOf,
-        } = config;
+        const { name, model, type, validate } = config;
 
         if (!name) {
             throw new Error('Field requires a name');
@@ -43,24 +32,38 @@ class Field {
         }
 
         this.name = name;
-        this.default = defaultValue;
         this.type = type;
-        this.validators = {
-            required,
-            type,
-            minLength,
-            maxLength,
-            oneOf,
-            validate,
-        };
-
-        this.column = this.getColumnName();
-
         this.setModel(model);
 
+        if (config.default) {
+            this.default = config.default;
+        }
+
+        const validators = { type };
+        const { required, minLength, maxLength, oneOf } = config;
+
+        if (validate) { validators.validate = validate; }
+        if (required) { validators.required = required; }
+        if (minLength) { validators.minLength = minLength; }
+        if (maxLength) { validators.maxLength = maxLength; }
+        if (oneOf) { validators.oneOf = oneOf; }
+
+        this.validators = validators;
+
+        if (config.default) {
+            this.default = config.default;
+        }
+
+        const { references } = config;
         if (references) {
             this.setReference(references);
         }
+
+        let { column } = config;
+        if (!column) {
+            column = this.getColumnName();
+        }
+        this.column = column;
     }
 
     getColumnName() {
