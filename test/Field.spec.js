@@ -1,7 +1,6 @@
 const uuid = require('uuid');
 const Field = require('../Field');
 const Model = require('../Model');
-
 const sinon = require('sinon');
 const expect = require('unexpected')
     .clone()
@@ -263,10 +262,11 @@ describe('Field', function () {
                     type: Field.types.string,
                     required: true,
                 });
-                await expect(field.validate(), 'to be rejected with', {
-                    BadRequest: true,
-                    MissingRequiredUserFirstNameError: true,
-                });
+                await expect(
+                    field.validate(),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'MissingRequiredUserFirstNameError')
+                );
             });
 
             it("rejects if the value is 'undefined'", async function () {
@@ -276,10 +276,11 @@ describe('Field', function () {
                     type: Field.types.string,
                     required: true,
                 });
-                await expect(field.validate(undefined), 'to be rejected with', {
-                    BadRequest: true,
-                    MissingRequiredUserFirstNameError: true,
-                });
+                await expect(
+                    field.validate(undefined),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'MissingRequiredUserFirstNameError')
+                );
             });
 
             it("rejects if the value is 'null'", async function () {
@@ -289,10 +290,11 @@ describe('Field', function () {
                     type: Field.types.string,
                     required: true,
                 });
-                await expect(field.validate(null), 'to be rejected with', {
-                    BadRequest: true,
-                    MissingRequiredUserFirstNameError: true,
-                });
+                await expect(
+                    field.validate(null),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'MissingRequiredUserFirstNameError')
+                );
             });
 
             it('resolves if the value is set', async function () {
@@ -313,9 +315,11 @@ describe('Field', function () {
                     model: User,
                     type: Field.types.text,
                 });
-                await expect(field.validate({}), 'to be rejected with', {
-                    InvalidUserFirstNameTypeError: true,
-                });
+                await expect(
+                    field.validate({}),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                );
             });
 
             it('does not type-validate if the value is undefined', async function () {
@@ -528,10 +532,11 @@ describe('Field', function () {
                         model: User,
                         type: Field.types.integer,
                     });
-                    await expect(field.validate(1.5), 'to be rejected with', {
-                        BadRequest: true,
-                        InvalidUserFirstNameTypeError: true,
-                    });
+                    await expect(
+                        field.validate(1.5),
+                        'to be rejected with',
+                        expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                    );
                 });
 
                 it("for string numbers against the 'integer' type", async function () {
@@ -540,10 +545,11 @@ describe('Field', function () {
                         model: User,
                         type: Field.types.integer,
                     });
-                    await expect(field.validate('1'), 'to be rejected with', {
-                        BadRequest: true,
-                        InvalidUserFirstNameTypeError: true,
-                    });
+                    await expect(
+                        field.validate('1'),
+                        'to be rejected with',
+                        expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                    );
                 });
 
                 it("for date strings against the 'dateTime' type", async function () {
@@ -555,10 +561,7 @@ describe('Field', function () {
                     await expect(
                         field.validate(new Date().toString()),
                         'to be rejected with',
-                        {
-                            BadRequest: true,
-                            InvalidUserFirstNameTypeError: true,
-                        }
+                         expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
                     );
                 });
 
@@ -568,10 +571,11 @@ describe('Field', function () {
                         model: User,
                         type: Field.types.boolean,
                     });
-                    await expect(field.validate(1), 'to be rejected with', {
-                        BadRequest: true,
-                        InvalidUserFirstNameTypeError: true,
-                    });
+                    await expect(
+                        field.validate(1),
+                        'to be rejected with',
+                        expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                    );
                 });
 
                 it("for falsy values against the 'boolean' type", async function () {
@@ -580,10 +584,11 @@ describe('Field', function () {
                         model: User,
                         type: Field.types.boolean,
                     });
-                    await expect(field.validate(0), 'to be rejected with', {
-                        BadRequest: true,
-                        InvalidUserFirstNameTypeError: true,
-                    });
+                    await expect(
+                        field.validate(0),
+                        'to be rejected with',
+                        expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                    );
                 });
 
                 it("invalid uuid's against the 'uuid' type", async function () {
@@ -595,10 +600,7 @@ describe('Field', function () {
                     await expect(
                         field.validate('not-valid-uuid'),
                         'to be rejected with',
-                        {
-                            BadRequest: true,
-                            InvalidUserFirstNameTypeError: true,
-                        }
+                         expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
                     );
                 });
 
@@ -611,10 +613,7 @@ describe('Field', function () {
                     await expect(
                         field.validate(uuid.v1()),
                         'to be rejected with',
-                        {
-                            BadRequest: true,
-                            InvalidUserFirstNameTypeError: true,
-                        }
+                         expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
                     );
                 });
 
@@ -627,10 +626,7 @@ describe('Field', function () {
                     await expect(
                         field.validate('{not: "valid"}'),
                         'to be rejected with',
-                        {
-                            BadRequest: true,
-                            InvalidUserFirstNameTypeError: true,
-                        }
+                         expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
                     );
                 });
 
@@ -640,10 +636,11 @@ describe('Field', function () {
                         model: User,
                         type: Field.types.json,
                     });
-                    await expect(field.validate(false), 'to be rejected with', {
-                        BadRequest: true,
-                        InvalidUserFirstNameTypeError: true,
-                    });
+                    await expect(
+                        field.validate(false),
+                        'to be rejected with',
+                        expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                    );
                 });
 
                 it("strings against the 'decimal' type", async function () {
@@ -652,10 +649,11 @@ describe('Field', function () {
                         model: User,
                         type: Field.types.decimal,
                     });
-                    await expect(field.validate('foo'), 'to be rejected with', {
-                        BadRequest: true,
-                        InvalidUserFirstNameTypeError: true,
-                    });
+                    await expect(
+                        field.validate('foo'),
+                        'to be rejected with',
+                        expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                    );
                 });
 
                 it("string values against the 'binary' type", async function () {
@@ -664,10 +662,11 @@ describe('Field', function () {
                         model: User,
                         type: Field.types.binary,
                     });
-                    await expect(field.validate('bar'), 'to be rejected with', {
-                        BadRequest: true,
-                        InvalidUserFirstNameTypeError: true,
-                    });
+                    await expect(
+                        field.validate('bar'),
+                        'to be rejected with',
+                        expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                    );
                 });
 
                 it("object values against the 'binary' type", async function () {
@@ -676,10 +675,11 @@ describe('Field', function () {
                         model: User,
                         type: Field.types.binary,
                     });
-                    await expect(field.validate({}), 'to be rejected with', {
-                        BadRequest: true,
-                        InvalidUserFirstNameTypeError: true,
-                    });
+                    await expect(
+                        field.validate({}),
+                        'to be rejected with',
+                        expect.it('to be an error instance of', 'InvalidUserFirstNameTypeError')
+                    );
                 });
             });
         });
@@ -692,10 +692,11 @@ describe('Field', function () {
                     type: Field.types.string,
                     minLength: 6,
                 });
-                await expect(field.validate('a'), 'to be rejected with', {
-                    BadRequest: true,
-                    UserFirstNameTooShortError: true,
-                });
+                await expect(
+                    field.validate('a'),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'UserFirstNameTooShortError')
+                );
             });
 
             it('does not reject an if the value is the same lenth as the minLength', async function () {
@@ -747,10 +748,11 @@ describe('Field', function () {
                     type: Field.types.string,
                     maxLength: 6,
                 });
-                await expect(field.validate('1234567'), 'to be rejected with', {
-                    BadRequest: true,
-                    UserFirstNameTooLongError: true,
-                });
+                await expect(
+                    field.validate('1234567'),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'UserFirstNameTooLongError')
+                );
             });
 
             it('does not reject an if the value is the same lenth as the maxLength', async function () {
@@ -802,10 +804,11 @@ describe('Field', function () {
                     type: Field.types.integer,
                     oneOf: [ 1, 2 ],
                 });
-                await expect(field.validate(3), 'to be rejected with', {
-                    BadRequest: true,
-                    UnknownUserFirstNameError: true,
-                });
+                await expect(
+                    field.validate(3),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'UnknownUserFirstNameError')
+                );
             });
 
             it('does not reject an if the value is included in oneOf', async function () {
@@ -825,10 +828,11 @@ describe('Field', function () {
                     type: Field.types.string,
                     oneOf: [ 'READ', 'UNREAD' ],
                 });
-                await expect(field.validate('read'), 'to be rejected with', {
-                    BadRequest: true,
-                    UnknownUserFirstNameError: true,
-                });
+                await expect(
+                    field.validate('read'),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'UnknownUserFirstNameError')
+                );
             });
 
             it('does not reject if the value is undefined', async function () {
@@ -945,10 +949,11 @@ describe('Field', function () {
                         return false;
                     },
                 });
-                await expect(field.validate('bar value'), 'to be rejected with', {
-                    BadRequest: true,
-                    InvalidUserFirstNameError: true,
-                });
+                await expect(
+                    field.validate('bar value'),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'InvalidUserFirstNameError')
+                );
             });
 
             it('does not reject if the validator returns nothing', async function () {
@@ -972,10 +977,11 @@ describe('Field', function () {
                         };
                     },
                 });
-                await expect(field.validate('bar value'), 'to be rejected with', {
-                    BadRequest: true,
-                    UserFirstNameTooLongError: true,
-                });
+                await expect(
+                    field.validate('bar value'),
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'UserFirstNameTooLongError')
+                );
             });
 
             it("runs the new validator if the first validator returns an object with a 'validate' function", async function () {
@@ -1171,18 +1177,12 @@ describe('Field', function () {
             field.setModel(User);
 
             expect(field.errors, 'to satisfy', {
-                Required: expect.it('to be an error named', 'MissingRequiredUserFirstNameError')
-                    .and('to be an error that extends', 'BadRequest'),
-                Type: expect.it('to be an error named', 'InvalidUserFirstNameTypeError')
-                    .and('to be an error that extends', 'BadRequest'),
-                MinLength: expect.it('to be an error named', 'UserFirstNameTooShortError')
-                    .and('to be an error that extends', 'BadRequest'),
-                MaxLength: expect.it('to be an error named', 'UserFirstNameTooLongError')
-                    .and('to be an error that extends', 'BadRequest'),
-                OneOf: expect.it('to be an error named', 'UnknownUserFirstNameError')
-                    .and('to be an error that extends', 'BadRequest'),
-                Custom: expect.it('to be an error named', 'InvalidUserFirstNameError')
-                    .and('to be an error that extends', 'BadRequest'),
+                Required: expect.it('to be an error named', 'MissingRequiredUserFirstNameError'),
+                Type: expect.it('to be an error named', 'InvalidUserFirstNameTypeError'),
+                MinLength: expect.it('to be an error named', 'UserFirstNameTooShortError'),
+                MaxLength: expect.it('to be an error named', 'UserFirstNameTooLongError'),
+                OneOf: expect.it('to be an error named', 'UnknownUserFirstNameError'),
+                Custom: expect.it('to be an error named', 'InvalidUserFirstNameError'),
             });
         });
 
@@ -1218,35 +1218,23 @@ describe('Field', function () {
                 });
 
                 expect(field.errors, 'to satisfy', {
-                    Required: expect.it('to be an error named', 'MissingRequiredUserFirstNameError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    Type: expect.it('to be an error named', 'InvalidUserFirstNameTypeError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    MinLength: expect.it('to be an error named', 'UserFirstNameTooShortError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    MaxLength: expect.it('to be an error named', 'UserFirstNameTooLongError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    OneOf: expect.it('to be an error named', 'UnknownUserFirstNameError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    Custom: expect.it('to be an error named', 'InvalidUserFirstNameError')
-                        .and('to be an error that extends', 'BadRequest'),
+                    Required: expect.it('to be an error named', 'MissingRequiredUserFirstNameError'),
+                    Type: expect.it('to be an error named', 'InvalidUserFirstNameTypeError'),
+                    MinLength: expect.it('to be an error named', 'UserFirstNameTooShortError'),
+                    MaxLength: expect.it('to be an error named', 'UserFirstNameTooLongError'),
+                    OneOf: expect.it('to be an error named', 'UnknownUserFirstNameError'),
+                    Custom: expect.it('to be an error named', 'InvalidUserFirstNameError'),
                 });
 
                 field.setModel(Employee);
 
                 expect(field.errors, 'to satisfy', {
-                    Required: expect.it('to be an error named', 'MissingRequiredEmployeeFirstNameError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    Type: expect.it('to be an error named', 'InvalidEmployeeFirstNameTypeError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    MinLength: expect.it('to be an error named', 'EmployeeFirstNameTooShortError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    MaxLength: expect.it('to be an error named', 'EmployeeFirstNameTooLongError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    OneOf: expect.it('to be an error named', 'UnknownEmployeeFirstNameError')
-                        .and('to be an error that extends', 'BadRequest'),
-                    Custom: expect.it('to be an error named', 'InvalidEmployeeFirstNameError')
-                        .and('to be an error that extends', 'BadRequest'),
+                    Required: expect.it('to be an error named', 'MissingRequiredEmployeeFirstNameError'),
+                    Type: expect.it('to be an error named', 'InvalidEmployeeFirstNameTypeError'),
+                    MinLength: expect.it('to be an error named', 'EmployeeFirstNameTooShortError'),
+                    MaxLength: expect.it('to be an error named', 'EmployeeFirstNameTooLongError'),
+                    OneOf: expect.it('to be an error named', 'UnknownEmployeeFirstNameError'),
+                    Custom: expect.it('to be an error named', 'InvalidEmployeeFirstNameError'),
                 });
             });
 

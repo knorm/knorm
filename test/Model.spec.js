@@ -2,7 +2,6 @@ const Model = require('../Model');
 const Field = require('../Field');
 const Virtual = require('../Virtual');
 const Query = require('../Query');
-
 const sinon = require('sinon');
 const expect = require('unexpected')
     .clone()
@@ -659,10 +658,11 @@ describe('Model', function () {
 
             const foo = new Foo();
 
-            await expect(foo.validate(), 'to be rejected with', {
-                BadRequest: true,
-                MissingRequiredFooFooError: true,
-            });
+            await expect(
+                foo.validate(),
+                'to be rejected with',
+                expect.it('to be an error instance of', 'MissingRequiredFooFooError')
+            );
 
             await expect(fooValidationSpy, 'was called once');
             await expect(barValidationSpy, 'was called once');
@@ -693,10 +693,8 @@ describe('Model', function () {
 
                 await expect(
                     foo.validate({ fields: [ 'bar' ] }),
-                    'to be rejected with', {
-                        BadRequest: true,
-                        MissingRequiredFooBarError: true,
-                    }
+                    'to be rejected with',
+                    expect.it('to be an error instance of', 'MissingRequiredFooBarError')
                 );
 
                 await expect(fooValidationSpy, 'was not called');
@@ -728,10 +726,7 @@ describe('Model', function () {
                 await expect(
                     foo.validate({ fields: [ Foo.fields.bar ] }),
                     'to be rejected with',
-                    {
-                        BadRequest: true,
-                        MissingRequiredFooBarError: true,
-                    }
+                    expect.it('to be an error instance of', 'MissingRequiredFooBarError')
                 );
 
                 await expect(fooValidationSpy, 'was not called');

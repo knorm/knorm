@@ -327,24 +327,12 @@ class Field {
 
         const ModelField = upperCamelCase(this.model.name) + upperCamelCase(this.name);
         this.errors = {
-            Required: createError(
-                `MissingRequired${ModelField}Error`, 'BadRequest'
-            ),
-            Type: createError(
-                `Invalid${ModelField}TypeError`, 'BadRequest'
-            ),
-            MinLength: createError(
-                `${ModelField}TooShortError`, 'BadRequest'
-            ),
-            MaxLength: createError(
-                `${ModelField}TooLongError`, 'BadRequest'
-            ),
-            OneOf: createError(
-                `Unknown${ModelField}Error`, 'BadRequest'
-            ),
-            Custom: createError(
-                `Invalid${ModelField}Error`, 'BadRequest'
-            ),
+            Required: createError(`MissingRequired${ModelField}Error`),
+            Type: createError(`Invalid${ModelField}TypeError`),
+            MinLength: createError(`${ModelField}TooShortError`),
+            MaxLength: createError(`${ModelField}TooLongError`),
+            OneOf: createError(`Unknown${ModelField}Error`),
+            Custom: createError(`Invalid${ModelField}Error`),
         };
 
         return this;

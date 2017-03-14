@@ -1,31 +1,26 @@
-const httpErrors = require('httperrors');
-
 module.exports = {
     name: 'unexpected-error',
     installInto: expect => {
         expect.addAssertion(
             '<function> to be an error named <string>',
             (expect, TheError, name) => {
-                const error = new TheError();
-                return expect(error, 'to satisfy', {
-                    name,
-                    [name]: true,
-                });
+                expect(TheError.name, 'to be', name);
+                expect(new TheError().name, 'to be', name);
             }
         );
 
         expect.addAssertion(
-            '<function> to be an error that extends <string|number|function>',
-            (expect, TheError, TheParent) => {
-                if (typeof TheParent === 'string' || typeof TheParent === 'number') {
-                    TheParent = httpErrors[TheParent];
-                }
+            '<Error> to be an error instance of <string>',
+            (expect, error, name) => {
+                expect(error.name, 'to be', name);
+                expect(error.constructor.name, 'to be', name);
+            }
+        );
 
-                const error = new TheError();
-                const parent = new TheParent();
-                return expect(error, 'to satisfy', {
-                    [parent.name]: true,
-                });
+        expect.addAssertion(
+            '<function> to be an error that extends <Error>',
+            (expect, TheError, TheParent) => {
+                return expect(TheError.prototype, 'to be an', TheParent);
             }
         );
     },
