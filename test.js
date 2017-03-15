@@ -3,6 +3,10 @@ class Transaction {}
 
 module.exports = async () => {
     return new Transaction(async transaction => {
+        const userCount = await User.query
+            .where({ confirmed: true })
+            .count({ field: 'id', distinct: 'id' });
+
         const users = await User.query
             // .all()
             // .first()

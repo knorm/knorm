@@ -1141,8 +1141,7 @@ describe('Model', function () {
 
                 expect(Model.errors, 'to exhaustively satisfy', {
                     CountError: expect.it('to be an error named', 'ModelCountError'),
-                    FetchRowError: expect.it('to be an error named', 'ModelFetchRowError'),
-                    FetchRowsError: expect.it('to be an error named', 'ModelFetchRowsError'),
+                    FetchError: expect.it('to be an error named', 'ModelFetchError'),
                     SaveError: expect.it('to be an error named', 'ModelSaveError'),
                     RowNotInsertedError: expect.it('to be an error named', 'ModelNotInsertedError'),
                     RowNotUpdatedError: expect.it('to be an error named', 'ModelNotUpdatedError'),
@@ -1152,8 +1151,7 @@ describe('Model', function () {
 
                 expect(User.errors, 'to exhaustively satisfy', {
                     CountError: expect.it('to be an error named', 'UserCountError'),
-                    FetchRowError: expect.it('to be an error named', 'UserFetchRowError'),
-                    FetchRowsError: expect.it('to be an error named', 'UserFetchRowsError'),
+                    FetchError: expect.it('to be an error named', 'UserFetchError'),
                     SaveError: expect.it('to be an error named', 'UserSaveError'),
                     RowNotInsertedError: expect.it('to be an error named', 'UserNotInsertedError'),
                     RowNotUpdatedError: expect.it('to be an error named', 'UserNotUpdatedError'),
@@ -1173,8 +1171,7 @@ describe('Model', function () {
 
                 expect(User.errors, 'to exhaustively satisfy', {
                     CountError: expect.it('to be an error named', 'UserCountError'),
-                    FetchRowError: expect.it('to be an error named', 'UserFetchRowError'),
-                    FetchRowsError: expect.it('to be an error named', 'UserFetchRowsError'),
+                    FetchError: expect.it('to be an error named', 'UserFetchError'),
                     SaveError: expect.it('to be an error named', 'UserSaveError'),
                     RowNotInsertedError: expect.it('to be an error named', 'UserNotInsertedError'),
                     RowNotUpdatedError: expect.it('to be an error named', 'UserNotUpdatedError'),

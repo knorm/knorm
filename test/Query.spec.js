@@ -1,18 +1,12 @@
 const QueryBuilder = require('knex/lib/query/builder');
-const DbModel = require('../../../lib/newModels/DbModel');
-const Field = require('../../../lib/newModels/Field');
-const knex = require('../../../lib/services/knex')();
-const proxyquire = require('proxyquire');
-const newModelsMock = {};
-const Query = proxyquire('../../../lib/newModels/Query', {
-    './': () => newModelsMock,
-});
-
+const AbstractModel = require('../Model');
+const Field = require('../Field');
+const knex = require('./lib/knex')();
+const AbstractQuery = require('../Query');
 const sinon = require('sinon');
 const expect = require('unexpected')
     .clone()
-    .use(require('unexpected-sinon'))
-    .use(require('../../unexpected-sorted-array'));
+    .use(require('unexpected-sinon'));
 
 const createUserTable = table => {
     table.increments();
@@ -29,7 +23,24 @@ const truncateUserTable = () => {
     return knex.schema.raw('TRUNCATE "user" RESTART IDENTITY CASCADE');
 };
 
-class User extends DbModel {}
+class Model extends AbstractModel {}
+
+Model.fields = {
+    id: {
+        type: Field.types.integer,
+        required: true,
+    },
+    createdAt: {
+        type: Field.types.dateTime,
+        default: () => new Date(),
+    },
+    updatedAt: {
+        type: Field.types.dateTime,
+        default: () => new Date(),
+    },
+};
+
+class User extends Model {}
 User.table = 'user';
 User.fields = {
     name: {
@@ -55,7 +66,6 @@ User.fields = {
         type: Field.types.string,
     },
 };
-newModelsMock.User = User;
 
 const createImageCategoryTable = table => {
     table.increments();
@@ -67,7 +77,7 @@ const truncateImageCategoryTable = () => {
     return knex.schema.raw('TRUNCATE "image_category" RESTART IDENTITY CASCADE');
 };
 
-class ImageCategory extends DbModel {}
+class ImageCategory extends Model {}
 ImageCategory.table = 'image_category';
 ImageCategory.fields = {
     name: {
@@ -75,7 +85,6 @@ ImageCategory.fields = {
         required: true,
     },
 };
-newModelsMock.ImageCategory = ImageCategory;
 
 const createImageTable = table => {
     table.increments();
@@ -88,7 +97,7 @@ const truncateImageTable = () => {
     return knex('image').truncate();
 };
 
-class Image extends DbModel {}
+class Image extends Model {}
 Image.table = 'image';
 Image.fields = {
     userId: {
@@ -100,9 +109,8 @@ Image.fields = {
         references: ImageCategory.fields.id,
     },
 };
-newModelsMock.Image = Image;
 
-class Dummy extends DbModel {}
+class Dummy extends Model {}
 Dummy.table = 'dummy_table';
 Dummy.fields = {
     fieldOne: {
@@ -118,11 +126,11 @@ Dummy.fields = {
         references: User.fields.updatedAt,
     },
 };
-newModelsMock.Dummy = Dummy;
+
+class Query extends AbstractQuery {}
+Query.knex = knex;
 
 describe('lib/newModels/Query', function () {
-    before(require('../../helpers/preparePostgres'));
-
     before(async function () {
         await knex.schema.createTable(User.table, createUserTable);
         await knex.schema.createTable(ImageCategory.table, createImageCategoryTable);
@@ -140,30 +148,145 @@ describe('lib/newModels/Query', function () {
             expect(
                 () => new Query(),
                 'to throw',
-                new Error('Query requires a DbModel class')
+                new Error('Query requires a Model class')
             );
         });
 
-        it('throws an error if the passed model does not inherit from DbModel', function () {
+        it('throws an error if the passed model does not inherit from Model', function () {
             class Foo {}
             expect(
                 () => new Query(Foo),
                 'to throw',
-                new Error('Query requires a DbModel sub-class')
+                new Error('Query requires a subclass of Model')
             );
         });
 
         it("throws an error if the passed model's table-name is not set", function () {
-            class Foo extends DbModel {}
+            class Foo extends Model {}
             expect(
                 () => new Query(Foo),
                 'to throw',
-                new Error("'Foo.table' is not set")
+                new Error("'Foo.table' is not configured")
+            );
+        });
+
+        it('throws an error if Query.knex is not configured', function () {
+            class Foo extends Model {}
+            Foo.table = 'foo';
+            expect(
+                () => new AbstractQuery(Foo),
+                'to throw',
+                new Error('Query.knex is not configured')
             );
         });
     });
 
-    describe('Query.prototype.returning', function () {
+    describe('Query.prototype.count', function () {
+        before(async function () {
+            await knex('user').insert([
+                {
+                    id: 1,
+                    name: 'User 1',
+                    confirmed: false,
+                    description: 'this is user 1',
+                    age: 10,
+                    date_of_birth: null,
+                },
+                {
+                    id: 2,
+                    name: 'User 2',
+                    confirmed: true,
+                    description: 'this is user 2',
+                    age: 10,
+                    date_of_birth: null,
+                },
+            ]);
+            await knex('image_category').insert([
+                {
+                    id: 1,
+                    name: 'User images',
+                },
+            ]);
+            await knex('image').insert([
+                {
+                    id: 1,
+                    user_id: 1,
+                    category_id: 1,
+                },
+            ]);
+        });
+
+        after(async function () {
+            await truncateImageTable();
+            await truncateImageCategoryTable();
+            await truncateUserTable();
+        });
+
+        it('resolves with the count of all the rows in the table if not passed any options', async function () {
+            const query = new Query(User);
+            await expect(
+                query.count(),
+                'to be fulfilled with',
+                2
+            );
+        });
+
+        it("accepts a 'field' option specifying the field to count", async function () {
+            const query = new Query(User);
+            await expect(
+                query.count({ field: 'dateOfBirth' }),
+                'to be fulfilled with',
+                0 // since date_of_birth is null in both rows
+            );
+        });
+
+        it("accepts a 'distinct' option to count distinct fields", async function () {
+            const query = new Query(User);
+            await expect(
+                query.count({ distinct: User.fields.age }),
+                'to be fulfilled with',
+                1
+            );
+        });
+
+        it('rejects with a ModelCountError if a database error occurs', async function () {
+            const query = new Query(User);
+            const stub = sinon.stub(QueryBuilder.prototype, 'first').returns(
+                Promise.reject(new Error('count error'))
+            );
+            await expect(
+                query.count(),
+                'to be rejected with',
+                new User.errors.CountError('count error')
+            );
+            stub.restore();
+        });
+
+        describe("with a 'where' configured", function () {
+            it('resolves with the count of rows matching the query', async function () {
+                const query = new Query(User).where({ confirmed: true });
+                await expect(
+                    query.count(),
+                    'to be fulfilled with',
+                    1
+                );
+            });
+        });
+
+        describe("with a 'with' configured", function () {
+            it('resolves with the count of rows matching the join', async function () {
+                const imageQuery = new Query(Image).require(true);
+                const query = new Query(User).with(imageQuery);
+                await expect(
+                    query.count(),
+                    'to be fulfilled with',
+                    1
+                );
+            });
+        });
+    });
+
+    describe.skip('Query.prototype.returning', function () {
         let returningSpy;
         let query;
 
@@ -259,7 +382,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.save', function () {
+    describe.skip('Query.prototype.save', function () {
         let query;
 
         beforeEach(function () {
@@ -541,7 +664,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.where', function () {
+    describe.skip('Query.prototype.where', function () {
         let query;
 
         beforeEach(function () {
@@ -596,7 +719,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.whereNot', function () {
+    describe.skip('Query.prototype.whereNot', function () {
         let query;
 
         beforeEach(function () {
@@ -639,7 +762,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.orderBy', function () {
+    describe.skip('Query.prototype.orderBy', function () {
         let orderBySpy;
         let query;
 
@@ -685,94 +808,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.count', function () {
-        let query;
-
-        beforeEach(function () {
-            query = new Query(User);
-        });
-
-        before(async function () {
-            await knex('user').insert([
-                {
-                    id: 1,
-                    name: 'User 1',
-                    confirmed: false,
-                    description: 'this is user 1',
-                    age: 10,
-                    date_of_birth: null,
-                },
-                {
-                    id: 2,
-                    name: 'User 2',
-                    confirmed: true,
-                    description: 'this is user 2',
-                    age: 10,
-                    date_of_birth: null,
-                },
-            ]);
-        });
-
-        after(async function () {
-            await truncateUserTable();
-        });
-
-        it('resolves with the count of all the rows in the table if not passed any options', async function () {
-            await expect(
-                query.count(),
-                'to be fulfilled with',
-                2
-            );
-        });
-
-        it("accepts a 'where' option to count rows matching the query provided", async function () {
-            await expect(
-                query.count({ where: { confirmed: true } }),
-                'to be fulfilled with',
-                1
-            );
-        });
-
-        it("accepts a 'with' option to count rows matching a join", async function () {
-            await expect(
-                query.count({ with: { Image: { require: true } } }),
-                'to be fulfilled with',
-                0
-            );
-        });
-
-        it("accepts a 'field' option specifying the field to count", async function () {
-            await expect(
-                query.count({ where: { age: 10 }, field: 'dateOfBirth' }),
-                'to be fulfilled with',
-                0 // since date_of_birth is null in both rows
-            );
-        });
-
-        it("accepts a 'distinct' option to count distinct fields", async function () {
-            await expect(
-                User.count({ distinct: User.fields.age }),
-                'to be fulfilled with',
-                1
-            );
-        });
-
-        it('rejects with a ModelCountError if a fetch error occurs', async function () {
-            const stub = sinon.stub(QueryBuilder.prototype, 'first').returns(
-                Promise.reject(new Error('fetch error'))
-            );
-            await expect(User.count({ id: 1 }), 'to be rejected with', {
-                DatabaseError: true,
-                InternalServerError: true,
-                UserCountError: true,
-                message: 'fetch error',
-                data: { error: new Error('fetch error') },
-            });
-            stub.restore();
-        });
-    });
-
-    describe('Query.prototype.fields', function () {
+    describe.skip('Query.prototype.fields', function () {
         let columnsSpy;
         let query;
 
@@ -868,7 +904,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.with', function () {
+    describe.skip('Query.prototype.with', function () {
         let leftJoinSpy;
         let innerJoinSpy;
         let query;
@@ -938,7 +974,7 @@ describe('lib/newModels/Query', function () {
         });
 
         it("throws if the referenced model has no 'table' property", function () {
-            class Bar extends DbModel {}
+            class Bar extends Model {}
             expect(() => {
                 query.with(Bar);
             }, 'to throw', new Error(
@@ -1409,7 +1445,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.transaction', function () {
+    describe.skip('Query.prototype.transaction', function () {
         let query;
 
         beforeEach(function () {
@@ -1448,7 +1484,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.fetchRow', function () {
+    describe.skip('Query.prototype.fetchRow', function () {
         let query;
 
         before(async function () {
@@ -1654,7 +1690,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.fetchOne', function () {
+    describe.skip('Query.prototype.fetchOne', function () {
         let query;
 
         before(async function () {
@@ -2118,7 +2154,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.fetchRows', function () {
+    describe.skip('Query.prototype.fetchRows', function () {
         let query;
 
         before(async function () {
@@ -2426,7 +2462,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe('Query.prototype.fetchAll', function () {
+    describe.skip('Query.prototype.fetchAll', function () {
         let query;
 
         before(async function () {

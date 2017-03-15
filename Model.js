@@ -309,8 +309,7 @@ const getDefaultErrors = (model) => {
     return {
         SaveError: createError(`${model.name}SaveError`, DatabaseError),
         CountError: createError(`${model.name}CountError`, DatabaseError),
-        FetchRowError: createError(`${model.name}FetchRowError`, DatabaseError),
-        FetchRowsError: createError(`${model.name}FetchRowsError`, DatabaseError),
+        FetchError: createError(`${model.name}FetchError`, DatabaseError),
         RowNotInsertedError: createError(`${model.name}NotInsertedError`, DatabaseError), // TODO: not a db error
         RowNotUpdatedError: createError(`${model.name}NotUpdatedError`, DatabaseError), // TODO: not a db error
         RowNotFoundError: createError(`${model.name}NotFoundError`),
