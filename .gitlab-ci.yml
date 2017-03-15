@@ -1,11 +1,6 @@
-before_script:
-  - apt-get update -qq && apt-get install -y build-essentials libssl-dev
-  - curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
-  - export NVM_DIR="$HOME/.nvm"
-  - source "$NVM_DIR/nvm.sh"
-  - nvm install `cat .nvmrc`
-  - npm install
+image: node:7.7.2
 
 test:
   script:
+    - npm install
     - npm run ci
