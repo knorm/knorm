@@ -9,6 +9,10 @@ test:
     - docker
   services:
     - postgres:9.6.2
+  variables:
+    POSTGRES_DB: postgres
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ''
   script:
     - npm install
     - npm run ci
