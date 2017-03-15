@@ -1,12 +1,12 @@
 image: node:7.7.2
 
-before_script:
-  - npm install
-
 cache:
   paths:
     - node_modules/
 
 test:
+  tags:
+    - docker
   script:
+    - npm install
     - npm run ci
