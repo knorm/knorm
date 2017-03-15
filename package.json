@@ -40,5 +40,11 @@
   ],
   "dependencies": {
     "lodash": "^4.17.4"
+  },
+  "nyc": {
+    "all": true,
+    "cache": true,
+    "include": [ "*.js", "lib/**/*.js" ],
+    "exclude": [ "index.js" ]
   }
 }
