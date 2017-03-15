@@ -7,7 +7,7 @@
     "test": "mocha",
     "coverage": "nyc mocha",
     "lint": "eslint .",
-    "travis": "npm-run-all lint coverage"
+    "ci": "npm-run-all lint coverage"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
