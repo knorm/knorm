@@ -393,12 +393,7 @@ class Query extends WithKnex {
 
     _throw(name, error) {
         const TheError = this.model.errors[name];
-
-        if (error) {
-            throw new TheError(error.message);
-        }
-
-        throw new TheError();
+        throw new TheError(error);
     }
 
     async count({ field, distinct } = {}) {
