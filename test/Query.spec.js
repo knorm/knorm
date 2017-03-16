@@ -6,7 +6,37 @@ const AbstractQuery = require('../Query');
 const sinon = require('sinon');
 const expect = require('unexpected')
     .clone()
-    .use(require('unexpected-sinon'));
+    .use(require('unexpected-sinon'))
+    .use(require('unexpected-knex'))
+    .addAssertion(
+        '<Promise> to be fulfilled with sorted rows [exhaustively] satisfying <array>',
+        (expect, subject, value) => {
+            const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
+
+            expect.errorMode = 'bubble';
+            return expect(
+                subject,
+                'to be fulfilled with value satisfying',
+                subject => {
+                    expect(subject, 'to be an array');
+                    expect(
+                        subject,
+                        'sorted by',
+                        ascendingOrder,
+                        'to [exhaustively] satisfy',
+                        value
+                    );
+                }
+            );
+        }
+    );
+
+class Query extends AbstractQuery {}
+Query.knex = knex;
+
+class Model extends AbstractModel {}
+
+Model.Query = Query;
 
 const createUserTable = table => {
     table.increments();
@@ -19,11 +49,9 @@ const createUserTable = table => {
     table.string('db_default').defaultTo('set-by-db');
 };
 
-const truncateUserTable = () => {
+const truncateUserTable = async () => {
     return knex.schema.raw('TRUNCATE "user" RESTART IDENTITY CASCADE');
 };
-
-class Model extends AbstractModel {}
 
 Model.fields = {
     id: {
@@ -73,7 +101,7 @@ const createImageCategoryTable = table => {
     table.string('name').notNullable();
 };
 
-const truncateImageCategoryTable = () => {
+const truncateImageCategoryTable = async () => {
     return knex.schema.raw('TRUNCATE "image_category" RESTART IDENTITY CASCADE');
 };
 
@@ -93,7 +121,7 @@ const createImageTable = table => {
     table.integer('category_id').references('id').inTable('user');
 };
 
-const truncateImageTable = () => {
+const truncateImageTable = async () => {
     return knex('image').truncate();
 };
 
@@ -126,9 +154,6 @@ Dummy.fields = {
         references: User.fields.updatedAt,
     },
 };
-
-class Query extends AbstractQuery {}
-Query.knex = knex;
 
 describe('lib/newModels/Query', function () {
     before(async function () {
@@ -178,6 +203,483 @@ describe('lib/newModels/Query', function () {
                 'to throw',
                 new Error('Query.knex is not configured')
             );
+        });
+    });
+
+    describe('Query.prototype.fetch', function () {
+        before(async function () {
+            await knex('user').insert([
+                {
+                    id: 1,
+                    name: 'User 1',
+                    confirmed: false,
+                    description: 'this is user 1',
+                    age: 10,
+                    date_of_birth: null,
+                },
+                {
+                    id: 2,
+                    name: 'User 2',
+                    confirmed: true,
+                    description: 'this is user 2',
+                    age: 10,
+                    date_of_birth: null,
+                },
+            ]);
+            await knex('image_category').insert([
+                {
+                    id: 1,
+                    name: 'User images',
+                },
+            ]);
+            await knex('image').insert([
+                {
+                    id: 1,
+                    user_id: 1,
+                    category_id: 1,
+                },
+            ]);
+        });
+
+        after(async function () {
+            await truncateImageTable();
+            await truncateImageCategoryTable();
+            await truncateUserTable();
+        });
+
+        it('resolves with all the rows in the table', async function () {
+            const query = new Query(User);
+            await expect(
+                query.fetch(),
+                'to be fulfilled with value satisfying',
+                rows => expect(rows, 'to have length', 2)
+            );
+        });
+
+        it('resolves with instances of the model', async function () {
+            const query = new Query(User);
+            await expect(
+                query.fetch(),
+                'to be fulfilled with value satisfying',
+                [
+                    expect.it('to be a', User),
+                    expect.it('to be a', User),
+                ]
+            );
+        });
+
+        it('populates the instances with data for all the fields', async function () {
+            const query = new Query(User);
+            await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows exhaustively satisfying',
+                [
+                    new User({
+                        id: 1,
+                        createdAt: null,
+                        updatedAt: null,
+                        name: 'User 1',
+                        confirmed: false,
+                        description: 'this is user 1',
+                        age: 10,
+                        dateOfBirth: null,
+                        dbDefault: 'set-by-db',
+                    }),
+                    new User({
+                        id: 2,
+                        createdAt: null,
+                        updatedAt: null,
+                        name: 'User 2',
+                        confirmed: true,
+                        description: 'this is user 2',
+                        age: 10,
+                        dateOfBirth: null,
+                        dbDefault: 'set-by-db',
+                    }),
+                ]
+            );
+        });
+
+        it('rejects with a ModelFetchError if a database error occurs', async function () {
+            const query = new Query(User);
+            const stub = sinon.stub(QueryBuilder.prototype, 'select').returns(
+                Promise.reject(new Error('fetch error'))
+            );
+            await expect(
+                query.fetch(),
+                'to be rejected with',
+                new User.errors.FetchError('fetch error')
+            );
+            stub.restore();
+        });
+
+        describe("with 'require' configured and no rows are matched", function () {
+            let selectStub;
+
+            before(function () {
+                selectStub = sinon.stub(QueryBuilder.prototype, 'select')
+                    .returns(Promise.resolve([]));
+            });
+
+            beforeEach(function () {
+                selectStub.reset();
+            });
+
+            after(function () {
+                selectStub.restore();
+            });
+
+            it('rejects with a RowsNotFoundError', async function () {
+                const query = new Query(User).require();
+                await expect(
+                    query.fetch(),
+                    'to be rejected with',
+                    new User.errors.RowsNotFoundError()
+                );
+            });
+
+            describe("with 'first' configured", function () {
+                it('rejects with a RowNotFoundError', async function () {
+                    const query = new Query(User).require().first();
+                    await expect(
+                        query.fetch(),
+                        'to be rejected with',
+                        new User.errors.RowNotFoundError()
+                    );
+                });
+            });
+        });
+
+        describe("with 'first' configured", function () {
+            it('resolves with an instance populated with data from the first row', async function () {
+                const query = new Query(User).first();
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with value exhaustively satisfying',
+                    new User({
+                        id: 1,
+                        createdAt: null,
+                        updatedAt: null,
+                        name: 'User 1',
+                        confirmed: false,
+                        description: 'this is user 1',
+                        age: 10,
+                        dateOfBirth: null,
+                        dbDefault: 'set-by-db',
+                    })
+                );
+            });
+        });
+
+        describe("with 'forge' disabled", function () {
+            it('resolves with plain JS objects', async function () {
+                const query = new Query(User).forge(false);
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with value satisfying',
+                    [
+                        expect.it('not to be a', User),
+                        expect.it('not to be a', User),
+                    ]
+                );
+            });
+
+            it("uses the model's field names as the objects' keys", async function () {
+                const query = new Query(User).forge(false);
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        {
+                            id: 1,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 1',
+                            confirmed: false,
+                            description: 'this is user 1',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        },
+                        {
+                            id: 2,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 2',
+                            confirmed: true,
+                            description: 'this is user 2',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        },
+                    ]
+                );
+            });
+        });
+
+        describe("with a 'where' configured", function () {
+            it('resolves only the rows matching the object', async function () {
+                const query = new Query(User).where({ id: 2 });
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        new User({
+                            id: 2,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 2',
+                            confirmed: true,
+                            description: 'this is user 2',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        }),
+                    ]
+                );
+
+            });
+        });
+
+        describe("with a 'with' configured", function () {
+            it("rejects with an error if a fetch is attempted from the joined model's", async function () {
+                const imageQuery = new Query(Image);
+                new Query(User).with(imageQuery);
+                await expect(
+                    imageQuery.fetch(),
+                    'to be rejected with error satisfying',
+                    new Error(
+                        "Cannot fetch from a child query. (Image.query is User.query's child)"
+                    )
+                );
+            });
+
+            it('includes the joined model in the returned instance', async function () {
+                const query = new Query(User).with(new Query(Image));
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        Object.assign(new User({
+                            id: 1,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 1',
+                            confirmed: false,
+                            description: 'this is user 1',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        }, {
+                            image: new Image({
+                                id: 1,
+                                userId: 1,
+                                categoryId: 1,
+                            }),
+                        })),
+                        new User({
+                            id: 2,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 2',
+                            confirmed: true,
+                            description: 'this is user 2',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        }),
+                    ]
+                );
+            });
+
+            it('allows passing a model directly', async function () {
+                const query = new Query(User).with(Image);
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        Object.assign(new User({
+                            id: 1,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 1',
+                            confirmed: false,
+                            description: 'this is user 1',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        }, {
+                            image: new Image({
+                                id: 1,
+                                userId: 1,
+                                categoryId: 1,
+                            }),
+                        })),
+                        new User({
+                            id: 2,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 2',
+                            confirmed: true,
+                            description: 'this is user 2',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        }),
+                    ]
+                );
+            });
+
+            it('allows passing options when a model is passed directly', async function () {
+                const query = new Query(User).with(Image, { require: true });
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        Object.assign(new User({
+                            id: 1,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 1',
+                            confirmed: false,
+                            description: 'this is user 1',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        }, {
+                            image: new Image({
+                                id: 1,
+                                userId: 1,
+                                categoryId: 1,
+                            }),
+                        })),
+                    ]
+                );
+            });
+
+            it('does not include the joined model if no rows were matched', async function () {
+                const query = new Query(User)
+                    .with(new Query(Image))
+                    .where({ id: 2 });
+
+                const user2 = new User({
+                    id: 2,
+                    createdAt: null,
+                    updatedAt: null,
+                    name: 'User 2',
+                    confirmed: true,
+                    description: 'this is user 2',
+                    age: 10,
+                    dateOfBirth: null,
+                    dbDefault: 'set-by-db',
+                });
+                user2.image = undefined;
+
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        user2,
+                    ]
+                );
+            });
+
+            describe("with 'require' configured on the child query", function () {
+                it('returns the instances with matching data in the joined table', async function () {
+                    const query = new Query(User).with(new Query(Image).require(true));
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            Object.assign(new User({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }, {
+                                image: new Image({
+                                    id: 1,
+                                    userId: 1,
+                                    categoryId: 1,
+                                }),
+                            })),
+                        ]
+                    );
+                });
+            });
+
+            describe("with 'forge' disabled", function () {
+                it('includes a plain object of the requested model', async function () {
+                    const query = new Query(User)
+                        .forge(false)
+                        .with(new Query(Image));
+
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            {
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                                image: {
+                                    id: 1,
+                                    userId: 1,
+                                    categoryId: 1,
+                                },
+                            },
+                            {
+                                id: 2,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 2',
+                                confirmed: true,
+                                description: 'this is user 2',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            },
+                        ]
+                    );
+                });
+
+                it('does not include the joined model if no rows were matched', async function () {
+                    const query = new Query(User)
+                        .with(new Query(Image))
+                        .where({ id: 2 })
+                        .forge(false);
+
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            {
+                                id: 2,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 2',
+                                confirmed: true,
+                                description: 'this is user 2',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                                image: undefined,
+                            },
+                        ]
+                    );
+                });
+            });
         });
     });
 
@@ -275,8 +777,7 @@ describe('lib/newModels/Query', function () {
 
         describe("with a 'with' configured", function () {
             it('resolves with the count of rows matching the join', async function () {
-                const imageQuery = new Query(Image).require(true);
-                const query = new Query(User).with(imageQuery);
+                const query = new Query(User).with(new Query(Image).require(true));
                 await expect(
                     query.count(),
                     'to be fulfilled with',
