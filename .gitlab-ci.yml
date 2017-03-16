@@ -5,6 +5,7 @@ cache:
     - node_modules/
 
 variables:
+  POSTGRES_HOST: postgres
   POSTGRES_DB: postgres
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: ''
