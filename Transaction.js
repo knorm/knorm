@@ -2,12 +2,18 @@ const WithKnex = require('./lib/WithKnex');
 
 class Transaction extends WithKnex {
     constructor(callback) {
+        if (typeof callback !== 'function') {
+            throw new Error('Transaction requires a callback');
+        }
+
         super();
+
         this.callback = callback;
+        this.knex = this.constructor.knex;
     }
 
     async execute() {
-        return this.constructor.knex.transaction(async transaction => {
+        return this.knex.transaction(async transaction => {
             return Promise.resolve(this.callback(transaction))
                 .then(transaction.commit)
                 .catch(transaction.rollback);
