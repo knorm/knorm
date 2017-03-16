@@ -151,7 +151,7 @@ require('yargs')
         {
             name: {
                 alias: 'n',
-                default: 'knex-orm-postgres',
+                default: 'knorm-postgres',
                 describe: 'The name of the postgres container',
             },
             port: {
@@ -199,7 +199,7 @@ require('yargs')
         {
             name: {
                 alias: 'n',
-                default: 'knex-orm-postgres',
+                default: 'knorm-postgres',
                 describe: 'The name of the postgres container',
             },
         },
@@ -221,8 +221,10 @@ require('yargs')
                     return stopContainer(container);
                 })
                 .then(container => {
-                    // eslint-disable-next-line no-console
-                    console.log('Container stopped', container);
+                    if (container) {
+                        // eslint-disable-next-line no-console
+                        console.log('Container stopped', container);
+                    }
                     process.exit(0);
                 })
                 .catch(error => {
@@ -240,7 +242,7 @@ require('yargs')
         {
             name: {
                 alias: 'n',
-                default: 'knex-orm-postgres',
+                default: 'knorm-postgres',
                 describe: 'The name of the postgres container',
             },
         },
@@ -253,6 +255,7 @@ require('yargs')
                     if (!container) {
                         // eslint-disable-next-line no-console
                         console.log('No container found');
+                        return;
                     }
                     if (container.status.startsWith('Removed')) {
                         return container;
@@ -262,8 +265,10 @@ require('yargs')
                     return removeContainer(container);
                 })
                 .then(container => {
-                    // eslint-disable-next-line no-console
-                    console.log('Container removed', container);
+                    if (container) {
+                        // eslint-disable-next-line no-console
+                        console.log('Container removed', container);
+                    }
                     process.exit(0);
                 })
                 .catch(error => {

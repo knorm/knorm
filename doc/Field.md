@@ -5,7 +5,7 @@ adding a `maxLength` validator for every field of type `string`, you could
 override the `string` validator to add max-length validation:
 
 ```js
-const { Field: AbstractField } = require('knex-orm');
+const { Field: AbstractField } = require('knorm');
 
 class Field extends AbstractField {
   validateIsString(value) {

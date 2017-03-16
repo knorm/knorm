@@ -1,6 +1,6 @@
-# knex-orm
+# knorm
 
-ORM for knex with support for joins.
+[![build status](https://gitlab.one.com/jmu/knorm/badges/master/build.svg)](https://gitlab.one.com/jmu/knorm/commits/master)
+[![coverage report](https://gitlab.one.com/jmu/knorm/badges/master/coverage.svg)](https://gitlab.one.com/jmu/knorm/commits/master)
 
-[![build status](https://gitlab.one.com/jmu/knex-orm/badges/master/build.svg)](https://gitlab.one.com/jmu/knex-orm/commits/master)
-[![coverage report](https://gitlab.one.com/jmu/knex-orm/badges/master/coverage.svg)](https://gitlab.one.com/jmu/knex-orm/commits/master)
+ORM for [Knex.js](http://knexjs.org/) with built-in support for joins.

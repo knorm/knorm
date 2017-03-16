@@ -1,5 +1,5 @@
 {
-  "name": "knex-orm",
+  "name": "knorm",
   "version": "0.0.1",
   "description": "A purely class-based ORM for Knex.js",
   "main": "index.js",
