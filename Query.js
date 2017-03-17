@@ -23,13 +23,31 @@ class Query extends WithKnex {
         this.alias = model.table;
         this.index = 0;
 
-        this._fields = [];
-        this._returning = [];
+        const idField = this.model.fields[this.model.idField];
+        this._fields = [
+            { field: idField, alias: idField.name },
+        ];
+        this._returning = [
+            { field: idField, alias: idField.name },
+        ];
+
         this._orderBy = [];
+        this._groupBy = [];
         this._with = [];
+        this._on = [];
+
         this._where = [];
         this._whereNot = [];
-        this._on = [];
+        this._orWhere = [];
+        this._orWhereNot = [];
+
+        this._having = [];
+        this._havingNot = [];
+        this._orHaving = [];
+        this._orHavingNot = [];
+
+        this._parsedRows = [];
+        this._parsedData = {};
     }
 
     _getField(name) {
@@ -56,37 +74,81 @@ class Query extends WithKnex {
         return field;
     }
 
-    _getValidatedFields(fields) {
-        if (isObject(fields)) {
-            return Object.keys(fields).map(name => {
-                const field = this._getValidatedField(name);
-                const alias = isString(fields[name]) ? fields[name] : field.name;
-                return { field, alias };
-            });
-        }
-
+    _getValidatedFields(fields, options = {}) {
         if (!isArray(fields)) {
             fields = [ fields ];
         }
 
-        if (isArray(fields)) {
-            return fields.map(field => {
+        const validatedFields = [];
+
+        fields.forEach(field => {
+            if (isString(field) || field instanceof Field) {
                 field = this._getValidatedField(field);
+
+                if (options.exclude && options.exclude === field.name) {
+                    return;
+                }
+
+                if (!options.alias) {
+                    return validatedFields.push({ field });
+                }
+
                 const alias = field.name;
-                return { field, alias };
-            });
-        }
+                return validatedFields.push({ field, alias });
+            }
+
+            if (isObject(fields)) {
+                return Object.keys(fields).map(name => {
+                    const field = this._getValidatedField(name);
+
+                    if (options.exclude && options.exclude === field.name) {
+                        return;
+                    }
+
+                    if (!options.alias) {
+                        return validatedFields.push({ field });
+                    }
+
+                    let alias = fields[name];
+                    if (!isString(alias)) {
+                        alias = field.name;
+                    }
+
+                    return validatedFields.push({ field, alias });
+                });
+            }
+        });
+
+        return validatedFields;
     }
 
-    fields(fields) {
-        this._fields.push(...this._getValidatedFields(fields));
+    _pushValidatedFields(key, fields, options) {
+        this[`_${key}`].push(...this._getValidatedFields(fields, options));
         return this;
     }
 
-    orderBy(order) {
-        Object.keys(order).forEach(fieldName => {
+    fields(fields) {
+        this._pushValidatedFields('fields', fields, {
+            alias: true,
+            exclude: this.model.idField,
+        });
+        this._hasFields = true;
+        return this;
+    }
+
+    returning(fields) {
+        this._pushValidatedFields('returning', fields, {
+            alias: true,
+            exclude: this.model.idField,
+        });
+        this._hasReturning = true;
+        return this;
+    }
+
+    orderBy(orderBy) {
+        Object.keys(orderBy).forEach(fieldName => {
             const field = this._getField(fieldName);
-            let direction = order[fieldName];
+            let direction = orderBy[fieldName];
 
             if (direction === 1) {
                 direction = 'asc';
@@ -98,6 +160,10 @@ class Query extends WithKnex {
         });
 
         return this;
+    }
+
+    groupBy(fields) {
+        return this._pushValidatedFields('groupBy', fields);
     }
 
     with(queries, options) {
@@ -157,37 +223,37 @@ class Query extends WithKnex {
         return this;
     }
 
-    where(where) {
-        Object.keys(where).forEach(fieldName => {
+    _pushWhereOrHaving(key, whereOrHaving) {
+        Object.keys(whereOrHaving).forEach(fieldName => {
             const field = this._getField(fieldName);
-            const value = where[fieldName];
+            const value = whereOrHaving[fieldName];
 
-            this._where.push({ field, value });
+            this[`_${key}`].push({ field, value });
         });
 
         return this;
     }
 
-    whereNot(whereNot) {
-        Object.keys(whereNot).forEach(fieldName => {
-            const field = this._getField(fieldName);
-            const value = whereNot[fieldName];
+    where(where) { return this._pushWhereOrHaving('where', where); }
+    whereNot(whereNot) { return this._pushWhereOrHaving('whereNot', whereNot); }
+    orWhere(orWhere) { return this._pushWhereOrHaving('orWhere', orWhere); }
+    orWhereNot(orWhereNot) { return this._pushWhereOrHaving('orWhereNot', orWhereNot); }
 
-            this._whereNot.push({ field, value });
-        });
-
-        return this;
-    }
-
-    returning(fields) {
-        this._returning.push(...this._getValidatedFields(fields));
-        return this;
-    }
+    having(having) { return this._pushWhereOrHaving('having', having); }
+    havingNot(havingNot) { return this._pushWhereOrHaving('havingNot', havingNot); }
+    orHaving(orHaving) { return this._pushWhereOrHaving('orHaving', orHaving); }
+    orHavingNot(orHavingNot) { return this._pushWhereOrHaving('orHavingNot', orHavingNot); }
 
     options(options) {
         Object.keys(options).forEach(option => {
             if (typeof this[option] !== 'function') {
                 throw new Error(`Unknown option '${option}'`);
+            }
+            if (
+                option.startsWith('_') ||
+                [ 'count', 'fetch', 'save' ].includes(option)
+            ) {
+                throw new Error(`'${option}' is not an allowed option`);
             }
 
             this[option].call(this, options[option]);
@@ -227,9 +293,7 @@ class Query extends WithKnex {
     }
 
     on(fields) {
-        this._on.push(...this._getValidatedFields(fields));
-
-        return this;
+        return this._pushValidatedFields('on', fields);
     }
 
     _getColumn(field, alias) {
@@ -268,40 +332,45 @@ class Query extends WithKnex {
         this.builder.returning(this._getColumns(this._returning));
     }
 
-    _addWhere() {
-        this._where.forEach(({ field, value }) => {
+    _addWhereOrHaving(key) {
+        this[`_${key}`].forEach(({ field, value }) => {
             const column = this._getColumn(field);
 
             if (value === null) {
-                this.builder.whereNull(column);
+                this.builder[`${key}Null`](column);
             } else if (Array.isArray(value)) {
-                this.builder.whereIn(column, value);
+                this.builder[`${key}In`](column, value);
+            } else if (typeof value === 'object') {
+                this.builder[`${key}`](column, value.operator, value.value);
+            } else if (key.toLowerCase().indexOf('having') > -1) {
+                // FIXME: QueryBuilder expects `having` to have an operator, the
+                // behaviour added in the next line is bound to change at some point
+                this.builder[`${key}`](column, '=', value);
             } else {
-                this.builder.where(column, value);
+                this.builder[`${key}`](column, value);
             }
         });
     }
 
-    _addWhereNot() {
-        this._whereNot.forEach(({ field, value }) => {
-            const column = this._getColumn(field);
+    _addWhere() { this._addWhereOrHaving('where'); }
+    _addWhereNot() { this._addWhereOrHaving('whereNot'); }
+    _addOrWhere() { this._addWhereOrHaving('orWhere'); }
+    _addOrWhereNot() { this._addWhereOrHaving('orWhereNot'); }
 
-            if (value === null) {
-                this.builder.whereNotNull(column);
-            } else if (Array.isArray(value)) {
-                this.builder.whereNotIn(column, value);
-            } else {
-                this.builder.whereNot(column, value);
-            }
-        });
-    }
+    _addHaving() { this._addWhereOrHaving('having'); }
+    _addHavingNot() { this._addWhereOrHaving('havingNot'); }
+    _addOrHaving() { this._addWhereOrHaving('orHaving'); }
+    _addOrHavingNot() { this._addWhereOrHaving('orHavingNot'); }
 
     _addOrderBy() {
         this._orderBy.forEach(({ field, direction }) => {
             const column = this._getColumn(field);
-
             this.builder.orderBy(column, direction);
         });
+    }
+
+    _addGroupBy() {
+        this.builder.groupBy(this._getColumns(this._groupBy));
     }
 
     _addLimit() {
@@ -320,13 +389,14 @@ class Query extends WithKnex {
 
             let on;
             if (query._on.length) {
-                on = query._on;
                 if (isBackReference) {
-                    on = on.map(field => referenced[this.model.name][field.name]);
+                    on = query._on.map(({ field }) => referenced[field.name]);
+                } else {
+                    on = query._on.map(({ field }) => field);
                 }
             } else {
                 const references = this.model.referenced[query.model.name];
-                on = Object.values(references);
+                on = Object.values(references || referenced);
             }
 
             on = on.reduce((on, field) => {
@@ -352,61 +422,54 @@ class Query extends WithKnex {
         });
     }
 
+    _getFieldsWithAliases() {
+        return Object.values(this.model.fields).map(field => ({
+            field,
+            alias: field.name,
+        }));
+    }
+
     _prepareBuilder(options = {}) {
         if (options.forSave) {
-            if (this._returning.length) {
-                this._addReturning();
+            if (!this._hasReturning) {
+                this._returning = this._getFieldsWithAliases();
             }
-            return;
+            return this._addReturning();
         }
 
         if (options.includeFields !== false) {
-            if (!this._fields.length) {
-                this._fields = Object.values(this.model.fields).map(field => {
-                    return {
-                        field,
-                        alias: field.name,
-                    };
-                });
+            if (!this._hasFields) {
+                this._fields = this._getFieldsWithAliases();
             }
             this._addFields();
         }
 
-        if (this._where.length) {
-            this._addWhere();
-        }
+        if (this._with.length) { this._addWith(options); }
 
-        if (this._whereNot.length) {
-            this._addWhereNot();
-        }
+        if (this._where.length) { this._addWhere(); }
+        if (this._whereNot.length) { this._addWhereNot(); }
+        if (this._orWhere.length) { this._addOrWhere(); }
+        if (this._orWhereNot.length) { this._addOrWhereNot(); }
 
-        if (this._with.length) {
-            this._addWith(options);
-        }
+        if (this._groupBy.length) { this._addGroupBy(); }
+
+        if (this._having.length) { this._addHaving(); }
+        if (this._havingNot.length) { this._addHavingNot(); }
+        if (this._orHaving.length) { this._addOrHaving(); }
+        if (this._orHavingNot.length) { this._addOrHavingNot(); }
+
+        if (this._orderBy.length) { this._addOrderBy(); }
 
         if (this.isChild) {
-            return;
+            return this;
         }
 
-        if (this._transaction) {
-            this._addTransaction();
-        }
+        if (this._transaction) { this._addTransaction(); }
+        if (this._first) { this._limit = 1; }
+        if (this._limit !== undefined) { this._addLimit(); }
+        if (this._offset !== undefined) { this._addOffset(); }
 
-        if (this._orderBy.length) {
-            this._addOrderBy();
-        }
-
-        if (this._first) {
-            this._limit = 1;
-        }
-
-        if (this._limit !== undefined) {
-            this._addLimit();
-        }
-
-        if (this._offset !== undefined) {
-            this._addOffset();
-        }
+        return this;
     }
 
     _throw(name, error) {
@@ -418,7 +481,9 @@ class Query extends WithKnex {
         this._prepareBuilder({ includeFields: false });
 
         if (distinct) {
-            this.builder.countDistinct(this._getColumn(this._getValidatedField(distinct)));
+            this.builder.countDistinct(
+                this._getColumn(this._getValidatedField(distinct))
+            );
         } else if (field) {
             this.builder.count(this._getColumn(this._getValidatedField(field)));
         } else {
@@ -435,62 +500,62 @@ class Query extends WithKnex {
         return parseInt(row.count);
     }
 
-    _getAliasedData(row) {
-        return Object.keys(row).reduce((data, column) => {
-            const value = row[column];
-            const pair = column.split('.');
-            const alias = pair[0];
-            const field = pair[1];
-
-            data[alias] = data[alias] || {};
-            data[alias][field] = value;
-
-            return data;
-        }, {});
-    }
-
-    _hasAliasedData(data) {
+    _hasData(data) {
         return Object.values(data[this.alias]).some(value => value !== null);
     }
 
-    _removeAliasesFromData(data) {
-        this._dataWithoutAlias = data[this.alias];
+    _parseData(data) {
+        const instanceData = data[this.alias];
+        const id = instanceData[this.model.idField];
+
+        let parsedData = this._parsedData[id];
+        if (!parsedData) {
+            // eslint-disable-next-line new-cap
+            parsedData = this._forge === false ? instanceData : new this.model(
+                instanceData
+            );
+            this._parsedData[id] = parsedData;
+            this._parsedRows.push(parsedData);
+        }
 
         if (this._with.length) {
             this._with.forEach(query => {
-                if (query._hasAliasedData(data)) {
-                    query._removeAliasesFromData(data);
-                    this._dataWithoutAlias[query._as] = query._dataWithoutAlias;
+                if (query._hasData(data)) {
+                    const nestedData = query._parseData(data);
+
+                    if (parsedData[query._as]) {
+                        parsedData[query._as] = [
+                            parsedData[query._as],
+                            nestedData,
+                        ];
+                    } else {
+                        parsedData[query._as] = nestedData;
+                    }
                 }
             });
         }
 
-        return this._dataWithoutAlias;
+        return parsedData;
     }
 
-    _removeAliasesFromRow(row) {
-        return this._removeAliasesFromData(this._getAliasedData(row));
-    }
+    _parseRows(rows) {
+        rows.forEach(row => {
+            const data = Object.keys(row).reduce((data, column) => {
+                const value = row[column];
+                const pair = column.split('.');
+                const alias = pair[0];
+                const field = pair[1];
 
-    _forgeFromData(data) {
+                data[alias] = data[alias] || {};
+                data[alias][field] = value;
 
-        // eslint-disable-next-line new-cap
-        this._instance = new this.model(data[this.alias]);
+                return data;
+            }, {});
 
-        if (this._with.length) {
-            this._with.forEach(query => {
-                if (query._hasAliasedData(data)) {
-                    query._forgeFromData(data);
-                    this._instance[query._as] = query._instance;
-                }
-            });
-        }
+            this._parseData(data);
+        });
 
-        return this._instance;
-    }
-
-    _forgeFromRow(row) {
-        return this._forgeFromData(this._getAliasedData(row));
+        return this._parsedRows.slice();
     }
 
     async fetch() {
@@ -506,27 +571,24 @@ class Query extends WithKnex {
 
         this._prepareBuilder();
 
-        let result;
+        let rows;
         try {
-            result = await this.builder.select();
+            rows = await this.builder.select();
         } catch (error) {
             this._throw('FetchError', error);
         }
 
-        if (!result.length && this._require) {
+        if (!rows.length && this._require) {
             this._throw(this._first ? 'RowNotFoundError' : 'RowsNotFoundError');
         }
 
-        if (this._forge === false) {
-            result = result.map(this._removeAliasesFromRow, this);
-        } else {
-            result = result.map(this._forgeFromRow, this);
-        }
+        rows = this._parseRows(rows);
 
-        return this._first ? result[0] : result;
+        return this._first ? rows[0] : rows;
     }
 
     async save(model, { transaction } = {}) {
+        // TODO
         const Model = this.model;
 
         if (!(model instanceof Model)) {

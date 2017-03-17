@@ -11,27 +11,25 @@ const updateUsers => async () => {
     const count = await User.query
       .transaction(transaction)
       .where({ confirmed: true })
-      .count({ field: 'id' });
+      .count({ field: 'id' }); // or { field: User.fields.id }
 
     if (count < 1) {
       return;
     }
 
     const users = await User.query
-      .where({ id: 1 })
-      .require()
+      .where({ hasPublicImage: null })
+      .orWhere({ hasPrivateImage: null })
       .with([
         Image.query
           .as('publicImage')
-          .on('userId')
-          .fields('id')
+          .fields('id') // or .fields(User.fields.id) or .fields(['id'])
           .where({ public: true }),
         Image.query
           .as('privateImage')
-          .on(Image.fields.userId)
           .fields(Image.fields.id)
           .where({ public: false }),
-        ])
+      ])
       .transaction(transaction, { forUpdate: true })
       .fetch();
 
@@ -46,8 +44,7 @@ const updateUsers => async () => {
 
     return User.query
       .transaction(transaction)
-      .require()
       .save(users);
   });
-}
+};
 ```

@@ -317,6 +317,8 @@ const getDefaultErrors = (model) => {
     };
 };
 
+Model.idField = 'id';
+
 module.exports = Model;
 
 // circular deps
