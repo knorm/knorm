@@ -158,14 +158,13 @@ class Model {
     }
 
     static async fetchById(id, options) {
-        // TODO: FIXME: this should use Model.idField
-        if (!this.fields.id) {
-            throw new Error(`${this.name} has no id field configured`);
+        if (!this.fields[this.idField]) {
+            throw new Error(`${this.name} has no id field ('${this.idField}') configured`);
         }
 
         return this.query
             .options(options)
-            .where({ id })
+            .where({ [this.idField]: id })
             .require()
             .first()
             .fetch();

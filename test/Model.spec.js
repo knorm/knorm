@@ -1465,13 +1465,13 @@ describe('Model', function () {
             query.fetch.reset();
         });
 
-        it('rejects with an error if no id field configured', async function () {
+        it('rejects with an error if no id field is configured', async function () {
             class Foo extends Model {}
             Foo.Query = sinon.stub();
             return expect(
                 Foo.fetchById(1),
                 'to be rejected with',
-                new Error('Foo has no id field configured')
+                new Error("Foo has no id field ('id') configured")
             );
         });
 
@@ -1522,6 +1522,21 @@ describe('Model', function () {
                 'to be rejected with',
                 new Error('foo happens')
             );
+        });
+
+        describe('with a custom idField', function () {
+            it('rejects with the correct error if the id field is not configured', function () {
+                class Foo extends Model {}
+                Foo.Query = sinon.stub();
+                Foo.idField = 'uniqueId';
+                return expect(
+                    Foo.fetchById(1),
+                    'to be rejected with',
+                    new Error("Foo has no id field ('uniqueId') configured")
+                );
+            });
+
+            it('uses the configured id field to fetch the data');
         });
     });
 });
