@@ -158,6 +158,7 @@ class Model {
     }
 
     static async fetchById(id, options) {
+        // TODO: FIXME: this should use Model.idField
         if (!this.fields.id) {
             throw new Error(`${this.name} has no id field configured`);
         }

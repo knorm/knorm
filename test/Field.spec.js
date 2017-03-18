@@ -1102,7 +1102,7 @@ describe('Field', function () {
             userCreatedAt.setReference(createdAt);
 
             expect(User.references, 'to equal', {});
-            expect(Image.references, 'to exhaustively satisfy', {
+            expect(Image.references, 'to equal', {
                 User: {
                     userId: id,
                     userCreatedAt: createdAt,
@@ -1110,7 +1110,7 @@ describe('Field', function () {
             });
         });
 
-        it('adds back-references to the referenced model', function () {
+        it('adds reverse-references to the referenced model', function () {
             class User extends Model {}
             class Image extends Model {}
 
@@ -1139,10 +1139,41 @@ describe('Field', function () {
             userCreatedAt.setReference(createdAt);
 
             expect(Image.referenced, 'to equal', {});
-            expect(User.referenced, 'to exhaustively satisfy', {
+            expect(User.referenced, 'to equal', {
                 Image: {
-                    id: userId,
-                    createdAt: userCreatedAt,
+                    id: [ userId ],
+                    createdAt: [ userCreatedAt ],
+                },
+            });
+        });
+
+        it("doesn't overwrite reverse-references to the same field", function () {
+            class User extends Model {}
+            class Image extends Model {}
+
+            const id = new Field({
+                name: 'id',
+                model: User,
+                type: Field.types.integer,
+            });
+            const userId1 = new Field({
+                name: 'userId1',
+                model: Image,
+                type: Field.types.integer,
+            });
+            const userId2 = new Field({
+                name: 'userId2',
+                model: Image,
+                type: Field.types.integer,
+            });
+
+            userId1.setReference(id);
+            userId2.setReference(id);
+
+            expect(Image.referenced, 'to equal', {});
+            expect(User.referenced, 'to equal', {
+                Image: {
+                    id: [ userId1, userId2 ],
                 },
             });
         });
@@ -1239,7 +1270,7 @@ describe('Field', function () {
             });
 
             describe('when the field has a reference', function () {
-                it('updates the back-references to the new model', function () {
+                it('updates the reverse-references to the new model', function () {
                     class Image extends Model {}
 
                     const id = new Field({
@@ -1254,9 +1285,9 @@ describe('Field', function () {
                         references: id,
                     });
 
-                    expect(User.referenced, 'to exhaustively satisfy', {
+                    expect(User.referenced, 'to equal', {
                         Image: {
-                            id: userId,
+                            id: [ userId ],
                         },
                     });
 
@@ -1264,9 +1295,9 @@ describe('Field', function () {
 
                     userId.setModel(UserImage);
 
-                    expect(User.referenced, 'to exhaustively satisfy', {
+                    expect(User.referenced, 'to equal', {
                         UserImage: {
-                            id: userId,
+                            id: [ userId ],
                         },
                     });
                 });

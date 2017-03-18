@@ -35,24 +35,7 @@ class Query extends AbstractQuery {}
 Query.knex = knex;
 
 class Model extends AbstractModel {}
-
 Model.Query = Query;
-
-const createUserTable = table => {
-    table.increments();
-    table.timestamps();
-    table.string('name').notNullable();
-    table.text('description');
-    table.integer('age');
-    table.boolean('confirmed').notNullable();
-    table.dateTime('date_of_birth');
-    table.string('db_default').defaultTo('set-by-db');
-};
-
-const truncateUserTable = async () => {
-    return knex.schema.raw('TRUNCATE "user" RESTART IDENTITY CASCADE');
-};
-
 Model.fields = {
     id: {
         type: Field.types.integer,
@@ -95,14 +78,19 @@ User.fields = {
     },
 };
 
-const createImageCategoryTable = table => {
+const createUserTable = table => {
     table.increments();
     table.timestamps();
     table.string('name').notNullable();
+    table.text('description');
+    table.integer('age');
+    table.boolean('confirmed').notNullable();
+    table.dateTime('date_of_birth');
+    table.string('db_default').defaultTo('set-by-db');
 };
 
-const truncateImageCategoryTable = async () => {
-    return knex.schema.raw('TRUNCATE "image_category" RESTART IDENTITY CASCADE');
+const truncateUserTable = async () => {
+    return knex.schema.raw(`TRUNCATE "${User.table}" RESTART IDENTITY CASCADE`);
 };
 
 class ImageCategory extends Model {}
@@ -114,15 +102,14 @@ ImageCategory.fields = {
     },
 };
 
-const createImageTable = table => {
+const createImageCategoryTable = table => {
     table.increments();
     table.timestamps();
-    table.integer('user_id').references('id').inTable('user');
-    table.integer('category_id').references('id').inTable('user');
+    table.string('name').notNullable();
 };
 
-const truncateImageTable = async () => {
-    return knex('image').truncate();
+const truncateImageCategoryTable = async () => {
+    return knex.schema.raw(`TRUNCATE "${ImageCategory.table}" RESTART IDENTITY CASCADE`);
 };
 
 class Image extends Model {}
@@ -138,21 +125,45 @@ Image.fields = {
     },
 };
 
-class Dummy extends Model {}
-Dummy.table = 'dummy_table';
-Dummy.fields = {
-    fieldOne: {
+const createImageTable = table => {
+    table.increments();
+    table.timestamps();
+    table.integer('user_id').references('id').inTable('user');
+    table.integer('category_id').references('id').inTable('user');
+};
+
+const truncateImageTable = async () => {
+    return knex(Image.table).truncate();
+};
+
+class Message extends Model {}
+
+Message.table = 'account';
+Message.fields = {
+    text: {
+        type: Field.types.text,
+        required: true,
+    },
+    senderId: {
         type: Field.types.integer,
         references: User.fields.id,
     },
-    fieldTwo: {
+    receiverId: {
         type: Field.types.integer,
-        references: User.fields.createdAt,
+        references: User.fields.id,
     },
-    fieldThree: {
-        type: Field.types.integer,
-        references: User.fields.updatedAt,
-    },
+};
+
+const createMessageTable = table => {
+    table.increments();
+    table.timestamps();
+    table.text('text').notNullable();
+    table.integer('sender_id').references('id').inTable('user');
+    table.integer('receiver_id').references('id').inTable('user');
+};
+
+const truncateMessageTable = async () => {
+    return knex(Message.table).truncate();
 };
 
 describe('lib/newModels/Query', function () {
@@ -160,9 +171,11 @@ describe('lib/newModels/Query', function () {
         await knex.schema.createTable(User.table, createUserTable);
         await knex.schema.createTable(ImageCategory.table, createImageCategoryTable);
         await knex.schema.createTable(Image.table, createImageTable);
+        await knex.schema.createTable(Message.table, createMessageTable);
     });
 
     after(async function () {
+        await knex.schema.dropTable(Message.table);
         await knex.schema.dropTable(Image.table);
         await knex.schema.dropTable(ImageCategory.table);
         await knex.schema.dropTable(User.table);
@@ -226,24 +239,9 @@ describe('lib/newModels/Query', function () {
                     date_of_birth: null,
                 },
             ]);
-            await knex('image_category').insert([
-                {
-                    id: 1,
-                    name: 'User images',
-                },
-            ]);
-            await knex('image').insert([
-                {
-                    id: 1,
-                    user_id: 1,
-                    category_id: 1,
-                },
-            ]);
         });
 
         after(async function () {
-            await truncateImageTable();
-            await truncateImageCategoryTable();
             await truncateUserTable();
         });
 
@@ -307,7 +305,7 @@ describe('lib/newModels/Query', function () {
             );
             await expect(
                 query.fetch(),
-                'to be rejected with',
+                'to be rejected with error satisfying',
                 error => {
                     expect(error, 'to be a', User.errors.FetchError);
                     expect(error, 'to exhaustively satisfy', {
@@ -339,7 +337,7 @@ describe('lib/newModels/Query', function () {
                 const query = new Query(User).require();
                 await expect(
                     query.fetch(),
-                    'to be rejected with',
+                    'to be rejected with error satisfying',
                     new User.errors.RowsNotFoundError()
                 );
             });
@@ -349,7 +347,7 @@ describe('lib/newModels/Query', function () {
                     const query = new Query(User).require().first();
                     await expect(
                         query.fetch(),
-                        'to be rejected with',
+                        'to be rejected with error satisfying',
                         new User.errors.RowNotFoundError()
                     );
                 });
@@ -698,6 +696,58 @@ describe('lib/newModels/Query', function () {
         });
 
         describe("with a 'with' configured", function () {
+            before(async function () {
+                await knex(ImageCategory.table).insert([
+                    {
+                        id: 1,
+                        name: 'User images',
+                    },
+                ]);
+                await knex(Image.table).insert([
+                    {
+                        id: 1,
+                        user_id: 1,
+                        category_id: 1,
+                    },
+                ]);
+                await knex(Message.table).insert([
+                    {
+                        id: 1,
+                        text: 'Hi User 2',
+                        sender_id: 1,
+                        receiver_id: 2,
+                    },
+                    {
+                        id: 2,
+                        text: 'Hi User 1',
+                        sender_id: 2,
+                        receiver_id: 1,
+                    },
+                ]);
+            });
+
+            after(async function () {
+                await truncateMessageTable();
+                await truncateImageTable();
+                await truncateImageCategoryTable();
+                await truncateUserTable();
+            });
+
+            it('throws an error if the models do not reference each other', function () {
+                class Foo extends Model {}
+                Foo.table = 'foo';
+                expect(
+                    () => new Query(User).with(new Query(Foo)),
+                    'to throw',
+                    new Error("'User' has no references to 'Foo'")
+                );
+                expect(
+                    () => new Query(Foo).with(new Query(User)),
+                    'to throw',
+                    new Error("'Foo' has no references to 'User'")
+                );
+            });
+
             it("rejects with an error if a fetch is attempted from the joined model's query", async function () {
                 const imageQuery = new Query(Image);
                 new Query(User).with(imageQuery);
@@ -710,7 +760,7 @@ describe('lib/newModels/Query', function () {
                 );
             });
 
-            it('includes the joined model in the returned instance', async function () {
+            it('includes the joined model in the returned instance using a camel-cased property name', async function () {
                 const query = new Query(User).with(new Query(Image));
                 await expect(
                     query.fetch(),
@@ -829,11 +879,9 @@ describe('lib/newModels/Query', function () {
 
             describe("with 'require' configured on the child query", function () {
                 it('returns the instances with matching data in the joined table (inner join)', async function () {
-                    const query = new Query(User)
-                        .with(
-                            new Query(Image)
-                                .require(true)
-                        );
+                    const query = new Query(User).with(
+                        new Query(Image).require(true)
+                    );
                     await expect(
                         query.fetch(),
                         'to be fulfilled with sorted rows exhaustively satisfying',
@@ -858,6 +906,18 @@ describe('lib/newModels/Query', function () {
                                 }),
                             }),
                         ]
+                    );
+                });
+
+                it("rejects with a ModelsNotFoundError if the join doesn't match any rows", async function () {
+                    const query = new Query(User)
+                        .where({ id: 2 })
+                        .with(new Query(Image).require(true));
+
+                    await expect(
+                        query.fetch(),
+                        'to be rejected with error satisfying',
+                        new Image.errors.RowsNotFoundError()
                     );
                 });
             });
@@ -923,6 +983,115 @@ describe('lib/newModels/Query', function () {
                                     updatedAt: null,
                                     userId: 1,
                                     categoryId: 1,
+                                }),
+                            }),
+                        ]
+                    );
+                });
+            });
+
+            it('creates a join to the referenced model on all fields', async function () {
+                const query = new Query(User).with(new Query(Message));
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        // this query doesn't match any messages since it joins
+                        // ON user.id = message.sender_id AND user.id = message.receiver_id
+                        new User({
+                            id: 1,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 1',
+                            confirmed: false,
+                            description: 'this is user 1',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        }),
+                        new User({
+                            id: 2,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 2',
+                            confirmed: true,
+                            description: 'this is user 2',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        }),
+                    ]
+                );
+            });
+
+            describe("with 'on' configured on the child query", function () {
+                it('creates a join on the provided field', async function () {
+                    const query = new Query(User).with([
+                        new Query(Message)
+                            .on(Message.fields.senderId)
+                            .as('sentMessage'),
+                        new Query(Message)
+                            .on('receiverId')
+                            .as('receivedMessage'),
+                    ]);
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            Object.assign(new User({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }), {
+                                sentMessage: new Message({
+                                    id: 1,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    text: 'Hi User 2',
+                                    senderId: 1,
+                                    receiverId: 2,
+                                }),
+                                receivedMessage: new Message({
+                                    id: 2,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    text: 'Hi User 1',
+                                    senderId: 2,
+                                    receiverId: 1,
+                                }),
+                            }),
+                            Object.assign(new User({
+                                id: 2,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 2',
+                                confirmed: true,
+                                description: 'this is user 2',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }), {
+                                sentMessage: new Message({
+                                    id: 2,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    text: 'Hi User 1',
+                                    senderId: 2,
+                                    receiverId: 1,
+                                }),
+                                receivedMessage: new Message({
+                                    id: 1,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    text: 'Hi User 2',
+                                    senderId: 1,
+                                    receiverId: 2,
                                 }),
                             }),
                         ]
@@ -1493,7 +1662,7 @@ describe('lib/newModels/Query', function () {
                 );
             });
 
-            describe('with a reversed join', function () {
+            describe('with a reverse-reference join', function () {
                 it('resolves with the correct data', async function () {
                     const query = new Query(Image).with(new Query(User));
                     await expect(
@@ -1523,7 +1692,7 @@ describe('lib/newModels/Query', function () {
                     );
                 });
 
-                it("supports a reversed 'on' option as a string", async function () {
+                it("supports the 'on' option as a string", async function () {
                     const query = new Query(Image)
                         .with(
                             new Query(User)
@@ -1556,7 +1725,7 @@ describe('lib/newModels/Query', function () {
                     );
                 });
 
-                it("supports a reversed 'on' option as a field object", async function () {
+                it("supports the 'on' option as a field object", async function () {
                     const query = new Query(Image)
                         .with(
                             new Query(User)
@@ -1584,6 +1753,136 @@ describe('lib/newModels/Query', function () {
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
                                 }),
+                            }),
+                        ]
+                    );
+                });
+            });
+
+            describe("with a nested 'with' query", function () {
+                it('includes the nested data in the returned data if rows are matched', async function () {
+                    const query = new Query(User).with(
+                        new Query(Image).with(
+                            new Query(ImageCategory)
+                        )
+                    );
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            Object.assign(new User({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }), {
+                                image: Object.assign(new Image({
+                                    id: 1,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    userId: 1,
+                                    categoryId: 1,
+                                }), {
+                                    imageCategory: new ImageCategory({
+                                        id: 1,
+                                        createdAt: null,
+                                        updatedAt: null,
+                                        name: 'User images',
+                                    }),
+                                }),
+                            }),
+                            new User({
+                                id: 2,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 2',
+                                confirmed: true,
+                                description: 'this is user 2',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }),
+                        ]
+                    );
+                });
+            });
+
+            describe("with a circular 'with' query", function () {
+                it('includes the circular data in the returned data', async function () {
+                    const query = new Query(User).with(
+                        new Query(Image).with(
+                            new Query(ImageCategory).with(
+                                new Query(Image).with(
+                                    new Query(User)
+                                )
+                            )
+                        )
+                    );
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            Object.assign(new User({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }), {
+                                image: Object.assign(new Image({
+                                    id: 1,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    userId: 1,
+                                    categoryId: 1,
+                                }), {
+                                    imageCategory: Object.assign(new ImageCategory({
+                                        id: 1,
+                                        createdAt: null,
+                                        updatedAt: null,
+                                        name: 'User images',
+                                    }), {
+                                        image: Object.assign(new Image({
+                                            id: 1,
+                                            createdAt: null,
+                                            updatedAt: null,
+                                            userId: 1,
+                                            categoryId: 1,
+                                        }), {
+                                            user: new User({
+                                                id: 1,
+                                                createdAt: null,
+                                                updatedAt: null,
+                                                name: 'User 1',
+                                                confirmed: false,
+                                                description: 'this is user 1',
+                                                age: 10,
+                                                dateOfBirth: null,
+                                                dbDefault: 'set-by-db',
+                                            }),
+                                        }),
+                                    }),
+                                }),
+                            }),
+                            new User({
+                                id: 2,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 2',
+                                confirmed: true,
+                                description: 'this is user 2',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
                             }),
                         ]
                     );
@@ -1667,7 +1966,7 @@ describe('lib/newModels/Query', function () {
             );
             await expect(
                 query.count(),
-                'to be rejected with',
+                'to be rejected with error satisfying',
                 error => {
                     expect(error, 'to be a', User.errors.CountError);
                     expect(error, 'to exhaustively satisfy', {

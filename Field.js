@@ -307,7 +307,10 @@ class Field {
         if (!reference.model.referenced[this.model.name]) {
             reference.model.referenced[this.model.name] =  {};
         }
-        reference.model.referenced[this.model.name][reference.name] = this;
+        if (!reference.model.referenced[this.model.name][reference.name]) {
+            reference.model.referenced[this.model.name][reference.name] = [];
+        }
+        reference.model.referenced[this.model.name][reference.name].push(this);
 
         this.references = reference;
 
@@ -317,8 +320,8 @@ class Field {
     setModel(model) {
         if (this.model && this.references) {
             const reference = this.references;
-            const backReference = reference.model.referenced[this.model.name];
-            reference.model.referenced[model.name] = backReference;
+            const reverseReference = reference.model.referenced[this.model.name];
+            reference.model.referenced[model.name] = reverseReference;
             // TODO: delete though?
             delete reference.model.referenced[this.model.name];
         }

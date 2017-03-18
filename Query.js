@@ -185,15 +185,12 @@ class Query extends WithKnex {
                 );
             }
 
-            query.index = ++this.index;
-            query.alias = `t${query.index}`;
-            query.builder = this.builder;
-            query.isChild = true;
-            query.parent = this;
-
             if (options) {
                 query.options(options);
             }
+
+            query.isChild = true;
+            query.parent = this;
 
             this._with.push(query);
         });
@@ -383,40 +380,49 @@ class Query extends WithKnex {
 
     _addWith(options) {
         this._with.forEach(query => {
-            const method = query._require ? 'innerJoin' : 'leftJoin';
-            const referenced = query.model.referenced[this.model.name];
-            const isBackReference = !!referenced;
-
-            let on;
-            if (query._on.length) {
-                if (isBackReference) {
-                    on = query._on.map(({ field }) => referenced[field.name]);
-                } else {
-                    on = query._on.map(({ field }) => field);
-                }
-            } else {
-                const references = this.model.referenced[query.model.name];
-                on = Object.values(references || referenced);
-            }
-
-            on = on.reduce((on, field) => {
-                const fromColumn = field.column;
-                const toColumn = field.references.column;
-
-                if (isBackReference) {
-                    on[`${query.alias}.${toColumn}`] = `${this.alias}.${fromColumn}`;
-                } else {
-                    on[`${query.alias}.${fromColumn}`] = `${this.alias}.${toColumn}`;
-                }
-
-                return on;
-            }, {});
-
-            this.builder[method](`${query.table} as ${query.alias}`, on);
-
             if (!query._as) {
                 query._as = camelCase(query.model.name);
             }
+
+            query.index = ++this.index;
+            query.alias = `t${query.index}`;
+            query.builder = this.builder;
+
+            const method = query._require ? 'innerJoin' : 'leftJoin';
+            const forwardReferences = this.model.referenced[query.model.name];
+            const reverseReferences = query.model.referenced[this.model.name];
+            const isReverseReference = !!reverseReferences;
+
+            const on = [];
+
+            if (query._on.length) {
+                if (isReverseReference) {
+                    query._on.forEach(
+                        ({ field }) => on.push(...reverseReferences[field.name])
+                    );
+                } else {
+                    query._on.forEach(({ field }) => on.push(field));
+                }
+            } else {
+                Object.values(forwardReferences || reverseReferences).forEach(
+                    fields => on.push(...fields)
+                );
+            }
+
+            const onColumns = on.reduce((columns, field) => {
+                const fromColumn = field.column;
+                const toColumn = field.references.column;
+
+                if (isReverseReference) {
+                    columns[`${query.alias}.${toColumn}`] = `${this.alias}.${fromColumn}`;
+                } else {
+                    columns[`${query.alias}.${fromColumn}`] = `${this.alias}.${toColumn}`;
+                }
+
+                return columns;
+            }, {});
+
+            this.builder[method](`${query.table} as ${query.alias}`, onColumns);
 
             query._prepareBuilder(options);
         });
@@ -465,6 +471,9 @@ class Query extends WithKnex {
         }
 
         if (this._transaction) { this._addTransaction(); }
+
+        // TODO: Add support for limit and offset options in joined queries
+        // will probably require joining with a subquery
         if (this._first) { this._limit = 1; }
         if (this._limit !== undefined) { this._addLimit(); }
         if (this._offset !== undefined) { this._addOffset(); }
@@ -558,6 +567,22 @@ class Query extends WithKnex {
         return this._parsedRows.slice();
     }
 
+    _maybeThrowRequireErrors() {
+        if (this._require) {
+            if (this.isChild) {
+                // FIXME: this is because joined queries don't have support for
+                // limit and offset options yet
+                this._throw('RowsNotFoundError');
+            } else {
+                this._throw(this._first ? 'RowNotFoundError' : 'RowsNotFoundError');
+            }
+        }
+
+        if (this._with.length) {
+            this._with.forEach(query => query._maybeThrowRequireErrors());
+        }
+    }
+
     async fetch() {
         if (this.isChild) {
             throw new Error(
@@ -578,8 +603,8 @@ class Query extends WithKnex {
             this._throw('FetchError', error);
         }
 
-        if (!rows.length && this._require) {
-            this._throw(this._first ? 'RowNotFoundError' : 'RowsNotFoundError');
+        if (!rows.length) {
+            this._maybeThrowRequireErrors();
         }
 
         rows = this._parseRows(rows);
