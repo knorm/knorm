@@ -203,7 +203,7 @@ class Query extends WithKnex {
         let forUpdate;
         let forShare;
 
-        if (transaction.transaction) {
+        if (isObject(transaction)) {
             forUpdate = transaction.forUpdate;
             forShare = transaction.forShare;
             transaction = transaction.transaction;
@@ -437,6 +437,15 @@ class Query extends WithKnex {
     }
 
     _prepareBuilder(options = {}) {
+        if (this._where.length) { this._addWhere(); }
+        if (this._whereNot.length) { this._addWhereNot(); }
+        if (this._orWhere.length) { this._addOrWhere(); }
+        if (this._orWhereNot.length) { this._addOrWhereNot(); }
+
+        if (!this.isChild) {
+            if (this._transaction) { this._addTransaction(); }
+        }
+
         if (options.forSave) {
             if (!this._hasReturning) {
                 this._returning = this._getFieldsWithAliases();
@@ -453,11 +462,6 @@ class Query extends WithKnex {
 
         if (this._with.length) { this._addWith(options); }
 
-        if (this._where.length) { this._addWhere(); }
-        if (this._whereNot.length) { this._addWhereNot(); }
-        if (this._orWhere.length) { this._addOrWhere(); }
-        if (this._orWhereNot.length) { this._addOrWhereNot(); }
-
         if (this._groupBy.length) { this._addGroupBy(); }
 
         if (this._having.length) { this._addHaving(); }
@@ -470,8 +474,6 @@ class Query extends WithKnex {
         if (this.isChild) {
             return this;
         }
-
-        if (this._transaction) { this._addTransaction(); }
 
         // TODO: Add support for limit and offset options in joined queries
         // will probably require joining with a subquery
@@ -613,51 +615,61 @@ class Query extends WithKnex {
         return this._first ? rows[0] : rows;
     }
 
-    async save(model, { transaction } = {}) {
-        // TODO
-        const Model = this.model;
+    foo(transaction) {
+        this._transaction = { transaction };
+        return this;
+    }
 
-        if (!(model instanceof Model)) {
-            model = new Model(model);
+    async fooSave(instance) {
+        this._prepareBuilder({ forSave: true });
+        return this.save(instance);
+    }
+
+    async save(instance) {
+        if (!(instance instanceof this.model)) {
+            // eslint-disable-next-line new-cap
+            instance = new this.model(instance);
         }
 
-        const id = model.id;
+        const id = instance[this.model.idField];
         const isUpdate = !!id;
         const isInsert = !isUpdate;
 
-        if (isUpdate) {
-            this.where({ id });
-        }
-
-        if (transaction) {
-            this.transaction(transaction);
-        }
-
-        let fields = Object.keys(Model.fields);
-
-        this.returning(fields);
-
+        const allFields = Object.keys(this.model.fields);
         let fieldsToSave;
+        let fieldsNotToSave = [ this.model.idField ];
 
         if (isInsert) {
-            model.setDefaults();
-            fieldsToSave = difference(fields, [ 'id' ]);
+            instance.setDefaults();
+            fieldsToSave = difference(allFields, fieldsNotToSave);
         } else {
-            model.updatedAt = undefined;
-            model.setDefaults({ fields: [ 'updatedAt' ] });
-            const filledFields = fields.filter(name => model[name] !== undefined);
-            fieldsToSave = difference(filledFields, [ 'id', 'createdAt' ]);
+            const updatedAtField = this.model.fields[this.model.updatedAtField];
+            if (updatedAtField && updatedAtField.hasDefault()) {
+                instance.updatedAt = undefined;
+                instance.setDefaults({ fields: [ this.model.updatedAtField ] });
+            }
+            const filledFields = allFields.filter(name => {
+                return instance[name] !== undefined;
+            });
+            if (this.model.fields[this.model.createdAtField]) {
+                fieldsNotToSave.push(this.model.createdAtField);
+            }
+            fieldsToSave = difference(filledFields, fieldsNotToSave);
         }
 
-        await model.validate({ fields: fieldsToSave });
+        await instance.validate({ fields: fieldsToSave });
 
-        const data = await model.getData({ fields: fieldsToSave });
-
+        const data = await instance.getData({ fields: fieldsToSave });
         const row = Object.keys(data).reduce((row, field) => {
-            field = Model.fields[field];
+            field = this.model.fields[field];
             row[field.column] = data[field.name];
             return row;
         }, {});
+
+        if (isUpdate) {
+            this.where({ [this.model.idField]: id });
+        }
+        this._prepareBuilder({ forSave: true });
 
         let result;
 
@@ -679,9 +691,14 @@ class Query extends WithKnex {
             }
         }
 
-        model.setData(result[0]);
+        result = result[0];
+        Object.keys(result).forEach(aliasedField => {
+            const field = aliasedField.split('.')[1];
+            const value = result[aliasedField];
+            instance[field] = value;
+        });
 
-        return model;
+        return instance;
     }
 }
 

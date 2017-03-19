@@ -318,6 +318,8 @@ const getDefaultErrors = (model) => {
 };
 
 Model.idField = 'id';
+Model.createdAtField = 'createdAt';
+Model.updatedAtField = 'updatedAt';
 
 module.exports = Model;
 

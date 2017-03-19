@@ -8,7 +8,7 @@ for joins.
 
 ```js
 const updateUsers => async () => {
-  new Transaction(async transaction => {
+  const transaction = new Transaction(async transaction => {
     const count = await User.query
       .transaction(transaction)
       .where({ confirmed: true })
@@ -34,18 +34,17 @@ const updateUsers => async () => {
       .transaction(transaction, { forUpdate: true })
       .fetch();
 
-    users.forEach(user => {
+    return Promise.all(users.map(user => {
       if (user.publicImage) {
         user.hasPublicImage = true;
       }
       if (user.privateImage) {
         user.hasPrivateImage = true;
       }
-    });
-
-    return User.query
-      .transaction(transaction)
-      .save(users);
+      return user.save({ transaction });
+    }));
   });
+
+  return transaction.execute();
 };
 ```

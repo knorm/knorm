@@ -689,7 +689,10 @@ describe('lib/newModels/Query', function () {
                     ]
                 );
                 await expect(spy, 'to have calls satisfying', () => {
-                    spy(expect.it('to be a function'));
+                    spy(expect.it('to satisfy', {
+                        commit: expect.it('to be a function'),
+                        rollback: expect.it('to be a function'),
+                    }));
                 });
                 spy.restore();
             });
@@ -1997,6 +2000,346 @@ describe('lib/newModels/Query', function () {
                     'to be fulfilled with',
                     1
                 );
+            });
+        });
+
+        describe("with 'fields' configured", function () {
+            it('does not add the fields to the query', async function () {
+                const spy = sinon.spy(QueryBuilder.prototype, 'columns');
+                const query = new Query(User).fields('dateOfBirth');
+                await expect(query.count(), 'to be fulfilled');
+                await expect(spy, 'was not called');
+                spy.restore();
+            });
+        });
+    });
+
+    describe.only('Query.prototype.save', function () {
+        afterEach(async function () {
+            await truncateUserTable();
+        });
+
+        it('saves a model instance to the database', async function () {
+            const query = new Query(User);
+            const user = new User({ name: 'John Doe', confirmed: true });
+            await expect(query.save(user), 'to be fulfilled');
+            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'John Doe',
+                    confirmed: true,
+                },
+            ]);
+        });
+
+        it('saves a plain object to the database', async function () {
+            const query = new Query(User);
+            const user = { name: 'John Doe', confirmed: true };
+            await expect(query.save(user), 'to be fulfilled');
+            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'John Doe',
+                    confirmed: true,
+                },
+            ]);
+        });
+
+        it('populates fields with default values before saving', async function () {
+            const query = new Query(User);
+            const user = new User({ name: 'John Doe' });
+            await expect(query.save(user), 'to be fulfilled');
+            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'John Doe',
+                    confirmed: false,
+                    age: null,
+                    created_at: expect.it('to be a', Date),
+                    updated_at: expect.it('to be a', Date),
+                },
+            ]);
+        });
+
+        it("validates the instance's fields before saving", async function () {
+            const query = new Query(User);
+            const user = new User({ name: 1 });
+            await expect(
+                query.save(user),
+                'to be rejected with error satisfying',
+                new User.fields.name.errors.TypeError()
+            );
+        });
+
+        it('resolves with an instance of the model', async function () {
+            const query = new Query(User);
+            await expect(
+                query.save(new User({ name: 'John Doe' })),
+                'to be fulfilled with value satisfying',
+                expect.it('to be a', User)
+            );
+        });
+
+        it('populates the instance with all the fields from the database', async function () {
+            const query = new Query(User);
+            await expect(
+                query.save(new User({ name: 'John Doe' })),
+                'to be fulfilled with value satisfying',
+                new User({
+                    id: 1,
+                    createdAt: expect.it('to be a', Date),
+                    updatedAt: expect.it('to be a', Date),
+                    name: 'John Doe',
+                    confirmed: false,
+                    description: null,
+                    age: null,
+                    dateOfBirth: null,
+                    dbDefault: 'set-by-db',
+                })
+            );
+        });
+
+        it('rejects with a ModelSaveError if the insert operation fails', async function () {
+            const query = new Query(User);
+            const stub = sinon.stub(QueryBuilder.prototype, 'insert').returns(
+                Promise.reject(new Error('insert error'))
+            );
+            await expect(
+                query.save(new User({ name: 'John Doe' })),
+                'to be rejected with error satisfying',
+                error => {
+                    expect(error, 'to be a', User.errors.SaveError);
+                    expect(error, 'to exhaustively satisfy', {
+                        message: 'insert error',
+                        originalError: new Error('insert error'),
+                    });
+                }
+            );
+            stub.restore();
+        });
+
+        describe('with the id field of the instance set', function () {
+            let user;
+
+            beforeEach(async function () {
+                user = await new Query(User).save({ name: 'John Doe' });
+            });
+
+            it('updates the row in the database', async function () {
+                const query = new Query(User);
+                user.name = 'Jane Doe';
+                await expect(query.save(user), 'to be fulfilled');
+                await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                    {
+                        id: 1,
+                        name: 'Jane Doe',
+                    },
+                ]);
+            });
+
+            it('validates only the fields that have values set', async function () {
+                // allows sending an update without having fetched the model
+                const query = new Query(User);
+                const newUser = new User({
+                    id: user.id,
+                    confirmed: true,
+                });
+                await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                    {
+                        id: 1,
+                        name: 'John Doe',
+                        confirmed: false,
+                    }]
+                );
+                await expect(query.save(newUser), 'to be fulfilled');
+                await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                    {
+                        id: 1,
+                        name: 'John Doe',
+                        confirmed: true,
+                    },
+                ]);
+            });
+
+            it("sets the 'updatedAt' before saving", async function () {
+                const clock = sinon.useFakeTimers('Date');
+                const newUser = await new Query(User).save({ name: 'foo' });
+
+                expect(newUser.createdAt, 'to equal', new Date(0));
+                expect(newUser.updatedAt, 'to equal', new Date(0));
+
+                clock.tick(1000);
+                await new Query(User).save(newUser);
+
+                expect(newUser.createdAt, 'to equal', new Date(0));
+                expect(newUser.updatedAt, 'to equal', new Date(1000));
+
+                await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                    {
+                        name: 'John Doe',
+                    },
+                    {
+                        name: 'foo',
+                        created_at: new Date(0),
+                        updated_at: new Date(1000),
+                    },
+                ]);
+
+                await knex('user').where({ id: newUser.id }).delete();
+
+                clock.restore();
+            });
+
+            describe('if the model has no updatedAt field', function () {
+                it("doesn't set the 'updatedAt' before saving", async function () {
+                    class Foo extends User {}
+                    delete Foo.fields.updatedAt;
+
+                    const clock = sinon.useFakeTimers('Date');
+                    const foo = await new Query(Foo).save({ name: 'foo' });
+
+                    expect(foo.createdAt, 'to equal', new Date(0));
+                    expect(foo.updatedAt, 'to be undefined');
+
+                    clock.tick(1000);
+                    await new Query(Foo).save(foo);
+
+                    expect(foo.createdAt, 'to equal', new Date(0));
+                    expect(foo.updatedAt, 'to be undefined');
+
+                    await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                        {
+                            name: 'John Doe',
+                        },
+                        {
+                            name: 'foo',
+                            created_at: new Date(0),
+                            updated_at: null,
+                        },
+                    ]);
+
+                    await knex('user').where({ id: foo.id }).delete();
+
+                    clock.restore();
+                });
+            });
+
+            describe('if the updatedAt field has no default value', function () {
+                it("doesn't set the 'updatedAt' before saving", async function () {
+                    class Foo extends User {}
+                    delete Foo.fields.updatedAt.default;
+
+                    const clock = sinon.useFakeTimers('Date');
+                    const foo = await new Query(Foo).save({ name: 'foo' });
+
+                    expect(foo.createdAt, 'to equal', new Date(0));
+                    expect(foo.updatedAt, 'to be null');
+
+                    clock.tick(1000);
+                    await new Query(Foo).save(foo);
+
+                    expect(foo.createdAt, 'to equal', new Date(0));
+                    expect(foo.updatedAt, 'to be null');
+
+                    await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                        {
+                            name: 'John Doe',
+                        },
+                        {
+                            name: 'foo',
+                            created_at: new Date(0),
+                            updated_at: null,
+                        },
+                    ]);
+
+                    await knex('user').where({ id: foo.id }).delete();
+
+                    clock.restore();
+                });
+            });
+
+            it('rejects with a ModelSaveError if the update operation fails', async function () {
+                const query = new Query(User);
+                const stub = sinon.stub(QueryBuilder.prototype, 'update').returns(
+                    Promise.reject(new Error('update error'))
+                );
+                user.name = 'Jane Doe';
+                await expect(
+                    query.save(user),
+                    'to be rejected with error satisfying',
+                    error => {
+                        expect(error, 'to be a', User.errors.SaveError);
+                        expect(error, 'to exhaustively satisfy', {
+                            message: 'update error',
+                            originalError: new Error('update error'),
+                        });
+                    }
+                );
+                stub.restore();
+            });
+        });
+
+        describe.skip('with a custom id field', function () {
+            class EmailAsId extends AbstractModel {}
+            EmailAsId.Query = Query;
+            EmailAsId.table = 'email_as_id';
+            EmailAsId.idField = 'email';
+            EmailAsId.fields = {
+                email: {
+                    type: Field.types.string,
+                    required: true,
+                },
+                name: {
+                    type: Field.types.string,
+                },
+            };
+
+            before(async function () {
+                await knex.schema.createTable(EmailAsId.table, table => {
+                    table.string('email').unique().notNullable();
+                    table.string('name');
+                });
+            });
+
+            after(async function () {
+                await knex.schema.dropTable(EmailAsId.table);
+            });
+
+            afterEach(async function () {
+                await knex(EmailAsId.table).truncate();
+            });
+
+            it('saves an instance of the model', async function () {
+                const query = new Query(EmailAsId);
+                const instance = new EmailAsId({ email: 'foo', name: 'bar' });
+                await expect(query.save(instance), 'to be fulfilled');
+                await expect(knex, 'with table', EmailAsId.table, 'to have rows satisfying', [
+                    {
+                        email: 'foo',
+                        name: 'bar',
+                    },
+                ]);
+
+            });
+        });
+
+        describe("with a 'transaction' configured", function () {
+            it('does the save within the transaction', async function () {
+                const transact = async transaction => {
+                    await new Query(User)
+                        .transaction(transaction)
+                        .save(new User({ name: 'John Doe' }));
+
+                    throw new Error('foo');
+                };
+
+                await expect(
+                    knex.transaction(transact),
+                    'to be rejected with error satisfying',
+                    new Error('foo')
+                );
+
+                await expect(knex, 'with table', 'user', 'to be empty');
             });
         });
     });

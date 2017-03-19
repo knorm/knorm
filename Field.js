@@ -1,5 +1,6 @@
 const { camelCase, snakeCase } = require('lodash');
 const createError = require('./lib/createError');
+const ValidationError = createError('ValidationError');
 
 class Field {
     constructor(config = {}) {
@@ -35,7 +36,7 @@ class Field {
         this.type = type;
         this.setModel(model);
 
-        if (config.default) {
+        if (config.default !== undefined) {
             this.default = config.default;
         }
 
@@ -84,7 +85,7 @@ class Field {
 
     validateIsRequired(value) {
         if (!isSet(value)) {
-            throw new this.errors.Required();
+            throw new this.errors.RequiredError();
         }
     }
 
@@ -93,7 +94,7 @@ class Field {
             return true;
         }
         if (!validate(value)) {
-            throw new this.errors.Type();
+            throw new this.errors.TypeError();
         }
     }
 
@@ -126,6 +127,7 @@ class Field {
     }
 
     validateIsUuid(value) {
+        // TODO: use validator for validation instead of duplicating efforts
         // source: https://github.com/chriso/validator.js/blob/6.2.1/src/lib/isUUID.js
         this.validateWithRegex(
             value,
@@ -205,7 +207,7 @@ class Field {
         }
 
         if (value.length < minLength) {
-            throw new this.errors.MinLength();
+            throw new this.errors.MinLengthError();
         }
     }
 
@@ -215,7 +217,7 @@ class Field {
         }
 
         if (value.length > maxLength) {
-            throw new this.errors.MaxLength();
+            throw new this.errors.MaxLengthError();
         }
     }
 
@@ -225,7 +227,7 @@ class Field {
         }
 
         if (!oneOf.includes(value)) {
-            throw new this.errors.OneOf();
+            throw new this.errors.OneOfError();
         }
     }
 
@@ -237,7 +239,7 @@ class Field {
         const returnValue = await validate.call(modelInstance, value);
 
         if (returnValue === false) {
-            throw new this.errors.Custom();
+            throw new this.errors.CustomError();
         }
 
         if (typeof returnValue === 'object') {
@@ -330,12 +332,12 @@ class Field {
 
         const ModelField = upperCamelCase(this.model.name) + upperCamelCase(this.name);
         this.errors = {
-            Required: createError(`MissingRequired${ModelField}Error`),
-            Type: createError(`Invalid${ModelField}TypeError`),
-            MinLength: createError(`${ModelField}TooShortError`),
-            MaxLength: createError(`${ModelField}TooLongError`),
-            OneOf: createError(`Unknown${ModelField}Error`),
-            Custom: createError(`Invalid${ModelField}Error`),
+            RequiredError: createError(`MissingRequired${ModelField}Error`, ValidationError),
+            TypeError: createError(`Invalid${ModelField}TypeError`, ValidationError),
+            MinLengthError: createError(`${ModelField}TooShortError`, ValidationError),
+            MaxLengthError: createError(`${ModelField}TooLongError`, ValidationError),
+            OneOfError: createError(`Unknown${ModelField}Error`, ValidationError),
+            CustomError: createError(`Invalid${ModelField}Error`, ValidationError),
         };
 
         return this;
@@ -351,6 +353,7 @@ const upperCamelCase = string => {
 const isSet = value => value !== undefined && value !== null;
 
 // TODO: add password field
+// TODO: add email field and update example in Model.md#Model.idField
 // TODO: allow adding types
 const types = {
     text: 'text',

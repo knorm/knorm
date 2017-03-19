@@ -1,5 +1,7 @@
 # Model
 
+## Model.idField
+
 Knorm expects models to have an `id` field (used mostly in joins). By default it
 expects this field to be named 'id' (owing to the fact that knex's
 [SchemaBuilder.prototype.increments](http://knexjs.org/#Schema-increments)
@@ -9,12 +11,12 @@ configure it like so:
 ```js
 class Model extends AbstractModel {}
 
-Model.idField = 'uniqueId';
+Model.idField = 'email';
 
-// then Model is expected to have a field named 'uniqueId'
+// then Model is expected to have a field named 'email'
 Model.fields = {
-  uniqueId: {
-    type: Field.types.bigInteger,
+  email: {
+    type: Field.types.string,
     required: true,
   },
   // ... other fields

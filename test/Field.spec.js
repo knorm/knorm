@@ -200,6 +200,26 @@ describe('Field', function () {
             });
             expect(field.hasDefault(), 'to be true');
         });
+
+        it("returns true if the field was configured with the default value as 'false'", function () {
+            const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: Field.types.string,
+                default: false,
+            });
+            expect(field.hasDefault(), 'to be true');
+        });
+
+        it("returns true if the field was configured with the default value as 'null'", function () {
+            const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: Field.types.string,
+                default: null,
+            });
+            expect(field.hasDefault(), 'to be true');
+        });
     });
 
     describe('Field.prototype.getDefault', function () {
@@ -1208,12 +1228,12 @@ describe('Field', function () {
             field.setModel(User);
 
             expect(field.errors, 'to satisfy', {
-                Required: expect.it('to be an error named', 'MissingRequiredUserFirstNameError'),
-                Type: expect.it('to be an error named', 'InvalidUserFirstNameTypeError'),
-                MinLength: expect.it('to be an error named', 'UserFirstNameTooShortError'),
-                MaxLength: expect.it('to be an error named', 'UserFirstNameTooLongError'),
-                OneOf: expect.it('to be an error named', 'UnknownUserFirstNameError'),
-                Custom: expect.it('to be an error named', 'InvalidUserFirstNameError'),
+                RequiredError: expect.it('to be an error named', 'MissingRequiredUserFirstNameError'),
+                TypeError: expect.it('to be an error named', 'InvalidUserFirstNameTypeError'),
+                MinLengthError: expect.it('to be an error named', 'UserFirstNameTooShortError'),
+                MaxLengthError: expect.it('to be an error named', 'UserFirstNameTooLongError'),
+                OneOfError: expect.it('to be an error named', 'UnknownUserFirstNameError'),
+                CustomError: expect.it('to be an error named', 'InvalidUserFirstNameError'),
             });
         });
 
@@ -1249,23 +1269,23 @@ describe('Field', function () {
                 });
 
                 expect(field.errors, 'to satisfy', {
-                    Required: expect.it('to be an error named', 'MissingRequiredUserFirstNameError'),
-                    Type: expect.it('to be an error named', 'InvalidUserFirstNameTypeError'),
-                    MinLength: expect.it('to be an error named', 'UserFirstNameTooShortError'),
-                    MaxLength: expect.it('to be an error named', 'UserFirstNameTooLongError'),
-                    OneOf: expect.it('to be an error named', 'UnknownUserFirstNameError'),
-                    Custom: expect.it('to be an error named', 'InvalidUserFirstNameError'),
+                    RequiredError: expect.it('to be an error named', 'MissingRequiredUserFirstNameError'),
+                    TypeError: expect.it('to be an error named', 'InvalidUserFirstNameTypeError'),
+                    MinLengthError: expect.it('to be an error named', 'UserFirstNameTooShortError'),
+                    MaxLengthError: expect.it('to be an error named', 'UserFirstNameTooLongError'),
+                    OneOfError: expect.it('to be an error named', 'UnknownUserFirstNameError'),
+                    CustomError: expect.it('to be an error named', 'InvalidUserFirstNameError'),
                 });
 
                 field.setModel(Employee);
 
                 expect(field.errors, 'to satisfy', {
-                    Required: expect.it('to be an error named', 'MissingRequiredEmployeeFirstNameError'),
-                    Type: expect.it('to be an error named', 'InvalidEmployeeFirstNameTypeError'),
-                    MinLength: expect.it('to be an error named', 'EmployeeFirstNameTooShortError'),
-                    MaxLength: expect.it('to be an error named', 'EmployeeFirstNameTooLongError'),
-                    OneOf: expect.it('to be an error named', 'UnknownEmployeeFirstNameError'),
-                    Custom: expect.it('to be an error named', 'InvalidEmployeeFirstNameError'),
+                    RequiredError: expect.it('to be an error named', 'MissingRequiredEmployeeFirstNameError'),
+                    TypeError: expect.it('to be an error named', 'InvalidEmployeeFirstNameTypeError'),
+                    MinLengthError: expect.it('to be an error named', 'EmployeeFirstNameTooShortError'),
+                    MaxLengthError: expect.it('to be an error named', 'EmployeeFirstNameTooLongError'),
+                    OneOfError: expect.it('to be an error named', 'UnknownEmployeeFirstNameError'),
+                    CustomError: expect.it('to be an error named', 'InvalidEmployeeFirstNameError'),
                 });
             });
 
