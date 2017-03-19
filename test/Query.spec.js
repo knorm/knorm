@@ -2014,7 +2014,7 @@ describe('lib/newModels/Query', function () {
         });
     });
 
-    describe.only('Query.prototype.save', function () {
+    describe('Query.prototype.save', function () {
         afterEach(async function () {
             await truncateUserTable();
         });
