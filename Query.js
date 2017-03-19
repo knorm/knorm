@@ -198,6 +198,7 @@ class Query extends WithKnex {
         return this;
     }
 
+    // TODO: rename this to 'in' or 'within'
     transaction(transaction, options) {
         let forUpdate;
         let forShare;
