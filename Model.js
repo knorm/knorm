@@ -307,11 +307,12 @@ const createError = require('./lib/createError');
 const getDefaultErrors = (model) => {
     const DatabaseError = createError('DatabaseError');
     return {
-        SaveError: createError(`${model.name}SaveError`, DatabaseError),
         CountError: createError(`${model.name}CountError`, DatabaseError),
         FetchError: createError(`${model.name}FetchError`, DatabaseError),
-        RowNotInsertedError: createError(`${model.name}NotInsertedError`, DatabaseError), // TODO: not a db error
-        RowNotUpdatedError: createError(`${model.name}NotUpdatedError`, DatabaseError), // TODO: not a db error
+        InsertError: createError(`${model.name}InsertError`, DatabaseError),
+        UpdateError: createError(`${model.name}UpdateError`, DatabaseError),
+        RowNotInsertedError: createError(`${model.name}NotInsertedError`),
+        RowNotUpdatedError: createError(`${model.name}NotUpdatedError`),
         RowNotFoundError: createError(`${model.name}NotFoundError`),
         RowsNotFoundError: createError(`${model.name}sNotFoundError`), // TODO: proper pluralizing
     };

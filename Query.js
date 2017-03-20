@@ -249,7 +249,7 @@ class Query extends WithKnex {
             }
             if (
                 option.startsWith('_') ||
-                [ 'count', 'fetch', 'save' ].includes(option)
+                [ 'count', 'fetch', 'insert', 'update' ].includes(option)
             ) {
                 throw new Error(`'${option}' is not an allowed option`);
             }
@@ -437,20 +437,28 @@ class Query extends WithKnex {
     }
 
     _prepareBuilder(options = {}) {
+        if (!this.isChild) {
+            if (this._transaction) { this._addTransaction(); }
+        }
+
+        if (options.forInsert || options.forUpdate) {
+            if (!this._hasReturning) {
+                this._returning = this._getFieldsWithAliases();
+            }
+            this._addReturning();
+        }
+
+        if (options.forInsert) {
+            return this;
+        }
+
         if (this._where.length) { this._addWhere(); }
         if (this._whereNot.length) { this._addWhereNot(); }
         if (this._orWhere.length) { this._addOrWhere(); }
         if (this._orWhereNot.length) { this._addOrWhereNot(); }
 
-        if (!this.isChild) {
-            if (this._transaction) { this._addTransaction(); }
-        }
-
-        if (options.forSave) {
-            if (!this._hasReturning) {
-                this._returning = this._getFieldsWithAliases();
-            }
-            return this._addReturning();
+        if (options.forUpdate) {
+            return this;
         }
 
         if (options.includeFields !== false) {
@@ -615,80 +623,116 @@ class Query extends WithKnex {
         return this._first ? rows[0] : rows;
     }
 
-    async save(instance) {
+    _getValidatedInstance(instance) {
         if (!(instance instanceof this.model)) {
+            if (!isObject(instance)) {
+                throw new Error(
+                    `Cannot insert/update non-object '${instance}'`
+                );
+            } else if (instance instanceof Model) {
+                throw new Error(
+                    `Cannot insert/update an instance of ${(
+                        instance.constructor.name
+                    )} with ${this.model.name}.query`
+                );
+            }
             // eslint-disable-next-line new-cap
             instance = new this.model(instance);
         }
+        return instance;
+    }
 
-        const id = instance[this.model.idField];
-        const isUpdate = !!id;
-        const isInsert = !isUpdate;
+    async _getRow(instance, fields) {
+        const data = await instance.getData({ fields });
 
-        const allFields = Object.keys(this.model.fields);
-        let fieldsToSave;
-        let fieldsNotToSave = [ this.model.idField ];
-
-        if (isInsert) {
-            instance.setDefaults();
-            fieldsToSave = difference(allFields, fieldsNotToSave);
-        } else {
-            const updatedAtField = this.model.fields[this.model.updatedAtField];
-            if (updatedAtField && updatedAtField.hasDefault()) {
-                instance.updatedAt = undefined;
-                instance.setDefaults({ fields: [ this.model.updatedAtField ] });
-            }
-            const filledFields = allFields.filter(name => {
-                return instance[name] !== undefined;
-            });
-            if (this.model.fields[this.model.createdAtField]) {
-                fieldsNotToSave.push(this.model.createdAtField);
-            }
-            fieldsToSave = difference(filledFields, fieldsNotToSave);
-        }
-
-        await instance.validate({ fields: fieldsToSave });
-
-        const data = await instance.getData({ fields: fieldsToSave });
-        const row = Object.keys(data).reduce((row, field) => {
+        return Object.keys(data).reduce((row, field) => {
             field = this.model.fields[field];
             row[field.column] = data[field.name];
             return row;
         }, {});
+    }
 
-        if (isUpdate) {
-            this.where({ [this.model.idField]: id });
-        }
-        this._prepareBuilder({ forSave: true });
-
-        let result;
-
-        try {
-            if (isInsert) {
-                result = await this.builder.insert(row);
-            } else {
-                result = await this.builder.update(row);
-            }
-        } catch (error) {
-            this._throw('SaveError', error);
-        }
-
-        if (!result || !result[0]) {
-            if (isInsert) {
-                this._throw('RowNotInsertedError');
-            } else {
-                this._throw('RowNotUpdatedError');
-            }
-        }
-
-        result = result[0];
-        Object.keys(result).forEach(aliasedField => {
+    _setData(instance, row) {
+        Object.keys(row).forEach(aliasedField => {
             const field = aliasedField.split('.')[1];
-            const value = result[aliasedField];
+            const value = row[aliasedField];
+
             instance[field] = value;
         });
-
         return instance;
+    }
+
+    async insert(instance) {
+        instance = this._getValidatedInstance(instance);
+        this._prepareBuilder({ forInsert: true });
+
+        instance.setDefaults();
+
+        const fieldsNotToSave = [];
+        if (instance[this.model.idField] === undefined) {
+            fieldsNotToSave.push(this.model.idField);
+        }
+
+        const allFields = Object.keys(this.model.fields);
+        const fieldsToSave = difference(allFields, fieldsNotToSave);
+
+        await instance.validate({ fields: fieldsToSave });
+
+        const row = await this._getRow(instance, fieldsToSave);
+
+        let result;
+        try {
+            result = await this.builder.insert(row);
+            result = result[0];
+        } catch (error) {
+            this._throw('InsertError', error);
+        }
+
+        if (!result && this._require) {
+            this._throw('RowNotInsertedError');
+        }
+
+        return this._setData(instance, result);
+    }
+
+    async update(instance) {
+        instance = this._getValidatedInstance(instance);
+        this._prepareBuilder({ forUpdate: true });
+
+        const updatedAtField = this.model.fields[this.model.updatedAtField];
+        if (updatedAtField && updatedAtField.hasDefault()) {
+            instance.updatedAt = undefined;
+            instance.setDefaults({ fields: [ this.model.updatedAtField ] });
+        }
+
+        const filledFields = Object.keys(this.model.fields).filter(name => {
+            return instance[name] !== undefined;
+        });
+
+        const fieldsNotToSave = [ this.model.idField ];
+        if (this.model.fields[this.model.createdAtField]) {
+            fieldsNotToSave.push(this.model.createdAtField);
+        }
+
+        const fieldsToSave = difference(filledFields, fieldsNotToSave);
+
+        await instance.validate({ fields: fieldsToSave });
+
+        const row = await this._getRow(instance, fieldsToSave);
+
+        let result;
+        try {
+            result = await this.builder.update(row);
+            result = result[0];
+        } catch (error) {
+            this._throw('UpdateError', error);
+        }
+
+        if (!result && this._require) {
+            this._throw('RowNotUpdatedError');
+        }
+
+        return this._setData(instance, result);
     }
 }
 
