@@ -1,7 +1,7 @@
 # knorm
 
-[![build status](https://gitlab.one.com/jmu/knorm/badges/master/build.svg)](https://gitlab.one.com/jmu/knorm/commits/master)
-[![coverage report](https://gitlab.one.com/jmu/knorm/badges/master/coverage.svg)](https://gitlab.one.com/jmu/knorm/commits/master)
+[![build status](https://travis-ci.org/joelmukuthu/knorm.svg?branch=master)](https://travis-ci.org/joelmukuthu/knorm)
+[![coverage status](https://coveralls.io/repos/github/joelmukuthu/knorm/badge.svg?branch=master)](https://coveralls.io/github/joelmukuthu/knorm?branch=master)
 
 A purely class-based ORM for [Knex.js](http://knexjs.org/) with built-in support
 for joins.
