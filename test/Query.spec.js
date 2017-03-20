@@ -736,21 +736,6 @@ describe('lib/newModels/Query', function () {
                 await truncateUserTable();
             });
 
-            it('throws an error if the models do not reference each other', function () {
-                class Foo extends Model {}
-                Foo.table = 'foo';
-                expect(
-                    () => new Query(User).with(new Query(Foo)),
-                    'to throw',
-                    new Error("'User' has no references to 'Foo'")
-                );
-                expect(
-                    () => new Query(Foo).with(new Query(User)),
-                    'to throw',
-                    new Error("'Foo' has no references to 'User'")
-                );
-            });
-
             it("rejects with an error if a fetch is attempted from the joined model's query", async function () {
                 const imageQuery = new Query(Image);
                 new Query(User).with(imageQuery);
@@ -1891,6 +1876,23 @@ describe('lib/newModels/Query', function () {
                     );
                 });
             });
+        });
+    });
+
+    describe('Query.prototype.with', function () {
+        it('throws an error if the models do not reference each other', function () {
+            class Foo extends Model {}
+            Foo.table = 'foo';
+            expect(
+                () => new Query(User).with(new Query(Foo)),
+                'to throw',
+                new Error("'User' has no references to 'Foo'")
+            );
+            expect(
+                () => new Query(Foo).with(new Query(User)),
+                'to throw',
+                new Error("'Foo' has no references to 'User'")
+            );
         });
     });
 
