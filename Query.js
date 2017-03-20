@@ -615,16 +615,6 @@ class Query extends WithKnex {
         return this._first ? rows[0] : rows;
     }
 
-    foo(transaction) {
-        this._transaction = { transaction };
-        return this;
-    }
-
-    async fooSave(instance) {
-        this._prepareBuilder({ forSave: true });
-        return this.save(instance);
-    }
-
     async save(instance) {
         if (!(instance instanceof this.model)) {
             // eslint-disable-next-line new-cap
