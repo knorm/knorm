@@ -36,6 +36,7 @@
     "yargs": "^7.0.2"
   },
   "directories": {
+    "doc": "doc",
     "test": "test"
   },
   "keywords": [
@@ -57,5 +58,13 @@
     "exclude": [
       "index.js"
     ]
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/joelmukuthu/knorm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joelmukuthu/knorm/issues"
+  },
+  "homepage": "https://github.com/joelmukuthu/knorm#readme"
 }
