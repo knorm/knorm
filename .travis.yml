@@ -1,0 +1,17 @@
+services:
+  - postgresql: "9.6"
+
+before_script:
+  - psql -c 'create database knorm;' -U postgres
+
+env:
+  - POSTGRES_DB=knorm
+
+language: node_js
+
+cache:
+  directories:
+    - node_modules
+
+script:
+  - npm run ci

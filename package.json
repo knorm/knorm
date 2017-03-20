@@ -7,7 +7,8 @@
     "test": "mocha",
     "coverage": "nyc mocha",
     "lint": "eslint .",
-    "ci": "npm-run-all lint coverage",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "ci": "npm-run-all lint coverage coveralls",
     "postgres": "node script/postgres start",
     "postgres:stop": "node script/postgres stop",
     "postgres:remove": "node script/postgres remove"
@@ -18,6 +19,7 @@
     "knex": "^0.12.7"
   },
   "devDependencies": {
+    "coveralls": "^2.12.0",
     "eslint": "^3.17.1",
     "eslint-config-onelint": "^2.0.0",
     "knex": "^0.12.7",
@@ -34,6 +36,7 @@
     "yargs": "^7.0.2"
   },
   "directories": {
+    "doc": "doc",
     "test": "test"
   },
   "keywords": [
@@ -55,5 +58,13 @@
     "exclude": [
       "index.js"
     ]
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/joelmukuthu/knorm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joelmukuthu/knorm/issues"
+  },
+  "homepage": "https://github.com/joelmukuthu/knorm#readme"
 }
