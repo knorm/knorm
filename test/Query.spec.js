@@ -138,7 +138,7 @@ const truncateImageTable = async () => {
 
 class Message extends Model {}
 
-Message.table = 'account';
+Message.table = 'message';
 Message.fields = {
     text: {
         type: Field.types.text,
