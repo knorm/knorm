@@ -68,6 +68,8 @@ class Field {
     }
 
     getColumnName() {
+        // TODO: change this, default should be to do nothing
+        // TODO: pass the field name as an argument
         return snakeCase(this.name);
     }
 

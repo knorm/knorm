@@ -198,7 +198,7 @@ class Query extends WithKnex {
         return this;
     }
 
-    // TODO: rename this to 'in' or 'within'
+    // TODO: rename this to 'within'
     transaction(transaction, options) {
         let forUpdate;
         let forShare;
@@ -705,7 +705,8 @@ class Query extends WithKnex {
             instance.setDefaults({ fields: [ this.model.updatedAtField ] });
         }
 
-        const filledFields = Object.keys(this.model.fields).filter(name => {
+        const allFields = Object.keys(this.model.fields);
+        const filledFields = allFields.filter(name => {
             return instance[name] !== undefined;
         });
 
