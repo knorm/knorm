@@ -1,9 +1,7 @@
 const createError = require('../lib/createError');
-const expect = require('unexpected')
-    .clone()
-    .use(require('unexpected-sinon'));
+const expect = require('unexpected').clone();
 
-describe('createErrors helper', function () {
+describe('createError', function () {
     it('creates a custom error that inherits Error', function () {
         const MyError = createError('MyError');
         expect(MyError.prototype, 'to be an', Error);
