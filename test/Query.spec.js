@@ -2061,7 +2061,7 @@ describe('lib/newModels/Query', function () {
             await expect(
                 query.insert(1),
                 'to be rejected with error exhaustively satisfying',
-                new Error("Cannot insert/update non-object '1'")
+                new Error("Cannot insert non-object '1'")
             );
         });
 
@@ -2070,7 +2070,7 @@ describe('lib/newModels/Query', function () {
             await expect(
                 query.insert(new Message()),
                 'to be rejected with error exhaustively satisfying',
-                new Error('Cannot insert/update an instance of Message with User.query')
+                new Error('Cannot insert an instance of Message with User.query')
             );
         });
 
@@ -2100,18 +2100,24 @@ describe('lib/newModels/Query', function () {
             );
         });
 
-        it('allows saving instances/objects without the id field set', async function () {
+        it('allows inserting instances without the id field set', async function () {
             const query = new Query(User);
             const user = new User({ name: 'John Doe' });
             await expect(query.insert(user), 'to be fulfilled');
-            await expect(query.insert({ name: 'John Doe' }), 'to be fulfilled');
             await expect(knex, 'with table', 'user', 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'John Doe',
                 },
+            ]);
+        });
+
+        it('allows saving objects without the id field set', async function () {
+            const query = new Query(User);
+            await expect(query.insert({ name: 'John Doe' }), 'to be fulfilled');
+            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
                 {
-                    id: 2,
+                    id: 1,
                     name: 'John Doe',
                 },
             ]);
@@ -2273,6 +2279,277 @@ describe('lib/newModels/Query', function () {
                     query.insert(new User({ name: 'John Doe' })),
                     'to be rejected with error satisfying',
                     new User.errors.RowNotInsertedError()
+                );
+                stub.restore();
+
+            });
+        });
+    });
+
+    describe('Query.prototype.update', function () {
+        let user;
+
+        beforeEach(async function () {
+            const query = new Query(User);
+            user = await query.insert(new User({ id: 1, name: 'John Doe' }));
+        });
+
+        afterEach(async function () {
+            await truncateUserTable();
+        });
+
+        it('updtes a row in the database table from a model instance', async function () {
+            const query = new Query(User);
+            user.name = 'Jane Doe';
+            await expect(query.update(user), 'to be fulfilled');
+            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'Jane Doe',
+                },
+            ]);
+        });
+
+        it('updates a row in the database table from a plain object', async function () {
+            const query = new Query(User);
+            const user = { id: 1, name: 'Jane Doe' };
+            await expect(query.update(user), 'to be fulfilled');
+            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'Jane Doe',
+                },
+            ]);
+        });
+
+        it('rejects with an error if the object contains invalid field names', async function () {
+            const query = new Query(User);
+            await expect(
+                query.update({ foo: 'bar' }),
+                'to be rejected with error exhaustively satisfying',
+                new Error("Unknown field or virtual 'User.foo'")
+            );
+        });
+
+        it('rejects with an error if passed a non-object value', async function () {
+            const query = new Query(User);
+            await expect(
+                query.update(1),
+                'to be rejected with error exhaustively satisfying',
+                new Error("Cannot update non-object '1'")
+            );
+        });
+
+        it('rejects with an error if passed an instance of a different model', async function () {
+            const query = new Query(User);
+            await expect(
+                query.update(new Message()),
+                'to be rejected with error exhaustively satisfying',
+                new Error('Cannot update an instance of Message with User.query')
+            );
+        });
+
+        it('populates the updatedAt field with its default value before update', async function () {
+            const oldCreatedAt = user.createdAt;
+            const oldUpdatedAt = user.updatedAt;
+            const clock = sinon.useFakeTimers('Date');
+            const newUpdatedAt = new Date();
+            const query = new Query(User);
+            user.name = 'Jane Doe';
+            await expect(query.update(user), 'to be fulfilled');
+            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'Jane Doe',
+                    confirmed: false,
+                    age: null,
+                    created_at: oldCreatedAt,
+                    updated_at: newUpdatedAt,
+                },
+            ]);
+            await expect(oldUpdatedAt, 'not to equal', newUpdatedAt);
+            clock.restore();
+        });
+
+        it("validates the instance's fields before saving", async function () {
+            const query = new Query(User);
+            user.name = 1;
+            await expect(
+                query.update(user),
+                'to be rejected with error satisfying',
+                new User.fields.name.errors.TypeError()
+            );
+        });
+
+        it('resolves with an instance of the model', async function () {
+            const query = new Query(User);
+            user.name = 'Jane Doe';
+            await expect(
+                query.update(user),
+                'to be fulfilled with value exhaustively satisfying',
+                expect.it('to be a', User)
+            );
+        });
+
+        it('resolves with the same instance that was passed', async function () {
+            const query = new Query(User);
+            user.name = 'Jane Doe';
+            await expect(
+                query.update(user),
+                'to be fulfilled with value exhaustively satisfying',
+                updatedUser => {
+                    expect(updatedUser === user, 'to be true');
+                }
+            );
+        });
+
+        it('populates the instance with all the fields from the database', async function () {
+            const query = new Query(User);
+            user.name = 'Jane Doe';
+            await expect(
+                query.update(user),
+                'to be fulfilled with value satisfying',
+                new User({
+                    id: 1,
+                    createdAt: expect.it('to be a', Date),
+                    updatedAt: expect.it('to be a', Date),
+                    name: 'Jane Doe',
+                    confirmed: false,
+                    description: null,
+                    age: null,
+                    dateOfBirth: null,
+                    dbDefault: 'set-by-db',
+                })
+            );
+        });
+
+        it("doesn't modify other instance data properties", async function () {
+            const query = new Query(User);
+            user.name = 'Jane Doe';
+            user.leaveMeIntact = 'okay';
+            await query.update(user);
+            await expect(
+                user,
+                'to exhaustively satisfy',
+                Object.assign(new User({
+                    id: 1,
+                    createdAt: expect.it('to be a', Date),
+                    updatedAt: expect.it('to be a', Date),
+                    name: 'Jane Doe',
+                    confirmed: false,
+                    description: null,
+                    age: null,
+                    dateOfBirth: null,
+                    dbDefault: 'set-by-db',
+                }), {
+                    leaveMeIntact: 'okay',
+                })
+            );
+        });
+
+        it('rejects with a ModelUpdateError if the update operation fails', async function () {
+            const stub = sinon.stub(QueryBuilder.prototype, 'update').returns(
+                Promise.reject(new Error('update error'))
+            );
+            const query = new Query(User);
+            user.name = 'Jane Doe';
+            await expect(
+                query.update(user),
+                'to be rejected with error satisfying',
+                error => {
+                    expect(error, 'to be a', User.errors.UpdateError);
+                    expect(error, 'to exhaustively satisfy', {
+                        message: 'update error',
+                        originalError: new Error('update error'),
+                    });
+                }
+            );
+            stub.restore();
+        });
+
+        describe('with a custom id field', function () {
+            class UuidAsId extends AbstractModel {}
+            UuidAsId.Query = Query;
+            UuidAsId.table = 'uuid_as_id';
+            UuidAsId.idField = 'uuid';
+            UuidAsId.fields = {
+                uuid: {
+                    type: Field.types.string,
+                    required: true,
+                },
+                name: {
+                    type: Field.types.string,
+                },
+            };
+
+            before(async function () {
+                await knex.schema.createTable(UuidAsId.table, table => {
+                    table.string('uuid').unique().notNullable();
+                    table.string('name');
+                });
+            });
+
+            after(async function () {
+                await knex.schema.dropTable(UuidAsId.table);
+            });
+
+            afterEach(async function () {
+                await knex(UuidAsId.table).truncate();
+            });
+
+            it('updates an instance of the model', async function () {
+                const instance = await new Query(UuidAsId).insert(
+                    new UuidAsId({ uuid: 'foo', name: 'bar' })
+                );
+                const query = new Query(UuidAsId);
+                instance.name = 'foobar';
+                await expect(query.update(instance), 'to be fulfilled');
+                await expect(knex, 'with table', UuidAsId.table, 'to have rows satisfying', [
+                    {
+                        uuid: 'foo',
+                        name: 'foobar',
+                    },
+                ]);
+            });
+        });
+
+        describe("with a 'transaction' configured", function () {
+            it('does the update within the transaction', async function () {
+                const transact = async transaction => {
+                    user.name = 'Jane Doe';
+                    await new Query(User)
+                        .transaction(transaction)
+                        .update(user);
+
+                    throw new Error('foo');
+                };
+
+                await expect(
+                    knex.transaction(transact),
+                    'to be rejected with error satisfying',
+                    new Error('foo')
+                );
+
+                await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                    {
+                        id: 1,
+                        name: 'John Doe',
+                    },
+                ]);
+            });
+        });
+
+        describe("with 'require' option configured", function () {
+            it('throws a ModelNotUpdatedError if no row is updated', async function () {
+                const stub = sinon.stub(QueryBuilder.prototype, 'update').returns(
+                    Promise.resolve([])
+                );
+                user.name = 'Jane Doe';
+                const query = new Query(User).require();
+                await expect(
+                    query.update(user),
+                    'to be rejected with error satisfying',
+                    new User.errors.RowNotUpdatedError()
                 );
                 stub.restore();
 

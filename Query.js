@@ -623,15 +623,15 @@ class Query extends WithKnex {
         return this._first ? rows[0] : rows;
     }
 
-    _getValidatedInstance(instance) {
+    _getValidatedInstance(instance, operation) {
         if (!(instance instanceof this.model)) {
             if (!isObject(instance)) {
                 throw new Error(
-                    `Cannot insert/update non-object '${instance}'`
+                    `Cannot ${operation} non-object '${instance}'`
                 );
             } else if (instance instanceof Model) {
                 throw new Error(
-                    `Cannot insert/update an instance of ${(
+                    `Cannot ${operation} an instance of ${(
                         instance.constructor.name
                     )} with ${this.model.name}.query`
                 );
@@ -663,7 +663,7 @@ class Query extends WithKnex {
     }
 
     async insert(instance) {
-        instance = this._getValidatedInstance(instance);
+        instance = this._getValidatedInstance(instance, 'insert');
         this._prepareBuilder({ forInsert: true });
 
         instance.setDefaults();
@@ -696,7 +696,7 @@ class Query extends WithKnex {
     }
 
     async update(instance) {
-        instance = this._getValidatedInstance(instance);
+        instance = this._getValidatedInstance(instance, 'update');
         this._prepareBuilder({ forUpdate: true });
 
         const updatedAtField = this.model.fields[this.model.updatedAtField];
@@ -710,6 +710,7 @@ class Query extends WithKnex {
             return instance[name] !== undefined;
         });
 
+        // TODO: figure out how to handle this id case
         const fieldsNotToSave = [ this.model.idField ];
         if (this.model.fields[this.model.createdAtField]) {
             fieldsNotToSave.push(this.model.createdAtField);
