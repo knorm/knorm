@@ -1,6 +1,7 @@
+const { snakeCase } = require('lodash');
 const QueryBuilder = require('knex/lib/query/builder');
 const AbstractModel = require('../Model');
-const Field = require('../Field');
+const AbstractField = require('../Field');
 const knex = require('./lib/knex')();
 const AbstractQuery = require('../Query');
 const sinon = require('sinon');
@@ -34,8 +35,15 @@ const expect = require('unexpected')
 class Query extends AbstractQuery {}
 Query.knex = knex;
 
+class Field extends AbstractField {
+    getColumnName(fieldName) {
+        return snakeCase(fieldName);
+    }
+}
+
 class Model extends AbstractModel {}
 Model.Query = Query;
+Model.Field = Field;
 Model.fields = {
     id: {
         type: Field.types.integer,

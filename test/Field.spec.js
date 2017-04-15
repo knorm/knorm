@@ -96,25 +96,18 @@ describe('Field', function () {
             stub.restore();
         });
 
-        describe('without a column name configured', function () {
-            it("calls getColumnName to set the field's column name", function () {
+        describe('with a column name configured', function () {
+            it("sets the field's column name from configured value", function () {
                 class Foo extends Model {}
-                const stub = sinon.stub(Field.prototype, 'getColumnName')
-                    .returns('the column name');
                 const field = new Field({
                     name: 'bar',
                     model: Foo,
                     type: Field.types.string,
-                });
-                expect(stub, 'to have calls satisfying', () => {
-                    stub();
+                    column: 'the column name',
                 });
                 expect(field.column, 'to be', 'the column name');
-                stub.restore();
             });
-        });
 
-        describe('with a column name configured', function () {
             it('does not call getColumnName', function () {
                 class Foo extends Model {}
                 const spy = sinon.spy(Field.prototype, 'getColumnName');
@@ -127,16 +120,23 @@ describe('Field', function () {
                 expect(spy, 'was not called');
                 spy.restore();
             });
+        });
 
-            it("sets the field's column name from configured value", function () {
+        describe('without a column name configured', function () {
+            it("calls getColumnName to set the field's column name", function () {
                 class Foo extends Model {}
+                const stub = sinon.stub(Field.prototype, 'getColumnName')
+                    .returns('the column name');
                 const field = new Field({
                     name: 'bar',
                     model: Foo,
                     type: Field.types.string,
-                    column: 'the column name',
+                });
+                expect(stub, 'to have calls satisfying', () => {
+                    stub('bar');
                 });
                 expect(field.column, 'to be', 'the column name');
+                stub.restore();
             });
         });
     });
@@ -158,14 +158,14 @@ describe('Field', function () {
     });
 
     describe('Field.prototype.getColumnName', function () {
-        it('returns a snake-cased version of the passed field name', function () {
+        it('returns the field name passed as is', function () {
             class Foo extends Model {}
             const field = new Field({
                 name: 'firstName',
                 model: Foo,
                 type: Field.types.string,
             });
-            expect(field.getColumnName(), 'to be', 'first_name');
+            expect(field.getColumnName('firstName'), 'to be', 'firstName');
         });
     });
 

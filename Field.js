@@ -1,4 +1,4 @@
-const { camelCase, snakeCase } = require('lodash');
+const { camelCase } = require('lodash');
 const createError = require('./lib/createError');
 const ValidationError = createError('ValidationError');
 
@@ -62,15 +62,13 @@ class Field {
 
         let { column } = config;
         if (!column) {
-            column = this.getColumnName();
+            column = this.getColumnName(name);
         }
         this.column = column;
     }
 
-    getColumnName() {
-        // TODO: change this, default should be to do nothing
-        // TODO: pass the field name as an argument
-        return snakeCase(this.name);
+    getColumnName(fieldName) {
+        return fieldName;
     }
 
     clone() {
