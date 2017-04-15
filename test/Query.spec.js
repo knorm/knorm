@@ -2357,6 +2357,16 @@ describe('lib/newModels/Query', function () {
             );
         });
 
+        it("doesn't save the id field if it's been set", async function () {
+            const spy = sinon.spy(QueryBuilder.prototype, 'update');
+            const query = new Query(User);
+            await query.update(user);
+            await expect(spy, 'to have calls satisfying', () => {
+                spy(expect.it('not to have key', 'id'));
+            });
+            spy.restore();
+        });
+
         it('populates the updatedAt field with its default value before update', async function () {
             const oldCreatedAt = user.createdAt;
             const oldUpdatedAt = user.updatedAt;

@@ -710,7 +710,6 @@ class Query extends WithKnex {
             return instance[name] !== undefined;
         });
 
-        // TODO: figure out how to handle this id case
         const fieldsNotToSave = [ this.model.idField ];
         if (this.model.fields[this.model.createdAtField]) {
             fieldsNotToSave.push(this.model.createdAtField);
