@@ -31,7 +31,7 @@
     "shelljs": "^0.7.7",
     "sinon": "^1.17.7",
     "unexpected": "^10.26.3",
-    "unexpected-knex": "^1.1.1",
+    "unexpected-knex": "^1.1.2",
     "unexpected-sinon": "^10.7.0",
     "yargs": "^7.0.2"
   },
