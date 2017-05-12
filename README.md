@@ -76,9 +76,9 @@ Model.fields = {
     default: () => new Date(),
   },
 };
-// Note that the required and default field options are optional; however, type
-// is required.
-// With the few exceptions, these types map one-to-one with the types you use
+// Note that the 'required' and 'default' field options are optional; however,
+// 'type' is required.
+// With a few exceptions, these types map one-to-one with the types you use
 // with Knex's schema builder.
 ```
 Knorm requires all models to have an `id` field (timestamps are optional). If
@@ -159,11 +159,10 @@ const updateUserMessageFlags => async () => {
       return;
     }
 
-    // this will do a left join from the 'user' to the 'message' table
     const users = await User.query
       .where({ confirmed: true })
       .within(transaction, { forUpdate: true })
-      .with([
+      .with([ // this will do a left join from the 'user' to the 'message' table
           Message.query
               .on(Message.fields.senderId)
               .fields([ 'id', Message.fields.text ])
