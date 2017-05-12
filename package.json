@@ -30,7 +30,7 @@
     "proxyquire": "^1.7.11",
     "shelljs": "^0.7.7",
     "sinon": "^1.17.7",
-    "unexpected": "^10.26.3",
+    "unexpected": "^10.29.0",
     "unexpected-knex": "^1.1.2",
     "unexpected-sinon": "^10.7.0",
     "yargs": "^7.0.2"
