@@ -329,12 +329,12 @@ describe('lib/newModels/Query', function () {
             let selectStub;
 
             before(function () {
-                selectStub = sinon.stub(QueryBuilder.prototype, 'select')
-                    .returns(Promise.resolve([]));
+                selectStub = sinon.stub(QueryBuilder.prototype, 'select');
             });
 
             beforeEach(function () {
                 selectStub.reset();
+                selectStub.returns(Promise.resolve([]));
             });
 
             after(function () {
@@ -2393,12 +2393,12 @@ describe('lib/newModels/Query', function () {
             let insertStub;
 
             before(function () {
-                insertStub = sinon.stub(QueryBuilder.prototype, 'insert')
-                    .returns(Promise.resolve([]));
+                insertStub = sinon.stub(QueryBuilder.prototype, 'insert');
             });
 
             beforeEach(function () {
                 insertStub.reset();
+                insertStub.returns(Promise.resolve([]));
             });
 
             after(function () {
@@ -2752,12 +2752,12 @@ describe('lib/newModels/Query', function () {
             let updateStub;
 
             before(function () {
-                updateStub = sinon.stub(QueryBuilder.prototype, 'update')
-                    .returns(Promise.resolve([]));
+                updateStub = sinon.stub(QueryBuilder.prototype, 'update');
             });
 
             beforeEach(function () {
                 updateStub.reset();
+                updateStub.returns(Promise.resolve([]));
             });
 
             after(function () {

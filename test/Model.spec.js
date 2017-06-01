@@ -1100,7 +1100,8 @@ describe('Model', function () {
         });
 
         beforeEach(function () {
-            User.Query.reset().returns(sinon.createStubInstance(Query));
+            User.Query.reset();
+            User.Query.returns(sinon.createStubInstance(Query));
         });
 
         describe('as a getter', function () {
