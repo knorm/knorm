@@ -2306,7 +2306,7 @@ describe('lib/newModels/Query', function () {
             await truncateUserTable();
         });
 
-        it('updtes a row in the database table from a model instance', async function () {
+        it('updates a row in the database table from a model instance', async function () {
             const query = new Query(User);
             user.name = 'Jane Doe';
             await expect(query.update(user), 'to be fulfilled');
