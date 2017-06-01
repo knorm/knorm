@@ -129,26 +129,66 @@ class Model {
         return this;
     }
 
-    async fetch(options) {
-        const where = await this.getData();
-        const data = await this.constructor.query
-            .options(options)
-            .where(where)
-            .require()
-            .forge(false)
-            .fetch();
+    _initQuery(options = {}) {
+        const query = this.constructor.query
+            .options(options);
 
+        if (options.require === undefined) {
+            query.require(true);
+        }
+
+        return query;
+    }
+
+    async fetch(options = {}) {
+        const query = this._initQuery(options)
+            .first(true)
+            .forge(false);
+
+        if (options.where === undefined) {
+            const where = await this.getData();
+            query.where(where);
+        }
+
+        const data = await query.fetch();
+
+        if (!data) {
+            return data;
+        }
         return this.setData(data);
     }
 
-    async save(options) {
-        return this.constructor.save(this, options);
+    async save(options = {}) {
+        const query = this._initQuery(options);
+        return query.save(this);
+    }
+
+    async insert(options = {}) {
+        const query = this._initQuery(options);
+        return query.insert(this);
+    }
+
+    async update(options = {}) {
+        const query = this._initQuery(options);
+        return query.update(this);
     }
 
     static async save(data, options) {
         return this.query
             .options(options)
             .save(data);
+    }
+
+    static async insert(data, options) {
+        return this.query
+            .options(options)
+            .insert(data);
+    }
+
+    static async update(data, options) {
+        return this.query
+            .options(options)
+            .update(data);
     }
 
     static async fetch(options) {
@@ -158,16 +198,16 @@ class Model {
     }
 
     static async fetchById(id, options) {
-        if (!this.fields[this.idField]) {
-            throw new Error(`${this.name} has no id field ('${this.idField}') configured`);
-        }
+        ensureIdFieldIsConfigured(this);
+        const instance = new this({ [this.idField]: id });
+        return instance.fetch(options);
+    }
 
-        return this.query
-            .options(options)
-            .where({ [this.idField]: id })
-            .require()
-            .first()
-            .fetch();
+    static async updateById(id, data, options) {
+        ensureIdFieldIsConfigured(this);
+        data = Object.assign({}, data, { [this.idField]: id });
+        const instance = new this(data);
+        return instance.update(options);
     }
 
     static get references() {
@@ -316,6 +356,14 @@ const getDefaultErrors = (model) => {
         RowNotFoundError: createError(`${model.name}NotFoundError`),
         RowsNotFoundError: createError(`${model.name}sNotFoundError`), // TODO: proper pluralizing
     };
+};
+
+const ensureIdFieldIsConfigured = (model) => {
+    if (!model.fields[model.idField]) {
+        throw new Error(
+            `${model.name} has no id field ('${model.idField}') configured`
+        );
+    }
 };
 
 Model.idField = 'id';
