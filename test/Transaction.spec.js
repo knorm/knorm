@@ -133,7 +133,8 @@ describe('Transaction', function () {
         const executeStub = sinon.stub(Transaction.prototype, 'execute');
 
         beforeEach(function () {
-            executeStub.reset().returns(Promise.resolve());
+            executeStub.reset();
+            executeStub.returns(Promise.resolve());
         });
 
         it('calls Transaction.prototype.execute', async function () {
@@ -194,7 +195,8 @@ describe('Transaction', function () {
         const executeStub = sinon.stub(Transaction.prototype, 'execute');
 
         beforeEach(function () {
-            executeStub.reset().returns(Promise.resolve());
+            executeStub.reset();
+            executeStub.returns(Promise.resolve());
         });
 
         it('calls Transaction.prototype.execute', async function () {
@@ -206,7 +208,8 @@ describe('Transaction', function () {
         });
 
         it('does not call the callback if Transaction.prototype.execute fulfils', async function () {
-            executeStub.reset().returns(Promise.resolve());
+            executeStub.reset();
+            executeStub.returns(Promise.resolve());
             const transaction = new Transaction(() => {});
             const spy = sinon.spy();
             await transaction.catch(spy);
@@ -235,7 +238,8 @@ describe('Transaction', function () {
             });
 
             it('fulfils if Transaction.prototype.execute fulfils', async function () {
-                executeStub.reset().returns(Promise.resolve());
+                executeStub.reset();
+                executeStub.returns(Promise.resolve());
                 const transaction = new Transaction(() => {});
                 await expect(transaction.catch(), 'to be fulfilled');
             });
