@@ -2573,5 +2573,30 @@ describe('lib/newModels/Query', function () {
 
             });
         });
+
+        describe("with 'where' option configured", function () {
+            it('updates only the rows that match the where definition', async function () {
+                await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
+
+                const query = new Query(User).where({ id: 1 });
+                await expect(query.update({ name: 'Johnie Doe' }), 'to be fulfilled');
+                await expect(
+                    knex,
+                    'with table',
+                    'user',
+                    'to have rows satisfying',
+                    expect.it('sorted by', (a, b) => a.id - b.id, 'to satisfy', [
+                        {
+                            id: 1,
+                            name: 'Johnie Doe',
+                        },
+                        {
+                            id: 2,
+                            name: 'Jane Doe',
+                        },
+                    ])
+                );
+            });
+        });
     });
 });
