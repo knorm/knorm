@@ -242,7 +242,7 @@ class Query extends WithKnex {
     orHaving(orHaving) { return this._pushWhereOrHaving('orHaving', orHaving); }
     orHavingNot(orHavingNot) { return this._pushWhereOrHaving('orHavingNot', orHavingNot); }
 
-    options(options) {
+    options(options = {}) {
         Object.keys(options).forEach(option => {
             if (typeof this[option] !== 'function') {
                 throw new Error(`Unknown option '${option}'`);
@@ -578,7 +578,7 @@ class Query extends WithKnex {
         return this._parsedRows.slice();
     }
 
-    _maybeThrowRequireErrors() {
+    _maybeThrowFetchRequireErrors() {
         if (this._require) {
             if (this.isChild) {
                 // FIXME: this is because joined queries don't have support for
@@ -590,7 +590,7 @@ class Query extends WithKnex {
         }
 
         if (this._with.length) {
-            this._with.forEach(query => query._maybeThrowRequireErrors());
+            this._with.forEach(query => query._maybeThrowFetchRequireErrors());
         }
     }
 
@@ -615,7 +615,8 @@ class Query extends WithKnex {
         }
 
         if (!rows.length) {
-            this._maybeThrowRequireErrors();
+            this._maybeThrowFetchRequireErrors();
+            return this._first ? null : [];
         }
 
         rows = this._parseRows(rows);
@@ -689,8 +690,11 @@ class Query extends WithKnex {
             this._throw('InsertError', error);
         }
 
-        if (!result && this._require) {
-            this._throw('RowNotInsertedError');
+        if (!result) {
+            if (this._require) {
+                this._throw('RowNotInsertedError');
+            }
+            return null;
         }
 
         return this._setData(instance, result);
@@ -737,8 +741,11 @@ class Query extends WithKnex {
             this._throw('UpdateError', error);
         }
 
-        if (!result && this._require) {
-            this._throw('RowNotUpdatedError');
+        if (!result) {
+            if (this._require) {
+                this._throw('RowNotUpdatedError');
+            }
+            return null;
         }
 
         return this._setData(instance, result);

@@ -325,7 +325,7 @@ describe('lib/newModels/Query', function () {
             stub.restore();
         });
 
-        describe("with 'require' configured and no rows are matched", function () {
+        describe('if no rows are matched', function () {
             let selectStub;
 
             before(function () {
@@ -341,23 +341,45 @@ describe('lib/newModels/Query', function () {
                 selectStub.restore();
             });
 
-            it('rejects with a RowsNotFoundError', async function () {
-                const query = new Query(User).require();
+            it('resolves with an empty array', async function () {
+                const query = new Query(User);
                 await expect(
                     query.fetch(),
-                    'to be rejected with error satisfying',
-                    new User.errors.RowsNotFoundError()
+                    'to be fulfilled with value satisfying',
+                    []
                 );
             });
 
             describe("with 'first' configured", function () {
-                it('rejects with a RowNotFoundError', async function () {
-                    const query = new Query(User).require().first();
+                it('resolves with null', async function () {
+                    const query = new Query(User).first();
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with value satisfying',
+                        null
+                    );
+                });
+            });
+
+            describe("with 'require' configured", function () {
+                it('rejects with a RowsNotFoundError', async function () {
+                    const query = new Query(User).require();
                     await expect(
                         query.fetch(),
                         'to be rejected with error satisfying',
-                        new User.errors.RowNotFoundError()
+                        new User.errors.RowsNotFoundError()
                     );
+                });
+
+                describe("with 'first' configured", function () {
+                    it('rejects with a RowNotFoundError', async function () {
+                        const query = new Query(User).require().first();
+                        await expect(
+                            query.fetch(),
+                            'to be rejected with error satisfying',
+                            new User.errors.RowNotFoundError()
+                        );
+                    });
                 });
             });
         });
@@ -2277,19 +2299,40 @@ describe('lib/newModels/Query', function () {
             });
         });
 
-        describe("with 'require' option configured", function () {
-            it('throws a ModelNotInsertedError if no row is inserted', async function () {
-                const stub = sinon.stub(QueryBuilder.prototype, 'insert').returns(
-                    Promise.resolve([])
-                );
-                const query = new Query(User).require();
+        describe('if no row is inserted', function () {
+            let insertStub;
+
+            before(function () {
+                insertStub = sinon.stub(QueryBuilder.prototype, 'insert')
+                    .returns(Promise.resolve([]));
+            });
+
+            beforeEach(function () {
+                insertStub.reset();
+            });
+
+            after(function () {
+                insertStub.restore();
+            });
+
+            it('resolves with null', async function () {
+                const query = new Query(User);
                 await expect(
                     query.insert(new User({ name: 'John Doe' })),
-                    'to be rejected with error satisfying',
-                    new User.errors.RowNotInsertedError()
+                    'to be fulfilled with value satisfying',
+                    null
                 );
-                stub.restore();
+            });
 
+            describe("with 'require' option configured", function () {
+                it('rejects with a ModelNotInsertedError', async function () {
+                    const query = new Query(User).require();
+                    await expect(
+                        query.insert(new User({ name: 'John Doe' })),
+                        'to be rejected with error satisfying',
+                        new User.errors.RowNotInsertedError()
+                    );
+                });
             });
         });
     });
@@ -2615,20 +2658,42 @@ describe('lib/newModels/Query', function () {
             });
         });
 
-        describe("with 'require' option configured", function () {
-            it('throws a ModelNotUpdatedError if no row is updated', async function () {
-                const stub = sinon.stub(QueryBuilder.prototype, 'update').returns(
-                    Promise.resolve([])
-                );
+        describe('if no row is updated', function () {
+            let updateStub;
+
+            before(function () {
+                updateStub = sinon.stub(QueryBuilder.prototype, 'update')
+                    .returns(Promise.resolve([]));
+            });
+
+            beforeEach(function () {
+                updateStub.reset();
+            });
+
+            after(function () {
+                updateStub.restore();
+            });
+
+            it('resolves with null', async function () {
                 user.name = 'Jane Doe';
-                const query = new Query(User).require();
+                const query = new Query(User);
                 await expect(
                     query.update(user),
-                    'to be rejected with error satisfying',
-                    new User.errors.RowNotUpdatedError()
+                    'to be fulfilled with value satisfying',
+                    null
                 );
-                stub.restore();
+            });
 
+            describe("with 'require' option configured", function () {
+                it('rejects with a ModelNotUpdatedError', async function () {
+                    user.name = 'Jane Doe';
+                    const query = new Query(User).require();
+                    await expect(
+                        query.update(user),
+                        'to be rejected with error satisfying',
+                        new User.errors.RowNotUpdatedError()
+                    );
+                });
             });
         });
 
