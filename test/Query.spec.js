@@ -2357,13 +2357,66 @@ describe('lib/newModels/Query', function () {
             );
         });
 
-        it("doesn't save the id field if it's been set", async function () {
-            const spy = sinon.spy(QueryBuilder.prototype, 'update');
-            const query = new Query(User);
-            await query.update(user);
-            await expect(spy, 'to have calls satisfying', () => {
-                spy(expect.it('not to have key', 'id'));
+        describe('when the id has a value set', function () {
+            it("adds a 'where' option for the id", async function () {
+                const spy = sinon.spy(Query.prototype, 'where');
+                await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
+                user.name = 'Johnie Doe';
+                await expect(new Query(User).update(user), 'to be fulfilled');
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy({ id: 1 });
+                });
+                await expect(
+                    knex,
+                    'with table',
+                    'user',
+                    'to have rows satisfying',
+                    expect.it('sorted by', (a, b) => a.id - b.id, 'to satisfy', [
+                        {
+                            id: 1,
+                            name: 'Johnie Doe',
+                        },
+                        {
+                            id: 2,
+                            name: 'Jane Doe',
+                        },
+                    ])
+                );
+                spy.restore();
             });
+
+            it("doesn't save the id field", async function () {
+                const spy = sinon.spy(QueryBuilder.prototype, 'update');
+                const query = new Query(User);
+                await query.update(user);
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy(expect.it('not to have key', 'id'));
+                });
+                spy.restore();
+            });
+        });
+
+        it('updates all rows if the id is not set', async function () {
+            const spy = sinon.spy(Query.prototype, 'where');
+            await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
+            await expect(new Query(User).update({ name: 'Johnie Doe' }), 'to be fulfilled');
+            await expect(spy, 'was not called');
+            await expect(
+                knex,
+                'with table',
+                'user',
+                'to have rows satisfying',
+                expect.it('sorted by', (a, b) => a.id - b.id, 'to satisfy', [
+                    {
+                        id: 1,
+                        name: 'Johnie Doe',
+                    },
+                    {
+                        id: 2,
+                        name: 'Johnie Doe',
+                    },
+                ])
+            );
             spy.restore();
         });
 
@@ -2519,15 +2572,20 @@ describe('lib/newModels/Query', function () {
                 const instance = await new Query(UuidAsId).insert(
                     new UuidAsId({ uuid: 'foo', name: 'bar' })
                 );
+                const spy = sinon.spy(Query.prototype, 'where');
                 const query = new Query(UuidAsId);
                 instance.name = 'foobar';
                 await expect(query.update(instance), 'to be fulfilled');
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy({ uuid: 'foo' });
+                });
                 await expect(knex, 'with table', UuidAsId.table, 'to have rows satisfying', [
                     {
                         uuid: 'foo',
                         name: 'foobar',
                     },
                 ]);
+                spy.restore();
             });
         });
 

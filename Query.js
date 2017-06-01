@@ -669,8 +669,9 @@ class Query extends WithKnex {
         instance.setDefaults();
 
         const fieldsNotToSave = [];
-        if (instance[this.model.idField] === undefined) {
-            fieldsNotToSave.push(this.model.idField);
+        const idField = this.model.idField;
+        if (instance[idField] === undefined) {
+            fieldsNotToSave.push(idField);
         }
 
         const allFields = Object.keys(this.model.fields);
@@ -697,6 +698,13 @@ class Query extends WithKnex {
 
     async update(instance) {
         instance = this._getValidatedInstance(instance, 'update');
+
+        const idField = this.model.idField;
+        const id = instance[idField];
+        if (id !== undefined) {
+            this.where({ [idField]: id });
+        }
+
         this._prepareBuilder({ forUpdate: true });
 
         const updatedAtField = this.model.fields[this.model.updatedAtField];
