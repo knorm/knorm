@@ -260,8 +260,8 @@ class Query extends WithKnex {
         return this;
     }
 
-    require() {
-        this._require = true;
+    require(require = true) {
+        this._require = !!require;
         return this;
     }
 
@@ -275,13 +275,13 @@ class Query extends WithKnex {
         return this;
     }
 
-    first() {
-        this._first = true;
+    first(first = true) {
+        this._first = !!first;
         return this;
     }
 
-    forge(forge) {
-        this._forge = forge;
+    forge(forge = true) {
+        this._forge = !!forge;
         return this;
     }
 
