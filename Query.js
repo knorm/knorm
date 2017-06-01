@@ -758,6 +758,8 @@ class Query extends WithKnex {
             return this.update(data);
         }
     }
+
+    // TODO: add delete()
 }
 
 const isObject = value => typeof value === 'object' && value !== null;
