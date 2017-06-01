@@ -2033,7 +2033,7 @@ describe('lib/newModels/Query', function () {
             const query = new Query(User);
             const user = new User({ id: 1, name: 'John Doe', confirmed: true });
             await expect(query.insert(user), 'to be fulfilled');
-            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'John Doe',
@@ -2046,7 +2046,7 @@ describe('lib/newModels/Query', function () {
             const query = new Query(User);
             const user = { id: 1, name: 'John Doe', confirmed: true };
             await expect(query.insert(user), 'to be fulfilled');
-            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'John Doe',
@@ -2086,7 +2086,7 @@ describe('lib/newModels/Query', function () {
             const query = new Query(User);
             const user = new User({ id: 1, name: 'John Doe' });
             await expect(query.insert(user), 'to be fulfilled');
-            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'John Doe',
@@ -2112,7 +2112,7 @@ describe('lib/newModels/Query', function () {
             const query = new Query(User);
             const user = new User({ name: 'John Doe' });
             await expect(query.insert(user), 'to be fulfilled');
-            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'John Doe',
@@ -2123,7 +2123,7 @@ describe('lib/newModels/Query', function () {
         it('allows saving objects without the id field set', async function () {
             const query = new Query(User);
             await expect(query.insert({ name: 'John Doe' }), 'to be fulfilled');
-            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'John Doe',
@@ -2244,7 +2244,7 @@ describe('lib/newModels/Query', function () {
                 await knex(UuidAsId.table).truncate();
             });
 
-            it('saves an instance of the model', async function () {
+            it('inserts an instance of the model', async function () {
                 const query = new Query(UuidAsId);
                 const instance = new UuidAsId({ uuid: 'foo', name: 'bar' });
                 await expect(query.insert(instance), 'to be fulfilled');
@@ -2273,7 +2273,7 @@ describe('lib/newModels/Query', function () {
                     new Error('foo')
                 );
 
-                await expect(knex, 'with table', 'user', 'to be empty');
+                await expect(knex, 'with table', User.table, 'to be empty');
             });
         });
 
@@ -2310,7 +2310,7 @@ describe('lib/newModels/Query', function () {
             const query = new Query(User);
             user.name = 'Jane Doe';
             await expect(query.update(user), 'to be fulfilled');
-            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'Jane Doe',
@@ -2322,7 +2322,7 @@ describe('lib/newModels/Query', function () {
             const query = new Query(User);
             const user = { id: 1, name: 'Jane Doe' };
             await expect(query.update(user), 'to be fulfilled');
-            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'Jane Doe',
@@ -2375,7 +2375,7 @@ describe('lib/newModels/Query', function () {
             const query = new Query(User);
             user.name = 'Jane Doe';
             await expect(query.update(user), 'to be fulfilled');
-            await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                 {
                     id: 1,
                     name: 'Jane Doe',
@@ -2548,7 +2548,7 @@ describe('lib/newModels/Query', function () {
                     new Error('foo')
                 );
 
-                await expect(knex, 'with table', 'user', 'to have rows satisfying', [
+                await expect(knex, 'with table', User.table, 'to have rows satisfying', [
                     {
                         id: 1,
                         name: 'John Doe',
