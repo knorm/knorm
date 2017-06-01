@@ -662,8 +662,8 @@ class Query extends WithKnex {
         return instance;
     }
 
-    async insert(instance) {
-        instance = this._getValidatedInstance(instance, 'insert');
+    async insert(data) {
+        const instance = this._getValidatedInstance(data, 'insert');
         this._prepareBuilder({ forInsert: true });
 
         instance.setDefaults();
@@ -696,8 +696,8 @@ class Query extends WithKnex {
         return this._setData(instance, result);
     }
 
-    async update(instance) {
-        instance = this._getValidatedInstance(instance, 'update');
+    async update(data) {
+        const instance = this._getValidatedInstance(data, 'update');
 
         const idField = this.model.idField;
         const id = instance[idField];
@@ -742,6 +742,14 @@ class Query extends WithKnex {
         }
 
         return this._setData(instance, result);
+    }
+
+    async save(data) {
+        if (data[this.model.idField] === undefined) {
+            return this.insert(data);
+        } else {
+            return this.update(data);
+        }
     }
 }
 

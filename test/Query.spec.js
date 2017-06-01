@@ -2635,7 +2635,6 @@ describe('lib/newModels/Query', function () {
         describe("with 'where' option configured", function () {
             it('updates only the rows that match the where definition', async function () {
                 await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
-
                 const query = new Query(User).where({ id: 1 });
                 await expect(query.update({ name: 'Johnie Doe' }), 'to be fulfilled');
                 await expect(
@@ -2655,6 +2654,47 @@ describe('lib/newModels/Query', function () {
                     ])
                 );
             });
+        });
+    });
+
+    describe('Query.prototype.save', function () {
+        afterEach(async function () {
+            await truncateUserTable();
+        });
+
+        it('proxies to Query.prototype.insert if no id is set on the data', async function () {
+            const spy = sinon.spy(Query.prototype, 'insert');
+            const query = new Query(User);
+            const user = new User({ name: 'John Doe' });
+            await expect(query.save(user), 'to be fulfilled');
+            await expect(spy, 'to have calls satisfying', () => {
+                spy(user);
+            });
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'John Doe',
+                },
+            ]);
+            spy.restore();
+        });
+
+        it('proxies to Query.prototype.update if an id is set on the data', async function () {
+            await new Query(User).insert(new User({ id: 1, name: 'John Doe' }));
+            const spy = sinon.spy(Query.prototype, 'update');
+            const query = new Query(User);
+            const user = { id: 1, name: 'Jane Doe' };
+            await expect(query.save(user), 'to be fulfilled');
+            await expect(spy, 'to have calls satisfying', () => {
+                spy(user);
+            });
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'Jane Doe',
+                },
+            ]);
+            spy.restore();
         });
     });
 });
