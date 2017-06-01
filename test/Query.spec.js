@@ -1493,46 +1493,136 @@ describe('lib/newModels/Query', function () {
             });
 
             describe("with 'forge' disabled", function () {
-                it('includes a plain object of the requested model', async function () {
-                    const query = new Query(User)
-                        .forge(false)
-                        .with(new Query(Image));
+                describe('on the parent query', function () {
+                    it('still forges the joined model', async function () {
+                        const query = new Query(User)
+                            .forge(false)
+                            .with(new Query(Image));
 
-                    await expect(
-                        query.fetch(),
-                        'to be fulfilled with sorted rows exhaustively satisfying',
-                        [
-                            {
-                                id: 1,
-                                createdAt: null,
-                                updatedAt: null,
-                                name: 'User 1',
-                                confirmed: false,
-                                description: 'this is user 1',
-                                age: 10,
-                                dateOfBirth: null,
-                                dbDefault: 'set-by-db',
-                                image: {
+                        await expect(
+                            query.fetch(),
+                            'to be fulfilled with sorted rows exhaustively satisfying',
+                            [
+                                {
                                     id: 1,
                                     createdAt: null,
                                     updatedAt: null,
-                                    userId: 1,
-                                    categoryId: 1,
+                                    name: 'User 1',
+                                    confirmed: false,
+                                    description: 'this is user 1',
+                                    age: 10,
+                                    dateOfBirth: null,
+                                    dbDefault: 'set-by-db',
+                                    image: new Image({
+                                        id: 1,
+                                        createdAt: null,
+                                        updatedAt: null,
+                                        userId: 1,
+                                        categoryId: 1,
+                                    }),
                                 },
-                            },
-                            {
-                                id: 2,
-                                createdAt: null,
-                                updatedAt: null,
-                                name: 'User 2',
-                                confirmed: true,
-                                description: 'this is user 2',
-                                age: 10,
-                                dateOfBirth: null,
-                                dbDefault: 'set-by-db',
-                            },
-                        ]
-                    );
+                                {
+                                    id: 2,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    name: 'User 2',
+                                    confirmed: true,
+                                    description: 'this is user 2',
+                                    age: 10,
+                                    dateOfBirth: null,
+                                    dbDefault: 'set-by-db',
+                                },
+                            ]
+                        );
+                    });
+                });
+
+                describe('on the joined model', function () {
+                    it('includes a plain object of the joined model', async function () {
+                        const query = new Query(User)
+                            .with(new Query(Image).forge(false));
+
+                        await expect(
+                            query.fetch(),
+                            'to be fulfilled with sorted rows exhaustively satisfying',
+                            [
+                                Object.assign(new User({
+                                    id: 1,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    name: 'User 1',
+                                    confirmed: false,
+                                    description: 'this is user 1',
+                                    age: 10,
+                                    dateOfBirth: null,
+                                    dbDefault: 'set-by-db',
+                                }), {
+                                    image: {
+                                        id: 1,
+                                        createdAt: null,
+                                        updatedAt: null,
+                                        userId: 1,
+                                        categoryId: 1,
+                                    },
+                                }),
+                                {
+                                    id: 2,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    name: 'User 2',
+                                    confirmed: true,
+                                    description: 'this is user 2',
+                                    age: 10,
+                                    dateOfBirth: null,
+                                    dbDefault: 'set-by-db',
+                                },
+                            ]
+                        );
+                    });
+                });
+
+                describe('on both the parent and the joined models', function () {
+                    it('includes plain objects of the both models', async function () {
+                        const query = new Query(User)
+                            .forge(false)
+                            .with(new Query(Image).forge(false));
+
+                        await expect(
+                            query.fetch(),
+                            'to be fulfilled with sorted rows exhaustively satisfying',
+                            [
+                                {
+                                    id: 1,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    name: 'User 1',
+                                    confirmed: false,
+                                    description: 'this is user 1',
+                                    age: 10,
+                                    dateOfBirth: null,
+                                    dbDefault: 'set-by-db',
+                                    image: {
+                                        id: 1,
+                                        createdAt: null,
+                                        updatedAt: null,
+                                        userId: 1,
+                                        categoryId: 1,
+                                    },
+                                },
+                                {
+                                    id: 2,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    name: 'User 2',
+                                    confirmed: true,
+                                    description: 'this is user 2',
+                                    age: 10,
+                                    dateOfBirth: null,
+                                    dbDefault: 'set-by-db',
+                                },
+                            ]
+                        );
+                    });
                 });
 
                 it('does not include the joined model if no rows were matched', async function () {
