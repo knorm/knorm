@@ -227,6 +227,34 @@ describe('lib/newModels/Query', function () {
         });
     });
 
+    describe('Query.prototype.options', function () {
+        it('throws an error if passed an option that is not a Query method', function () {
+            expect(
+                () => new Query(User).options({ foo: 'bar'}),
+                'to throw',
+                new Error("Unknown option 'foo'")
+            );
+        });
+
+        it('throws an error if a db-method is passed as an option', function () {
+            [ 'count', 'fetch', 'insert', 'update', 'save', 'delete' ].forEach(method => {
+                expect(
+                    () => new Query(User).options({ [method]: 'bar'}),
+                    'to throw',
+                    new Error(`'${method}' is not an allowed option`)
+                );
+            });
+        });
+
+        it('throws an error if a private method is passed as an option', function () {
+            expect(
+                () => new Query(User).options({ _addFields: 'bar'}),
+                'to throw',
+                new Error("'_addFields' is not an allowed option")
+            );
+        });
+    });
+
     describe('Query.prototype.fetch', function () {
         before(async function () {
             await knex(User.table).insert([
