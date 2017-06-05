@@ -108,16 +108,16 @@ If you have fields that are common to all your models, add them to the base
 Model.fields = {
   id: {
     type: Field.types.integer,
-    required: true, // This is a validation rule
+    required: true // This is a validation rule
   },
   createdAt: {
     type: Field.types.dateTime,
-    default: () => new Date(),
+    default: () => new Date() // default values can be plain values or functions
   },
   updatedAt: {
     type: Field.types.dateTime,
-    default: () => new Date(),
-  },
+    default: () => new Date()
+  }
 };
 // Note that the 'required' and 'default' field options are optional; however,
 // 'type' is required.
@@ -138,16 +138,16 @@ Model.updatedAtField = 'updated';
 Model.fields = {
   uuid: {
     type: Field.types.uuid,
-    required: true,
+    required: true
   },
   created: {
     type: Field.types.dateTime,
-    default: () => new Date(),
+    default: () => new Date()
   },
   updated: {
     type: Field.types.dateTime,
-    default: () => new Date(),
-  },
+    default: () => new Date()
+  }
 };
 // You can also override this for any model that extends Model
 ```
@@ -180,8 +180,8 @@ User.fields = {
   },
   confirmed: {
     type: Field.types.boolean,
-    default: false,
-  },
+    default: false
+  }
 };
 
 class Message extends Model {}
@@ -198,7 +198,7 @@ Message.fields = {
     receiverId: {
         type: Field.types.integer,
         references: User.fields.id,
-    },
+    }
 };
 ```
 
