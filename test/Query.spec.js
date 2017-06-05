@@ -3106,6 +3106,46 @@ describe('lib/newModels/Query', function () {
             });
         });
 
+        describe("with a 'transaction' configured", function () {
+            it('does the delete within the transaction', async function () {
+                const transact = async transaction => {
+                    await new Query(User)
+                        .transaction(transaction)
+                        .delete();
+
+                    throw new Error('foo');
+                };
+
+                await expect(
+                    knex.transaction(transact),
+                    'to be rejected with error satisfying',
+                    new Error('foo')
+                );
+
+                await expect(knex, 'with table', User.table, 'not to be empty');
+            });
+
+            describe("via the 'within' alias", function () {
+                it('does the delete within the transaction', async function () {
+                    const transact = async transaction => {
+                        await new Query(User)
+                            .transaction(transaction)
+                            .delete();
+
+                        throw new Error('foo');
+                    };
+
+                    await expect(
+                        knex.transaction(transact),
+                        'to be rejected with error satisfying',
+                        new Error('foo')
+                    );
+
+                    await expect(knex, 'with table', User.table, 'not to be empty');
+                });
+            });
+        });
+
         it('rejects with a ModelDeleteError if the delete operation fails', async function () {
             const stub = sinon.stub(QueryBuilder.prototype, 'delete').returns(
                 Promise.reject(new Error('delete error'))
