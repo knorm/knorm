@@ -247,10 +247,17 @@ class Query extends WithKnex {
             if (typeof this[option] !== 'function') {
                 throw new Error(`Unknown option '${option}'`);
             }
-            if (
-                option.startsWith('_') ||
-                [ 'count', 'fetch', 'insert', 'update' ].includes(option)
-            ) {
+
+            const dbMethods = [
+                'count',
+                'fetch',
+                'insert',
+                'update',
+                'save',
+                'delete',
+            ];
+
+            if (option.startsWith('_') || dbMethods.includes(option)) {
                 throw new Error(`'${option}' is not an allowed option`);
             }
 
@@ -441,14 +448,17 @@ class Query extends WithKnex {
             if (this._transaction) { this._addTransaction(); }
         }
 
-        if (options.forInsert || options.forUpdate) {
+        const { forInsert, forUpdate, forDelete } = options;
+
+        if (forInsert || forUpdate || forDelete) {
+            // TODO: add support for DBs that don't have support for RETURNING
             if (!this._hasReturning) {
                 this._returning = this._getFieldsWithAliases();
             }
             this._addReturning();
         }
 
-        if (options.forInsert) {
+        if (forInsert) {
             return this;
         }
 
@@ -457,7 +467,7 @@ class Query extends WithKnex {
         if (this._orWhere.length) { this._addOrWhere(); }
         if (this._orWhereNot.length) { this._addOrWhereNot(); }
 
-        if (options.forUpdate) {
+        if (forUpdate || forDelete) {
             return this;
         }
 
@@ -619,9 +629,30 @@ class Query extends WithKnex {
             return this._first ? null : [];
         }
 
-        rows = this._parseRows(rows);
+        const parsedRows = this._parseRows(rows);
+        return this._first ? parsedRows[0] : parsedRows;
+    }
 
-        return this._first ? rows[0] : rows;
+    async delete() {
+        // TODO: add support for deleting joined models
+        this._prepareBuilder({ forDelete: true });
+
+        let rows;
+        try {
+            rows = await this.builder.delete();
+        } catch (error) {
+            this._throw('DeleteError', error);
+        }
+
+        if (!rows.length) {
+            if (this._require) {
+                this._throw('RowNotDeletedError');
+            }
+            return null;
+        }
+
+        const parsedRows = this._parseRows(rows);
+        return parsedRows;
     }
 
     _getValidatedInstance(instance, operation) {
@@ -663,6 +694,7 @@ class Query extends WithKnex {
         return instance;
     }
 
+    // TODO: add support for inserting arrays of data
     async insert(data) {
         const instance = this._getValidatedInstance(data, 'insert');
         this._prepareBuilder({ forInsert: true });
@@ -700,6 +732,7 @@ class Query extends WithKnex {
         return this._setData(instance, result);
     }
 
+    // TODO: add support for updating arrays of data
     async update(data) {
         const instance = this._getValidatedInstance(data, 'update');
 
@@ -751,6 +784,7 @@ class Query extends WithKnex {
         return this._setData(instance, result);
     }
 
+    // TODO: add support for saving arrays of data
     async save(data) {
         if (data[this.model.idField] === undefined) {
             return this.insert(data);
@@ -759,7 +793,7 @@ class Query extends WithKnex {
         }
     }
 
-    // TODO: add delete()
+    // TODO: add support for re-using Query instances i.e. Query.prototype._reset
 }
 
 const isObject = value => typeof value === 'object' && value !== null;

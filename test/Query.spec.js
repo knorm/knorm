@@ -136,8 +136,8 @@ Image.fields = {
 const createImageTable = table => {
     table.increments();
     table.timestamps();
-    table.integer('user_id').references('id').inTable('user');
-    table.integer('category_id').references('id').inTable('user');
+    table.integer('user_id').references('id').inTable(User.table);
+    table.integer('category_id').references('id').inTable(User.table);
 };
 
 const truncateImageTable = async () => {
@@ -166,8 +166,8 @@ const createMessageTable = table => {
     table.increments();
     table.timestamps();
     table.text('text').notNullable();
-    table.integer('sender_id').references('id').inTable('user');
-    table.integer('receiver_id').references('id').inTable('user');
+    table.integer('sender_id').references('id').inTable(User.table);
+    table.integer('receiver_id').references('id').inTable(User.table);
 };
 
 const truncateMessageTable = async () => {
@@ -229,7 +229,7 @@ describe('lib/newModels/Query', function () {
 
     describe('Query.prototype.fetch', function () {
         before(async function () {
-            await knex('user').insert([
+            await knex(User.table).insert([
                 {
                     id: 1,
                     name: 'User 1',
@@ -2018,7 +2018,7 @@ describe('lib/newModels/Query', function () {
 
     describe('Query.prototype.count', function () {
         before(async function () {
-            await knex('user').insert([
+            await knex(User.table).insert([
                 {
                     id: 1,
                     name: 'User 1',
@@ -2502,9 +2502,9 @@ describe('lib/newModels/Query', function () {
                 await expect(
                     knex,
                     'with table',
-                    'user',
+                    User.table,
                     'to have rows satisfying',
-                    expect.it('sorted by', (a, b) => a.id - b.id, 'to satisfy', [
+                    rows => expect(rows, 'when sorted by', (a, b) => a.id - b.id, 'to satisfy', [
                         {
                             id: 1,
                             name: 'Johnie Doe',
@@ -2537,9 +2537,9 @@ describe('lib/newModels/Query', function () {
             await expect(
                 knex,
                 'with table',
-                'user',
+                User.table,
                 'to have rows satisfying',
-                expect.it('sorted by', (a, b) => a.id - b.id, 'to satisfy', [
+                rows => expect(rows, 'when sorted by', (a, b) => a.id - b.id, 'to satisfy', [
                     {
                         id: 1,
                         name: 'Johnie Doe',
@@ -2795,9 +2795,9 @@ describe('lib/newModels/Query', function () {
                 await expect(
                     knex,
                     'with table',
-                    'user',
+                    User.table,
                     'to have rows satisfying',
-                    expect.it('sorted by', (a, b) => a.id - b.id, 'to satisfy', [
+                    rows => expect(rows, 'when sorted by', (a, b) => a.id - b.id, 'to satisfy', [
                         {
                             id: 1,
                             name: 'Johnie Doe',
@@ -2850,6 +2850,180 @@ describe('lib/newModels/Query', function () {
                 },
             ]);
             spy.restore();
+        });
+    });
+
+    describe('Query.prototype.delete', function () {
+        beforeEach(async function () {
+            await knex(User.table).insert([
+                {
+                    id: 1,
+                    name: 'John Doe',
+                    confirmed: true,
+                },
+                {
+                    id: 2,
+                    name: 'Jane Doe',
+                    confirmed: true,
+                },
+            ]);
+        });
+
+        afterEach(async function () {
+            await truncateUserTable();
+        });
+
+        it('deletes all rows from the database', async function () {
+            await expect(new Query(User).delete(), 'to be fulfilled');
+            await expect(knex, 'with table', User.table, 'to be empty');
+        });
+
+        it('resolves with populated instances of the deleted models', async function () {
+            const query = new Query(User);
+            await expect(
+                query.delete(),
+                'to be fulfilled with sorted rows exhaustively satisfying',
+                [
+                    new User({
+                        id: 1,
+                        name: 'John Doe',
+                        confirmed: true,
+                        createdAt: null,
+                        updatedAt: null,
+                        description: null,
+                        age: null,
+                        dateOfBirth: null,
+                        dbDefault: 'set-by-db',
+                    }),
+                    new User({
+                        id: 2,
+                        name: 'Jane Doe',
+                        confirmed: true,
+                        createdAt: null,
+                        updatedAt: null,
+                        description: null,
+                        age: null,
+                        dateOfBirth: null,
+                        dbDefault: 'set-by-db',
+                    }),
+                ]
+            );
+        });
+
+        describe("with a 'where' option", function () {
+            it('deletes only the rows matching the query', async function () {
+                const query = new Query(User).where({ id: 1 });
+                await expect(query.delete(), 'to be fulfilled');
+                await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                    {
+                        id: 2,
+                        name: 'Jane Doe',
+                    },
+                ]);
+            });
+        });
+
+        describe("with a 'returning' option", function () {
+            it('resolves with the deleted models with only the fields specified', async function () {
+                const query = new Query(User).returning([ 'id', 'name' ]);
+                await expect(
+                    query.delete(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        new User({ id: 1, name: 'John Doe' }),
+                        new User({ id: 2, name: 'Jane Doe' }),
+                    ]
+                );
+            });
+        });
+
+        describe('with forge disabled', function () {
+            it('resolves with the deleted models as plain objects', async function () {
+                const query = new Query(User).forge(false);
+                await expect(
+                    query.delete(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        {
+                            id: 1,
+                            name: 'John Doe',
+                            confirmed: true,
+                            createdAt: null,
+                            updatedAt: null,
+                            description: null,
+                            age: null,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        },
+                        {
+                            id: 2,
+                            name: 'Jane Doe',
+                            confirmed: true,
+                            createdAt: null,
+                            updatedAt: null,
+                            description: null,
+                            age: null,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                        },
+                    ]
+                );
+            });
+        });
+
+        it('rejects with a ModelDeleteError if the delete operation fails', async function () {
+            const stub = sinon.stub(QueryBuilder.prototype, 'delete').returns(
+                Promise.reject(new Error('delete error'))
+            );
+            const query = new Query(User);
+            await expect(
+                query.delete(),
+                'to be rejected with error satisfying',
+                error => {
+                    expect(error, 'to be a', User.errors.DeleteError);
+                    expect(error, 'to exhaustively satisfy', {
+                        message: 'delete error',
+                        originalError: new Error('delete error'),
+                    });
+                }
+            );
+            stub.restore();
+        });
+
+        describe('if no row is deleted', function () {
+            let deleteStub;
+
+            before(function () {
+                deleteStub = sinon.stub(QueryBuilder.prototype, 'delete');
+            });
+
+            beforeEach(function () {
+                deleteStub.reset();
+                deleteStub.returns(Promise.resolve([]));
+            });
+
+            after(function () {
+                deleteStub.restore();
+            });
+
+            it('resolves with null', async function () {
+                await expect(
+                    new Query(User).delete(),
+                    'to be fulfilled with value satisfying',
+                    null
+                );
+            });
+
+            describe("with 'require' option configured", function () {
+                it('rejects with a ModelNotDeletedError', async function () {
+                    const query = new Query(User).require();
+                    await expect(
+                        query.delete(),
+                        'to be rejected with error satisfying',
+                        new User.errors.RowNotDeletedError()
+                    );
+                });
+            });
         });
     });
 });

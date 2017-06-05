@@ -351,8 +351,12 @@ const getDefaultErrors = (model) => {
         FetchError: createError(`${model.name}FetchError`, DatabaseError),
         InsertError: createError(`${model.name}InsertError`, DatabaseError),
         UpdateError: createError(`${model.name}UpdateError`, DatabaseError),
+        DeleteError: createError(`${model.name}DeleteError`, DatabaseError),
         RowNotInsertedError: createError(`${model.name}NotInsertedError`),
+        // TODO: always use plurals for RowNotUpdatedError
         RowNotUpdatedError: createError(`${model.name}NotUpdatedError`),
+        // TODO: always use plurals for RowNotDeletedError
+        RowNotDeletedError: createError(`${model.name}NotDeletedError`),
         RowNotFoundError: createError(`${model.name}NotFoundError`),
         RowsNotFoundError: createError(`${model.name}sNotFoundError`), // TODO: proper pluralizing
     };
