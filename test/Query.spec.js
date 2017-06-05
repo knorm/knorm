@@ -2113,6 +2113,43 @@ describe('lib/newModels/Query', function () {
                     );
                 });
             });
+
+            describe('with the child query options passed as a second parameter', function () {
+                it('passes the options to the child query via Query.prototype.options', async function () {
+                    const imageQuery = new Query(Image);
+                    const spy = sinon.spy(imageQuery, 'options');
+                    const query = new Query(User)
+                        .where({ id: 1 })
+                        .with(
+                            imageQuery,
+                            { fields: 'id' }
+                        );
+                    await expect(spy, 'to have calls satisfying', () => {
+                        spy({ fields: 'id' });
+                    });
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            Object.assign(new User({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }), {
+                                image: new Image({
+                                    id: 1,
+                                }),
+                            }),
+                        ]
+                    );
+                });
+            });
         });
     });
 
