@@ -198,7 +198,6 @@ class Query extends WithKnex {
         return this;
     }
 
-    // TODO: rename this to 'within'
     transaction(transaction, options) {
         let forUpdate;
         let forShare;
@@ -219,6 +218,10 @@ class Query extends WithKnex {
         };
 
         return this;
+    }
+
+    within(...args) {
+        return this.transaction(...args);
     }
 
     _pushWhereOrHaving(key, whereOrHaving) {

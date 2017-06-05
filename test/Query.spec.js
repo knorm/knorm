@@ -726,6 +726,53 @@ describe('lib/newModels/Query', function () {
                 });
                 spy.restore();
             });
+
+            describe("via the 'within' alias", function () {
+                it('does the fetch within the transaction', async function () {
+                    const spy = sinon.spy(QueryBuilder.prototype, 'transacting');
+                    await expect(
+                        knex.transaction(async transaction => {
+                            const users = await new Query(User)
+                                .within(transaction)
+                                .fetch();
+
+                            return users;
+                        }),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            new User({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }),
+                            new User({
+                                id: 2,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 2',
+                                confirmed: true,
+                                description: 'this is user 2',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }),
+                        ]
+                    );
+                    await expect(spy, 'to have calls satisfying', () => {
+                        spy(expect.it('to satisfy', {
+                            commit: expect.it('to be a function'),
+                            rollback: expect.it('to be a function'),
+                        }));
+                    });
+                    spy.restore();
+                });
+            });
         });
 
         describe("with a 'with' configured", function () {
@@ -2387,6 +2434,26 @@ describe('lib/newModels/Query', function () {
 
                 await expect(knex, 'with table', User.table, 'to be empty');
             });
+
+            describe("via the 'within' alias", function () {
+                it('does the insert within the transaction', async function () {
+                    const transact = async transaction => {
+                        await new Query(User)
+                            .within(transaction)
+                            .insert(new User({ name: 'John Doe' }));
+
+                        throw new Error('foo');
+                    };
+
+                    await expect(
+                        knex.transaction(transact),
+                        'to be rejected with error satisfying',
+                        new Error('foo')
+                    );
+
+                    await expect(knex, 'with table', User.table, 'to be empty');
+                });
+            });
         });
 
         describe('if no row is inserted', function () {
@@ -2745,6 +2812,32 @@ describe('lib/newModels/Query', function () {
                         name: 'John Doe',
                     },
                 ]);
+            });
+
+            describe("via the 'within' alias", function () {
+                it('does the update within the transaction', async function () {
+                    const transact = async transaction => {
+                        user.name = 'Jane Doe';
+                        await new Query(User)
+                            .transaction(transaction)
+                            .update(user);
+
+                        throw new Error('foo');
+                    };
+
+                    await expect(
+                        knex.transaction(transact),
+                        'to be rejected with error satisfying',
+                        new Error('foo')
+                    );
+
+                    await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                        {
+                            id: 1,
+                            name: 'John Doe',
+                        },
+                    ]);
+                });
             });
         });
 
