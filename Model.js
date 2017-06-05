@@ -140,22 +140,50 @@ class Model {
         return query;
     }
 
-    async fetch(options = {}) {
-        const query = this._initQuery(options)
-            .first(true)
-            .forge(false);
+    async _initQueryWithWhereOption(options = {}) {
+        const query = this._initQuery(options);
 
         if (options.where === undefined) {
             const where = await this.getData();
             query.where(where);
         }
 
-        const data = await query.fetch();
+        return query;
+    }
 
-        if (!data) {
-            return data;
+    async fetch(options = {}) {
+        const query = await this._initQueryWithWhereOption(options);
+
+        query
+            .first(true)
+            .forge(false);
+
+        const row = await query.fetch();
+
+        if (!row) {
+            return row;
         }
-        return this.setData(data);
+
+        return this.setData(row);
+    }
+
+    async delete(options = {}) {
+        const query = await this._initQueryWithWhereOption(options);
+
+        query.forge(false);
+
+        const rows = await query.delete();
+
+        if (!rows) {
+            return rows;
+        }
+
+        if (rows.length === 1) {
+            return this.setData(rows[0]);
+        } else {
+            // TODO: attempt to support LIMIT 1 for delete()
+            return rows.map(row => new this.constructor(row));
+        }
     }
 
     async save(options = {}) {
@@ -197,10 +225,22 @@ class Model {
             .fetch();
     }
 
+    static async delete(options) {
+        return this.query
+            .options(options)
+            .delete();
+    }
+
     static async fetchById(id, options) {
         ensureIdFieldIsConfigured(this);
         const instance = new this({ [this.idField]: id });
         return instance.fetch(options);
+    }
+
+    static async deleteById(id, options) {
+        ensureIdFieldIsConfigured(this);
+        const instance = new this({ [this.idField]: id });
+        return instance.delete(options);
     }
 
     static async updateById(id, data, options) {

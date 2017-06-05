@@ -1470,14 +1470,13 @@ describe('Model', function () {
                 await User.insert({ id: 1, name: 'John Doe' });
                 const user = new User({ id: 1 });
                 const spy = sinon.spy(UserQuery.prototype, 'options');
-                const options = { fields: 'name' };
                 await expect(
-                    user.fetch(options),
+                    user.fetch({ fields: 'name' }),
                     'to be fulfilled with value satisfying',
                     new User({ name: 'John Doe' })
                 );
                 await expect(spy, 'to have calls satisfying', () => {
-                    spy(options);
+                    spy({ fields: 'name' });
                 });
                 spy.restore();
             });
@@ -1541,6 +1540,119 @@ describe('Model', function () {
                 const user = new User({ id: 1, name: 'John Doe' });
                 const spy = sinon.spy(UserQuery.prototype, 'forge');
                 await expect(user.fetch(), 'to be fulfilled');
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy(false);
+                });
+                spy.restore();
+            });
+        });
+
+        describe('Model.prototype.delete', function () {
+            it('deletes a model from the database via Query.prototype.delete', async function () {
+                await User.insert({ id: 1, name: 'John Doe' });
+                const user = new User({ id: 1 });
+                const spy = sinon.spy(UserQuery.prototype, 'delete');
+                await expect(
+                    user.delete(),
+                    'to be fulfilled with value satisfying',
+                    new User({ id: 1, name: 'John Doe' })
+                );
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy();
+                });
+                await expect(knex, 'with table', User.table, 'to be empty');
+                spy.restore();
+            });
+
+            it('passes any options passed to Query.prototype.options', async function () {
+                await User.insert({ id: 1, name: 'John Doe' });
+                const user = new User({ id: 1 });
+                const spy = sinon.spy(UserQuery.prototype, 'options');
+                await expect(
+                    user.delete({ fields: 'name' }),
+                    'to be fulfilled with value satisfying',
+                    new User({ name: 'John Doe' })
+                );
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy({ fields: 'name' });
+                });
+                spy.restore();
+            });
+
+            it('passes all the data set on the model to Query.prototype.where', async function () {
+                await User.insert({ id: 1, name: 'John Doe' });
+                const user = new User({ id: 1, name: 'John Doe' });
+                const spy = sinon.spy(UserQuery.prototype, 'where');
+                await expect(
+                    user.delete(),
+                    'to be fulfilled with value satisfying',
+                    new User({ id: 1, name: 'John Doe' })
+                );
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy({ id: 1, name: 'John Doe' });
+                });
+                spy.restore();
+            });
+
+            it("allows overriding the 'where' option if a 'where' option is passed", async function () {
+                await User.insert({ id: 1, name: 'John Doe' });
+                const user = new User({ id: 1, name: 'John Doe' });
+                const spy = sinon.spy(UserQuery.prototype, 'where');
+                await expect(
+                    user.delete({ where: { id: 1 } }),
+                    'to be fulfilled with value satisfying',
+                    new User({ id: 1, name: 'John Doe' })
+                );
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy({ id: 1 });
+                });
+                spy.restore();
+            });
+
+            describe('if no rows are deleted', function () {
+                it('rejects with a ModelNotDeletedError', async function () {
+                    await User.insert({ id: 1, name: 'John Doe' });
+                    const user = new User({ id: 1, name: 'Jane Doe' });
+                    await expect(
+                        user.delete(),
+                        'to be rejected with error satisfying',
+                        new User.errors.RowNotDeletedError()
+                    );
+                });
+
+                describe("if the 'require' option is set to false", function () {
+                    it('does not reject with a ModelNotDeletedError', async function () {
+                        await User.insert({ id: 1, name: 'John Doe' });
+                        const user = new User({ id: 1, name: 'Jane Doe' });
+                        await expect(
+                            user.delete({ require: false }),
+                            'to be fulfilled with value satisfying',
+                            null
+                        );
+                    });
+                });
+            });
+
+            describe('if more than one row is deleted', function () {
+                it('resolves with instances of all the deleted rows', async function () {
+                    await User.insert({ id: 1, name: 'John Doe' });
+                    await User.insert({ id: 2, name: 'Jane Doe' });
+                    await expect(
+                        new User().delete(),
+                        'to be fulfilled with value satisfying',
+                        instances => expect(instances, 'when sorted by', (a, b) => a.id - b.id, 'to satisfy', [
+                            new User({ id: 1, name: 'John Doe' }),
+                            new User({ id: 2, name: 'Jane Doe' }),
+                        ])
+                    );
+                });
+            });
+
+            it('prevents extra forging by Query.prototype.delete', async function () {
+                await User.insert({ id: 1, name: 'John Doe' });
+                const user = new User({ id: 1, name: 'John Doe' });
+                const spy = sinon.spy(UserQuery.prototype, 'forge');
+                await expect(user.delete(), 'to be fulfilled');
                 await expect(spy, 'to have calls satisfying', () => {
                     spy(false);
                 });
@@ -1681,6 +1793,33 @@ describe('Model', function () {
             });
         });
 
+        describe('Model.delete', function () {
+            it('deletes data from the database via Query.prototype.delete', async function () {
+                await User.save({ name: 'John Doe' });
+                const spy = sinon.spy(UserQuery.prototype, 'delete');
+                await expect(User.delete(), 'to be fulfilled with value satisfying', [
+                    new User({ id: 1, name: 'John Doe' }),
+                ]);
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy();
+                });
+                spy.restore();
+            });
+
+            it('passes any options passed to Query.prototype.options', async function () {
+                await User.save({ name: 'John Doe' });
+                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const options = { forge: false };
+                await expect(User.delete(options), 'to be fulfilled with value satisfying', [
+                    { id: 1, name: 'John Doe' },
+                ]);
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy(options);
+                });
+                spy.restore();
+            });
+        });
+
         describe('Model.fetchById', function () {
             it('fetches data from the database via Model.prototype.fetch', async function () {
                 await User.insert({ id: 1, name: 'John Doe' });
@@ -1709,7 +1848,36 @@ describe('Model', function () {
                 });
                 spy.restore();
             });
+        });
 
+        describe('Model.deleteById', function () {
+            it('deletes data from the database via Model.prototype.delete', async function () {
+                await User.insert({ id: 1, name: 'John Doe' });
+                const spy = sinon.spy(User.prototype, 'delete');
+                await expect(
+                    User.deleteById(1),
+                    'to be fulfilled with value satisfying',
+                    new User({ id: 1, name: 'John Doe' })
+                );
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy(undefined);
+                });
+                spy.restore();
+            });
+
+            it('passes any options passed to Model.prototype.delete', async function () {
+                await User.insert({ id: 1, name: 'John Doe' });
+                const spy = sinon.spy(UserQuery.prototype, 'options');
+                await expect(
+                    User.deleteById(1, { forge: false }),
+                    'to be fulfilled with value satisfying',
+                    { id: 1, name: 'John Doe' }
+                );
+                await expect(spy, 'to have calls satisfying', () => {
+                    spy({ forge: false });
+                });
+                spy.restore();
+            });
         });
 
         describe('Model.updateById', function () {
