@@ -7,12 +7,13 @@
 [![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm.svg)](https://greenkeeper.io/)
 
 A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
-- model validation (before insert and update operations)
+- model validation (before insert and update operations) with custom error
+  classes and support for async custom validators
 - SQL joins with full JavaScript syntax
-- virtual model fields (i.e. computed fields) including async virtuals
+- virtual fields (i.e. computed fields) with support for async getters
 - model field names to database column names transformations (and vice-versa
   e.g. snake-casing)
-- custom error classes (custom for every model class created)
+- custom error classes (custom for every model class created) for db errors
 - improved syntax for transactions
 - full and easy configuration and extendability (owing to ES6 classes)
 - includes pre-built files for ES5 support
@@ -166,8 +167,16 @@ class User extends Model {
 User.table = 'user'; // configure the table-name
 User.fields = {
   name: {
-    type: Field.types.string,
-    required: true,
+    type: Field.types.string, // type is also used a validation rule
+    required: true, // validation rule
+    minLength: 2,  // validation rule
+    maxLength: 100, // validation rule
+    async validate(val) { // custom validation
+      const hasNumbers = /[0-9]/.test(val);
+      if (hasNumbers) {
+        return false; // or: throw new CustomValidationError();
+      }
+    }
   },
   confirmed: {
     type: Field.types.boolean,
@@ -191,6 +200,21 @@ Message.fields = {
         references: User.fields.id,
     },
 };
+```
+
+You can also define virtual fields. If virtuals are defined on a model, every
+instance of the model will have the virtual's getters/setters added.
+
+```js
+Message.virtuals = {
+  upperCaseText() { // shortcut to defining a virtual with only a getter
+    return this.text.toUpperCase();
+  },
+  someOtherVirtual: {
+    async get() {}, // async virtual getters are also supported
+    set(val) {}
+  }
+}
 ```
 
 `User` and `Message` will inherit all the fields (add virtuals) added to `Model`
@@ -315,11 +339,12 @@ const updateUserMessageFlags => async () => {
 
 ## TODOs
 
-- [ ] build ES5 code and include in the package
-- [ ] documentation (in the meantime, the tests are a good source of
-documentation, check them out on [the travis builds](https://travis-ci.org/joelmukuthu/knorm))
-- [ ] run tests against other databases besides PostgreSQL
-- [ ] add support for databases that don't support RETURNING clauses
+- build and test ES5 classes and include them in releases
+- add documentation (in the meantime, the tests are a good source of
+  documentation)
+- run tests against other databases besides PostgreSQL
+- add support for databases that don't support RETURNING clauses
+- add a tool to generate models from DESCRIBE queries
 
 > run `npm run todo` to see TODOs in the code
 
