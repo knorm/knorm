@@ -198,6 +198,10 @@ class Query extends WithKnex {
         return this;
     }
 
+    join(...args) {
+        return this.with(...args);
+    }
+
     transaction(transaction, options) {
         let forUpdate;
         let forShare;

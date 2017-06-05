@@ -865,6 +865,48 @@ describe('lib/newModels/Query', function () {
                 );
             });
 
+            describe("via the 'join' alias", function () {
+                it('includes the joined model in the returned instance', async function () {
+                    const query = new Query(User).join(new Query(Image));
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            Object.assign(new User({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }), {
+                                image: new Image({
+                                    id: 1,
+                                    createdAt: null,
+                                    updatedAt: null,
+                                    userId: 1,
+                                    categoryId: 1,
+                                }),
+                            }),
+                            new User({
+                                id: 2,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 2',
+                                confirmed: true,
+                                description: 'this is user 2',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }),
+                        ]
+                    );
+                });
+            });
+
             it('does not include the joined model if no rows were matched', async function () {
                 const query = new Query(User)
                     .with(new Query(Image))
