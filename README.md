@@ -88,9 +88,9 @@ this nature, you can override the `Field` class and then configure `Model`
 appropriately:
 
 ```js
-const { Field: AbstractField } = require('knorm');
+const { Field: KnormField } = require('knorm');
 
-class Field extends AbstractField {
+class Field extends KnormField {
   getColumnName(fieldName) {
     return fieldName.toLowerCase(); // for example
   }
