@@ -6,49 +6,86 @@
 [![dependency status](https://david-dm.org/joelmukuthu/knorm.svg)](https://david-dm.org/joelmukuthu/knorm)
 [![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm.svg)](https://greenkeeper.io/)
 
-A purely class-based ORM for [Knex.js](http://knexjs.org) with built-in support
-for validation, joins, snake-casing column names...
+A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
+- model validation (before insert and update operations)
+- SQL joins with full JavaScript syntax
+- virtual model fields (i.e. computed fields) including async virtuals
+- model field names to database column names transformations (and vice-versa
+  e.g. snake-casing)
+- custom error classes (custom for every model class created)
+- improved syntax for transactions
+- full and easy configuration and extendability (owing to ES6 classes)
+- includes pre-built files for ES5 support
+- good test coverage
 
-## NOTE: This is currently in active development
+## NOTE: currently supports [PostgreSQL, MSSQL and Oracle databases](http://knexjs.org/#Builder-returning)
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [1. Set up knex](#1-set-up-knex)
+  - [2. Configure your ORM](#2-configure-your-orm)
+    - [2.1. Configure field-name to column-name mapping (optional)](#21-configure-field-name-to-column-name-mapping-optional)
+    - [2.2. Configure common fields (optional)](#22-configure-common-fields-optional)
+  - [3. Add some model classes](#3-add-some-model-classes)
+  - [4. Profit!](#4-profit)
+- [TODOs](#todos)
+- [Credits](#credits)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Installation
 ```bash
-npm install --save knorm
+npm install --save knorm knex
 ```
-Knorm has a peer dependency on Knex.js so you'll also need to install
-[knex](https://www.npmjs.com/package/knex) if you haven't done so already.
+> knorm has a peer dependency on [knex](https://www.npmjs.com/package/knex)
 
 ## Usage
-First, set up your knex connection. We'll create a postgres connection as an
-example:
+### 1. Set up knex
+
+We'll create a postgres connection as an example:
+
 ```js
 const knex = require('knex'){
   client: 'pg',
   connection: 'postgres://postgres-connection-string',
 });
-// Note that you should only use one knex instance throughout your application.
 ```
+> Note that you should only use one knex instance throughout your application.
+
+### 2. Configure your ORM
+
 Then configure your ORM with the knex instance:
+
 ```js
 const {
-  Model: AbstractModel,
-  Query: AbstractQuery,
-  Transaction: AbstractTransaction,
+  Query: KnormQuery,
+  Model: KnormModel,
+  Transaction: KnormTransaction,
 } = require('knorm');
 
-class Query extends AbstractQuery {}
+class Query extends KnormQuery {}
 Query.knex = knex; // the knex instance
 
-class Transaction extends AbstractTransaction {}
+class Transaction extends KnormTransaction {}
 Transaction.knex = knex; // the knex instance
 
-class Model extends AbstractModel {}
-Model.Query = Query; // use the Query class with the knex instance configured
-
+class Model extends KnormModel {}
+Model.Query = Query; // Model needs Query
 ```
+> You should always extend the classes provided by knorm and configure the
+child classes, especially if you want to create several ORMs in the same
+application.
+
+#### 2.1. Configure field-name to column-name mapping (optional)
+
 If you need to snake-case field names or put hyphens in there or something of
-this nature, you can override the `Field` class and configure `Model`
+this nature, you can override the `Field` class and then configure `Model`
 appropriately:
+
 ```js
 const { Field: AbstractField } = require('knorm');
 
@@ -60,8 +97,12 @@ class Field extends AbstractField {
 
 Model.Field = Field; // configure the new Field class
 ```
-You can configure `Model` further. For instance, if you have fields that are
-common to all your models, add them to the base `Model` class:
+
+#### 2.2. Configure common fields (optional)
+
+If you have fields that are common to all your models, add them to the base
+`Model` class:
+
 ```js
 Model.fields = {
   id: {
@@ -82,9 +123,12 @@ Model.fields = {
 // With a few exceptions, these types map one-to-one with the types you use
 // with Knex's schema builder.
 ```
-Knorm requires all models to have an `id` field (timestamps are optional). If
-your `id` field or timestamp fields have names other than `id`, `createdAt`
-and `updatedAt` respectively, you can configure this:
+
+Knorm doesn't require models to have an `id` or timestamp fields but it will do
+the right thing (*as far as I have tested*) if they've been added. If your `id`
+or timestamp fields have names other than `id`, `createdAt` and `updatedAt`
+respectively, you can configure that as well:
+
 ```js
 Model.idField = 'uuid';
 Model.createdAtField = 'created';
@@ -106,7 +150,11 @@ Model.fields = {
 };
 // You can also override this for any model that extends Model
 ```
+
+### 3. Add some model classes
+
 Then you're ready to add some models:
+
 ```js
 class User extends Model {
   async confirm() {
@@ -122,7 +170,7 @@ User.fields = {
     required: true,
   },
   confirmed: {
-    type: Field.types.string,
+    type: Field.types.boolean,
     default: false,
   },
 };
@@ -144,15 +192,22 @@ Message.fields = {
     },
 };
 ```
-`User` and `Message` will inherit all the fields of `Model` so you can use this
-structure to build more complicated ORMs.
+
+`User` and `Message` will inherit all the fields (add virtuals) added to `Model`
+so they'll also have the `id`, `createdAt` and `updatedAt` fields. This will
+also work with thier child classes, so if you create an `Employee` model that
+inherits from `User` it will get all the fields defined in `User` and `Model`.
+You can use this scheme to build more complicated ORMs.
+
+### 4. Profit!
 
 With this setup you'll be able to achieve the following:
+
 ```js
 const updateUserMessageFlags => async () => {
   const transaction = new Transaction(async transaction => {
     const count = await User.query
-      .within(transaction)
+      .transaction(transaction)
       .where({ confirmed: true })
       .count({ field: 'id' }); // or { field: User.fields.id }
 
@@ -162,8 +217,8 @@ const updateUserMessageFlags => async () => {
 
     const users = await User.query
       .where({ confirmed: true })
-      .within(transaction, { forUpdate: true })
-      .with([ // this will do a left join from the 'user' to the 'message' table
+      .transaction(transaction, { forUpdate: true })
+      .join([ // this will do a left join from the 'user' to the 'message' table
           Message.query
               .on(Message.fields.senderId)
               .fields([ 'id', Message.fields.text ])
@@ -257,5 +312,20 @@ const updateUserMessageFlags => async () => {
   return transaction.execute();
 };
 ```
-Knorm is inspired a bit by the [Mongoose](http://mongoosejs.com/) and
+
+## TODOs
+
+- [ ] build ES5 code and include in the package
+- [ ] documentation (in the meantime, the tests are a good source of
+documentation, check them out on [the travis builds](https://travis-ci.org/joelmukuthu/knorm))
+- [ ] run tests against other databases besides PostgreSQL
+- [ ] add support for databases that don't support RETURNING clauses
+
+> run `npm run todo` to see TODOs in the code
+
+PRs are very welcome!
+
+## Credits
+
+Knorm is inspired in part by the [Mongoose](http://mongoosejs.com/) and
 [Bookshelf](http://bookshelfjs.org/) APIs.
