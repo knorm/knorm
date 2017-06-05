@@ -12,7 +12,8 @@
     "postgres": "node script/postgres start",
     "postgres:stop": "node script/postgres stop",
     "postgres:remove": "node script/postgres remove",
-    "todo": "grep -n -e TODO -e FIXME Field.js Model.js Query.js Virtual.js Transaction.js"
+    "todo": "grep -n -e TODO -e FIXME Field.js Model.js Query.js Virtual.js Transaction.js",
+    "doctoc": "doctoc README.md --github"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "coveralls": "^2.12.0",
+    "doctoc": "^1.3.0",
     "eslint": "^3.17.1",
     "eslint-config-onelint": "^2.0.0",
     "knex": "^0.13.0",
