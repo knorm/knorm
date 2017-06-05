@@ -154,7 +154,7 @@ class Field {
             let object;
 
             try {
-                // TODO: this is expensive!
+                // TODO: JSON.parse is expensive
                 object = JSON.parse(value);
             } catch (e) {
                 return false;
@@ -324,7 +324,7 @@ class Field {
             const reference = this.references;
             const reverseReference = reference.model.referenced[this.model.name];
             reference.model.referenced[model.name] = reverseReference;
-            // TODO: delete though?
+            // TODO: is it necessary to delete though
             delete reference.model.referenced[this.model.name];
         }
 
@@ -354,7 +354,8 @@ const isSet = value => value !== undefined && value !== null;
 
 // TODO: add password field
 // TODO: add email field and update example in Model.md#Model.idField
-// TODO: allow adding types
+// TODO: add all the types supported by knex
+// TODO: allow adding types (figure out how to share validation logic with existing types)
 const types = {
     text: 'text',
     json: 'json',

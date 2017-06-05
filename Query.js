@@ -703,6 +703,7 @@ class Query extends WithKnex {
 
     // TODO: add support for inserting arrays of data
     async insert(data) {
+        // TODO: add support for inserting joined models
         const instance = this._getValidatedInstance(data, 'insert');
         this._prepareBuilder({ forInsert: true });
 
@@ -741,6 +742,7 @@ class Query extends WithKnex {
 
     // TODO: add support for updating arrays of data
     async update(data) {
+        // TODO: add support for updating joined models
         const instance = this._getValidatedInstance(data, 'update');
 
         const idField = this.model.idField;
