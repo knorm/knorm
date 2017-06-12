@@ -32,7 +32,7 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
     - [2.1. Configure field-name to column-name mapping (optional)](#21-configure-field-name-to-column-name-mapping-optional)
     - [2.2. Configure common fields (optional)](#22-configure-common-fields-optional)
   - [3. Add some model classes](#3-add-some-model-classes)
-  - [4. Profit!](#4-profit)
+  - [4. Example](#4-example)
 - [TODOs](#todos)
 - [Credits](#credits)
 
@@ -227,7 +227,7 @@ also work with thier child classes, so if you create an `Employee` model that
 inherits from `User` it will get all the fields defined in `User` and `Model`.
 You can use this scheme to build more complicated ORMs.
 
-### 4. Examples
+### 4. Example
 
 With this setup you'll be able to achieve the following:
 
