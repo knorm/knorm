@@ -193,11 +193,15 @@ Message.fields = {
     },
     senderId: {
         type: Field.types.integer,
-        references: User.fields.id, // these references are used for joins
+        references: User.fields.id, // these references are used for SQL joins
     },
     receiverId: {
         type: Field.types.integer,
         references: User.fields.id,
+    },
+    read: {
+      type: Field.types.boolean,
+      default: false
     }
 };
 ```
@@ -223,117 +227,40 @@ also work with thier child classes, so if you create an `Employee` model that
 inherits from `User` it will get all the fields defined in `User` and `Model`.
 You can use this scheme to build more complicated ORMs.
 
-### 4. Profit!
+### 4. Examples
 
 With this setup you'll be able to achieve the following:
 
 ```js
-const updateUserMessageFlags => async () => {
-  const transaction = new Transaction(async transaction => {
-    const count = await User.query
-      .transaction(transaction)
-      .where({ confirmed: true })
-      .count({ field: 'id' }); // or { field: User.fields.id }
+const emailConfirmedUsersWithUnreadMessages => async () => {
+  const confirmedUserCount = await User.query
+    .where({ confirmed: true })
+    .count({ field: User.fields.id }); // or { field: 'id' }
 
-    if (count < 1) {
+  if (confirmedUserCount < 1) {
+    return;
+  }
+
+  const confirmedUsersWithUnreadMessages = await User.query
+    .where({ confirmed: true })
+    .join( // this does a LEFT JOIN from the 'user' to the 'message' table
+      Message.query
+        .on('receiverId')
+        .as('unreadMessages')
+        .where({ read: false })
+    )
+    .fetch();
+
+  await Promise.all(confirmedUsersWithUnreadMessages.map(async user => {
+    const { unreadMessages } = user;
+
+    if (!unreadMessages || !unreadMessages.length) {
       return;
     }
 
-    const users = await User.query
-      .where({ confirmed: true })
-      .transaction(transaction, { forUpdate: true })
-      .join([ // this will do a left join from the 'user' to the 'message' table
-          Message.query
-              .on(Message.fields.senderId)
-              .fields([ 'id', Message.fields.text ])
-              .as('sentMessages'),
-          Message.query
-              .on('receiverId')
-              .as('receivedMessages'),
-      ])
-      .fetch();
-
-    console.log(users);
-
-    /*
-    will be something like:
-    [
-      new User({
-        id: 1,
-        name: 'Foo',
-        confirmed: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        sentMessages: [
-          new Message({
-            id: 1,
-            text: 'Hey Bar',
-          }),
-          new Message({
-            id: 2,
-            text: 'Hey Bar again',
-          }),
-        ],
-        receivedMessages: [
-          new Message({
-            id: 3,
-            text: 'Hey Foo',
-            senderId: 2,
-            receiverId: 1,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }),
-        ]
-      }),
-      new User({
-        id: 2,
-        name: 'Bar',
-        confirmed: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        sentMessages: [
-          new Message({
-            id: 3,
-            text: 'Hey Foo',
-          }),
-        ]
-        receivedMessages: [
-          new Message({
-            id: 1,
-            text: 'Hey Bar',
-            senderId: 1,
-            receiverId: 2,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }),
-          new Message({
-            id: 2,
-            text: 'Hey Bar again',
-            senderId: 1,
-            receiverId: 2,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }),
-        ]
-      }),
-    ]
-    */
-
-    return Promise.all(users.map(user => {
-      // Assuming User had 'hasReceivedMessages' and 'hasSentMessages' fields
-      // and a sendEmail method
-      if (user.receivedMessages.length) {
-        user.hasReceivedMessages = true;
-      }
-      if (user.sentMessages.length) {
-        user.hasSentMessages = true;
-      }
-      return user.save({ transaction })
-        .then(user => user.sendEmail());
-    }));
-  });
-
-  return transaction.execute();
+    // assuming User had a `sendEmail` method
+    await user.sendEmail(`You have ${unreadMessages.length} unread messages`);
+  }));
 };
 ```
 
