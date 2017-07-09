@@ -581,7 +581,7 @@ describe('Field', function () {
                     await expect(
                         field.validate(new Date().toString()),
                         'to be rejected with',
-                         expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
+                        expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
                     );
                 });
 
@@ -620,7 +620,7 @@ describe('Field', function () {
                     await expect(
                         field.validate('not-valid-uuid'),
                         'to be rejected with',
-                         expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
+                        expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
                     );
                 });
 
@@ -633,7 +633,7 @@ describe('Field', function () {
                     await expect(
                         field.validate(uuid.v1()),
                         'to be rejected with',
-                         expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
+                        expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
                     );
                 });
 
@@ -646,7 +646,7 @@ describe('Field', function () {
                     await expect(
                         field.validate('{not: "valid"}'),
                         'to be rejected with',
-                         expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
+                        expect.it('to be an error instance of',  'InvalidUserFirstNameTypeError')
                     );
                 });
 
