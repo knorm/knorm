@@ -13,7 +13,8 @@
     "postgres:stop": "node script/postgres stop",
     "postgres:remove": "node script/postgres remove",
     "todo": "grep -n -e TODO -e FIXME Field.js Model.js Query.js Virtual.js Transaction.js",
-    "doctoc": "doctoc README.md --github"
+    "doctoc": "doctoc README.md --github",
+    "es5": "babel lib -d es5"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -21,6 +22,9 @@
     "knex": "^0.12.7"
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
     "coveralls": "^2.12.0",
     "doctoc": "^1.3.0",
     "eslint": "^4.2.0",
