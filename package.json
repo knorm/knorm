@@ -12,7 +12,7 @@
     "postgres": "node script/postgres start",
     "postgres:stop": "node script/postgres stop",
     "postgres:remove": "node script/postgres remove",
-    "todo": "grep -n -e TODO -e FIXME Field.js Model.js Query.js Virtual.js Transaction.js",
+    "todo": "grep -rn -e TODO -e FIXME lib",
     "doctoc": "doctoc README.md --github",
     "es5": "babel lib -d es5"
   },
