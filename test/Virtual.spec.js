@@ -1,5 +1,5 @@
-const Virtual = require('../Virtual');
-const Model = require('../Model');
+const Virtual = require('../lib/Virtual');
+const Model = require('../lib/Model');
 const expect = require('unexpected').clone();
 
 describe('Virtual', function () {

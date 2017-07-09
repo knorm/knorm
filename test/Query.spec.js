@@ -1,9 +1,9 @@
 const { snakeCase } = require('lodash');
 const QueryBuilder = require('knex/lib/query/builder');
-const AbstractModel = require('../Model');
-const AbstractField = require('../Field');
+const AbstractModel = require('../lib/Model');
+const AbstractField = require('../lib/Field');
+const AbstractQuery = require('../lib/Query');
 const knex = require('./lib/knex')();
-const AbstractQuery = require('../Query');
 const sinon = require('sinon');
 const expect = require('unexpected')
     .clone()

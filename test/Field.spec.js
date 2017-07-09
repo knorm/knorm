@@ -1,6 +1,6 @@
 const uuid = require('uuid');
-const Field = require('../Field');
-const Model = require('../Model');
+const Field = require('../lib/Field');
+const Model = require('../lib/Model');
 const sinon = require('sinon');
 const expect = require('unexpected')
     .clone()

@@ -1,7 +1,7 @@
 // TODO: this is a workaround for https://github.com/unexpectedjs/unexpected/issues/378
-const Model = require('../../Model');
-const Field = require('../../Field');
-const Virtual = require('../../Virtual');
+const Model = require('../../lib/Model');
+const Field = require('../../lib/Field');
+const Virtual = require('../../lib/Virtual');
 
 module.exports = {
     name: 'unexpected-workaround',

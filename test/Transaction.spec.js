@@ -1,4 +1,4 @@
-const AbstractTransaction = require('../Transaction');
+const AbstractTransaction = require('../lib/Transaction');
 const knex = require('./lib/knex')();
 const sinon = require('sinon');
 const expect = require('unexpected')
