@@ -5,6 +5,7 @@
     "lib"
   ],
   "exclude": [
-    "index.js"
+    "index.js",
+    "lib/index.js"
   ]
 }
