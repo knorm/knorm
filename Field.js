@@ -51,10 +51,6 @@ class Field {
 
         this.validators = validators;
 
-        if (config.default) {
-            this.default = config.default;
-        }
-
         const { references } = config;
         if (references) {
             this.setReference(references);
