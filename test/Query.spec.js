@@ -2348,7 +2348,7 @@ describe('Query', function () {
             await expect(
                 query.insert(user),
                 'to be rejected with error satisfying',
-                new User.fields.name.errors.TypeError()
+                { name: 'FieldTypeError' }
             );
         });
 
@@ -2727,7 +2727,7 @@ describe('Query', function () {
             await expect(
                 query.update(user),
                 'to be rejected with error satisfying',
-                new User.fields.name.errors.TypeError()
+                { name: 'FieldTypeError' }
             );
         });
 
