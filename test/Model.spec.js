@@ -9,7 +9,6 @@ const expect = require('unexpected')
     .clone()
     .use(require('unexpected-sinon'))
     .use(require('unexpected-knex'))
-    .use(require('./lib/unexpected-error'))
     .use(require('./lib/unexpected-workaround'));
 
 describe('Model', function () {
@@ -664,7 +663,7 @@ describe('Model', function () {
             await expect(
                 foo.validate(),
                 'to be rejected with',
-                expect.it('to be an error instance of', 'MissingRequiredFooFooError')
+                { name: 'RequiredError' }
             );
 
             await expect(fooValidationSpy, 'was called once');
@@ -697,7 +696,7 @@ describe('Model', function () {
                 await expect(
                     foo.validate({ fields: [ 'bar' ] }),
                     'to be rejected with',
-                    expect.it('to be an error instance of', 'MissingRequiredFooBarError')
+                    { name: 'RequiredError' }
                 );
 
                 await expect(fooValidationSpy, 'was not called');
@@ -729,7 +728,7 @@ describe('Model', function () {
                 await expect(
                     foo.validate({ fields: [ Foo.fields.bar ] }),
                     'to be rejected with',
-                    expect.it('to be an error instance of', 'MissingRequiredFooBarError')
+                    { name: 'RequiredError' }
                 );
 
                 await expect(fooValidationSpy, 'was not called');
