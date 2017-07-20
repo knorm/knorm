@@ -26,14 +26,6 @@ module.exports = {
             equal: (a, b, equal) => {
                 a = Object.assign({}, a);
                 b = Object.assign({}, b);
-
-                Object.keys(a.errors).forEach(name => {
-                    a.errors[name] = a.errors[name].toString();
-                });
-                Object.keys(b.errors).forEach(name => {
-                    b.errors[name] = b.errors[name].toString();
-                });
-
                 return equal(a, b);
             },
         });
