@@ -1138,90 +1138,6 @@ describe('Model', function () {
         });
     });
 
-    describe('Model.errors', function () {
-        describe('as a getter', function () {
-            it("returns the model's errors", function () {
-                class User extends Model {}
-
-                expect(Model.errors, 'to exhaustively satisfy', {
-                    CountError: expect.it('to be an error named', 'ModelCountError'),
-                    FetchError: expect.it('to be an error named', 'ModelFetchError'),
-                    InsertError: expect.it('to be an error named', 'ModelInsertError'),
-                    UpdateError: expect.it('to be an error named', 'ModelUpdateError'),
-                    DeleteError: expect.it('to be an error named', 'ModelDeleteError'),
-                    RowNotInsertedError: expect.it('to be an error named', 'ModelNotInsertedError'),
-                    RowNotUpdatedError: expect.it('to be an error named', 'ModelNotUpdatedError'),
-                    RowNotDeletedError: expect.it('to be an error named', 'ModelNotDeletedError'),
-                    RowNotFoundError: expect.it('to be an error named', 'ModelNotFoundError'),
-                    RowsNotFoundError: expect.it('to be an error named', 'ModelsNotFoundError'),
-                });
-
-                expect(User.errors, 'to exhaustively satisfy', {
-                    CountError: expect.it('to be an error named', 'UserCountError'),
-                    FetchError: expect.it('to be an error named', 'UserFetchError'),
-                    InsertError: expect.it('to be an error named', 'UserInsertError'),
-                    UpdateError: expect.it('to be an error named', 'UserUpdateError'),
-                    DeleteError: expect.it('to be an error named', 'UserDeleteError'),
-                    RowNotInsertedError: expect.it('to be an error named', 'UserNotInsertedError'),
-                    RowNotUpdatedError: expect.it('to be an error named', 'UserNotUpdatedError'),
-                    RowNotDeletedError: expect.it('to be an error named', 'UserNotDeletedError'),
-                    RowNotFoundError: expect.it('to be an error named', 'UserNotFoundError'),
-                    RowsNotFoundError: expect.it('to be an error named', 'UsersNotFoundError'),
-                });
-            });
-        });
-
-        describe('as a setter', function () {
-            it("adds the errors passed to the model's default errors", function () {
-                class User extends Model {}
-
-                User.errors = {
-                    UserFooError: { studentFoo: 'bar' },
-                };
-
-                expect(User.errors, 'to exhaustively satisfy', {
-                    CountError: expect.it('to be an error named', 'UserCountError'),
-                    FetchError: expect.it('to be an error named', 'UserFetchError'),
-                    InsertError: expect.it('to be an error named', 'UserInsertError'),
-                    UpdateError: expect.it('to be an error named', 'UserUpdateError'),
-                    DeleteError: expect.it('to be an error named', 'UserDeleteError'),
-                    RowNotInsertedError: expect.it('to be an error named', 'UserNotInsertedError'),
-                    RowNotUpdatedError: expect.it('to be an error named', 'UserNotUpdatedError'),
-                    RowNotDeletedError: expect.it('to be an error named', 'UserNotDeletedError'),
-                    RowNotFoundError: expect.it('to be an error named', 'UserNotFoundError'),
-                    RowsNotFoundError: expect.it('to be an error named', 'UsersNotFoundError'),
-                    UserFooError: { studentFoo: 'bar' },
-                });
-            });
-
-            describe('when a model is subclassed', function () {
-                it("adds the new errors to the the parent's errors", function () {
-                    class User extends Model {}
-                    User.errors = {
-                        UserFooError: { userFoo: 'bar' },
-                    };
-
-                    expect(User.errors, 'to satisfy', {
-                        UserFooError: { userFoo: 'bar' },
-                    });
-
-                    class Student extends User {}
-                    Student.errors = {
-                        StudentFooError: { studentFoo: 'bar' },
-                    };
-
-                    expect(User.errors, 'to satisfy', {
-                        UserFooError: { userFoo: 'bar' },
-                    });
-                    expect(Student.errors, 'to satisfy', {
-                        UserFooError: { userFoo: 'bar' },
-                        StudentFooError: { studentFoo: 'bar' },
-                    });
-                });
-            });
-        });
-    });
-
     describe('db methods', function () {
         class UserQuery extends Query {}
         UserQuery.knex = knex;
@@ -1308,7 +1224,7 @@ describe('Model', function () {
                 await expect(
                     user.save(),
                     'to be rejected with error satisfying',
-                    new User.errors.RowNotInsertedError()
+                    { name: 'NoRowsInsertedError' }
                 );
                 await expect(spy, 'to have calls satisfying', () => {
                     spy(true);
@@ -1366,7 +1282,7 @@ describe('Model', function () {
                 await expect(
                     user.insert(),
                     'to be rejected with error satisfying',
-                    new User.errors.RowNotInsertedError()
+                    { name: 'NoRowsInsertedError' }
                 );
                 await expect(spy, 'to have calls satisfying', () => {
                     spy(true);
@@ -1427,7 +1343,7 @@ describe('Model', function () {
                 await expect(
                     user.update(),
                     'to be rejected with error satisfying',
-                    new User.errors.RowNotUpdatedError()
+                    { name: 'NoRowsUpdatedError' }
                 );
                 await expect(spy, 'to have calls satisfying', () => {
                     spy(true);
@@ -1512,18 +1428,18 @@ describe('Model', function () {
             });
 
             describe('if no rows are matched', function () {
-                it('rejects with a ModelNotFoundError', async function () {
+                it('rejects with a NoRowsFetchedError', async function () {
                     await User.insert({ id: 1, name: 'John Doe' });
                     const user = new User({ id: 1, name: 'Jane Doe' });
                     await expect(
                         user.fetch(),
                         'to be rejected with error satisfying',
-                        new User.errors.RowNotFoundError()
+                        { name: 'NoRowsFetchedError' }
                     );
                 });
 
                 describe("if the 'require' option is set to false", function () {
-                    it('does not reject with a ModelNotFoundError', async function () {
+                    it('does not reject with a NoRowsFetchedError', async function () {
                         await User.insert({ id: 1, name: 'John Doe' });
                         const user = new User({ id: 1, name: 'Jane Doe' });
                         await expect(
@@ -1610,18 +1526,18 @@ describe('Model', function () {
             });
 
             describe('if no rows are deleted', function () {
-                it('rejects with a ModelNotDeletedError', async function () {
+                it('rejects with a NoRowsDeletedError', async function () {
                     await User.insert({ id: 1, name: 'John Doe' });
                     const user = new User({ id: 1, name: 'Jane Doe' });
                     await expect(
                         user.delete(),
                         'to be rejected with error satisfying',
-                        new User.errors.RowNotDeletedError()
+                        { name: 'NoRowsDeletedError' }
                     );
                 });
 
                 describe("if the 'require' option is set to false", function () {
-                    it('does not reject with a ModelNotDeletedError', async function () {
+                    it('does not reject with a NoRowsDeletedError', async function () {
                         await User.insert({ id: 1, name: 'John Doe' });
                         const user = new User({ id: 1, name: 'Jane Doe' });
                         await expect(
