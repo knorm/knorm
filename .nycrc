@@ -1,0 +1,11 @@
+{
+  "all": true,
+  "cache": true,
+  "include": [
+    "lib",
+    "es5"
+  ],
+  "exclude": [
+    "index.js"
+  ]
+}

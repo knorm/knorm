@@ -51,17 +51,6 @@
   "dependencies": {
     "lodash": "^4.17.4"
   },
-  "nyc": {
-    "all": true,
-    "cache": true,
-    "include": [
-      "*.js",
-      "lib/**/*.js"
-    ],
-    "exclude": [
-      "index.js"
-    ]
-  },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/joelmukuthu/knorm.git"
