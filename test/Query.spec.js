@@ -174,7 +174,7 @@ const truncateMessageTable = async () => {
     return knex(Message.table).truncate();
 };
 
-describe('lib/newModels/Query', function () {
+describe('Query', function () {
     before(async function () {
         await knex.schema.createTable(User.table, createUserTable);
         await knex.schema.createTable(ImageCategory.table, createImageCategoryTable);
