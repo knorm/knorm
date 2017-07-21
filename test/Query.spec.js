@@ -334,7 +334,7 @@ describe('Query', function () {
             );
         });
 
-        it('rejects with a ModelFetchError if a database error occurs', async function () {
+        it('rejects with a FetchError if a database error occurs', async function () {
             const stub = sinon.stub(QueryBuilder.prototype, 'select').returns(
                 Promise.reject(new Error('fetch error'))
             );
@@ -342,13 +342,7 @@ describe('Query', function () {
             await expect(
                 query.fetch(),
                 'to be rejected with error satisfying',
-                error => {
-                    expect(error, 'to be a', User.errors.FetchError);
-                    expect(error, 'to exhaustively satisfy', {
-                        message: 'fetch error',
-                        originalError: new Error('fetch error'),
-                    });
-                }
+                new Query.errors.FetchError(new Error('fetch error'), query)
             );
             stub.restore();
         });
@@ -390,24 +384,13 @@ describe('Query', function () {
             });
 
             describe("with 'require' configured", function () {
-                it('rejects with a RowsNotFoundError', async function () {
+                it('rejects with a NoRowsFetchedError', async function () {
                     const query = new Query(User).require();
                     await expect(
                         query.fetch(),
                         'to be rejected with error satisfying',
-                        new User.errors.RowsNotFoundError()
+                        new Query.errors.NoRowsFetchedError('no rows fetched', query)
                     );
-                });
-
-                describe("with 'first' configured", function () {
-                    it('rejects with a RowNotFoundError', async function () {
-                        const query = new Query(User).require().first();
-                        await expect(
-                            query.fetch(),
-                            'to be rejected with error satisfying',
-                            new User.errors.RowNotFoundError()
-                        );
-                    });
                 });
             });
         });
@@ -1044,15 +1027,16 @@ describe('Query', function () {
                     );
                 });
 
-                it("rejects with a ModelsNotFoundError if the join doesn't match any rows", async function () {
+                it("rejects with a NoRowsFetchedError if the join doesn't match any rows", async function () {
+                    const imageQuery = new Query(Image).require(true);
                     const query = new Query(User)
                         .where({ id: 2 })
-                        .with(new Query(Image).require(true));
+                        .with(imageQuery);
 
                     await expect(
                         query.fetch(),
                         'to be rejected with error satisfying',
-                        new Image.errors.RowsNotFoundError()
+                        new Query.errors.NoRowsFetchedError('no rows fetched', imageQuery)
                     );
                 });
             });
@@ -2238,7 +2222,7 @@ describe('Query', function () {
             );
         });
 
-        it('rejects with a ModelCountError if a database error occurs', async function () {
+        it('rejects with a CountError if a database error occurs', async function () {
             const stub = sinon.stub(QueryBuilder.prototype, 'first').returns(
                 Promise.reject(new Error('count error'))
             );
@@ -2246,13 +2230,7 @@ describe('Query', function () {
             await expect(
                 query.count(),
                 'to be rejected with error satisfying',
-                error => {
-                    expect(error, 'to be a', User.errors.CountError);
-                    expect(error, 'to exhaustively satisfy', {
-                        message: 'count error',
-                        originalError: new Error('count error'),
-                    });
-                }
+                new Query.errors.CountError(new Error('count error'), query)
             );
             stub.restore();
         });
@@ -2370,7 +2348,7 @@ describe('Query', function () {
             await expect(
                 query.insert(user),
                 'to be rejected with error satisfying',
-                new User.fields.name.errors.TypeError()
+                { name: 'FieldTypeError' }
             );
         });
 
@@ -2461,7 +2439,7 @@ describe('Query', function () {
             );
         });
 
-        it('rejects with a ModelInsertError if the insert operation fails', async function () {
+        it('rejects with a InsertError if the insert operation fails', async function () {
             const stub = sinon.stub(QueryBuilder.prototype, 'insert').returns(
                 Promise.reject(new Error('insert error'))
             );
@@ -2469,13 +2447,7 @@ describe('Query', function () {
             await expect(
                 query.insert(new User({ name: 'John Doe' })),
                 'to be rejected with error satisfying',
-                error => {
-                    expect(error, 'to be a', User.errors.InsertError);
-                    expect(error, 'to exhaustively satisfy', {
-                        message: 'insert error',
-                        originalError: new Error('insert error'),
-                    });
-                }
+                new Query.errors.InsertError(new Error('insert error'), query)
             );
             stub.restore();
         });
@@ -2589,12 +2561,12 @@ describe('Query', function () {
             });
 
             describe("with 'require' option configured", function () {
-                it('rejects with a ModelNotInsertedError', async function () {
+                it('rejects with a NoRowsInsertedError', async function () {
                     const query = new Query(User).require();
                     await expect(
                         query.insert(new User({ name: 'John Doe' })),
                         'to be rejected with error satisfying',
-                        new User.errors.RowNotInsertedError()
+                        new Query.errors.NoRowsInsertedError('no rows inserted', query)
                     );
                 });
             });
@@ -2755,7 +2727,7 @@ describe('Query', function () {
             await expect(
                 query.update(user),
                 'to be rejected with error satisfying',
-                new User.fields.name.errors.TypeError()
+                { name: 'FieldTypeError' }
             );
         });
 
@@ -2825,7 +2797,7 @@ describe('Query', function () {
             );
         });
 
-        it('rejects with a ModelUpdateError if the update operation fails', async function () {
+        it('rejects with a UpdateError if the update operation fails', async function () {
             const stub = sinon.stub(QueryBuilder.prototype, 'update').returns(
                 Promise.reject(new Error('update error'))
             );
@@ -2834,13 +2806,7 @@ describe('Query', function () {
             await expect(
                 query.update(user),
                 'to be rejected with error satisfying',
-                error => {
-                    expect(error, 'to be a', User.errors.UpdateError);
-                    expect(error, 'to exhaustively satisfy', {
-                        message: 'update error',
-                        originalError: new Error('update error'),
-                    });
-                }
+                new Query.errors.UpdateError(new Error('update error'), query)
             );
             stub.restore();
         });
@@ -2975,13 +2941,13 @@ describe('Query', function () {
             });
 
             describe("with 'require' option configured", function () {
-                it('rejects with a ModelNotUpdatedError', async function () {
+                it('rejects with a NoRowsUpdatedError', async function () {
                     user.name = 'Jane Doe';
                     const query = new Query(User).require();
                     await expect(
                         query.update(user),
                         'to be rejected with error satisfying',
-                        new User.errors.RowNotUpdatedError()
+                        new Query.errors.NoRowsUpdatedError('no rows updated', query)
                     );
                 });
             });
@@ -3211,7 +3177,7 @@ describe('Query', function () {
             });
         });
 
-        it('rejects with a ModelDeleteError if the delete operation fails', async function () {
+        it('rejects with a DeleteError if the delete operation fails', async function () {
             const stub = sinon.stub(QueryBuilder.prototype, 'delete').returns(
                 Promise.reject(new Error('delete error'))
             );
@@ -3219,13 +3185,7 @@ describe('Query', function () {
             await expect(
                 query.delete(),
                 'to be rejected with error satisfying',
-                error => {
-                    expect(error, 'to be a', User.errors.DeleteError);
-                    expect(error, 'to exhaustively satisfy', {
-                        message: 'delete error',
-                        originalError: new Error('delete error'),
-                    });
-                }
+                new Query.errors.DeleteError(new Error('delete error'), query)
             );
             stub.restore();
         });
@@ -3255,12 +3215,12 @@ describe('Query', function () {
             });
 
             describe("with 'require' option configured", function () {
-                it('rejects with a ModelNotDeletedError', async function () {
+                it('rejects with a NoRowsDeletedError', async function () {
                     const query = new Query(User).require();
                     await expect(
                         query.delete(),
                         'to be rejected with error satisfying',
-                        new User.errors.RowNotDeletedError()
+                        new Query.errors.NoRowsDeletedError('no rows deleted', query)
                     );
                 });
             });
