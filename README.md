@@ -32,6 +32,7 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
     - [2.2. Configure common fields (optional)](#22-configure-common-fields-optional)
   - [3. Add some model classes](#3-add-some-model-classes)
   - [4. Example](#4-example)
+- [Docs](#docs)
 - [TODOs](#todos)
 - [Credits](#credits)
 
@@ -261,6 +262,12 @@ const emailConfirmedUsersWithUnreadMessages => async () => {
   }));
 };
 ```
+
+## Docs
+Current documentation:
+- [Model](./doc/Model.md)
+- [Query](./doc/Query.md)
+- [Field](./doc/Field.md)
 
 ## TODOs
 
