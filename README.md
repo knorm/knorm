@@ -101,7 +101,8 @@ Model.Field = Field; // configure the new Field class
 #### 2.2. Configure common fields (optional)
 
 If you have fields that are common to all your models, add them to the base
-`Model` class:
+`Model` class. Knorm requires models to have an `id` field, `Model` is a good
+place to add it:
 
 ```js
 Model.fields = {
@@ -124,10 +125,8 @@ Model.fields = {
 // with Knex's schema builder.
 ```
 
-Knorm doesn't require models to have an `id` or timestamp fields but it will do
-the right thing (*as far as I have tested*) if they've been added. If your `id`
-or timestamp fields have names other than `id`, `createdAt` and `updatedAt`
-respectively, you can configure that as well:
+If your `id` or timestamp fields have names other than `id`, `createdAt` and
+`updatedAt` respectively, you can configure that as well:
 
 ```js
 Model.idField = 'uuid';
