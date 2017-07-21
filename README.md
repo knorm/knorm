@@ -16,7 +16,6 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
 - custom error classes (custom for every model class created) for db errors
 - improved syntax for transactions
 - full and easy configuration and extendability (owing to ES6 classes)
-- includes pre-built files for ES5 support
 - good test coverage
 
 ## NOTE: currently supports [PostgreSQL, MSSQL and Oracle databases](http://knexjs.org/#Builder-returning)
