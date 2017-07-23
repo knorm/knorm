@@ -18,7 +18,10 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
 - full and easy configuration and extendability (owing to ES6 classes)
 - good test coverage
 
-## NOTE: currently supports [PostgreSQL, MSSQL and Oracle databases](http://knexjs.org/#Builder-returning)
+> NOTE: currently supports
+[PostgreSQL, MSSQL and Oracle databases](http://knexjs.org/#Builder-returning)
+
+## Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -89,10 +92,11 @@ appropriately:
 
 ```js
 const { Field: KnormField } = require('knorm');
+const { snakeCase } = require('lodash');
 
 class Field extends KnormField {
   getColumnName(fieldName) {
-    return fieldName.toLowerCase(); // for example
+    return snakeCase(fieldName);
   }
 }
 
