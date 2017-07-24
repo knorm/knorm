@@ -2274,6 +2274,28 @@ describe('Query', function () {
                 spy.restore();
             });
         });
+
+        describe('if no rows are counted', function () {
+            it('resolves with zero', async function () {
+                const query = new Query(User).where({ id: 3 });
+                await expect(
+                    query.count(),
+                    'to be fulfilled with value satisfying',
+                    0
+                );
+            });
+
+            describe("with 'require' option configured", function () {
+                it('rejects with a NoRowsCountedError', async function () {
+                    const query = new Query(User).where({ id: 3 }).require();
+                    await expect(
+                        query.count(),
+                        'to be rejected with error satisfying',
+                        new Query.errors.NoRowsCountedError('no rows counted', query)
+                    );
+                });
+            });
+        });
     });
 
     describe('Query.prototype.insert', function () {
