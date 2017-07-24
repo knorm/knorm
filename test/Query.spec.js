@@ -246,6 +246,14 @@ describe('Query', function () {
             });
         });
 
+        it('throws an error if `options` is passed as an option', function () {
+            expect(
+                () => new Query(User).options({ 'options': 'bar'}),
+                'to throw',
+                new Error("'options' is not an allowed option")
+            );
+        });
+
         it('throws an error if a private method is passed as an option', function () {
             expect(
                 () => new Query(User).options({ _addFields: 'bar'}),
