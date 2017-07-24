@@ -1204,8 +1204,8 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
-                const stub = sinon.stub(UserQuery.prototype, 'options')
+            it('passes any options passed options Query.prototype.setOptions', async function () {
+                const stub = sinon.stub(UserQuery.prototype, 'setOptions')
                     .returnsThis();
                 const user = new User({ name: 'John Doe' });
                 await expect(user.save({ foo: 'bar' }), 'to be fulfilled');
@@ -1262,8 +1262,8 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
-                const stub = sinon.stub(UserQuery.prototype, 'options')
+            it('passes any options passed to Query.prototype.setOptions', async function () {
+                const stub = sinon.stub(UserQuery.prototype, 'setOptions')
                     .returnsThis();
                 const user = new User({ name: 'John Doe' });
                 await expect(user.insert({ foo: 'bar' }), 'to be fulfilled');
@@ -1321,10 +1321,10 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
+            it('passes any options passed to Query.prototype.setOptions', async function () {
                 const user = await User.insert({ name: 'John Doe' });
                 user.name = 'Jane Doe';
-                const stub = sinon.stub(UserQuery.prototype, 'options')
+                const stub = sinon.stub(UserQuery.prototype, 'setOptions')
                     .returnsThis();
                 await expect(user.update({ foo: 'bar' }), 'to be fulfilled');
                 await expect(stub, 'to have calls satisfying', () => {
@@ -1381,10 +1381,10 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
+            it('passes any options passed to Query.prototype.setOptions', async function () {
                 await User.insert({ id: 1, name: 'John Doe' });
                 const user = new User({ id: 1 });
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 await expect(
                     user.fetch({ fields: 'name' }),
                     'to be fulfilled with value satisfying',
@@ -1479,10 +1479,10 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
+            it('passes any options passed to Query.prototype.setOptions', async function () {
                 await User.insert({ id: 1, name: 'John Doe' });
                 const user = new User({ id: 1 });
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 await expect(
                     user.delete({ fields: 'name' }),
                     'to be fulfilled with value satisfying',
@@ -1609,8 +1609,8 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+            it('passes any options passed to Query.prototype.setOptions', async function () {
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 const data = { name: 'John Doe' };
                 const options = { require: true };
                 await expect(User.save(data, options), 'to be fulfilled');
@@ -1638,8 +1638,8 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+            it('passes any options passed to Query.prototype.setOptions', async function () {
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 const data = { name: 'John Doe' };
                 const options = { require: true };
                 await expect(User.insert(data, options), 'to be fulfilled');
@@ -1668,9 +1668,9 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
+            it('passes any options passed to Query.prototype.setOptions', async function () {
                 const user = await User.insert({ name: 'John Doe' });
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 user.name = 'Jane Doe';
                 const options = { require: true };
                 await expect(User.update(user, options), 'to be fulfilled');
@@ -1694,9 +1694,9 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
+            it('passes any options passed to Query.prototype.setOptions', async function () {
                 await User.save({ name: 'John Doe' });
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 const options = { forge: false };
                 await expect(User.fetch(options), 'to be fulfilled with value satisfying', [
                     { id: 1, name: 'John Doe' },
@@ -1721,9 +1721,9 @@ describe('Model', function () {
                 spy.restore();
             });
 
-            it('passes any options passed to Query.prototype.options', async function () {
+            it('passes any options passed to Query.prototype.setOptions', async function () {
                 await User.save({ name: 'John Doe' });
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 const options = { forge: false };
                 await expect(User.delete(options), 'to be fulfilled with value satisfying', [
                     { id: 1, name: 'John Doe' },
@@ -1752,7 +1752,7 @@ describe('Model', function () {
 
             it('passes any options passed to Model.prototype.fetch', async function () {
                 await User.insert({ id: 1, name: 'John Doe' });
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 await expect(
                     User.fetchById(1, { forge: false }),
                     'to be fulfilled with value satisfying',
@@ -1782,7 +1782,7 @@ describe('Model', function () {
 
             it('passes any options passed to Model.prototype.delete', async function () {
                 await User.insert({ id: 1, name: 'John Doe' });
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 await expect(
                     User.deleteById(1, { forge: false }),
                     'to be fulfilled with value satisfying',
@@ -1818,7 +1818,7 @@ describe('Model', function () {
 
             it('passes any options passed to Model.prototype.update', async function () {
                 await User.insert({ id: 1, name: 'John Doe' });
-                const spy = sinon.spy(UserQuery.prototype, 'options');
+                const spy = sinon.spy(UserQuery.prototype, 'setOptions');
                 await expect(
                     User.updateById(1, { name: 'Jane Doe' }, { forge: false }),
                     'to be fulfilled with value satisfying',

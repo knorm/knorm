@@ -227,10 +227,10 @@ describe('Query', function () {
         });
     });
 
-    describe('Query.prototype.options', function () {
+    describe('Query.prototype.setOptions', function () {
         it('throws an error if passed an option that is not a Query method', function () {
             expect(
-                () => new Query(User).options({ foo: 'bar'}),
+                () => new Query(User).setOptions({ foo: 'bar'}),
                 'to throw',
                 new Error("Unknown option 'foo'")
             );
@@ -239,24 +239,24 @@ describe('Query', function () {
         it('throws an error if a db-method is passed as an option', function () {
             [ 'count', 'fetch', 'insert', 'update', 'save', 'delete' ].forEach(method => {
                 expect(
-                    () => new Query(User).options({ [method]: 'bar'}),
+                    () => new Query(User).setOptions({ [method]: 'bar'}),
                     'to throw',
                     new Error(`'${method}' is not an allowed option`)
                 );
             });
         });
 
-        it('throws an error if `options` is passed as an option', function () {
+        it('throws an error if `setOptions` is passed as an option', function () {
             expect(
-                () => new Query(User).options({ 'options': 'bar'}),
+                () => new Query(User).setOptions({ 'setOptions': 'bar'}),
                 'to throw',
-                new Error("'options' is not an allowed option")
+                new Error("'setOptions' is not an allowed option")
             );
         });
 
         it('throws an error if a private method is passed as an option', function () {
             expect(
-                () => new Query(User).options({ _addFields: 'bar'}),
+                () => new Query(User).setOptions({ _addFields: 'bar'}),
                 'to throw',
                 new Error("'_addFields' is not an allowed option")
             );
@@ -2107,9 +2107,9 @@ describe('Query', function () {
             });
 
             describe('with the child query options passed as a second parameter', function () {
-                it('passes the options to the child query via Query.prototype.options', async function () {
+                it('passes the options to the child query via Query.prototype.setOptions', async function () {
                     const imageQuery = new Query(Image);
-                    const spy = sinon.spy(imageQuery, 'options');
+                    const spy = sinon.spy(imageQuery, 'setOptions');
                     const query = new Query(User)
                         .where({ id: 1 })
                         .with(
