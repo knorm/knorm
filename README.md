@@ -9,6 +9,7 @@
 A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
 - model validation (before insert and update operations) with custom error
   classes and support for async custom validators
+- value casting before insert and update operations and after fetch operations
 - SQL joins with full JavaScript syntax
 - virtual fields (i.e. computed fields) with support for async getters
 - model field names to database column names transformations (and vice-versa
