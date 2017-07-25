@@ -10,7 +10,7 @@ const expect = require('unexpected')
     .use(require('unexpected-sinon'))
     .use(require('unexpected-knex'))
     .addAssertion(
-        '<Promise> to be fulfilled with sorted rows exhaustively satisfying <array>',
+        '<Promise> to be fulfilled with sorted rows [exhaustively] satisfying <array>',
         (expect, subject, value) => {
             const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
 
@@ -24,7 +24,7 @@ const expect = require('unexpected')
                         subject,
                         'sorted by',
                         ascendingOrder,
-                        'to exhaustively satisfy',
+                        'to [exhaustively] satisfy',
                         value
                     );
                 }
@@ -84,6 +84,27 @@ User.fields = {
     dbDefault: {
         type: Field.types.string,
     },
+    jsonField: {
+        // TODO: jsonb
+        type: Field.types.json,
+        cast: {
+            save(value) {
+                if (value !== null) {
+                    return JSON.stringify(value);
+                }
+            },
+        },
+    },
+    intToString: {
+        type: Field.types.integer,
+        cast: {
+            fetch(value) {
+                if (value !== null) {
+                    return String(value);
+                }
+            },
+        },
+    },
 };
 
 const createUserTable = table => {
@@ -95,6 +116,8 @@ const createUserTable = table => {
     table.boolean('confirmed').notNullable();
     table.dateTime('date_of_birth');
     table.string('db_default').defaultTo('set-by-db');
+    table.jsonb('json_field');
+    table.integer('int_to_string');
 };
 
 const truncateUserTable = async () => {
@@ -273,6 +296,8 @@ describe('Query', function () {
                     description: 'this is user 1',
                     age: 10,
                     date_of_birth: null,
+                    json_field: null,
+                    int_to_string: 10,
                 },
                 {
                     id: 2,
@@ -281,6 +306,8 @@ describe('Query', function () {
                     description: 'this is user 2',
                     age: 10,
                     date_of_birth: null,
+                    json_field: null,
+                    int_to_string: null,
                 },
             ]);
         });
@@ -326,6 +353,8 @@ describe('Query', function () {
                         age: 10,
                         dateOfBirth: null,
                         dbDefault: 'set-by-db',
+                        jsonField: null,
+                        intToString: '10',
                     }),
                     new User({
                         id: 2,
@@ -337,6 +366,44 @@ describe('Query', function () {
                         age: 10,
                         dateOfBirth: null,
                         dbDefault: 'set-by-db',
+                        jsonField: null,
+                        intToString: null,
+                    }),
+                ]
+            );
+        });
+
+        it('casts fields configured with post-fetch cast functions after fetching', async function () {
+            const query = new Query(User);
+            await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows exhaustively satisfying',
+                [
+                    new User({
+                        id: 1,
+                        createdAt: null,
+                        updatedAt: null,
+                        name: 'User 1',
+                        confirmed: false,
+                        description: 'this is user 1',
+                        age: 10,
+                        dateOfBirth: null,
+                        dbDefault: 'set-by-db',
+                        jsonField: null,
+                        intToString: '10',
+                    }),
+                    new User({
+                        id: 2,
+                        createdAt: null,
+                        updatedAt: null,
+                        name: 'User 2',
+                        confirmed: true,
+                        description: 'this is user 2',
+                        age: 10,
+                        dateOfBirth: null,
+                        dbDefault: 'set-by-db',
+                        jsonField: null,
+                        intToString: null,
                     }),
                 ]
             );
@@ -419,6 +486,8 @@ describe('Query', function () {
                         age: 10,
                         dateOfBirth: null,
                         dbDefault: 'set-by-db',
+                        jsonField: null,
+                        intToString: '10',
                     })
                 );
             });
@@ -433,6 +502,24 @@ describe('Query', function () {
                     [
                         expect.it('not to be a', User),
                         expect.it('not to be a', User),
+                    ]
+                );
+            });
+
+            it('casts fields with post-fetch cast functions', async function () {
+                const query = new Query(User).forge(false);
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows satisfying',
+                    [
+                        {
+                            id: 1,
+                            intToString: '10',
+                        },
+                        {
+                            id: 2,
+                            intToString: null,
+                        },
                     ]
                 );
             });
@@ -453,6 +540,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         },
                         {
                             id: 2,
@@ -464,6 +553,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         },
                     ]
                 );
@@ -487,6 +578,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -510,6 +603,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -533,6 +628,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }),
                         new User({
                             id: 2,
@@ -544,6 +641,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -567,6 +666,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }),
                         new User({
                             id: 2,
@@ -578,6 +679,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -603,6 +706,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }),
                         new User({
                             id: 2,
@@ -614,6 +719,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -637,6 +744,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                         new User({
                             id: 1,
@@ -648,6 +757,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }),
                     ]
                 );
@@ -671,6 +782,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }),
                     ]
                 );
@@ -694,6 +807,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -723,6 +838,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }),
                         new User({
                             id: 2,
@@ -734,6 +851,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -769,6 +888,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }),
                             new User({
                                 id: 2,
@@ -780,6 +901,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: null,
                             }),
                         ]
                     );
@@ -860,6 +983,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }), {
                             image: new Image({
                                 id: 1,
@@ -879,6 +1004,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -901,6 +1028,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: new Image({
                                     id: 1,
@@ -920,6 +1049,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: null,
                             }),
                         ]
                     );
@@ -941,6 +1072,8 @@ describe('Query', function () {
                     age: 10,
                     dateOfBirth: null,
                     dbDefault: 'set-by-db',
+                    jsonField: null,
+                    intToString: null,
                 });
                 user2.image = undefined;
 
@@ -979,6 +1112,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }), {
                             image: [
                                 new Image({
@@ -1022,6 +1157,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: new Image({
                                     id: 1,
@@ -1071,6 +1208,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: new Image({
                                     id: 1,
@@ -1103,6 +1242,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 theImage: new Image({
                                     id: 1,
@@ -1135,6 +1276,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }),
                         new User({
                             id: 2,
@@ -1146,6 +1289,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -1175,6 +1320,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 sentMessage: new Message({
                                     id: 1,
@@ -1203,6 +1350,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: null,
                             }), {
                                 sentMessage: new Message({
                                     id: 2,
@@ -1256,6 +1405,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: new Image({
                                     id: 2,
@@ -1302,6 +1453,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: new Image({
                                     id: 1,
@@ -1349,6 +1502,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: [
                                     new Image({
@@ -1409,6 +1564,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: new Image({
                                     id: 3,
@@ -1456,6 +1613,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: [
                                     new Image({
@@ -1513,6 +1672,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: [
                                     new Image({
@@ -1576,6 +1737,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: [
                                     new Image({
@@ -1622,6 +1785,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: '10',
                                     image: new Image({
                                         id: 1,
                                         createdAt: null,
@@ -1640,6 +1805,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: null,
                                 },
                             ]
                         );
@@ -1665,6 +1832,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: '10',
                                 }), {
                                     image: {
                                         id: 1,
@@ -1684,6 +1853,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: null,
                                 },
                             ]
                         );
@@ -1710,6 +1881,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: '10',
                                     image: {
                                         id: 1,
                                         createdAt: null,
@@ -1728,6 +1901,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: null,
                                 },
                             ]
                         );
@@ -1754,6 +1929,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: null,
                                 image: undefined,
                             },
                         ]
@@ -1786,6 +1963,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                                 image: [
                                     {
                                         id: 1,
@@ -1826,6 +2005,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }), {
                             image: new Image({
                                 id: 1,
@@ -1845,6 +2026,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -1866,6 +2049,8 @@ describe('Query', function () {
                             age: 10,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
                         }), {
                             image: new Image({
                                 id: 1,
@@ -1880,7 +2065,7 @@ describe('Query', function () {
             });
 
             describe('with a reverse-reference join', function () {
-                it('resolves with the correct data', async function () {
+                it('resolves with the correct data (with values on the joined model casted)', async function () {
                     const query = new Query(Image).with(new Query(User));
                     await expect(
                         query.fetch(),
@@ -1903,6 +2088,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: '10',
                                 }),
                             }),
                         ]
@@ -1936,6 +2123,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: '10',
                                 }),
                             }),
                         ]
@@ -1969,6 +2158,8 @@ describe('Query', function () {
                                     age: 10,
                                     dateOfBirth: null,
                                     dbDefault: 'set-by-db',
+                                    jsonField: null,
+                                    intToString: '10',
                                 }),
                             }),
                         ]
@@ -1997,6 +2188,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: Object.assign(new Image({
                                     id: 1,
@@ -2023,6 +2216,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: null,
                             }),
                         ]
                     );
@@ -2054,6 +2249,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: Object.assign(new Image({
                                     id: 1,
@@ -2085,6 +2282,8 @@ describe('Query', function () {
                                                 age: 10,
                                                 dateOfBirth: null,
                                                 dbDefault: 'set-by-db',
+                                                jsonField: null,
+                                                intToString: '10',
                                             }),
                                         }),
                                     }),
@@ -2100,6 +2299,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: null,
                             }),
                         ]
                     );
@@ -2133,6 +2334,8 @@ describe('Query', function () {
                                 age: 10,
                                 dateOfBirth: null,
                                 dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10',
                             }), {
                                 image: new Image({
                                     id: 1,
@@ -2372,6 +2575,23 @@ describe('Query', function () {
             ]);
         });
 
+        it('casts fields configured with pre-save cast functions before validating them', async function () {
+            const query = new Query(User);
+            const user = new User({ id: 1, name: 'John Doe', jsonField: [ 'foo', 'bar' ] });
+            await expect(query.insert(user), 'to be fulfilled');
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'John Doe',
+                    confirmed: false,
+                    age: null,
+                    created_at: expect.it('to be a', Date),
+                    updated_at: expect.it('to be a', Date),
+                    json_field: [ 'foo', 'bar' ], // knex calls JSON.parse on it it seems
+                },
+            ]);
+        });
+
         it("validates the instance's fields before saving", async function () {
             const query = new Query(User);
             const user = new User({ id: 1, name: 1 });
@@ -2441,6 +2661,8 @@ describe('Query', function () {
                     age: null,
                     dateOfBirth: null,
                     dbDefault: 'set-by-db',
+                    jsonField: null,
+                    intToString: null,
                 })
             );
         });
@@ -2463,6 +2685,8 @@ describe('Query', function () {
                     age: null,
                     dateOfBirth: null,
                     dbDefault: 'set-by-db',
+                    jsonField: null,
+                    intToString: null,
                 }), {
                     leaveMeIntact: 'okay',
                 })
@@ -2751,6 +2975,19 @@ describe('Query', function () {
             clock.restore();
         });
 
+        it('casts updated fields configured with pre-save cast functions before validating them', async function () {
+            const query = new Query(User);
+            user.jsonField = [ 'foo', 'bar' ];
+            await expect(query.update(user), 'to be fulfilled');
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'John Doe',
+                    json_field: [ 'foo', 'bar' ], // knex calls JSON.parse on it it seems
+                },
+            ]);
+        });
+
         it("validates the instance's fields before saving", async function () {
             const query = new Query(User);
             user.name = 1;
@@ -2799,6 +3036,8 @@ describe('Query', function () {
                     age: null,
                     dateOfBirth: null,
                     dbDefault: 'set-by-db',
+                    jsonField: null,
+                    intToString: null,
                 })
             );
         });
@@ -2821,6 +3060,8 @@ describe('Query', function () {
                     age: null,
                     dateOfBirth: null,
                     dbDefault: 'set-by-db',
+                    jsonField: null,
+                    intToString: null,
                 }), {
                     leaveMeIntact: 'okay',
                 })
@@ -3090,6 +3331,8 @@ describe('Query', function () {
                         age: null,
                         dateOfBirth: null,
                         dbDefault: 'set-by-db',
+                        jsonField: null,
+                        intToString: null,
                     }),
                     new User({
                         id: 2,
@@ -3101,6 +3344,8 @@ describe('Query', function () {
                         age: null,
                         dateOfBirth: null,
                         dbDefault: 'set-by-db',
+                        jsonField: null,
+                        intToString: null,
                     }),
                 ]
             );
@@ -3150,6 +3395,8 @@ describe('Query', function () {
                             age: null,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         },
                         {
                             id: 2,
@@ -3161,6 +3408,8 @@ describe('Query', function () {
                             age: null,
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         },
                     ]
                 );

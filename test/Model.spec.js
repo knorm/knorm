@@ -825,6 +825,282 @@ describe('Model', function () {
         });
     });
 
+    describe('Model.prototype.cast', function () {
+        it('casts all the fields that have cast functions and a value set', async function () {
+            class Foo extends Model {}
+
+            const fooSaveCast = sinon.spy();
+
+            Foo.fields = {
+                foo: {
+                    required: true,
+                    type: Field.types.string,
+                    cast: {
+                        save: fooSaveCast,
+                    },
+                },
+                bar: {
+                    required: true,
+                    type: Field.types.string,
+                },
+            };
+
+            const foo = new Foo();
+            foo.foo = 'foo';
+            foo.bar = 'bar';
+            foo.cast({ save: true });
+
+            await expect(fooSaveCast, 'was called once');
+        });
+
+        describe("with a 'fields' option", function () {
+            it('casts only the fields passed', async function () {
+                class Foo extends Model {}
+
+                const fooSaveCast = sinon.spy();
+                const barSaveCast = sinon.spy();
+
+                Foo.fields = {
+                    foo: {
+                        required: true,
+                        type: Field.types.string,
+                        cast: {
+                            save: fooSaveCast,
+                        },
+                    },
+                    bar: {
+                        required: true,
+                        type: Field.types.string,
+                        cast: {
+                            save: barSaveCast,
+                        },
+                    },
+                };
+
+                const foo = new Foo();
+                foo.foo = 'foo';
+                foo.bar = 'bar';
+                foo.cast({ fields: [ 'bar' ], save: true });
+
+                await expect(fooSaveCast, 'was not called');
+                await expect(barSaveCast, 'was called once');
+            });
+
+            it('accepts a list of field objects', async function () {
+                class Foo extends Model {}
+
+                const fooSaveCast = sinon.spy();
+                const barSaveCast = sinon.spy();
+
+                Foo.fields = {
+                    foo: {
+                        required: true,
+                        type: Field.types.string,
+                        cast: {
+                            save: fooSaveCast,
+                        },
+                    },
+                    bar: {
+                        required: true,
+                        type: Field.types.string,
+                        cast: {
+                            save: barSaveCast,
+                        },
+                    },
+                };
+
+                const foo = new Foo();
+                foo.foo = 'foo';
+                foo.bar = 'bar';
+                foo.cast({ fields: [ Foo.fields.foo, Foo.fields.bar ], save: true });
+
+                await expect(fooSaveCast, 'was called once');
+                await expect(barSaveCast, 'was called once');
+            });
+
+            it('rejects if the list of fields contains unknown fields', function () {
+                class Foo extends Model {}
+
+                Foo.fields = {
+                    foo: {
+                        required: true,
+                        type: Field.types.string,
+                        cast: {
+                            save() {},
+                        },
+                    },
+                    bar: {
+                        required: true,
+                        type: Field.types.string,
+                        cast: {
+                            save() {},
+                        },
+                    },
+                };
+
+                const foo = new Foo();
+
+                expect(
+                    foo.cast({ fields: [ 'quux' ] }),
+                    'to be rejected with',
+                    new Error("Unknown field 'Foo.quux'")
+                );
+            });
+        });
+
+        it('calls Field.prototype.cast with the set value, the model instance and options passed', function () {
+            class Foo extends Model {}
+
+            Foo.fields = {
+                bar: {
+                    required: true,
+                    type: Field.types.string,
+                    cast: {
+                        save() {},
+                    },
+                },
+            };
+
+            const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
+
+            const foo = new Foo();
+            foo.bar = 'bar';
+            foo.cast({ fields: [ 'bar' ], save: true });
+
+            expect(barCastSpy, 'to have calls satisfying', () => {
+                barCastSpy('bar', foo, { save: true, fetch: undefined });
+            });
+
+            barCastSpy.restore();
+        });
+
+        it('does not call Field.prototype.cast if the field has no value set', function () {
+            class Foo extends Model {}
+
+            Foo.fields = {
+                bar: {
+                    required: true,
+                    type: Field.types.string,
+                    cast: {
+                        save() {},
+                    },
+                },
+            };
+
+            const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
+            const foo = new Foo();
+
+            foo.cast({ fields: [ 'bar' ], save: true });
+            expect(barCastSpy, 'was not called');
+
+            barCastSpy.restore();
+        });
+
+        it("calls Field.prototype.cast if the field's value is `null`", function () {
+            class Foo extends Model {}
+
+            Foo.fields = {
+                bar: {
+                    required: true,
+                    type: Field.types.string,
+                    cast: {
+                        save() {},
+                    },
+                },
+            };
+
+            const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
+            const foo = new Foo();
+            foo.bar = null;
+            foo.cast({ fields: [ 'bar' ], save: true });
+            expect(barCastSpy, 'was called once');
+
+            barCastSpy.restore();
+        });
+
+        it('updates the set value with the value from the cast function', function () {
+            class Foo extends Model {}
+
+            Foo.fields = {
+                bar: {
+                    required: true,
+                    type: Field.types.string,
+                    cast: {
+                        save() { return 'new value'; },
+                    },
+                },
+            };
+
+            const foo = new Foo();
+            foo.bar = 'bar';
+            foo.cast({ fields: [ 'bar' ], save: true });
+
+            expect(foo.bar, 'to be', 'new value');
+        });
+
+        it('does not update the set value if the cast function returns `undefined`', function () {
+            class Foo extends Model {}
+
+            Foo.fields = {
+                bar: {
+                    required: true,
+                    type: Field.types.string,
+                    cast: {
+                        save() { return; },
+                    },
+                },
+            };
+
+            const foo = new Foo();
+            foo.bar = 'bar';
+            foo.cast({ fields: [ 'bar' ], save: true });
+
+            expect(foo.bar, 'to be', 'bar');
+        });
+
+        it('updates the set value if the cast function returns `null`', function () {
+            class Foo extends Model {}
+
+            Foo.fields = {
+                bar: {
+                    required: true,
+                    type: Field.types.string,
+                    cast: {
+                        save() { return null; },
+                    },
+                },
+            };
+
+            const foo = new Foo();
+            foo.bar = 'bar';
+            foo.cast({ fields: [ 'bar' ], save: true });
+
+            expect(foo.bar, 'to be', null);
+        });
+
+        it('resolves with the model instance to allow chaining', function () {
+            class Foo extends Model {}
+
+            Foo.fields = {
+                bar: {
+                    default: true,
+                    type: Field.types.string,
+                    cast: {
+                        save() {},
+                    },
+                },
+            };
+
+            const foo = new Foo();
+
+            expect(
+                foo.cast({ fields: [ 'bar' ] }, { save: true }),
+                'to be fulfilled with',
+                foo
+            );
+        });
+    });
+
     describe('Model.fields', function () {
         describe('as a getter', function () {
             it('returns no fields by default', function () {

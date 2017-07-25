@@ -138,6 +138,42 @@ describe('Field', function () {
                 stub.restore();
             });
         });
+
+        describe('with `cast` options', function () {
+            it('throws if `cast.save` is not a function', function () {
+                class Foo extends Model {}
+                expect(
+                    () => new Field({
+                        name: 'bar',
+                        model: Foo,
+                        type: Field.types.string,
+                        cast: {
+                            save: 'foo',
+                        },
+                    }),
+                    'to throw',
+                    new Error("Pre-save cast function for field 'Foo.bar' should be a function")
+                );
+
+            });
+
+            it('throws if `cast.fetch` is not a function', function () {
+                class Foo extends Model {}
+                expect(
+                    () => new Field({
+                        name: 'bar',
+                        model: Foo,
+                        type: Field.types.string,
+                        cast: {
+                            fetch: 'foo',
+                        },
+                    }),
+                    'to throw',
+                    new Error("Post-fetch cast function for field 'Foo.bar' should be a function")
+                );
+
+            });
+        });
     });
 
     describe('Field.prototype.clone', function () {
@@ -165,6 +201,163 @@ describe('Field', function () {
                 type: Field.types.string,
             });
             expect(field.getColumnName('firstName'), 'to be', 'firstName');
+        });
+    });
+
+    describe('Field.prototype.hasCast', function () {
+        class User extends Model {}
+
+        it('returns false if the field has no cast functions', function () {
+            const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: Field.types.string,
+            });
+            expect(field.hasCast({ save: true }), 'to be false');
+        });
+
+        describe('with a `save` cast function', function () {
+            it('returns true if the `save` option is enabled', function () {
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        save() {},
+                    },
+                });
+                expect(field.hasCast({ save: true }), 'to be true');
+            });
+
+            it('returns false if the `fetch` option is enabled', function () {
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        save() {},
+                    },
+                });
+                expect(field.hasCast({ fetch: true }), 'to be false');
+            });
+        });
+
+        describe('with a `fetch` cast function', function () {
+            it('returns true if the `fetch` option is enabled', function () {
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        fetch() {},
+                    },
+                });
+                expect(field.hasCast({ fetch: true }), 'to be true');
+            });
+
+            it('returns false if the `save` option is enabled', function () {
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        fetch() {},
+                    },
+                });
+                expect(field.hasCast({ save: true }), 'to be false');
+            });
+        });
+
+        describe('with both `fetch` and `save` cast functions', function () {
+            it('returns true if the `fetch` option is enabled', function () {
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        save() {},
+                        fetch() {},
+                    },
+                });
+                expect(field.hasCast({ fetch: true }), 'to be true');
+            });
+
+            it('returns true if the `save` option is enabled', function () {
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        save() {},
+                        fetch() {},
+                    },
+                });
+                expect(field.hasCast({ save: true }), 'to be true');
+            });
+        });
+    });
+
+    describe('Field.prototype.cast', function () {
+        class User extends Model {}
+
+        describe('with a `save` cast function', function () {
+            it('calls the function with the value if the `save` option is enabled', function () {
+                const save = sinon.spy();
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        save,
+                    },
+                });
+                field.cast('bar value', 'a model instance', { save: true });
+                expect(save, 'was called with', 'bar value');
+            });
+
+            it("calls the function with 'this' set to the passed model instance", async function () {
+                const save = sinon.spy();
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        save,
+                    },
+                });
+                await field.cast('bar value', 'a model instance', { save: true });
+                await expect(save, 'was called on', 'a model instance');
+            });
+        });
+
+        describe('with a `fetch` cast function', function () {
+            it('calls the function with the value if the `fetch` option is enabled', function () {
+                const fetch = sinon.spy();
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        fetch,
+                    },
+                });
+                field.cast('bar value', 'a model instance', { fetch: true });
+                expect(fetch, 'was called with', 'bar value');
+            });
+
+            it("calls the function with 'this' set to the passed model instance", async function () {
+                const fetch = sinon.spy();
+                const field = new Field({
+                    name: 'firstName',
+                    model: User,
+                    type: Field.types.string,
+                    cast: {
+                        fetch,
+                    },
+                });
+                await field.cast('bar value', 'a model instance', { fetch: true });
+                await expect(fetch, 'was called on', 'a model instance');
+            });
         });
     });
 
@@ -761,7 +954,7 @@ describe('Field', function () {
             });
         });
 
-        describe('validates maxLength', function () {
+        describe('maxLength', function () {
             it('rejects with a MaxLengthError if the value is longer than the maxLength', async function () {
                 const field = new Field({
                     name: 'firstName',
@@ -817,7 +1010,7 @@ describe('Field', function () {
             });
         });
 
-        describe('validates oneOf', function () {
+        describe('oneOf', function () {
             it('rejects with a OneOfError if the value is not included in oneOf', async function () {
                 const field = new Field({
                     name: 'firstName',
