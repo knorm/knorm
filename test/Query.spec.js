@@ -586,6 +586,204 @@ describe('Query', function () {
             });
         });
 
+        describe("with 'fields' configured", function () {
+            it('resolves with instances containing only the requested fields', async function () {
+                const query = new Query(User).fields(['id', 'name']);
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        new User({ id: 1, name: 'User 1' }),
+                        new User({ id: 2, name: 'User 2' }),
+                    ]
+                );
+            });
+
+            it('always includes the `id` field even if not requested', async function () {
+                const query = new Query(User).fields('name');
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        new User({ id: 1, name: 'User 1' }),
+                        new User({ id: 2, name: 'User 2' }),
+                    ]
+                );
+            });
+
+            it('resolves with instances containing only the requested fields', async function () {
+                const query = new Query(User).fields(['name', 'confirmed']);
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        new User({ id: 1, name: 'User 1', confirmed: false }),
+                        new User({ id: 2, name: 'User 2', confirmed: true }),
+                    ]
+                );
+            });
+
+            it('casts the fields requested if they have post-fetch cast functions', async function () {
+                const query = new Query(User).fields('intToString');
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        new User({ id: 1,  intToString: '10' }),
+                        new User({ id: 2,  intToString: null }),
+                    ]
+                );
+            });
+
+            it('throws an error of the string is an unknown field name', async function () {
+                await expect(
+                    () => new Query(User).fields('foo'),
+                    'to throw',
+                    new Error("Unknown field 'User.foo'")
+                );
+            });
+
+            describe('as a Field instance', function () {
+                it('resolves with instances containing the requested fields', async function () {
+                    const query = new Query(User).fields(User.fields.name);
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            new User({ id: 1, name: 'User 1' }),
+                            new User({ id: 2, name: 'User 2' }),
+                        ]
+                    );
+                });
+
+                it('throws an error if the field does not belong to the model', async function () {
+                    await expect(
+                        () => new Query(User).fields(Image.fields.userId),
+                        'to throw',
+                        new Error("Field 'Image.userId' is not a field of 'User'")
+                    );
+                });
+            });
+
+            describe('as an object with string values', function () {
+                it('uses the string values as aliases for the fields', async function () {
+                    const query = new Query(User).fields({ age: 'ages' });
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            Object.assign(new User({ id: 1 }), { ages: 10 }),
+                            Object.assign(new User({ id: 2 }), { ages: 10 }),
+                        ]
+                    );
+                });
+
+                it('still casts the field values even when using aliases', async function () {
+                    const query = new Query(User).fields({ intToString: 'shouldBeCast' });
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            Object.assign(new User({ id: 1 }), { shouldBeCast: '10' }),
+                            Object.assign(new User({ id: 2 }), { shouldBeCast: null }),
+                        ]
+                    );
+                });
+            });
+
+            describe('as an object with Field instance values', function () {
+                it('resolves with instances containing the requested fields', async function () {
+                    const query = new Query(User).fields(User.fields);
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            new User({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }),
+                            new User({
+                                id: 2,
+                                createdAt: null,
+                                updatedAt: null,
+                                name: 'User 2',
+                                confirmed: true,
+                                description: 'this is user 2',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                            }),
+                        ]
+                    );
+                });
+
+                it('throws an error if the keys are not fields that belong to the model', async function () {
+                    await expect(
+                        () => new Query(User).fields({ userId: Image.fields.userId }),
+                        'to throw',
+                        new Error("Unknown field 'User.userId'")
+                    );
+                });
+
+                it('throws an error if the field value does not belong to the model', async function () {
+                    await expect(
+                        () => new Query(User).fields({ age: Image.fields.userId }),
+                        'to throw',
+                        new Error("Field 'Image.userId' is not a field of 'User'")
+                    );
+                });
+            });
+
+            describe('as an array of strings', function () {
+                it('resolves with instances containing the requested fields', async function () {
+                    const query = new Query(User).fields(['name', 'age', 'confirmed']);
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            new User({
+                                name: 'User 1',
+                                age: 10,
+                                confirmed: false,
+                            }),
+                            new User({
+                                name: 'User 2',
+                                age: 10,
+                                confirmed: true,
+                            }),
+                        ]
+                    );
+                });
+            });
+
+            describe('as an array of Field instances', function () {
+                it('resolves with instances containing the requested fields', async function () {
+                    const query = new Query(User).fields([User.fields.age, User.fields.confirmed]);
+                    await expect(
+                        query.fetch(),
+                        'to be fulfilled with sorted rows exhaustively satisfying',
+                        [
+                            new User({
+                                age: 10,
+                                confirmed: false,
+                            }),
+                            new User({
+                                age: 10,
+                                confirmed: true,
+                            }),
+                        ]
+                    );
+                });
+            });
+        });
+
         describe("with a 'whereNot' configured", function () {
             it('resolves with only the rows matching the query', async function () {
                 const query = new Query(User).whereNot({ id: 1 });
@@ -2598,6 +2796,26 @@ describe('Query', function () {
             ]);
         });
 
+        it('casts fields configured with post-fetch cast functions after inserting', async function () {
+            const query = new Query(User);
+            const user = new User({ id: 1, name: 'John Doe', intToString: 10 });
+            await expect(query.insert(user), 'to be fulfilled with value satisfying', {
+                intToString: '10',
+            });
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'John Doe',
+                    confirmed: false,
+                    age: null,
+                    created_at: expect.it('to be a', Date),
+                    updated_at: expect.it('to be a', Date),
+                    json_field: null,
+                    int_to_string: 10,
+                },
+            ]);
+        });
+
         it("validates the instance's fields before saving", async function () {
             const query = new Query(User);
             const user = new User({ id: 1, name: 1 });
@@ -2642,6 +2860,18 @@ describe('Query', function () {
 
         it('resolves with the same instance that was passed', async function () {
             const query = new Query(User);
+            const user = new User({ name: 'Johnie Doe' });
+            await expect(
+                query.insert(user),
+                'to be fulfilled with value exhaustively satisfying',
+                insertedUser => {
+                    expect(insertedUser === user, 'to be true');
+                }
+            );
+        });
+
+        it('resolves with the same instance that was passed', async function () {
+            const query = new Query(User);
             const user = new User({ name: 'John Doe' });
             await expect(
                 query.insert(user),
@@ -2671,6 +2901,51 @@ describe('Query', function () {
                     intToString: null,
                 })
             );
+        });
+
+        describe('with a `returning` option', function () {
+            it('returns only the fields requested', async function () {
+                const query = new Query(User).returning('name');
+                await expect(
+                    query.insert(new User({ name: 'John Doe' })),
+                    'to be fulfilled with value satisfying',
+                    new User({ name: 'John Doe' })
+                );
+            });
+
+            it('accepts an array of fields', async function () {
+                const query = new Query(User).returning(['name', 'confirmed']);
+                await expect(
+                    query.insert(new User({ name: 'John Doe' })),
+                    'to be fulfilled with value satisfying',
+                    new User({ name: 'John Doe', confirmed: false })
+                );
+            });
+
+            it('accepts an array of field instances', async function () {
+                const query = new Query(User).returning([
+                    User.fields.name,
+                    User.fields.confirmed,
+                ]);
+                await expect(
+                    query.insert(new User({ name: 'John Doe' })),
+                    'to be fulfilled with value satisfying',
+                    new User({ name: 'John Doe', confirmed: false })
+                );
+            });
+
+            it('allows using aliases for the fields returned from the database', async function () {
+                const query = new Query(User).returning({
+                    name: 'theName',
+                    confirmed: 'theConfirmed',
+                });
+                await expect(
+                    query.insert(new User({ name: 'John Doe' })),
+                    'to be fulfilled with value satisfying',
+                    Object.assign(new User(), { theName: 'John Doe', theConfirmed: false })
+                );
+            });
+
         });
 
         it("doesn't modify other instance data properties", async function () {
@@ -3000,6 +3275,21 @@ describe('Query', function () {
             ]);
         });
 
+        it('casts updated fields configured with post-fetch cast functions after updating', async function () {
+            const query = new Query(User);
+            user.intToString = 10;
+            await expect(query.update(user), 'to be fulfilled with value satisfying', {
+                intToString: '10',
+            });
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                {
+                    id: 1,
+                    name: 'John Doe',
+                    int_to_string: 10,
+                },
+            ]);
+        });
+
         it("validates the instance's fields before saving", async function () {
             const query = new Query(User);
             user.name = 1;
@@ -3052,6 +3342,54 @@ describe('Query', function () {
                     intToString: null,
                 })
             );
+        });
+
+        describe('with a `returning` option', function () {
+            it('returns only the fields requested', async function () {
+                const query = new Query(User).returning('name');
+                user.name = 'Jane Doe';
+                await expect(
+                    query.update(user),
+                    'to be fulfilled with value satisfying',
+                    new User({ name: 'Jane Doe' })
+                );
+            });
+
+            it('accepts an array of fields', async function () {
+                const query = new Query(User).returning(['name', 'confirmed']);
+                user.name = 'Jane Doe';
+                await expect(
+                    query.update(user),
+                    'to be fulfilled with value satisfying',
+                    new User({ name: 'Jane Doe', confirmed: false })
+                );
+            });
+
+            it('accepts an array of field objects', async function () {
+                const query = new Query(User).returning([
+                    User.fields.name,
+                    User.fields.confirmed,
+                ]);
+                user.name = 'Jane Doe';
+                await expect(
+                    query.update(user),
+                    'to be fulfilled with value satisfying',
+                    new User({ name: 'Jane Doe', confirmed: false })
+                );
+            });
+
+            it('allows using aliases for the returned fields', async function () {
+                const query = new Query(User).returning({
+                    name: 'theName',
+                    confirmed: 'theConfirmed',
+                });
+                user.name = 'Jane Doe';
+                await expect(
+                    query.update(user),
+                    'to be fulfilled with value satisfying',
+                    Object.assign(new User(), { theName: 'Jane Doe', theConfirmed: false })
+                );
+            });
         });
 
         it("doesn't modify other instance data properties", async function () {
@@ -3309,11 +3647,13 @@ describe('Query', function () {
                     id: 1,
                     name: 'John Doe',
                     confirmed: true,
+                    int_to_string: 10,
                 },
                 {
                     id: 2,
                     name: 'Jane Doe',
                     confirmed: true,
+                    int_to_string: null,
                 },
             ]);
         });
@@ -3344,7 +3684,7 @@ describe('Query', function () {
                         dateOfBirth: null,
                         dbDefault: 'set-by-db',
                         jsonField: null,
-                        intToString: null,
+                        intToString: '10',
                     }),
                     new User({
                         id: 2,
@@ -3361,6 +3701,25 @@ describe('Query', function () {
                     }),
                 ]
             );
+        });
+
+        it('casts fields configured with post-fetch cast functions after deleting', async function () {
+            const query = new Query(User).where({ id: 1 });
+            await expect(query.delete(), 'to be fulfilled with value satisfying', [{
+                intToString: '10',
+            }]);
+            await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+                {
+                    id: 2,
+                    name: 'Jane Doe',
+                    confirmed: true,
+                    age: null,
+                    created_at: null,
+                    updated_at: null,
+                    json_field: null,
+                    int_to_string: null,
+                },
+            ]);
         });
 
         describe("with a 'where' option", function () {
@@ -3388,6 +3747,48 @@ describe('Query', function () {
                     ]
                 );
             });
+
+            it('includes the `id` even if not requested', async function () {
+                const query = new Query(User).returning('name');
+                await expect(
+                    query.delete(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        new User({ id: 1, name: 'John Doe' }),
+                        new User({ id: 2, name: 'Jane Doe' }),
+                    ]
+                );
+            });
+
+            it('accepts an array of field objects', async function () {
+                const query = new Query(User).returning([
+                    User.fields.name,
+                    User.fields.confirmed,
+                ]);
+                await expect(
+                    query.delete(),
+                    'to be fulfilled with value exhaustively satisfying',
+                    [
+                        new User({ id: 1, name: 'John Doe', confirmed: true }),
+                        new User({ id: 2, name: 'Jane Doe', confirmed: true }),
+                    ]
+                );
+            });
+
+            it('allows using aliases for the returned fields', async function () {
+                const query = new Query(User).returning({
+                    name: 'theName',
+                    confirmed: 'theConfirmed',
+                });
+                await expect(
+                    query.delete(),
+                    'to be fulfilled with value exhaustively satisfying',
+                    [
+                        Object.assign(new User({ id: 1 }), { theName: 'John Doe', theConfirmed: true }),
+                        Object.assign(new User({ id: 2 }), { theName: 'Jane Doe', theConfirmed: true }),
+                    ]
+                );
+            });
         });
 
         describe('with forge disabled', function () {
@@ -3408,7 +3809,7 @@ describe('Query', function () {
                             dateOfBirth: null,
                             dbDefault: 'set-by-db',
                             jsonField: null,
-                            intToString: null,
+                            intToString: '10',
                         },
                         {
                             id: 2,
