@@ -1,5 +1,5 @@
 services:
-  - postgresql: "9.6"
+  - postgresql
 
 before_script:
   - psql -c 'create database knorm;' -U postgres

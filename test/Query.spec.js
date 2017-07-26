@@ -2587,7 +2587,13 @@ describe('Query', function () {
                     age: null,
                     created_at: expect.it('to be a', Date),
                     updated_at: expect.it('to be a', Date),
-                    json_field: [ 'foo', 'bar' ], // knex calls JSON.parse on it it seems
+                    json_field: expect.it('when passed as parameter to', value => {
+                        if (typeof value === 'string') {
+                            // postgres 9.1. (on CI) doesn't auto JSON.parse :/
+                            return JSON.parse(value);
+                        }
+                        return value;
+                    }, 'to equal', [ 'foo', 'bar' ]),
                 },
             ]);
         });
@@ -2983,7 +2989,13 @@ describe('Query', function () {
                 {
                     id: 1,
                     name: 'John Doe',
-                    json_field: [ 'foo', 'bar' ], // knex calls JSON.parse on it it seems
+                    json_field: expect.it('when passed as parameter to', value => {
+                        if (typeof value === 'string') {
+                            // postgres 9.1. (on CI) doesn't auto JSON.parse :/
+                            return JSON.parse(value);
+                        }
+                        return value;
+                    }, 'to equal', [ 'foo', 'bar' ]),
                 },
             ]);
         });
