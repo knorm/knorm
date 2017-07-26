@@ -190,6 +190,23 @@ describe('Field', function () {
                 type: Field.types.string,
             }));
         });
+
+        it('clones cast functions returns a clone of the field', function () {
+            class Foo extends Model {}
+            const field = new Field({
+                name: 'bar',
+                model: Foo,
+                type: Field.types.string,
+                cast: {
+                    save() {},
+                },
+            });
+            expect(field.clone(), 'to satisfy', {
+                castors: {
+                    save() {},
+                },
+            });
+        });
     });
 
     describe('Field.prototype.getColumnName', function () {
