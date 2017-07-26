@@ -634,25 +634,25 @@ describe('Field', function () {
                     await expect(field.validate(uuid.v4()), 'to be fulfilled');
                 });
 
-                it("string empty array against the 'json' type", async function () {
+                it("json string against the 'json' type", async function () {
                     const field = new Field({
                         name: 'firstName',
                         model: User,
                         type: Field.types.json,
                     });
-                    await expect(field.validate('[]'), 'to be fulfilled');
+                    await expect(field.validate('"foo"'), 'to be fulfilled');
                 });
 
-                it("string empty object against the 'json' type", async function () {
+                it("json string object against the 'json' type", async function () {
                     const field = new Field({
                         name: 'firstName',
                         model: User,
                         type: Field.types.json,
                     });
-                    await expect(field.validate('{}'), 'to be fulfilled');
+                    await expect(field.validate('{"foo":1}'), 'to be fulfilled');
                 });
 
-                it("string json against the 'json' type", async function () {
+                it("json string array against the 'json' type", async function () {
                     const field = new Field({
                         name: 'firstName',
                         model: User,
