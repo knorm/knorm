@@ -1194,7 +1194,6 @@ describe('Model', function () {
                     });
 
                     class Student extends User {}
-
                     Student.fields = {
                         studentId: {
                             type: 'integer',
@@ -1280,52 +1279,134 @@ describe('Model', function () {
                 };
 
                 expect(User.virtuals, 'to exhaustively satisfy', {
-                    firstName: expect.it('to be virtual', new Virtual({
+                    firstName: new Virtual({
                         name: 'firstName',
                         model: User,
                         descriptor: {
                             get() {},
                             set() {},
                         },
-                    })),
+                    }),
                 });
             });
 
-            it('allows overwriting the virtuals', function () {
-                class User extends Model {}
-
-                User.virtuals = {
-                    firstName: {
-                        get() { return 'foo'; },
-                    },
-                };
-
-                expect(User.virtuals, 'to exhaustively satisfy', {
-                    firstName: expect.it('to be virtual', new Virtual({
-                        name: 'firstName',
-                        model: User,
-                        descriptor: {
+            describe('when a model is subclassed', function () {
+                it('allows overwriting the virtuals defined in the parent', function () {
+                    class User extends Model {}
+                    User.virtuals = {
+                        firstName: {
                             get() { return 'foo'; },
                         },
-                    })),
-                });
+                    };
 
-                class OtherUser extends User {}
+                    expect(User.virtuals, 'to exhaustively satisfy', {
+                        firstName: new Virtual({
+                            name: 'firstName',
+                            model: User,
+                            descriptor: {
+                                get() { return 'foo'; },
+                            },
+                        }),
+                    });
 
-                OtherUser.virtuals = {
-                    firstName: {
-                        get() { return 'bar'; },
-                    },
-                };
-
-                expect(User.virtuals, 'to satisfy', {
-                    firstName: expect.it('to be virtual', new Virtual({
-                        name: 'firstName',
-                        model: OtherUser,
-                        descriptor: {
+                    class OtherUser extends User {}
+                    OtherUser.virtuals = {
+                        firstName: {
                             get() { return 'bar'; },
                         },
-                    })),
+                    };
+
+                    expect(OtherUser.virtuals, 'to satisfy', {
+                        firstName: new Virtual({
+                            name: 'firstName',
+                            model: OtherUser,
+                            descriptor: {
+                                get() { return 'bar'; },
+                            },
+                        }),
+                    });
+                });
+
+                it("updates the child's virtuals' model class", function () {
+                    class User extends Model {}
+                    User.virtuals = {
+                        firstName: {
+                            get() { return 'foo'; },
+                        },
+                    };
+
+                    expect(User.virtuals, 'to satisfy', {
+                        firstName: new Virtual({
+                            name: 'firstName',
+                            model: User,
+                            descriptor: { get() { return 'foo'; } },
+                        }),
+                    });
+
+                    class Student extends User {}
+                    Student.virtuals = {
+                        lastName: {
+                            get() { return 'bar'; },
+                        },
+                    };
+
+                    expect(Student.virtuals, 'to satisfy', {
+                        firstName: new Virtual({
+                            name: 'firstName',
+                            model: Student,
+                            descriptor: { get() { return 'foo'; } },
+                        }),
+                    });
+                });
+
+                it("doesn't interfere with the parent's virtuals", function () {
+                    class User extends Model {}
+
+                    expect(Model.virtuals, 'to be empty');
+                    expect(User.virtuals, 'to be empty');
+
+                    User.virtuals = {
+                        firstName: {
+                            get() { return 'foo'; },
+                        },
+                    };
+
+                    expect(Model.virtuals, 'to be empty');
+                    expect(User.virtuals, 'to exhaustively satisfy', {
+                        firstName: new Virtual({
+                            name: 'firstName',
+                            model: User,
+                            descriptor: { get() { return 'foo'; } },
+                        }),
+                    });
+
+                    class OtherUser extends User {}
+                    OtherUser.virtuals = {
+                        lastName: {
+                            get() { return 'bar'; },
+                        },
+                    };
+
+                    expect(Model.virtuals, 'to be empty');
+                    expect(User.virtuals, 'to exhaustively satisfy', {
+                        firstName: new Virtual({
+                            name: 'firstName',
+                            model: User,
+                            descriptor: { get() { return 'foo'; } },
+                        }),
+                    });
+                    expect(OtherUser.virtuals, 'to exhaustively satisfy', {
+                        firstName: new Virtual({
+                            name: 'firstName',
+                            model: OtherUser,
+                            descriptor: { get() { return 'foo'; } },
+                        }),
+                        lastName: new Virtual({
+                            name: 'lastName',
+                            model: OtherUser,
+                            descriptor: { get() { return 'bar'; } },
+                        }),
+                    });
                 });
             });
         });
@@ -1341,13 +1422,13 @@ describe('Model', function () {
                 };
 
                 expect(User.virtuals, 'to exhaustively satisfy', {
-                    firstName: expect.it('to be virtual', new Virtual({
+                    firstName: new Virtual({
                         name: 'firstName',
                         model: User,
                         descriptor: {
                             get() { return 'foo'; },
                         },
-                    })),
+                    }),
                 });
             });
         });

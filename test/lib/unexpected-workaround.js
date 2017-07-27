@@ -58,7 +58,7 @@ module.exports = {
         });
 
         expect.addAssertion(
-            '<Virtual> to be virtual <Virtual>',
+            '<Virtual> to [exhaustively] satisfy <Virtual>',
             (expect, subject, value) => {
                 return expect(subject, 'to equal', value);
             }

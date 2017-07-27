@@ -1,6 +1,6 @@
 const Virtual = require('../lib/Virtual');
 const Model = require('../lib/Model');
-const expect = require('unexpected').clone();
+const expect = require('unexpected').clone().use(require('./lib/unexpected-workaround'));
 
 describe('Virtual', function () {
     describe('constructor', function () {
@@ -79,6 +79,34 @@ describe('Virtual', function () {
                     get: expect.it('when called', 'to be', 'foo'),
                 });
             });
+        });
+    });
+
+    describe('Virtual.prototype.setModel', function () {
+        it('allows chaining', function () {
+            class Foo extends Model {}
+            const virtual = new Virtual({
+                name: 'bar',
+                model: Foo,
+                descriptor: { get: () => 'foo' },
+            });
+            expect(virtual.clone(), 'to equal', virtual);
+        });
+    });
+
+    describe('Virtual.prototype.clone', function () {
+        it('returns a clone of the virtual', function () {
+            class Foo extends Model {}
+            const virtual = new Virtual({
+                name: 'bar',
+                model: Foo,
+                descriptor: { get: () => 'foo', set() {} },
+            });
+            expect(virtual.clone(), 'to equal', new Virtual({
+                name: 'bar',
+                model: Foo,
+                descriptor: { get: () => 'foo', set() {} },
+            }));
         });
     });
 
