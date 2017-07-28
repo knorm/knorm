@@ -243,7 +243,7 @@ const emailConfirmedUsersWithUnreadMessages => async () => {
 
   const confirmedUsersWithUnreadMessages = await User.query
     .where({ confirmed: true })
-    .join( // this does a LEFT JOIN from the 'user' to the 'message' table
+    .leftJoin( // this does a LEFT JOIN from the 'user' to the 'message' table
       Message.query
         .on('receiverId')
         .as('unreadMessages')

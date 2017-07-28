@@ -1115,7 +1115,7 @@ describe('Query', function () {
             });
         });
 
-        describe("with a 'with' configured", function () {
+        describe("with a 'leftJoin' configured", function () {
             before(async function () {
                 await knex(ImageCategory.table).insert([
                     {
@@ -1150,12 +1150,26 @@ describe('Query', function () {
                 await truncateMessageTable();
                 await truncateImageTable();
                 await truncateImageCategoryTable();
-                await truncateUserTable();
+            });
+
+            it('throws an error if the models do not reference each other', function () {
+                class Foo extends Model {}
+                Foo.table = 'foo';
+                expect(
+                    () => new Query(User).leftJoin(new Query(Foo)),
+                    'to throw',
+                    new Error("'User' has no references to 'Foo'")
+                );
+                expect(
+                    () => new Query(Foo).leftJoin(new Query(User)),
+                    'to throw',
+                    new Error("'Foo' has no references to 'User'")
+                );
             });
 
             it("rejects with an error if a fetch is attempted from the joined model's query", async function () {
                 const imageQuery = new Query(Image);
-                new Query(User).with(imageQuery);
+                new Query(User).leftJoin(imageQuery);
                 await expect(
                     imageQuery.fetch(),
                     'to be rejected with error satisfying',
@@ -1166,7 +1180,7 @@ describe('Query', function () {
             });
 
             it('includes the joined model in the returned instance using a camel-cased property name', async function () {
-                const query = new Query(User).with(new Query(Image));
+                const query = new Query(User).leftJoin(new Query(Image));
                 await expect(
                     query.fetch(),
                     'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1209,55 +1223,9 @@ describe('Query', function () {
                 );
             });
 
-            describe("via the 'join' alias", function () {
-                it('includes the joined model in the returned instance', async function () {
-                    const query = new Query(User).join(new Query(Image));
-                    await expect(
-                        query.fetch(),
-                        'to be fulfilled with sorted rows exhaustively satisfying',
-                        [
-                            Object.assign(new User({
-                                id: 1,
-                                createdAt: null,
-                                updatedAt: null,
-                                name: 'User 1',
-                                confirmed: false,
-                                description: 'this is user 1',
-                                age: 10,
-                                dateOfBirth: null,
-                                dbDefault: 'set-by-db',
-                                jsonField: null,
-                                intToString: '10',
-                            }), {
-                                image: new Image({
-                                    id: 1,
-                                    createdAt: null,
-                                    updatedAt: null,
-                                    userId: 1,
-                                    categoryId: 1,
-                                }),
-                            }),
-                            new User({
-                                id: 2,
-                                createdAt: null,
-                                updatedAt: null,
-                                name: 'User 2',
-                                confirmed: true,
-                                description: 'this is user 2',
-                                age: 10,
-                                dateOfBirth: null,
-                                dbDefault: 'set-by-db',
-                                jsonField: null,
-                                intToString: null,
-                            }),
-                        ]
-                    );
-                });
-            });
-
             it('does not include the joined model if no rows were matched', async function () {
                 const query = new Query(User)
-                    .with(new Query(Image))
+                    .leftJoin(new Query(Image))
                     .where({ id: 2 });
 
                 const user2 = new User({
@@ -1295,7 +1263,7 @@ describe('Query', function () {
 
                 const query = new Query(User)
                     .where({ id: 1 })
-                    .with(new Query(Image));
+                    .leftJoin(new Query(Image));
                 await expect(
                     query.fetch(),
                     'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1336,59 +1304,11 @@ describe('Query', function () {
                 await knex('image').where({ id: 2 }).delete();
             });
 
-            describe("with 'require' configured on the child query", function () {
-                it('returns the instances with matching data in the joined table (inner join)', async function () {
-                    const query = new Query(User).with(
-                        new Query(Image).require(true)
-                    );
-                    await expect(
-                        query.fetch(),
-                        'to be fulfilled with sorted rows exhaustively satisfying',
-                        [
-                            Object.assign(new User({
-                                id: 1,
-                                createdAt: null,
-                                updatedAt: null,
-                                name: 'User 1',
-                                confirmed: false,
-                                description: 'this is user 1',
-                                age: 10,
-                                dateOfBirth: null,
-                                dbDefault: 'set-by-db',
-                                jsonField: null,
-                                intToString: '10',
-                            }), {
-                                image: new Image({
-                                    id: 1,
-                                    createdAt: null,
-                                    updatedAt: null,
-                                    userId: 1,
-                                    categoryId: 1,
-                                }),
-                            }),
-                        ]
-                    );
-                });
-
-                it("rejects with a NoRowsFetchedError if the join doesn't match any rows", async function () {
-                    const imageQuery = new Query(Image).require(true);
-                    const query = new Query(User)
-                        .where({ id: 2 })
-                        .with(imageQuery);
-
-                    await expect(
-                        query.fetch(),
-                        'to be rejected with error satisfying',
-                        new Query.errors.NoRowsFetchedError('no rows fetched', imageQuery)
-                    );
-                });
-            });
-
             describe("with 'fields' configured on the child query", function () {
                 it('returns only the requested fields from the joined model', async function () {
                     const query = new Query(User)
                         .where({ id: 1 })
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .fields('id')
                         );
@@ -1422,7 +1342,7 @@ describe('Query', function () {
                 it('uses the passed string as the property name of the joined model', async function () {
                     const query = new Query(User)
                         .where({ id: 1 })
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .as('theImage')
                         );
@@ -1456,8 +1376,8 @@ describe('Query', function () {
                 });
             });
 
-            it('creates a join to the referenced model on all fields', async function () {
-                const query = new Query(User).with(new Query(Message));
+            it('creates a left join to the referenced model on all fields', async function () {
+                const query = new Query(User).leftJoin(new Query(Message));
                 await expect(
                     query.fetch(),
                     'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1496,7 +1416,7 @@ describe('Query', function () {
 
             describe("with 'on' configured on the child query", function () {
                 it('creates a join on the provided field', async function () {
-                    const query = new Query(User).with([
+                    const query = new Query(User).leftJoin([
                         new Query(Message)
                             .on(Message.fields.senderId)
                             .as('sentMessage'),
@@ -1584,7 +1504,7 @@ describe('Query', function () {
                     ]);
 
                     const query = new Query(User)
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .where({ id: 2 })
                         );
@@ -1632,7 +1552,7 @@ describe('Query', function () {
                     ]);
 
                     const query = new Query(User)
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .whereNot({ id: 2 })
                         );
@@ -1680,7 +1600,7 @@ describe('Query', function () {
                     ]);
 
                     const query = new Query(User)
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .where({ id: 1 })
                                 .orWhere({ id: 2 })
@@ -1743,7 +1663,7 @@ describe('Query', function () {
                     ]);
 
                     const query = new Query(User)
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .orWhereNot({ id: [ 1, 2 ] })
                         );
@@ -1792,7 +1712,7 @@ describe('Query', function () {
 
                     const query = new Query(User)
                         .where({ id: 1 })
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .orderBy({ id: -1 })
                         );
@@ -1851,7 +1771,7 @@ describe('Query', function () {
                     const query = new Query(User)
                         .where({ id: 1 })
                         .groupBy('id')
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .groupBy([ 'id', 'userId' ])
                         );
@@ -1915,7 +1835,7 @@ describe('Query', function () {
                     const query = new Query(User)
                         .where({ id: 1 })
                         .groupBy('id')
-                        .with(
+                        .leftJoin(
                             new Query(Image)
                                 .groupBy([ 'id', 'userId' ])
                                 .having({ userId: 1  })
@@ -1967,7 +1887,7 @@ describe('Query', function () {
                     it('still forges the joined model', async function () {
                         const query = new Query(User)
                             .forge(false)
-                            .with(new Query(Image));
+                            .leftJoin(new Query(Image));
 
                         await expect(
                             query.fetch(),
@@ -2014,7 +1934,7 @@ describe('Query', function () {
                 describe('on the joined model', function () {
                     it('includes a plain object of the joined model', async function () {
                         const query = new Query(User)
-                            .with(new Query(Image).forge(false));
+                            .leftJoin(new Query(Image).forge(false));
 
                         await expect(
                             query.fetch(),
@@ -2063,7 +1983,7 @@ describe('Query', function () {
                     it('includes plain objects of the both models', async function () {
                         const query = new Query(User)
                             .forge(false)
-                            .with(new Query(Image).forge(false));
+                            .leftJoin(new Query(Image).forge(false));
 
                         await expect(
                             query.fetch(),
@@ -2109,7 +2029,7 @@ describe('Query', function () {
 
                 it('does not include the joined model if no rows were matched', async function () {
                     const query = new Query(User)
-                        .with(new Query(Image))
+                        .leftJoin(new Query(Image))
                         .where({ id: 2 })
                         .forge(false);
 
@@ -2146,7 +2066,7 @@ describe('Query', function () {
 
                     const query = new Query(User)
                         .where({ id: 1 })
-                        .with(new Query(Image));
+                        .leftJoin(new Query(Image));
                     await expect(
                         query.fetch(),
                         'to be fulfilled with sorted rows exhaustively satisfying',
@@ -2188,7 +2108,7 @@ describe('Query', function () {
             });
 
             it('allows passing a model directly', async function () {
-                const query = new Query(User).with(Image);
+                const query = new Query(User).leftJoin(Image);
                 await expect(
                     query.fetch(),
                     'to be fulfilled with sorted rows exhaustively satisfying',
@@ -2232,7 +2152,7 @@ describe('Query', function () {
             });
 
             it('allows passing options when a model is passed directly', async function () {
-                const query = new Query(User).with(Image, { require: true });
+                const query = new Query(User).leftJoin(Image, { fields: 'id' });
                 await expect(
                     query.fetch(),
                     'to be fulfilled with sorted rows exhaustively satisfying',
@@ -2252,11 +2172,20 @@ describe('Query', function () {
                         }), {
                             image: new Image({
                                 id: 1,
-                                createdAt: null,
-                                updatedAt: null,
-                                userId: 1,
-                                categoryId: 1,
                             }),
+                        }),
+                        new User({
+                            id: 2,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 2',
+                            confirmed: true,
+                            description: 'this is user 2',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: null,
                         }),
                     ]
                 );
@@ -2264,7 +2193,7 @@ describe('Query', function () {
 
             describe('with a reverse-reference join', function () {
                 it('resolves with the correct data (with values on the joined model casted)', async function () {
-                    const query = new Query(Image).with(new Query(User));
+                    const query = new Query(Image).leftJoin(new Query(User));
                     await expect(
                         query.fetch(),
                         'to be fulfilled with sorted rows exhaustively satisfying',
@@ -2296,7 +2225,7 @@ describe('Query', function () {
 
                 it("supports the 'on' option as a string", async function () {
                     const query = new Query(Image)
-                        .with(
+                        .leftJoin(
                             new Query(User)
                                 .on('id')
                         );
@@ -2331,7 +2260,7 @@ describe('Query', function () {
 
                 it("supports the 'on' option as a field object", async function () {
                     const query = new Query(Image)
-                        .with(
+                        .leftJoin(
                             new Query(User)
                                 .on(User.fields.id)
                         );
@@ -2365,10 +2294,10 @@ describe('Query', function () {
                 });
             });
 
-            describe("with a nested 'with' query", function () {
+            describe("with a nested 'leftJoin' query", function () {
                 it('includes the nested data in the returned data if rows are matched', async function () {
-                    const query = new Query(User).with(
-                        new Query(Image).with(
+                    const query = new Query(User).leftJoin(
+                        new Query(Image).leftJoin(
                             new Query(ImageCategory)
                         )
                     );
@@ -2422,12 +2351,12 @@ describe('Query', function () {
                 });
             });
 
-            describe("with a circular 'with' query", function () {
+            describe("with a circular 'leftJoin' query", function () {
                 it('includes the circular data in the returned data', async function () {
-                    const query = new Query(User).with(
-                        new Query(Image).with(
-                            new Query(ImageCategory).with(
-                                new Query(Image).with(
+                    const query = new Query(User).leftJoin(
+                        new Query(Image).leftJoin(
+                            new Query(ImageCategory).leftJoin(
+                                new Query(Image).leftJoin(
                                     new Query(User)
                                 )
                             )
@@ -2511,7 +2440,7 @@ describe('Query', function () {
                     const spy = sinon.spy(imageQuery, 'setOptions');
                     const query = new Query(User)
                         .where({ id: 1 })
-                        .with(
+                        .leftJoin(
                             imageQuery,
                             { fields: 'id' }
                         );
@@ -2544,22 +2473,139 @@ describe('Query', function () {
                 });
             });
         });
-    });
 
-    describe('Query.prototype.with', function () {
-        it('throws an error if the models do not reference each other', function () {
-            class Foo extends Model {}
-            Foo.table = 'foo';
-            expect(
-                () => new Query(User).with(new Query(Foo)),
-                'to throw',
-                new Error("'User' has no references to 'Foo'")
-            );
-            expect(
-                () => new Query(Foo).with(new Query(User)),
-                'to throw',
-                new Error("'Foo' has no references to 'User'")
-            );
+        describe("with an 'innerJoin' configured", function () {
+            before(async function () {
+                await knex(ImageCategory.table).insert([
+                    {
+                        id: 1,
+                        name: 'User images',
+                    },
+                ]);
+                await knex(Image.table).insert([
+                    {
+                        id: 1,
+                        user_id: 1,
+                        category_id: 1,
+                    },
+                ]);
+            });
+
+            after(async function () {
+                await truncateImageTable();
+                await truncateImageCategoryTable();
+            });
+
+            it('returns the instances with matching data in the joined table (inner join)', async function () {
+                const query = new Query(User).innerJoin(new Query(Image));
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        Object.assign(new User({
+                            id: 1,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 1',
+                            confirmed: false,
+                            description: 'this is user 1',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
+                        }), {
+                            image: new Image({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                userId: 1,
+                                categoryId: 1,
+                            }),
+                        }),
+                    ]
+                );
+            });
+
+            it("rejects with a NoRowsFetchedError if the join doesn't match any rows", async function () {
+                const imageQuery = new Query(Image);
+                const query = new Query(User)
+                    .where({ id: 2 })
+                    .innerJoin(imageQuery);
+
+                await expect(
+                    query.fetch(),
+                    'to be rejected with error satisfying',
+                    new Query.errors.NoRowsFetchedError('no rows fetched', imageQuery)
+                );
+            });
+        });
+
+        describe("with a 'join' configured", function () {
+            before(async function () {
+                await knex(ImageCategory.table).insert([
+                    {
+                        id: 1,
+                        name: 'User images',
+                    },
+                ]);
+                await knex(Image.table).insert([
+                    {
+                        id: 1,
+                        user_id: 1,
+                        category_id: 1,
+                    },
+                ]);
+            });
+
+            after(async function () {
+                await truncateImageTable();
+                await truncateImageCategoryTable();
+            });
+
+            it('returns the instances with matching data in the joined table (inner join)', async function () {
+                const query = new Query(User).join(new Query(Image));
+                await expect(
+                    query.fetch(),
+                    'to be fulfilled with sorted rows exhaustively satisfying',
+                    [
+                        Object.assign(new User({
+                            id: 1,
+                            createdAt: null,
+                            updatedAt: null,
+                            name: 'User 1',
+                            confirmed: false,
+                            description: 'this is user 1',
+                            age: 10,
+                            dateOfBirth: null,
+                            dbDefault: 'set-by-db',
+                            jsonField: null,
+                            intToString: '10',
+                        }), {
+                            image: new Image({
+                                id: 1,
+                                createdAt: null,
+                                updatedAt: null,
+                                userId: 1,
+                                categoryId: 1,
+                            }),
+                        }),
+                    ]
+                );
+            });
+
+            it("rejects with a NoRowsFetchedError if the join doesn't match any rows", async function () {
+                const imageQuery = new Query(Image);
+                const query = new Query(User)
+                    .where({ id: 2 })
+                    .join(imageQuery);
+
+                await expect(
+                    query.fetch(),
+                    'to be rejected with error satisfying',
+                    new Query.errors.NoRowsFetchedError('no rows fetched', imageQuery)
+                );
+            });
         });
     });
 
@@ -2655,9 +2701,9 @@ describe('Query', function () {
             });
         });
 
-        describe("with a 'with' configured", function () {
+        describe("with an 'innerJoin' configured", function () {
             it('resolves with the count of rows matching the join', async function () {
-                const query = new Query(User).with(new Query(Image).require(true));
+                const query = new Query(User).innerJoin(new Query(Image));
                 await expect(
                     query.count(),
                     'to be fulfilled with',
