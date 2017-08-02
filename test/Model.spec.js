@@ -2412,7 +2412,7 @@ describe('Model', function() {
     });
   });
 
-  describe('with a custom idField', function() {
+  describe('with a custom `id` field-name', function() {
     class EmailAsIdQuery extends Query {}
     EmailAsIdQuery.knex = knex;
 
@@ -2429,7 +2429,7 @@ describe('Model', function() {
         required: true
       }
     };
-    EmailAsId.idField = 'email';
+    EmailAsId.fieldNames.id = 'email';
 
     before(async function() {
       await knex.schema.createTable(EmailAsId.table, table => {
@@ -2457,13 +2457,13 @@ describe('Model', function() {
       });
 
       it('rejects with an error if the id field is not configured', async function() {
-        EmailAsId.idField = 'foo';
+        EmailAsId.fieldNames.id = 'foo';
         await expect(
           EmailAsId.fetchById('foo'),
           'to be rejected with',
           new Error("EmailAsId has no id field ('foo') configured")
         );
-        EmailAsId.idField = 'email';
+        EmailAsId.fieldNames.id = 'email';
       });
     });
 
@@ -2490,13 +2490,13 @@ describe('Model', function() {
       });
 
       it('rejects with an error if the id field is not configured', async function() {
-        EmailAsId.idField = 'foo';
+        EmailAsId.fieldNames.id = 'foo';
         await expect(
           EmailAsId.updateById('foo', { name: 'Jane Doe' }),
           'to be rejected with',
           new Error("EmailAsId has no id field ('foo') configured")
         );
-        EmailAsId.idField = 'email';
+        EmailAsId.fieldNames.id = 'email';
       });
     });
   });

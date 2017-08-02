@@ -3081,11 +3081,11 @@ describe('Query', function() {
       stub.restore();
     });
 
-    describe('with a custom id field', function() {
+    describe('with a custom `id` field', function() {
       class UuidAsId extends AbstractModel {}
       UuidAsId.Query = Query;
       UuidAsId.table = 'uuid_as_id';
-      UuidAsId.idField = 'uuid';
+      UuidAsId.fieldNames.id = 'uuid';
       UuidAsId.fields = {
         uuid: {
           type: Field.types.string,
@@ -3560,7 +3560,7 @@ describe('Query', function() {
       class UuidAsId extends AbstractModel {}
       UuidAsId.Query = Query;
       UuidAsId.table = 'uuid_as_id';
-      UuidAsId.idField = 'uuid';
+      UuidAsId.fieldNames.id = 'uuid';
       UuidAsId.fields = {
         uuid: {
           type: Field.types.string,
