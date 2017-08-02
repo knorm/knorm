@@ -4,7 +4,7 @@ services:
   - postgresql
 
 env:
-  - POSTGRES_USER=knorm POSTGRES_PASSWORD=knorm POSTGRES_DB=knorm
+  - POSTGRES_USER=knorm POSTGRES_PASSWORD=knorm POSTGRES_DB=knorm POSTGRES_PORT=5432
 
 before_script:
   - psql -c 'create database knorm;' -U postgres
