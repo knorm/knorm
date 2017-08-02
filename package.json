@@ -19,7 +19,7 @@
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "knex": "^0.12.7"
+    "knex": "^0.13.0"
   },
   "devDependencies": {
     "coveralls": "^2.12.0",
