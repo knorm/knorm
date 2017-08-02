@@ -9,7 +9,7 @@ env:
 before_script:
   - psql -c 'create database knorm;' -U postgres
   - psql -c "create user knorm with password 'knorm';" -U postgres
-
+  - rm ./package-lock.json
 
 cache:
   directories:
