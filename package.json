@@ -1,0 +1,56 @@
+{
+  "name": "knorm-timestamps",
+  "version": "0.0.1",
+  "description": "Timestamps plugin for knorm",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha 'test/**/*.spec.js'",
+    "coverage": "nyc npm test",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "ci": "npm-run-all lint coverage coveralls",
+    "postgres": "knorm-postgres start",
+    "postgres:stop": "knorm-postgres stop",
+    "postgres:remove": "knorm-postgres remove"
+  },
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
+  "peerDependencies": {
+    "knorm": "^0.3.0"
+  },
+  "devDependencies": {
+    "coveralls": "^2.12.0",
+    "eslint": "^4.2.0",
+    "eslint-config-prettier": "^2.3.0",
+    "eslint-plugin-prettier": "^2.1.2",
+    "knex": "^0.13.0",
+    "knorm": "^0.3.0",
+    "knorm-postgres": "^2.0.0",
+    "mocha": "^3.2.0",
+    "npm-run-all": "^4.0.2",
+    "nyc": "^11.0.2",
+    "pg": "^7.0.2",
+    "prettier": "^1.5.3",
+    "proxyquire": "^1.7.11",
+    "sinon": "^2.4.1",
+    "unexpected": "^10.29.0",
+    "unexpected-sinon": "^10.8.2"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [
+    "knorm",
+    "plugin",
+    "timestamps"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/joelmukuthu/knorm-timestamps.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joelmukuthu/knorm-timestamps/issues"
+  },
+  "homepage": "https://github.com/joelmukuthu/knorm-timestamps#readme"
+}
