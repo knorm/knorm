@@ -47,10 +47,10 @@ module.exports = {
 
         const stringifyGetterAndSetter = object => {
           if (object.get) {
-            object.get = object.get.toString();
+            object.get = object.get.toString().replace(/\s/g, '');
           }
           if (object.set) {
-            object.set = object.set.toString();
+            object.set = object.set.toString().replace(/\s/g, '');
           }
         };
 
