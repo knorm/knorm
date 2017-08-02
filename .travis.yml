@@ -9,7 +9,8 @@ env:
   - POSTGRES_DB=knorm
 
 before_script:
-  - psql -c 'create database knorm;' -U knorm
+  - psql -c 'create database knorm;' -U postgres
+  - psql -c "create user knorm with password 'knorm';" -U postgres
 
 
 cache:
