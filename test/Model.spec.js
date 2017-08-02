@@ -1522,6 +1522,77 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.fieldNames', function() {
+    it('returns the `id` field mapping by default', function() {
+      class User extends Model {}
+
+      expect(User.fieldNames, 'to exhaustively satisfy', {
+        id: 'id'
+      });
+    });
+
+    describe('as a setter', function() {
+      it("adds the field name mappings to the model's field name mappings", function() {
+        class User extends Model {}
+        User.fieldNames = { createdAt: 'created' };
+
+        expect(User.fieldNames, 'to exhaustively satisfy', {
+          id: 'id',
+          createdAt: 'created'
+        });
+      });
+
+      describe('when a model is subclassed', function() {
+        it('allows overwriting the field names defined in the parent', function() {
+          class User extends Model {}
+          User.fieldNames = { createdAt: 'created' };
+
+          expect(User.fieldNames, 'to exhaustively satisfy', {
+            id: 'id',
+            createdAt: 'created'
+          });
+
+          class OtherUser extends User {}
+          OtherUser.fieldNames = { createdAt: 'timeCreated' };
+
+          expect(OtherUser.fieldNames, 'to satisfy', {
+            id: 'id',
+            createdAt: 'timeCreated'
+          });
+        });
+
+        it("doesn't interfere with the parent's field name mappings", function() {
+          class User extends Model {}
+
+          expect(Model.fieldNames, 'to exhaustively satisfy', { id: 'id' });
+          expect(User.fieldNames, 'to exhaustively satisfy', { id: 'id' });
+
+          User.fieldNames = { createdAt: 'created' };
+
+          expect(Model.fieldNames, 'to exhaustively satisfy', { id: 'id' });
+          expect(User.fieldNames, 'to exhaustively satisfy', {
+            id: 'id',
+            createdAt: 'created'
+          });
+
+          class OtherUser extends User {}
+          OtherUser.fieldNames = { updatedAt: 'timeUpdated' };
+
+          expect(Model.fieldNames, 'to exhaustively satisfy', { id: 'id' });
+          expect(User.fieldNames, 'to exhaustively satisfy', {
+            id: 'id',
+            createdAt: 'created'
+          });
+          expect(OtherUser.fieldNames, 'to satisfy', {
+            id: 'id',
+            createdAt: 'created',
+            updatedAt: 'timeUpdated'
+          });
+        });
+      });
+    });
+  });
+
   describe('Model.references', function() {
     it("is a getter that returns the model's references", function() {
       class Foo extends Model {}
