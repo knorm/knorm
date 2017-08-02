@@ -128,12 +128,14 @@ Model.fields = {
 ```
 
 If your `id` or timestamp fields have names other than `id`, `createdAt` and
-`updatedAt` respectively, you can configure that as well:
+`updatedAt` respectively, you can define custom field names:
 
 ```js
-Model.idField = 'uuid';
-Model.createdAtField = 'created';
-Model.updatedAtField = 'updated';
+Model.fieldNames = {
+  id: 'uuid',
+  createdAt: 'created',
+  updatedAt: 'updated'
+};
 // In this case your base fields will be something like:
 Model.fields = {
   uuid: {
