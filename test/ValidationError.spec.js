@@ -8,19 +8,19 @@ class Field extends AbstractField {}
 
 class User extends AbstractModel {}
 
-describe('ValidationError', function () {
-    it('extends KnormError', () => {
-        expect(ValidationError.prototype, 'to be a', KnormError);
-    });
+describe('ValidationError', function() {
+  it('extends KnormError', () => {
+    expect(ValidationError.prototype, 'to be a', KnormError);
+  });
 
-    it('prepends error messages with the model name and field name', function () {
-        const field = new Field({
-            name: 'firstName',
-            type: 'string',
-            model: User,
-        });
-        expect(new ValidationError('foo bar', field), 'to satisfy', {
-            message: 'User.firstName: foo bar',
-        });
+  it('prepends error messages with the model name and field name', function() {
+    const field = new Field({
+      name: 'firstName',
+      type: 'string',
+      model: User
     });
+    expect(new ValidationError('foo bar', field), 'to satisfy', {
+      message: 'User.firstName: foo bar'
+    });
+  });
 });
