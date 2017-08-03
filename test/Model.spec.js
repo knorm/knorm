@@ -1787,12 +1787,7 @@ describe('Model', function() {
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 1,
-              name: 'John Doe'
-            }
-          ]
+          [{ id: 1, name: 'John Doe' }]
         );
         spy.restore();
       });
@@ -1853,12 +1848,7 @@ describe('Model', function() {
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 1,
-              name: 'Jane Doe'
-            }
-          ]
+          [{ id: 1, name: 'Jane Doe' }]
         );
         spy.restore();
       });
@@ -1905,6 +1895,28 @@ describe('Model', function() {
           null
         );
         stub.restore();
+      });
+
+      describe('if more than one row is updated', function() {
+        it('resolves with instances of all the updated rows', async function() {
+          await User.insert({ id: 1, name: 'John Doe' });
+          await User.insert({ id: 2, name: 'Jane Doe' });
+          await expect(
+            new User({ name: 'Mr & Mrs Smith' }).update(),
+            'to be fulfilled with value satisfying',
+            instances =>
+              expect(
+                instances,
+                'when sorted by',
+                (a, b) => a.id - b.id,
+                'to satisfy',
+                [
+                  new User({ id: 1, name: 'Mr & Mrs Smith' }),
+                  new User({ id: 2, name: 'Mr & Mrs Smith' })
+                ]
+              )
+          );
+        });
       });
     });
 
@@ -2158,12 +2170,7 @@ describe('Model', function() {
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 1,
-              name: 'John Doe'
-            }
-          ]
+          [{ id: 1, name: 'John Doe' }]
         );
         spy.restore();
       });
@@ -2181,12 +2188,7 @@ describe('Model', function() {
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 1,
-              name: 'Jane Doe'
-            }
-          ]
+          [{ id: 1, name: 'Jane Doe' }]
         );
         spy.restore();
       });
@@ -2216,12 +2218,7 @@ describe('Model', function() {
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 1,
-              name: 'John Doe'
-            }
-          ]
+          [{ id: 1, name: 'John Doe' }]
         );
         spy.restore();
       });
@@ -2252,12 +2249,7 @@ describe('Model', function() {
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 1,
-              name: 'Jane Doe'
-            }
-          ]
+          [{ id: 1, name: 'Jane Doe' }]
         );
         spy.restore();
       });
@@ -2407,12 +2399,7 @@ describe('Model', function() {
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 1,
-              name: 'Jane Doe'
-            }
-          ]
+          [{ id: 1, name: 'Jane Doe' }]
         );
         await expect(spy, 'to have calls satisfying', () => {
           spy(undefined);
@@ -2521,12 +2508,7 @@ describe('Model', function() {
           'with table',
           EmailAsId.table,
           'to have rows satisfying',
-          [
-            {
-              email: 'foo',
-              name: 'Jane Doe'
-            }
-          ]
+          [{ email: 'foo', name: 'Jane Doe' }]
         );
       });
 
