@@ -1,8 +1,8 @@
 const { snakeCase } = require('lodash');
 const QueryBuilder = require('knex/lib/query/builder');
-const AbstractModel = require('../lib/Model');
-const AbstractField = require('../lib/Field');
-const AbstractQuery = require('../lib/Query');
+const KnormModel = require('../lib/Model');
+const KnormField = require('../lib/Field');
+const KnormQuery = require('../lib/Query');
 const knex = require('./lib/knex')();
 const sinon = require('sinon');
 const expect = require('unexpected')
@@ -32,30 +32,22 @@ const expect = require('unexpected')
     }
   );
 
-class Query extends AbstractQuery {}
+class Query extends KnormQuery {}
 Query.knex = knex;
 
-class Field extends AbstractField {
+class Field extends KnormField {
   getColumnName(fieldName) {
     return snakeCase(fieldName);
   }
 }
 
-class Model extends AbstractModel {}
+class Model extends KnormModel {}
 Model.Query = Query;
 Model.Field = Field;
 Model.fields = {
   id: {
     type: Field.types.integer,
     required: true
-  },
-  createdAt: {
-    type: Field.types.dateTime,
-    default: () => new Date()
-  },
-  updatedAt: {
-    type: Field.types.dateTime,
-    default: () => new Date()
   }
 };
 
@@ -109,7 +101,6 @@ User.fields = {
 
 const createUserTable = table => {
   table.increments();
-  table.timestamps();
   table.string('name').notNullable();
   table.text('description');
   table.integer('age');
@@ -135,7 +126,6 @@ ImageCategory.fields = {
 
 const createImageCategoryTable = table => {
   table.increments();
-  table.timestamps();
   table.string('name').notNullable();
 };
 
@@ -160,7 +150,6 @@ Image.fields = {
 
 const createImageTable = table => {
   table.increments();
-  table.timestamps();
   table.integer('user_id').references('id').inTable(User.table);
   table.integer('category_id').references('id').inTable(User.table);
 };
@@ -248,7 +237,7 @@ describe('Query', function() {
       class Foo extends Model {}
       Foo.table = 'foo';
       expect(
-        () => new AbstractQuery(Foo),
+        () => new KnormQuery(Foo),
         'to throw',
         new Error('Query.knex is not configured')
       );
@@ -353,8 +342,6 @@ describe('Query', function() {
         [
           new User({
             id: 1,
-            createdAt: null,
-            updatedAt: null,
             name: 'User 1',
             confirmed: false,
             description: 'this is user 1',
@@ -366,8 +353,6 @@ describe('Query', function() {
           }),
           new User({
             id: 2,
-            createdAt: null,
-            updatedAt: null,
             name: 'User 2',
             confirmed: true,
             description: 'this is user 2',
@@ -389,8 +374,6 @@ describe('Query', function() {
         [
           new User({
             id: 1,
-            createdAt: null,
-            updatedAt: null,
             name: 'User 1',
             confirmed: false,
             description: 'this is user 1',
@@ -402,8 +385,6 @@ describe('Query', function() {
           }),
           new User({
             id: 2,
-            createdAt: null,
-            updatedAt: null,
             name: 'User 2',
             confirmed: true,
             description: 'this is user 2',
@@ -486,8 +467,6 @@ describe('Query', function() {
           'to be fulfilled with value exhaustively satisfying',
           new User({
             id: 1,
-            createdAt: null,
-            updatedAt: null,
             name: 'User 1',
             confirmed: false,
             description: 'this is user 1',
@@ -536,8 +515,6 @@ describe('Query', function() {
           [
             {
               id: 1,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 1',
               confirmed: false,
               description: 'this is user 1',
@@ -549,8 +526,6 @@ describe('Query', function() {
             },
             {
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -574,8 +549,6 @@ describe('Query', function() {
           [
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -704,8 +677,6 @@ describe('Query', function() {
             [
               new User({
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -715,8 +686,6 @@ describe('Query', function() {
               }),
               new User({
                 id: 2,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 2',
                 confirmed: true,
                 description: 'this is user 2',
@@ -800,8 +769,6 @@ describe('Query', function() {
           [
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -825,8 +792,6 @@ describe('Query', function() {
           [
             new User({
               id: 1,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 1',
               confirmed: false,
               description: 'this is user 1',
@@ -838,8 +803,6 @@ describe('Query', function() {
             }),
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -863,8 +826,6 @@ describe('Query', function() {
           [
             new User({
               id: 1,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 1',
               confirmed: false,
               description: 'this is user 1',
@@ -876,8 +837,6 @@ describe('Query', function() {
             }),
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -903,8 +862,6 @@ describe('Query', function() {
           [
             new User({
               id: 1,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 1',
               confirmed: false,
               description: 'this is user 1',
@@ -916,8 +873,6 @@ describe('Query', function() {
             }),
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -941,8 +896,6 @@ describe('Query', function() {
           [
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -954,8 +907,6 @@ describe('Query', function() {
             }),
             new User({
               id: 1,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 1',
               confirmed: false,
               description: 'this is user 1',
@@ -979,8 +930,6 @@ describe('Query', function() {
           [
             new User({
               id: 1,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 1',
               confirmed: false,
               description: 'this is user 1',
@@ -1004,8 +953,6 @@ describe('Query', function() {
           [
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -1035,8 +982,6 @@ describe('Query', function() {
           [
             new User({
               id: 1,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 1',
               confirmed: false,
               description: 'this is user 1',
@@ -1048,8 +993,6 @@ describe('Query', function() {
             }),
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -1085,8 +1028,6 @@ describe('Query', function() {
             [
               new User({
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -1098,8 +1039,6 @@ describe('Query', function() {
               }),
               new User({
                 id: 2,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 2',
                 confirmed: true,
                 description: 'this is user 2',
@@ -1197,8 +1136,6 @@ describe('Query', function() {
             Object.assign(
               new User({
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -1211,8 +1148,6 @@ describe('Query', function() {
               {
                 image: new Image({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   userId: 1,
                   categoryId: 1
                 })
@@ -1220,8 +1155,6 @@ describe('Query', function() {
             ),
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -1242,8 +1175,6 @@ describe('Query', function() {
 
         const user2 = new User({
           id: 2,
-          createdAt: null,
-          updatedAt: null,
           name: 'User 2',
           confirmed: true,
           description: 'this is user 2',
@@ -1281,8 +1212,6 @@ describe('Query', function() {
             Object.assign(
               new User({
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -1296,15 +1225,11 @@ describe('Query', function() {
                 image: [
                   new Image({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   }),
                   new Image({
                     id: 2,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   })
@@ -1329,8 +1254,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1363,8 +1286,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1377,8 +1298,6 @@ describe('Query', function() {
                 {
                   theImage: new Image({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   })
@@ -1399,8 +1318,6 @@ describe('Query', function() {
             // ON user.id = message.sender_id AND user.id = message.receiver_id
             new User({
               id: 1,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 1',
               confirmed: false,
               description: 'this is user 1',
@@ -1412,8 +1329,6 @@ describe('Query', function() {
             }),
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -1440,8 +1355,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1454,16 +1367,12 @@ describe('Query', function() {
                 {
                   sentMessage: new Message({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     text: 'Hi User 2',
                     senderId: 1,
                     receiverId: 2
                   }),
                   receivedMessage: new Message({
                     id: 2,
-                    createdAt: null,
-                    updatedAt: null,
                     text: 'Hi User 1',
                     senderId: 2,
                     receiverId: 1
@@ -1473,8 +1382,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 2,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 2',
                   confirmed: true,
                   description: 'this is user 2',
@@ -1487,16 +1394,12 @@ describe('Query', function() {
                 {
                   sentMessage: new Message({
                     id: 2,
-                    createdAt: null,
-                    updatedAt: null,
                     text: 'Hi User 1',
                     senderId: 2,
                     receiverId: 1
                   }),
                   receivedMessage: new Message({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     text: 'Hi User 2',
                     senderId: 1,
                     receiverId: 2
@@ -1529,8 +1432,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1543,8 +1444,6 @@ describe('Query', function() {
                 {
                   image: new Image({
                     id: 2,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   })
@@ -1578,8 +1477,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1592,8 +1489,6 @@ describe('Query', function() {
                 {
                   image: new Image({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   })
@@ -1627,8 +1522,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1642,15 +1535,11 @@ describe('Query', function() {
                   image: [
                     new Image({
                       id: 2,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     }),
                     new Image({
                       id: 1,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     })
@@ -1690,8 +1579,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1704,8 +1591,6 @@ describe('Query', function() {
                 {
                   image: new Image({
                     id: 3,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   })
@@ -1739,8 +1624,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1754,15 +1637,11 @@ describe('Query', function() {
                   image: [
                     new Image({
                       id: 2,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     }),
                     new Image({
                       id: 1,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     })
@@ -1798,8 +1677,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1813,15 +1690,11 @@ describe('Query', function() {
                   image: [
                     new Image({
                       id: 1,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     }),
                     new Image({
                       id: 2,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     })
@@ -1864,8 +1737,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1879,15 +1750,11 @@ describe('Query', function() {
                   image: [
                     new Image({
                       id: 1,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     }),
                     new Image({
                       id: 2,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     })
@@ -1914,8 +1781,6 @@ describe('Query', function() {
               [
                 {
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -1926,16 +1791,12 @@ describe('Query', function() {
                   intToString: '10',
                   image: new Image({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   })
                 },
                 {
                   id: 2,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 2',
                   confirmed: true,
                   description: 'this is user 2',
@@ -1963,8 +1824,6 @@ describe('Query', function() {
                 Object.assign(
                   new User({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     name: 'User 1',
                     confirmed: false,
                     description: 'this is user 1',
@@ -1977,8 +1836,6 @@ describe('Query', function() {
                   {
                     image: {
                       id: 1,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     }
@@ -1986,8 +1843,6 @@ describe('Query', function() {
                 ),
                 {
                   id: 2,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 2',
                   confirmed: true,
                   description: 'this is user 2',
@@ -2014,8 +1869,6 @@ describe('Query', function() {
               [
                 {
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -2026,16 +1879,12 @@ describe('Query', function() {
                   intToString: '10',
                   image: {
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   }
                 },
                 {
                   id: 2,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 2',
                   confirmed: true,
                   description: 'this is user 2',
@@ -2062,8 +1911,6 @@ describe('Query', function() {
             [
               {
                 id: 2,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 2',
                 confirmed: true,
                 description: 'this is user 2',
@@ -2096,8 +1943,6 @@ describe('Query', function() {
             [
               {
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -2109,15 +1954,11 @@ describe('Query', function() {
                 image: [
                   {
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   },
                   {
                     id: 2,
-                    createdAt: null,
-                    updatedAt: null,
                     userId: 1,
                     categoryId: 1
                   }
@@ -2139,8 +1980,6 @@ describe('Query', function() {
             Object.assign(
               new User({
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -2153,8 +1992,6 @@ describe('Query', function() {
               {
                 image: new Image({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   userId: 1,
                   categoryId: 1
                 })
@@ -2162,8 +1999,6 @@ describe('Query', function() {
             ),
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -2186,8 +2021,6 @@ describe('Query', function() {
             Object.assign(
               new User({
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -2205,8 +2038,6 @@ describe('Query', function() {
             ),
             new User({
               id: 2,
-              createdAt: null,
-              updatedAt: null,
               name: 'User 2',
               confirmed: true,
               description: 'this is user 2',
@@ -2230,16 +2061,12 @@ describe('Query', function() {
               Object.assign(
                 new Image({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   userId: 1,
                   categoryId: 1
                 }),
                 {
                   user: new User({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     name: 'User 1',
                     confirmed: false,
                     description: 'this is user 1',
@@ -2264,16 +2091,12 @@ describe('Query', function() {
               Object.assign(
                 new Image({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   userId: 1,
                   categoryId: 1
                 }),
                 {
                   user: new User({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     name: 'User 1',
                     confirmed: false,
                     description: 'this is user 1',
@@ -2300,16 +2123,12 @@ describe('Query', function() {
               Object.assign(
                 new Image({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   userId: 1,
                   categoryId: 1
                 }),
                 {
                   user: new User({
                     id: 1,
-                    createdAt: null,
-                    updatedAt: null,
                     name: 'User 1',
                     confirmed: false,
                     description: 'this is user 1',
@@ -2338,8 +2157,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -2353,16 +2170,12 @@ describe('Query', function() {
                   image: Object.assign(
                     new Image({
                       id: 1,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     }),
                     {
                       imageCategory: new ImageCategory({
                         id: 1,
-                        createdAt: null,
-                        updatedAt: null,
                         name: 'User images'
                       })
                     }
@@ -2371,8 +2184,6 @@ describe('Query', function() {
               ),
               new User({
                 id: 2,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 2',
                 confirmed: true,
                 description: 'this is user 2',
@@ -2403,8 +2214,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -2418,8 +2227,6 @@ describe('Query', function() {
                   image: Object.assign(
                     new Image({
                       id: 1,
-                      createdAt: null,
-                      updatedAt: null,
                       userId: 1,
                       categoryId: 1
                     }),
@@ -2427,24 +2234,18 @@ describe('Query', function() {
                       imageCategory: Object.assign(
                         new ImageCategory({
                           id: 1,
-                          createdAt: null,
-                          updatedAt: null,
                           name: 'User images'
                         }),
                         {
                           image: Object.assign(
                             new Image({
                               id: 1,
-                              createdAt: null,
-                              updatedAt: null,
                               userId: 1,
                               categoryId: 1
                             }),
                             {
                               user: new User({
                                 id: 1,
-                                createdAt: null,
-                                updatedAt: null,
                                 name: 'User 1',
                                 confirmed: false,
                                 description: 'this is user 1',
@@ -2464,8 +2265,6 @@ describe('Query', function() {
               ),
               new User({
                 id: 2,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 2',
                 confirmed: true,
                 description: 'this is user 2',
@@ -2497,8 +2296,6 @@ describe('Query', function() {
               Object.assign(
                 new User({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   name: 'User 1',
                   confirmed: false,
                   description: 'this is user 1',
@@ -2551,8 +2348,6 @@ describe('Query', function() {
             Object.assign(
               new User({
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -2565,8 +2360,6 @@ describe('Query', function() {
               {
                 image: new Image({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   userId: 1,
                   categoryId: 1
                 })
@@ -2619,8 +2412,6 @@ describe('Query', function() {
             Object.assign(
               new User({
                 id: 1,
-                createdAt: null,
-                updatedAt: null,
                 name: 'User 1',
                 confirmed: false,
                 description: 'this is user 1',
@@ -2633,8 +2424,6 @@ describe('Query', function() {
               {
                 image: new Image({
                   id: 1,
-                  createdAt: null,
-                  updatedAt: null,
                   userId: 1,
                   categoryId: 1
                 })
@@ -2844,9 +2633,7 @@ describe('Query', function() {
           id: 1,
           name: 'John Doe',
           confirmed: false,
-          age: null,
-          created_at: expect.it('to be a', Date),
-          updated_at: expect.it('to be a', Date)
+          age: null
         }
       ]);
     });
@@ -2865,8 +2652,6 @@ describe('Query', function() {
           name: 'John Doe',
           confirmed: false,
           age: null,
-          created_at: expect.it('to be a', Date),
-          updated_at: expect.it('to be a', Date),
           json_field: expect.it(
             'when passed as parameter to',
             value => {
@@ -2899,8 +2684,6 @@ describe('Query', function() {
           name: 'John Doe',
           confirmed: false,
           age: null,
-          created_at: expect.it('to be a', Date),
-          updated_at: expect.it('to be a', Date),
           json_field: null,
           int_to_string: 10
         }
@@ -2978,8 +2761,6 @@ describe('Query', function() {
         'to be fulfilled with value satisfying',
         new User({
           id: 1,
-          createdAt: expect.it('to be a', Date),
-          updatedAt: expect.it('to be a', Date),
           name: 'John Doe',
           confirmed: false,
           description: null,
@@ -3050,8 +2831,6 @@ describe('Query', function() {
         Object.assign(
           new User({
             id: 1,
-            createdAt: expect.it('to be a', Date),
-            updatedAt: expect.it('to be a', Date),
             name: 'John Doe',
             confirmed: false,
             description: null,
@@ -3082,7 +2861,7 @@ describe('Query', function() {
     });
 
     describe('with a custom `id` field', function() {
-      class UuidAsId extends AbstractModel {}
+      class UuidAsId extends KnormModel {}
       UuidAsId.Query = Query;
       UuidAsId.table = 'uuid_as_id';
       UuidAsId.fieldNames.id = 'uuid';
@@ -3345,28 +3124,6 @@ describe('Query', function() {
       spy.restore();
     });
 
-    it('populates the updatedAt field with its default value before update', async function() {
-      const oldCreatedAt = user.createdAt;
-      const oldUpdatedAt = user.updatedAt;
-      const clock = sinon.useFakeTimers('Date');
-      const newUpdatedAt = new Date();
-      const query = new Query(User);
-      user.name = 'Jane Doe';
-      await expect(query.update(user), 'to be fulfilled');
-      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 1,
-          name: 'Jane Doe',
-          confirmed: false,
-          age: null,
-          created_at: oldCreatedAt,
-          updated_at: newUpdatedAt
-        }
-      ]);
-      await expect(oldUpdatedAt, 'not to equal', newUpdatedAt);
-      clock.restore();
-    });
-
     it('casts updated fields configured with pre-save cast functions before validating them', async function() {
       const query = new Query(User);
       user.jsonField = ['foo', 'bar'];
@@ -3448,8 +3205,6 @@ describe('Query', function() {
         'to be fulfilled with value satisfying',
         new User({
           id: 1,
-          createdAt: expect.it('to be a', Date),
-          updatedAt: expect.it('to be a', Date),
           name: 'Jane Doe',
           confirmed: false,
           description: null,
@@ -3524,8 +3279,6 @@ describe('Query', function() {
         Object.assign(
           new User({
             id: 1,
-            createdAt: expect.it('to be a', Date),
-            updatedAt: expect.it('to be a', Date),
             name: 'Jane Doe',
             confirmed: false,
             description: null,
@@ -3557,7 +3310,7 @@ describe('Query', function() {
     });
 
     describe('with a custom id field', function() {
-      class UuidAsId extends AbstractModel {}
+      class UuidAsId extends KnormModel {}
       UuidAsId.Query = Query;
       UuidAsId.table = 'uuid_as_id';
       UuidAsId.fieldNames.id = 'uuid';
@@ -3822,8 +3575,6 @@ describe('Query', function() {
             id: 1,
             name: 'John Doe',
             confirmed: true,
-            createdAt: null,
-            updatedAt: null,
             description: null,
             age: null,
             dateOfBirth: null,
@@ -3835,8 +3586,6 @@ describe('Query', function() {
             id: 2,
             name: 'Jane Doe',
             confirmed: true,
-            createdAt: null,
-            updatedAt: null,
             description: null,
             age: null,
             dateOfBirth: null,
@@ -3861,8 +3610,6 @@ describe('Query', function() {
           name: 'Jane Doe',
           confirmed: true,
           age: null,
-          created_at: null,
-          updated_at: null,
           json_field: null,
           int_to_string: null
         }
@@ -3961,8 +3708,6 @@ describe('Query', function() {
               id: 1,
               name: 'John Doe',
               confirmed: true,
-              createdAt: null,
-              updatedAt: null,
               description: null,
               age: null,
               dateOfBirth: null,
@@ -3974,8 +3719,6 @@ describe('Query', function() {
               id: 2,
               name: 'Jane Doe',
               confirmed: true,
-              createdAt: null,
-              updatedAt: null,
               description: null,
               age: null,
               dateOfBirth: null,
