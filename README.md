@@ -26,7 +26,7 @@ npm install --save knorm knorm-timestamps
 
 ```js
 const { Query: KnormQuery } = require('knorm');
-const { withTimestamps } = require('knorm-timestamps');
+const withTimestamps = require('knorm-timestamps');
 
 class Query extends withTimestamps(KnormQuery) {}
 ```
