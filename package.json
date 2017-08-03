@@ -35,8 +35,7 @@
     "proxyquire": "^1.7.11",
     "sinon": "^2.4.1",
     "unexpected": "^10.29.0",
-    "unexpected-knex": "^1.2.0",
-    "unexpected-sinon": "^10.8.2"
+    "unexpected-knex": "^1.2.0"
   },
   "directories": {
     "lib": "lib",

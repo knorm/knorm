@@ -1,9 +1,6 @@
 const { Model: KnormModel, Query: KnormQuery } = require('knorm');
 const sinon = require('sinon');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'));
+const expect = require('unexpected').clone().use(require('unexpected-knex'));
 const modelWithTimestamps = require('../lib/modelWithTimestamps');
 const queryWithTimestamps = require('../lib/queryWithTimestamps');
 const knex = require('./lib/knex');
