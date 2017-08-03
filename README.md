@@ -6,9 +6,14 @@
 [![dependency status](https://david-dm.org/joelmukuthu/knorm-timestamps.svg)](https://david-dm.org/joelmukuthu/kknorm-timestamps)
 [![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm-timestamps.svg)](https://greenkeeper.io/)
 
-Timestamps plugin for [knorm](https://www.npmjs.com/package/knorm).
-knorm-timestamps exports a mixin that adds support for
+Timestamps plugin for [knorm](https://www.npmjs.com/package/knorm). It exports
+an ES6 class mixin that adds support for
 [knex timestamps](http://knexjs.org/#Schema-timestamps).
+
+This plugin adds the timestamp fields to your models and also updates your query
+methods so that the `updatedAt` field is set before any `update` calls (if it is
+configured with a default value). It will also ensure that any `update`
+calls do not overwrite the `createdAt` field.
 
 ## Installation
 ```bash
@@ -33,8 +38,8 @@ Then configure your ORM with the knex instance:
 ```js
 const { Model: KnormModel } = require('knorm');
 
-const config = { createdAt: true, updatedAt: true };
-class Model extends withTimestamps(KnormModel, config) {}
+const options = { createdAt: true, updatedAt: true };
+class Model extends withTimestamps(KnormModel, options) {}
 Model.Query = Query; // configure Model with the enhanced Query class
 ```
 
