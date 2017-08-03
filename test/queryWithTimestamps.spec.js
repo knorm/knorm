@@ -74,8 +74,7 @@ describe('queryWithTimestamps', () => {
     describe('insert', () => {
       it('sets `createdAt` and `updatedAt` to the current timestamp', async () => {
         clock.tick(2000);
-        const user = new User({ id: 1 });
-        await expect(user.insert(), 'to be fulfilled');
+        await new User({ id: 1 }).insert();
         await expect(
           knex,
           'with table',
