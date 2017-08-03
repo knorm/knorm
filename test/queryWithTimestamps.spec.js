@@ -42,8 +42,8 @@ describe('queryWithTimestamps', () => {
     };
 
     class User extends modelWithTimestamps(Model, {
-      createdAt: { addDefault: true },
-      updatedAt: { addDefault: true }
+      createdAt: { default: () => new Date() },
+      updatedAt: { default: () => new Date() }
     }) {}
     User.table = 'user';
 

@@ -38,8 +38,10 @@ describe('modelWithTimestamps', () => {
       });
     });
 
-    it('allows adding a default `createdAt` function', () => {
-      const Bar = modelWithTimestamps(Foo, { createdAt: { addDefault: true } });
+    it('allows configuring the default `createdAt` value', () => {
+      const Bar = modelWithTimestamps(Foo, {
+        createdAt: { default: () => new Date() }
+      });
       expect(Bar.fields, 'to satisfy', {
         createdAt: {
           default: expect
@@ -90,8 +92,10 @@ describe('modelWithTimestamps', () => {
       });
     });
 
-    it('allows adding a default `updatedAt` function', () => {
-      const Bar = modelWithTimestamps(Foo, { updatedAt: { addDefault: true } });
+    it('allows configuring the default `updatedAt` value', () => {
+      const Bar = modelWithTimestamps(Foo, {
+        updatedAt: { default: () => new Date() }
+      });
       expect(Bar.fields, 'to satisfy', {
         updatedAt: {
           default: expect
