@@ -35,9 +35,11 @@
     "proxyquire": "^1.7.11",
     "sinon": "^2.4.1",
     "unexpected": "^10.29.0",
+    "unexpected-knex": "^1.2.0",
     "unexpected-sinon": "^10.8.2"
   },
   "directories": {
+    "lib": "lib",
     "test": "test"
   },
   "keywords": [
@@ -52,5 +54,6 @@
   "bugs": {
     "url": "https://github.com/joelmukuthu/knorm-timestamps/issues"
   },
-  "homepage": "https://github.com/joelmukuthu/knorm-timestamps#readme"
+  "homepage": "https://github.com/joelmukuthu/knorm-timestamps#readme",
+  "dependencies": {}
 }

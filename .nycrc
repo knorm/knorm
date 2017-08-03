@@ -2,10 +2,7 @@
   "all": true,
   "cache": true,
   "include": [
-    "lib"
-  ],
-  "exclude": [
-    "index.js",
-    "lib/index.js"
+    "lib",
+    "index.js"
   ]
 }

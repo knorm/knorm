@@ -1,5 +1,5 @@
 const { Model: KnormModel } = require('knorm');
-const expect = require('unexpected').clone().use(require('unexpected-sinon'));
+const expect = require('unexpected').clone();
 const modelWithTimestamps = require('../lib/modelWithTimestamps');
 
 describe('modelWithTimestamps', () => {
