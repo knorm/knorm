@@ -199,6 +199,19 @@ describe('Field', function() {
       );
     });
 
+    it('copies the column name of the field', function() {
+      class Foo extends Model {}
+      const field = new Field({
+        name: 'bar',
+        model: Foo,
+        type: Field.types.string,
+        column: 'the-column-name'
+      });
+      expect(field.clone(), 'to satisfy', {
+        column: 'the-column-name'
+      });
+    });
+
     it('clones cast functions returns a clone of the field', function() {
       class Foo extends Model {}
       const field = new Field({
