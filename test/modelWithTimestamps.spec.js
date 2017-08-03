@@ -38,6 +38,17 @@ describe('modelWithTimestamps', () => {
       });
     });
 
+    it('allows configuring the `createdAt` type', () => {
+      const Bar = modelWithTimestamps(Foo, {
+        createdAt: { type: 'integer' }
+      });
+      expect(Bar.fields, 'to satisfy', {
+        createdAt: {
+          type: 'integer'
+        }
+      });
+    });
+
     it('allows configuring the default `createdAt` value', () => {
       const Bar = modelWithTimestamps(Foo, {
         createdAt: { default: () => new Date() }
@@ -89,6 +100,17 @@ describe('modelWithTimestamps', () => {
       });
       expect(Bar.fieldNames, 'to satisfy', {
         updatedAt: 'updatedAt'
+      });
+    });
+
+    it('allows configuring the `updatedAt` type', () => {
+      const Bar = modelWithTimestamps(Foo, {
+        updatedAt: { type: 'integer' }
+      });
+      expect(Bar.fields, 'to satisfy', {
+        updatedAt: {
+          type: 'integer'
+        }
       });
     });
 

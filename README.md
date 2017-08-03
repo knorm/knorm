@@ -50,10 +50,12 @@ a field to the `Model` class with this config:
 If passed as an object, supports these config options:
 - `name` *string, default: createdAt*: the field name to use instead of
   `createdAt`
-- `default` *mixed, default: undefined*: the default value to use for the field.
-  this can also be a function, e.g. `() => new Date()`
+- `type` *string, default: dateTime*: the field type to use instead of
+  `dateTime`
 - `column` *string, default: created_at*: the column name to use instead of
   `created_at`
+- `default` *mixed, default: undefined*: the default value to use for the field.
+  this can also be a function, e.g. `() => new Date()`
 
 ### updatedAt
 
@@ -65,7 +67,9 @@ a field to the `Model` class with this config:
 If passed as an object, supports these config options:
 - `name` *string, default: updatedAt*: the field name to use instead of
   `updatedAt`
-- `default` *mixed, default: undefined*: the default value to use for the field.
-  this can also be a function, e.g. `() => new Date()`
+- `type` *string, default: dateTime*: the field type to use instead of
+  `dateTime`
 - `column` *string, default: updated_at*: the column name to use instead of
   `updated_at`
+- `default` *mixed, default: undefined*: the default value to use for the field.
+  this can also be a function, e.g. `() => new Date()`
