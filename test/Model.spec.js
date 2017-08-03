@@ -1939,7 +1939,7 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('passes all the data set on the model to Query.prototype.where', async function() {
+      it('passes the `id` set on the model to Query.prototype.where', async function() {
         await User.insert({ id: 1, name: 'John Doe' });
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
@@ -1949,8 +1949,20 @@ describe('Model', function() {
           new User({ id: 1, name: 'John Doe' })
         );
         await expect(spy, 'to have calls satisfying', () => {
-          spy({ id: 1, name: 'John Doe' });
+          spy({ id: 1 });
         });
+        spy.restore();
+      });
+
+      it("does not pass the `id` to Query.prototype.where if it's unset", async function() {
+        await User.insert({ id: 1, name: 'John Doe' });
+        const spy = sinon.spy(UserQuery.prototype, 'where');
+        await expect(
+          new User().fetch(),
+          'to be fulfilled with value satisfying',
+          new User({ id: 1, name: 'John Doe' })
+        );
+        await expect(spy, 'was not called');
         spy.restore();
       });
 
@@ -1959,12 +1971,12 @@ describe('Model', function() {
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
-          user.fetch({ where: { id: 1 } }),
+          user.fetch({ where: { id: 1, name: 'John Doe' } }),
           'to be fulfilled with value satisfying',
           new User({ id: 1, name: 'John Doe' })
         );
         await expect(spy, 'to have calls satisfying', () => {
-          spy({ id: 1 });
+          spy({ id: 1, name: 'John Doe' });
         });
         spy.restore();
       });
@@ -1972,7 +1984,7 @@ describe('Model', function() {
       describe('if no rows are matched', function() {
         it('rejects with a NoRowsFetchedError', async function() {
           await User.insert({ id: 1, name: 'John Doe' });
-          const user = new User({ id: 1, name: 'Jane Doe' });
+          const user = new User({ id: 2 });
           await expect(user.fetch(), 'to be rejected with error satisfying', {
             name: 'NoRowsFetchedError'
           });
@@ -1981,7 +1993,7 @@ describe('Model', function() {
         describe("if the 'require' option is set to false", function() {
           it('does not reject with a NoRowsFetchedError', async function() {
             await User.insert({ id: 1, name: 'John Doe' });
-            const user = new User({ id: 1, name: 'Jane Doe' });
+            const user = new User({ id: 2 });
             await expect(
               user.fetch({ require: false }),
               'to be fulfilled with value satisfying',
@@ -2035,7 +2047,7 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('passes all the data set on the model to Query.prototype.where', async function() {
+      it('passes the `id` set on the model to Query.prototype.where', async function() {
         await User.insert({ id: 1, name: 'John Doe' });
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
@@ -2045,8 +2057,20 @@ describe('Model', function() {
           new User({ id: 1, name: 'John Doe' })
         );
         await expect(spy, 'to have calls satisfying', () => {
-          spy({ id: 1, name: 'John Doe' });
+          spy({ id: 1 });
         });
+        spy.restore();
+      });
+
+      it("does not pass the `id` to Query.prototype.where if it's unset", async function() {
+        await User.insert({ id: 1, name: 'John Doe' });
+        const spy = sinon.spy(UserQuery.prototype, 'where');
+        await expect(
+          new User().delete(),
+          'to be fulfilled with value satisfying',
+          new User({ id: 1, name: 'John Doe' })
+        );
+        await expect(spy, 'was not called');
         spy.restore();
       });
 
@@ -2068,7 +2092,7 @@ describe('Model', function() {
       describe('if no rows are deleted', function() {
         it('rejects with a NoRowsDeletedError', async function() {
           await User.insert({ id: 1, name: 'John Doe' });
-          const user = new User({ id: 1, name: 'Jane Doe' });
+          const user = new User({ id: 2 });
           await expect(user.delete(), 'to be rejected with error satisfying', {
             name: 'NoRowsDeletedError'
           });
@@ -2077,7 +2101,7 @@ describe('Model', function() {
         describe("if the 'require' option is set to false", function() {
           it('does not reject with a NoRowsDeletedError', async function() {
             await User.insert({ id: 1, name: 'John Doe' });
-            const user = new User({ id: 1, name: 'Jane Doe' });
+            const user = new User({ id: 2 });
             await expect(
               user.delete({ require: false }),
               'to be fulfilled with value satisfying',
@@ -2444,6 +2468,23 @@ describe('Model', function() {
 
     afterEach(async function() {
       await knex(EmailAsId.table).truncate();
+    });
+
+    describe('Model.prototype.fetch', function() {
+      it('passes the configured `id` field to Query.prototype.where', async function() {
+        await EmailAsId.insert({ email: 'foo', name: 'John Doe' });
+        const instance = new EmailAsId({ email: 'foo' });
+        const spy = sinon.spy(EmailAsIdQuery.prototype, 'where');
+        await expect(
+          instance.fetch(),
+          'to be fulfilled with value satisfying',
+          new EmailAsId({ email: 'foo', name: 'John Doe' })
+        );
+        await expect(spy, 'to have calls satisfying', () => {
+          spy({ email: 'foo' });
+        });
+        spy.restore();
+      });
     });
 
     describe('Model.fetchById', function() {
