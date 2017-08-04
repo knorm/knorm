@@ -216,6 +216,18 @@ describe('queryWithSoftDelete', () => {
           new Query.errors.NoRowsDeletedError('no rows deleted', query)
         );
       });
+
+      it('throws updateErrors as usual', async () => {
+        const stub = sinon
+          .stub(Query.prototype, 'update')
+          .returns(Promise.reject(new Error('update error')));
+        await expect(
+          new Query(User).delete(),
+          'to be rejected with error satisfying',
+          new Error('update error')
+        );
+        stub.restore();
+      });
     });
 
     describe('Query.prototype.restore', () => {
@@ -285,6 +297,18 @@ describe('queryWithSoftDelete', () => {
           'to be rejected with error satisfying',
           new Query.errors.NoRowsRestoredError('no rows restored', query)
         );
+      });
+
+      it('throws updateErrors as usual', async () => {
+        const stub = sinon
+          .stub(Query.prototype, 'update')
+          .returns(Promise.reject(new Error('update error')));
+        await expect(
+          new Query(User).restore(),
+          'to be rejected with error satisfying',
+          new Error('update error')
+        );
+        stub.restore();
       });
     });
 
