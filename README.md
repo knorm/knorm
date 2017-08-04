@@ -37,14 +37,23 @@ await Model.query.where({ foo: 'bar', deleted: [ true, false ] }).fetch();
 [configuration](#deleted) (but defaults to `deleted`)
 
 This plugin also adds `Query.prototype.restore`, `Model.prototype.restore` and
-`Model.restore` methods that can be used to restore soft-deleted records:
+`Model.restore` methods that can be used to restore soft-deleted records.
+Conversely, it also adds `Query.prototype.hardDelete`,
+`Model.prototype.hardDelete` and `Model.hardDelete` that can be used to
+hard-delete records:
+
 ```js
 // to delete:
 await new Model({ id: 1 }).delete();
 // to restore:
 await new Model({ id: 1 }).restore();
-// or
+// or:
 await Model.restore({ where: { id: 1 } });
+
+// or to hard-delete:
+await new Model({ id: 1 }).hardDelete();
+// or:
+await Model.hardDelete({ where: { id: 1 } });
 ```
 
 ## Installation

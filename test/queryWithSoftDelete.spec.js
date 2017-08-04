@@ -353,6 +353,42 @@ describe('queryWithSoftDelete', () => {
       });
     });
 
+    describe('Query.prototype.hardDelete', () => {
+      beforeEach(async () => {
+        await new Query(User).insert(
+          new User({ id: 1, name: 'one', deleted: true, deletedAt: new Date() })
+        );
+        await new Query(User).insert(new User({ id: 2, name: 'two' }));
+      });
+
+      it('can hard-delete soft-deleted rows', async () => {
+        await new Query(User).where({ id: 1 }).hardDelete();
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have rows satisfying',
+          [{ id: 2, deleted: false }]
+        );
+      });
+
+      it('can hard-delete rows that are not soft-deleted', async () => {
+        await new Query(User).where({ id: 2 }).hardDelete();
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have rows satisfying',
+          [{ id: 1, deleted: true }]
+        );
+      });
+
+      it('can hard-delete all rows', async () => {
+        await new Query(User).hardDelete();
+        await expect(knex, 'with table', User.table, 'to be empty');
+      });
+    });
+
     describe('Query.prototype.fetch', () => {
       beforeEach(async () => {
         await new Query(User).insert(new User({ id: 1, name: 'one' }));
@@ -380,17 +416,36 @@ describe('queryWithSoftDelete', () => {
       it('allows fetching both non-deleted and soft-deleted rows', async () => {
         await new Query(User).where({ id: 1 }).delete();
         await expect(
-          new Query(User)
-            .where({ deleted: true })
-            .orWhere({ deleted: false })
-            .fetch(),
+          new Query(User).where({ deleted: [true, false] }).fetch(),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }, { id: 2 }]
         );
+      });
+
+      it('allows fetching soft-deleted rows with `whereNot`', async () => {
+        await new Query(User).where({ id: 1 }).delete();
+        await expect(
+          new Query(User).where({ id: 1 }).whereNot({ deleted: false }).fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1 }]
+        );
+      });
+
+      it('allows fetching soft-deleted rows with `orWhere`', async () => {
+        await new Query(User).where({ id: 1 }).delete();
+        await expect(
+          new Query(User).where({ id: 2 }).orWhere({ deleted: true }).fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1 }, { id: 2 }]
+        );
+      });
+
+      it('allows fetching soft-deleted rows with `orWhereNot`', async () => {
+        await new Query(User).where({ id: 1 }).delete();
         await expect(
           new Query(User)
-            .where({ deleted: false })
-            .orWhere({ deleted: true })
+            .where({ id: 2 })
+            .orWhereNot({ deleted: false })
             .fetch(),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }, { id: 2 }]
@@ -468,6 +523,44 @@ describe('queryWithSoftDelete', () => {
           'to have sorted rows satisfying',
           [{ id: 1, deleted: false }]
         );
+      });
+    });
+
+    describe('Model.prototype.hardDelete', () => {
+      it('hard-deletes a record', async () => {
+        const user = await new User({ id: 1, name: 'one' }).insert();
+        await user.hardDelete();
+        await expect(knex, 'with table', User.table, 'to be empty');
+      });
+
+      it('hard-deletes a soft-deleted record', async () => {
+        const user = await new User({
+          id: 1,
+          name: 'one',
+          deleted: true,
+          deletedAt: new Date()
+        }).insert();
+        await user.hardDelete();
+        await expect(knex, 'with table', User.table, 'to be empty');
+      });
+    });
+
+    describe('Model.hardDelete', () => {
+      it('hard-deletes a record', async () => {
+        await User.insert({ id: 1, name: 'one' });
+        await User.hardDelete({ where: { id: 1 } });
+        await expect(knex, 'with table', User.table, 'to be empty');
+      });
+
+      it('hard-deletes a soft-deleted record', async () => {
+        await User.insert({
+          id: 1,
+          name: 'one',
+          deleted: true,
+          deletedAt: new Date()
+        });
+        await User.hardDelete({ where: { id: 1 } });
+        await expect(knex, 'with table', User.table, 'to be empty');
       });
     });
   });
