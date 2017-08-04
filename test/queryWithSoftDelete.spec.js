@@ -342,6 +342,15 @@ describe('queryWithSoftDelete', () => {
           [{ id: 1 }, { id: 2 }]
         );
       });
+
+      it('does not inadvertently include other rows by doing an OR WHERE match', async () => {
+        await new Query(User).where({ id: 1 }).delete();
+        await expect(
+          new Query(User).withDeleted().where({ id: 1 }).fetch(),
+          'to be fulfilled with value satisfying',
+          [{ id: 1 }]
+        );
+      });
     });
 
     describe('Query.prototype.fetch', () => {
@@ -354,7 +363,7 @@ describe('queryWithSoftDelete', () => {
         await new Query(User).where({ id: 1 }).delete();
         await expect(
           new Query(User).fetch(),
-          'to be fulfilled with value satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [{ id: 2 }]
         );
       });
@@ -363,7 +372,7 @@ describe('queryWithSoftDelete', () => {
         await new Query(User).where({ id: 1 }).delete();
         await expect(
           new Query(User).where({ deleted: true }).fetch(),
-          'to be fulfilled with value satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }]
         );
       });

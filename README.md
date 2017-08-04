@@ -17,7 +17,7 @@ It also modifies the behaviour of `Query.prototype.fetch`,
 `Query.prototype.update` and `Query.prototype.delete` so that they always filter
 out soft-deleted rows. To work with soft-deleted rows, use
 `Query.prototype.withDeleted`, `Query.prototype.onlyDeleted` or directly use the
-`Query.prototype.where` and `Query.prototype.orWhere` methods:
+`Query.prototype.where` (or `whereNot`, `orWhere`, `orWhereNot`) method:
 
 ```js
 // to update only soft-deleted rows:
@@ -28,12 +28,12 @@ await Model.query.where({ deleted: true }).update({ foo: 'bar' });
 // to fetch rows including soft-deleted rows:
 await Model.query.withDeleted().where({ foo: 'bar' }).fetch();
 // or:
-await Model.query
-  .where({ foo: 'bar', deleted: true })
-  .orWhere({ deleted: false })
-  .fetch();
+await Model.query.where({ foo: 'bar', deleted: [ true, false ] }).fetch();
 ```
-> The field name used in the `where` and `orWhere` methods depends on your
+> `where({ deleted: [true, false] })` translates to
+`WHERE deleted IN (true, false)`
+
+> The field name used in the `where` method depends on your
 [configuration](#deleted) (but defaults to `deleted`)
 
 This plugin also adds `Query.prototype.restore`, `Model.prototype.restore` and
