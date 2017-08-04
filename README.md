@@ -9,11 +9,33 @@
 Soft-delete plugin for [knorm](https://www.npmjs.com/package/knorm). It exports
 an ES6 class mixin that adds support for soft-deleting rows in the database.
 
-This plugin adds `deleted` and `deletedAt` fields to your models (depending on
-the config options) and also updates your query methods so that the `delete`
-method does not actually delete a row but rather updates the `deleted` flag. It
-also adds a default `where deleted = false` clause to all `fetch`, `update` and
-`delete` calls (which can also be overriden if you want to query deleted rows).
+This plugin adds `deleted` (by default) and `deletedAt` (if configured) fields
+to your models and also updates your query methods so that the `delete` method
+does not actually delete a row but rather updates the `deleted` flag.
+
+It also modifies the behaviour of `Query.prototype.fetch`,
+`Query.prototype.update` and `Query.prototype.delete` so that they always filter
+out deleted rows. However this behaviour can be overriden using the normal
+`Query.prototype.where` and `Query.prototype.orWhere` methods:
+
+```js
+// to fetch deleted rows:
+await Model.query.where({ deleted: true }).fetch();
+// to fetch all rows, including deleted:
+await Model.query.where({ deleted: true }).orWhere({ deleted: false }).fetch();
+```
+> This also applies for update() and delete() calls
+
+This plugin also adds `Query.prototype.restore`, `Model.prototype.restore` and
+`Model.restore` methods that can be used to restore soft-deleted records:
+```js
+// to delete:
+await new Model({ id: 1 }).delete();
+// to restore:
+await new Model({ id: 1 }).restore();
+// or
+await Model.restore({ where: { id: 1 } });
+```
 
 ## Installation
 ```bash
@@ -47,20 +69,19 @@ Model.Query = Query; // configure Model with the enhanced Query class
 
 ### deleted
 
-Can either be `true` or an object for further configuration. If `true`, it adds
-a field to the `Model` class with this config:
-- field-name: `deleted`
-- column-name: `deleted`
+The `deleted` field is always added, but the field and column names can be
+configured. By default, the field has this config:
+- field name: `deleted`
+- field type: `boolean`
+- column name: `deleted`
+- default value: `false`
 
 If passed as an object, supports these config options:
-- `name` *string, default: deleted*: the field name to use instead of
-  `deleted`
-- `type` *string, default: boolean*: the field type to use instead of
-  `boolean`
+- `name` *string, default: deleted*: the field name to use instead of `deleted`
 - `column` *string, default: deleted*: the column name to use instead of
   `deleted`
-- `default` *mixed, default: false*: the default value to use for the field.
-  this can also be a function.
+
+The field type and default value cannot be configured.
 
 ### deletedAt
 
