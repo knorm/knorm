@@ -11,20 +11,30 @@ an ES6 class mixin that adds support for soft-deleting rows in the database.
 
 This plugin adds `deleted` (by default) and `deletedAt` (if configured) fields
 to your models and also updates your query methods so that the `delete` method
-does not actually delete a row but rather updates the `deleted` flag.
+does not actually delete a row but rather updates the `deleted` column.
 
 It also modifies the behaviour of `Query.prototype.fetch`,
 `Query.prototype.update` and `Query.prototype.delete` so that they always filter
-out deleted rows. However this behaviour can be overriden using the normal
+out soft-deleted rows. To work with soft-deleted rows, use
+`Query.prototype.withDeleted`, `Query.prototype.onlyDeleted` or directly use the
 `Query.prototype.where` and `Query.prototype.orWhere` methods:
 
 ```js
-// to fetch deleted rows:
-await Model.query.where({ deleted: true }).fetch();
-// to fetch all rows, including deleted:
-await Model.query.where({ deleted: true }).orWhere({ deleted: false }).fetch();
+// to update only soft-deleted rows:
+await Model.query.onlyDeleted().update({ foo: 'bar' });
+// or:
+await Model.query.where({ deleted: true }).update({ foo: 'bar' });
+
+// to fetch rows including soft-deleted rows:
+await Model.query.withDeleted().where({ foo: 'bar' }).fetch();
+// or:
+await Model.query
+  .where({ foo: 'bar', deleted: true })
+  .orWhere({ deleted: false })
+  .fetch();
 ```
-> This also applies for update() and delete() calls
+> The field name used in the `where` and `orWhere` methods depends on your
+[configuration](#deleted) (but defaults to `deleted`)
 
 This plugin also adds `Query.prototype.restore`, `Model.prototype.restore` and
 `Model.restore` methods that can be used to restore soft-deleted records:
@@ -41,7 +51,8 @@ await Model.restore({ where: { id: 1 } });
 ```bash
 npm install --save knorm knorm-soft-delete
 ```
-> knorm-soft-delete has a peer dependency on [knorm](https://www.npmjs.com/package/knorm)
+> knorm-soft-delete has a peer dependency on
+[knorm](https://www.npmjs.com/package/knorm)
 
 ## Usage
 ### 1. Enhance knorm's Query class

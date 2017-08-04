@@ -312,6 +312,38 @@ describe('queryWithSoftDelete', () => {
       });
     });
 
+    describe('Query.prototype.onlyDeleted', () => {
+      beforeEach(async () => {
+        await new Query(User).insert(new User({ id: 1, name: 'one' }));
+        await new Query(User).insert(new User({ id: 2, name: 'two' }));
+      });
+
+      it('returns only the soft-deleted rows', async () => {
+        await new Query(User).where({ id: 1 }).delete();
+        await expect(
+          new Query(User).onlyDeleted().fetch(),
+          'to be fulfilled with value satisfying',
+          [{ id: 1 }]
+        );
+      });
+    });
+
+    describe('Query.prototype.withDeleted', () => {
+      beforeEach(async () => {
+        await new Query(User).insert(new User({ id: 1, name: 'one' }));
+        await new Query(User).insert(new User({ id: 2, name: 'two' }));
+      });
+
+      it('allows fetching both non-deleted and soft-deleted rows', async () => {
+        await new Query(User).where({ id: 1 }).delete();
+        await expect(
+          new Query(User).withDeleted().fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1 }, { id: 2 }]
+        );
+      });
+    });
+
     describe('Query.prototype.fetch', () => {
       beforeEach(async () => {
         await new Query(User).insert(new User({ id: 1, name: 'one' }));
