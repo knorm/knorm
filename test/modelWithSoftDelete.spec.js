@@ -22,21 +22,22 @@ describe('modelWithSoftDelete', () => {
     expect(Bar.prototype, 'to be a', KnormModel);
   });
 
+  it('adds a `deleted` field by default', () => {
+    class Foo extends KnormModel {}
+    const Bar = modelWithSoftDelete(Foo);
+    expect(Bar.fields, 'to satisfy', {
+      deleted: {
+        type: 'boolean',
+        column: 'deleted'
+      }
+    });
+    expect(Bar.fieldNames, 'to satisfy', {
+      deleted: 'deleted'
+    });
+  });
+
   describe('with a `deleted` config', () => {
     class Foo extends KnormModel {}
-
-    it('adds a `deleted` field', () => {
-      const Bar = modelWithSoftDelete(Foo, { deleted: true });
-      expect(Bar.fields, 'to satisfy', {
-        deleted: {
-          type: 'boolean',
-          column: 'deleted'
-        }
-      });
-      expect(Bar.fieldNames, 'to satisfy', {
-        deleted: 'deleted'
-      });
-    });
 
     it('allows configuring the `deleted` field-name', () => {
       const Bar = modelWithSoftDelete(Foo, { deleted: { name: 'isDeleted' } });
