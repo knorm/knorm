@@ -242,101 +242,22 @@ describe('Field', function() {
     });
   });
 
-  describe('Field.prototype.hasCast', function() {
-    class User extends Model {}
-
-    it('returns false if the field has no cast functions', function() {
-      const field = new Field({
-        name: 'firstName',
-        model: User,
-        type: Field.types.string
-      });
-      expect(field.hasCast({ save: true }), 'to be false');
-    });
-
-    describe('with a `save` cast function', function() {
-      it('returns true if the `save` option is enabled', function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          cast: {
-            save() {}
-          }
-        });
-        expect(field.hasCast({ save: true }), 'to be true');
-      });
-
-      it('returns false if the `fetch` option is enabled', function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          cast: {
-            save() {}
-          }
-        });
-        expect(field.hasCast({ fetch: true }), 'to be false');
-      });
-    });
-
-    describe('with a `fetch` cast function', function() {
-      it('returns true if the `fetch` option is enabled', function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          cast: {
-            fetch() {}
-          }
-        });
-        expect(field.hasCast({ fetch: true }), 'to be true');
-      });
-
-      it('returns false if the `save` option is enabled', function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          cast: {
-            fetch() {}
-          }
-        });
-        expect(field.hasCast({ save: true }), 'to be false');
-      });
-    });
-
-    describe('with both `fetch` and `save` cast functions', function() {
-      it('returns true if the `fetch` option is enabled', function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          cast: {
-            save() {},
-            fetch() {}
-          }
-        });
-        expect(field.hasCast({ fetch: true }), 'to be true');
-      });
-
-      it('returns true if the `save` option is enabled', function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          cast: {
-            save() {},
-            fetch() {}
-          }
-        });
-        expect(field.hasCast({ save: true }), 'to be true');
-      });
-    });
-  });
-
   describe('Field.prototype.cast', function() {
     class User extends Model {}
+
+    describe('with no cast functions defined', function() {
+      it('returns undefined', function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.string
+        });
+        expect(
+          field.cast('bar value', 'a model instance', { save: true }),
+          'to be undefined'
+        );
+      });
+    });
 
     describe('with a `save` cast function', function() {
       it('calls the function with the value if the `save` option is enabled', function() {
@@ -353,7 +274,7 @@ describe('Field', function() {
         expect(save, 'was called with', 'bar value');
       });
 
-      it("calls the function with 'this' set to the passed model instance", async function() {
+      it('calls the function with `this` set to the passed model instance', function() {
         const save = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -363,8 +284,8 @@ describe('Field', function() {
             save
           }
         });
-        await field.cast('bar value', 'a model instance', { save: true });
-        await expect(save, 'was called on', 'a model instance');
+        field.cast('bar value', 'a model instance', { save: true });
+        expect(save, 'was called on', 'a model instance');
       });
     });
 
@@ -383,7 +304,7 @@ describe('Field', function() {
         expect(fetch, 'was called with', 'bar value');
       });
 
-      it("calls the function with 'this' set to the passed model instance", async function() {
+      it('calls the function with `this` set to the passed model instance', function() {
         const fetch = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -393,8 +314,44 @@ describe('Field', function() {
             fetch
           }
         });
-        await field.cast('bar value', 'a model instance', { fetch: true });
-        await expect(fetch, 'was called on', 'a model instance');
+        field.cast('bar value', 'a model instance', { fetch: true });
+        expect(fetch, 'was called on', 'a model instance');
+      });
+    });
+
+    describe('with both `fetch` and `save` cast functions', function() {
+      it('calls only the `fetch` cast function if the `fetch` option is enabled', function() {
+        const save = sinon.spy();
+        const fetch = sinon.spy();
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.string,
+          cast: {
+            save,
+            fetch
+          }
+        });
+        field.cast('bar value', 'a model instance', { fetch: true });
+        expect(fetch, 'was called');
+        expect(save, 'was not called');
+      });
+
+      it('calls only the `save` cast function if the `save` option is enabled', function() {
+        const save = sinon.spy();
+        const fetch = sinon.spy();
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.string,
+          cast: {
+            save,
+            fetch
+          }
+        });
+        field.cast('bar value', 'a model instance', { save: true });
+        expect(save, 'was called');
+        expect(fetch, 'was not called');
       });
     });
   });
