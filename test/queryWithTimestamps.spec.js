@@ -61,7 +61,7 @@ describe('queryWithTimestamps', () => {
 
     let clock;
     beforeEach(() => {
-      clock = sinon.useFakeTimers('Date');
+      clock = sinon.useFakeTimers({ toFake: ['Date'] });
     });
 
     after(() => {
