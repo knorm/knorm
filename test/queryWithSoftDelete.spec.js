@@ -142,7 +142,7 @@ describe('queryWithSoftDelete', () => {
       });
 
       it('sets `deletedAt` to the current timestamp', async () => {
-        const clock = sinon.useFakeTimers(2000, 'Date');
+        const clock = sinon.useFakeTimers({ now: 2000, toFake: ['Date'] });
         await new Query(User).delete();
         await expect(
           knex,
@@ -190,7 +190,7 @@ describe('queryWithSoftDelete', () => {
 
       it('does not soft-delete already soft-deleted records', async () => {
         await new User({ id: 2, name: 'two' }).insert();
-        const clock = sinon.useFakeTimers(1000, 'Date');
+        const clock = sinon.useFakeTimers({ now: 1000, toFake: ['Date'] });
         await new Query(User).where({ id: 1 }).delete();
         clock.tick(1000);
         await new Query(User).where({ id: 2 }).delete();
