@@ -33,7 +33,7 @@
     "pg": "^7.0.2",
     "prettier": "^1.5.3",
     "proxyquire": "^1.7.11",
-    "sinon": "^2.4.1",
+    "sinon": "^3.1.0",
     "unexpected": "^10.29.0",
     "unexpected-knex": "^1.2.0",
     "unexpected-sinon": "^10.8.2"
