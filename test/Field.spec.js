@@ -470,11 +470,10 @@ describe('Field', function() {
           type: Field.types.string,
           required: true
         });
-        await expect(
-          field.validate(),
-          'to be rejected with',
-          new Field.errors.RequiredError('value is required', field, undefined)
-        );
+        await expect(field.validate(), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'RequiredError'
+        });
       });
 
       it("rejects if the value is 'undefined'", async function() {
@@ -484,11 +483,10 @@ describe('Field', function() {
           type: Field.types.string,
           required: true
         });
-        await expect(
-          field.validate(undefined),
-          'to be rejected with',
-          new Field.errors.RequiredError('value is required', field, undefined)
-        );
+        await expect(field.validate(undefined), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'RequiredError'
+        });
       });
 
       it("rejects if the value is 'null'", async function() {
@@ -498,11 +496,10 @@ describe('Field', function() {
           type: Field.types.string,
           required: true
         });
-        await expect(
-          field.validate(null),
-          'to be rejected with',
-          new Field.errors.RequiredError('value is required', field, null)
-        );
+        await expect(field.validate(null), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'RequiredError'
+        });
       });
 
       it('resolves if the value is set', async function() {
@@ -523,16 +520,10 @@ describe('Field', function() {
           model: User,
           type: Field.types.text
         });
-        await expect(
-          field.validate({}),
-          'to be rejected with',
-          new Field.errors.FieldTypeError(
-            "value is not of type 'text'",
-            field,
-            {},
-            'text'
-          )
-        );
+        await expect(field.validate({}), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'TypeError'
+        });
       });
 
       it('does not type-validate if the value is undefined', async function() {
@@ -745,16 +736,10 @@ describe('Field', function() {
             model: User,
             type: Field.types.integer
           });
-          await expect(
-            field.validate(1.5),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'integer'",
-              field,
-              1.5,
-              'integer'
-            )
-          );
+          await expect(field.validate(1.5), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("for string numbers against the 'integer' type", async function() {
@@ -763,16 +748,10 @@ describe('Field', function() {
             model: User,
             type: Field.types.integer
           });
-          await expect(
-            field.validate('1'),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'integer'",
-              field,
-              '1',
-              'integer'
-            )
-          );
+          await expect(field.validate('1'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("for date strings against the 'dateTime' type", async function() {
@@ -782,16 +761,10 @@ describe('Field', function() {
             type: Field.types.dateTime
           });
           const dateString = new Date().toString();
-          await expect(
-            field.validate(dateString),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'dateTime'",
-              field,
-              dateString,
-              'dateTime'
-            )
-          );
+          await expect(field.validate(dateString), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("for truthy values against the 'boolean' type", async function() {
@@ -800,16 +773,10 @@ describe('Field', function() {
             model: User,
             type: Field.types.boolean
           });
-          await expect(
-            field.validate(1),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'boolean'",
-              field,
-              1,
-              'boolean'
-            )
-          );
+          await expect(field.validate(1), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("for falsy values against the 'boolean' type", async function() {
@@ -818,16 +785,10 @@ describe('Field', function() {
             model: User,
             type: Field.types.boolean
           });
-          await expect(
-            field.validate(0),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'boolean'",
-              field,
-              0,
-              'boolean'
-            )
-          );
+          await expect(field.validate(0), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("invalid uuid's against the 'uuid' type", async function() {
@@ -839,12 +800,10 @@ describe('Field', function() {
           await expect(
             field.validate('not-valid-uuid'),
             'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'uuid'",
-              field,
-              'not-valid-uuid',
-              'uuid'
-            )
+            {
+              name: 'ValidationError',
+              type: 'TypeError'
+            }
           );
         });
 
@@ -855,16 +814,10 @@ describe('Field', function() {
             type: Field.types.uuidV4
           });
           const uuidV1 = uuid.v1();
-          await expect(
-            field.validate(uuidV1),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'uuidV4'",
-              field,
-              uuidV1,
-              'uuidV4'
-            )
-          );
+          await expect(field.validate(uuidV1), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("invalid json against the 'json' type", async function() {
@@ -876,12 +829,10 @@ describe('Field', function() {
           await expect(
             field.validate('{not: "valid"}'),
             'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'json'",
-              field,
-              '{not: "valid"}',
-              'json'
-            )
+            {
+              name: 'ValidationError',
+              type: 'TypeError'
+            }
           );
         });
 
@@ -891,16 +842,10 @@ describe('Field', function() {
             model: User,
             type: Field.types.json
           });
-          await expect(
-            field.validate(false),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'json'",
-              field,
-              false,
-              'json'
-            )
-          );
+          await expect(field.validate(false), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("strings against the 'decimal' type", async function() {
@@ -909,16 +854,10 @@ describe('Field', function() {
             model: User,
             type: Field.types.decimal
           });
-          await expect(
-            field.validate('foo'),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'decimal'",
-              field,
-              'foo',
-              'decimal'
-            )
-          );
+          await expect(field.validate('foo'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("string values against the 'binary' type", async function() {
@@ -927,16 +866,10 @@ describe('Field', function() {
             model: User,
             type: Field.types.binary
           });
-          await expect(
-            field.validate('bar'),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'binary'",
-              field,
-              'bar',
-              'binary'
-            )
-          );
+          await expect(field.validate('bar'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
 
         it("object values against the 'binary' type", async function() {
@@ -945,16 +878,10 @@ describe('Field', function() {
             model: User,
             type: Field.types.binary
           });
-          await expect(
-            field.validate({}),
-            'to be rejected with',
-            new Field.errors.FieldTypeError(
-              "value is not of type 'binary'",
-              field,
-              {},
-              'binary'
-            )
-          );
+          await expect(field.validate({}), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
         });
       });
     });
@@ -967,11 +894,10 @@ describe('Field', function() {
           type: Field.types.string,
           minLength: 6
         });
-        await expect(
-          field.validate('a'),
-          'to be rejected with',
-          new Field.errors.MinLengthError('value is too short', field, 'a', 6)
-        );
+        await expect(field.validate('a'), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'MinLengthError'
+        });
       });
 
       it('does not reject an if the value is the same lenth as the minLength', async function() {
@@ -1023,16 +949,10 @@ describe('Field', function() {
           type: Field.types.string,
           maxLength: 6
         });
-        await expect(
-          field.validate('1234567'),
-          'to be rejected with',
-          new Field.errors.MaxLengthError(
-            'value is too long',
-            field,
-            '1234567',
-            6
-          )
-        );
+        await expect(field.validate('1234567'), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'MaxLengthError'
+        });
       });
 
       it('does not reject an if the value is the same lenth as the maxLength', async function() {
@@ -1084,11 +1004,10 @@ describe('Field', function() {
           type: Field.types.integer,
           oneOf: [1, 2]
         });
-        await expect(
-          field.validate(3),
-          'to be rejected with',
-          new Field.errors.OneOfError('value is unexpected', field, 3, [1, 2])
-        );
+        await expect(field.validate(3), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'OneOfError'
+        });
       });
 
       it('does not reject an if the value is included in oneOf', async function() {
@@ -1108,14 +1027,10 @@ describe('Field', function() {
           type: Field.types.string,
           oneOf: ['READ', 'UNREAD']
         });
-        await expect(
-          field.validate('read'),
-          'to be rejected with',
-          new Field.errors.OneOfError('value is unexpected', field, 'read', [
-            'READ',
-            'UNREAD'
-          ])
-        );
+        await expect(field.validate('read'), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'OneOfError'
+        });
       });
 
       it('does not reject if the value is undefined', async function() {
@@ -1225,7 +1140,7 @@ describe('Field', function() {
         );
       });
 
-      it('rejects with a CustomValidatorError if the validator returns `false`', async function() {
+      it('rejects with a ValidatorError if the validator returns `false`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1234,19 +1149,10 @@ describe('Field', function() {
             return false;
           }
         });
-        await expect(
-          field.validate('bar value'),
-          'to be rejected with',
-          new Field.errors
-            .CustomValidatorError(
-            'value is invalid',
-            field,
-            'bar value',
-            function() {
-              return true;
-            }
-          )
-        );
+        await expect(field.validate('bar value'), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'ValidatorError'
+        });
       });
 
       it('does not reject if the validator returns nothing', async function() {
@@ -1270,16 +1176,10 @@ describe('Field', function() {
             };
           }
         });
-        await expect(
-          field.validate('bar value'),
-          'to be rejected with',
-          new Field.errors.MaxLengthError(
-            'value is too long',
-            field,
-            'bar value',
-            2
-          )
-        );
+        await expect(field.validate('bar value'), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'MaxLengthError'
+        });
       });
 
       it("runs the new validator if the first validator returns an object with a 'validate' function", async function() {

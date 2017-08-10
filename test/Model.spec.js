@@ -673,7 +673,8 @@ describe('Model', function() {
       const foo = new Foo();
 
       await expect(foo.validate(), 'to be rejected with', {
-        name: 'RequiredError'
+        name: 'ValidationError',
+        type: 'RequiredError'
       });
 
       await expect(fooValidationSpy, 'was called once');
@@ -704,7 +705,8 @@ describe('Model', function() {
         const foo = new Foo();
 
         await expect(foo.validate({ fields: ['bar'] }), 'to be rejected with', {
-          name: 'RequiredError'
+          name: 'ValidationError',
+          type: 'RequiredError'
         });
 
         await expect(fooValidationSpy, 'was not called');
@@ -736,7 +738,10 @@ describe('Model', function() {
         await expect(
           foo.validate({ fields: [Foo.fields.bar] }),
           'to be rejected with',
-          { name: 'RequiredError' }
+          {
+            name: 'ValidationError',
+            type: 'RequiredError'
+          }
         );
 
         await expect(fooValidationSpy, 'was not called');

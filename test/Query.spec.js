@@ -2685,7 +2685,8 @@ describe('Query', function() {
       const query = new Query(User);
       const user = new User({ id: 1, name: 1 });
       await expect(query.insert(user), 'to be rejected with error satisfying', {
-        name: 'FieldTypeError'
+        name: 'ValidationError',
+        type: 'TypeError'
       });
     });
 
@@ -2695,7 +2696,8 @@ describe('Query', function() {
         query.insert({ id: 1, name: 1 }),
         'to be rejected with error satisfying',
         {
-          name: 'FieldTypeError'
+          name: 'ValidationError',
+          type: 'TypeError'
         }
       );
     });
@@ -3106,7 +3108,11 @@ describe('Query', function() {
             new User({ id: 1, name: 'Jane Doe', confirmed: 'false' })
           ]),
           'to be rejected with error satisfying',
-          { name: 'FieldTypeError', message: /confirmed/ }
+          {
+            name: 'ValidationError',
+            type: 'TypeError',
+            message: /confirmed/
+          }
         );
       });
 
@@ -3118,7 +3124,11 @@ describe('Query', function() {
             { id: 1, name: 'Jane Doe', confirmed: 'false' }
           ]),
           'to be rejected with error satisfying',
-          { name: 'FieldTypeError', message: /confirmed/ }
+          {
+            name: 'ValidationError',
+            type: 'TypeError',
+            message: /confirmed/
+          }
         );
       });
 
@@ -3364,7 +3374,8 @@ describe('Query', function() {
       const query = new Query(User);
       user.name = 1;
       await expect(query.update(user), 'to be rejected with error satisfying', {
-        name: 'FieldTypeError'
+        name: 'ValidationError',
+        type: 'TypeError'
       });
     });
 
