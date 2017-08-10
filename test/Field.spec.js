@@ -253,7 +253,7 @@ describe('Field', function() {
           type: Field.types.string
         });
         expect(
-          field.cast('bar value', 'a model instance', { save: true }),
+          field.cast('bar value', 'a model instance', { forSave: true }),
           'to be undefined'
         );
       });
@@ -270,7 +270,7 @@ describe('Field', function() {
             save
           }
         });
-        field.cast('bar value', 'a model instance', { save: true });
+        field.cast('bar value', 'a model instance', { forSave: true });
         expect(save, 'was called with', 'bar value');
       });
 
@@ -284,7 +284,7 @@ describe('Field', function() {
             save
           }
         });
-        field.cast('bar value', 'a model instance', { save: true });
+        field.cast('bar value', 'a model instance', { forSave: true });
         expect(save, 'was called on', 'a model instance');
       });
     });
@@ -300,7 +300,7 @@ describe('Field', function() {
             fetch
           }
         });
-        field.cast('bar value', 'a model instance', { fetch: true });
+        field.cast('bar value', 'a model instance', { forFetch: true });
         expect(fetch, 'was called with', 'bar value');
       });
 
@@ -314,13 +314,13 @@ describe('Field', function() {
             fetch
           }
         });
-        field.cast('bar value', 'a model instance', { fetch: true });
+        field.cast('bar value', 'a model instance', { forFetch: true });
         expect(fetch, 'was called on', 'a model instance');
       });
     });
 
     describe('with both `fetch` and `save` cast functions', function() {
-      it('calls only the `fetch` cast function if the `fetch` option is enabled', function() {
+      it('calls only the `fetch` cast function if the `forFetch` option is enabled', function() {
         const save = sinon.spy();
         const fetch = sinon.spy();
         const field = new Field({
@@ -332,12 +332,12 @@ describe('Field', function() {
             fetch
           }
         });
-        field.cast('bar value', 'a model instance', { fetch: true });
+        field.cast('bar value', 'a model instance', { forFetch: true });
         expect(fetch, 'was called');
         expect(save, 'was not called');
       });
 
-      it('calls only the `save` cast function if the `save` option is enabled', function() {
+      it('calls only the `save` cast function if the `forSave` option is enabled', function() {
         const save = sinon.spy();
         const fetch = sinon.spy();
         const field = new Field({
@@ -349,7 +349,7 @@ describe('Field', function() {
             fetch
           }
         });
-        field.cast('bar value', 'a model instance', { save: true });
+        field.cast('bar value', 'a model instance', { forSave: true });
         expect(save, 'was called');
         expect(fetch, 'was not called');
       });

@@ -856,7 +856,7 @@ describe('Model', function() {
       const foo = new Foo();
       foo.foo = 'foo';
       foo.bar = 'bar';
-      foo.cast({ save: true });
+      foo.cast({ forSave: true });
 
       await expect(fooSaveCast, 'was called once');
     });
@@ -888,7 +888,7 @@ describe('Model', function() {
         const foo = new Foo();
         foo.foo = 'foo';
         foo.bar = 'bar';
-        foo.cast({ fields: ['bar'], save: true });
+        foo.cast({ fields: ['bar'], forSave: true });
 
         await expect(fooSaveCast, 'was not called');
         await expect(barSaveCast, 'was called once');
@@ -920,7 +920,7 @@ describe('Model', function() {
         const foo = new Foo();
         foo.foo = 'foo';
         foo.bar = 'bar';
-        foo.cast({ fields: [Foo.fields.foo, Foo.fields.bar], save: true });
+        foo.cast({ fields: [Foo.fields.foo, Foo.fields.bar], forSave: true });
 
         await expect(fooSaveCast, 'was called once');
         await expect(barSaveCast, 'was called once');
@@ -973,10 +973,10 @@ describe('Model', function() {
 
       const foo = new Foo();
       foo.bar = 'bar';
-      foo.cast({ fields: ['bar'], save: true });
+      foo.cast({ fields: ['bar'], forSave: true });
 
       expect(barCastSpy, 'to have calls satisfying', () => {
-        barCastSpy('bar', foo, { save: true, fetch: undefined });
+        barCastSpy('bar', foo, { forSave: true, forFetch: undefined });
       });
 
       barCastSpy.restore();
@@ -998,7 +998,7 @@ describe('Model', function() {
       const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
       const foo = new Foo();
 
-      foo.cast({ fields: ['bar'], save: true });
+      foo.cast({ fields: ['bar'], forSave: true });
       expect(barCastSpy, 'was not called');
 
       barCastSpy.restore();
@@ -1020,7 +1020,7 @@ describe('Model', function() {
       const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
       const foo = new Foo();
       foo.bar = null;
-      foo.cast({ fields: ['bar'], save: true });
+      foo.cast({ fields: ['bar'], forSave: true });
       expect(barCastSpy, 'was called once');
 
       barCastSpy.restore();
@@ -1043,7 +1043,7 @@ describe('Model', function() {
 
       const foo = new Foo();
       foo.bar = 'bar';
-      foo.cast({ fields: ['bar'], save: true });
+      foo.cast({ fields: ['bar'], forSave: true });
 
       expect(foo.bar, 'to be', 'new value');
     });
@@ -1065,7 +1065,7 @@ describe('Model', function() {
 
       const foo = new Foo();
       foo.bar = 'bar';
-      foo.cast({ fields: ['bar'], save: true });
+      foo.cast({ fields: ['bar'], forSave: true });
 
       expect(foo.bar, 'to be', 'bar');
     });
@@ -1087,7 +1087,7 @@ describe('Model', function() {
 
       const foo = new Foo();
       foo.bar = 'bar';
-      foo.cast({ fields: ['bar'], save: true });
+      foo.cast({ fields: ['bar'], forSave: true });
 
       expect(foo.bar, 'to be', null);
     });
@@ -1108,7 +1108,7 @@ describe('Model', function() {
       const foo = new Foo();
 
       expect(
-        foo.cast({ fields: ['bar'] }, { save: true }),
+        foo.cast({ fields: ['bar'] }, { forSave: true }),
         'to be fulfilled with',
         foo
       );
