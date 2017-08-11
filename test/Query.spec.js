@@ -421,7 +421,7 @@ describe('Query', function() {
       await expect(
         query.fetch(),
         'to be rejected with error satisfying',
-        new Query.errors.FetchError(new Error('fetch error'), query)
+        new Query.errors.FetchError({ error: new Error('fetch error'), query })
       );
       stub.restore();
     });
@@ -468,7 +468,7 @@ describe('Query', function() {
           await expect(
             query.fetch(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsFetchedError('no rows fetched', query)
+            new Query.errors.NoRowsFetchedError({ query })
           );
         });
       });
@@ -2391,7 +2391,7 @@ describe('Query', function() {
         await expect(
           query.fetch(),
           'to be rejected with error satisfying',
-          new Query.errors.NoRowsFetchedError('no rows fetched', imageQuery)
+          new Query.errors.NoRowsFetchedError({ query: imageQuery })
         );
       });
     });
@@ -2455,7 +2455,7 @@ describe('Query', function() {
         await expect(
           query.fetch(),
           'to be rejected with error satisfying',
-          new Query.errors.NoRowsFetchedError('no rows fetched', imageQuery)
+          new Query.errors.NoRowsFetchedError({ query: imageQuery })
         );
       });
     });
@@ -2533,7 +2533,7 @@ describe('Query', function() {
       await expect(
         query.count(),
         'to be rejected with error satisfying',
-        new Query.errors.CountError(new Error('count error'), query)
+        new Query.errors.CountError({ error: new Error('count error'), query })
       );
       stub.restore();
     });
@@ -2574,7 +2574,7 @@ describe('Query', function() {
           await expect(
             query.count(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsCountedError('no rows counted', query)
+            new Query.errors.NoRowsCountedError({ query })
           );
         });
       });
@@ -2842,7 +2842,10 @@ describe('Query', function() {
       await expect(
         query.insert(new User({ name: 'John Doe' })),
         'to be rejected with error satisfying',
-        new Query.errors.InsertError(new Error('insert error'), query)
+        new Query.errors.InsertError({
+          error: new Error('insert error'),
+          query
+        })
       );
       stub.restore();
     });
@@ -2967,7 +2970,7 @@ describe('Query', function() {
           await expect(
             query.insert(new User({ name: 'John Doe' })),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsInsertedError('no rows inserted', query)
+            new Query.errors.NoRowsInsertedError({ query })
           );
         });
       });
@@ -3305,7 +3308,7 @@ describe('Query', function() {
             await expect(
               query.insert([new User({ name: 'John Doe' })]),
               'to be rejected with error satisfying',
-              new Query.errors.NoRowsInsertedError('no rows inserted', query)
+              new Query.errors.NoRowsInsertedError({ query })
             );
           });
         });
@@ -3663,7 +3666,10 @@ describe('Query', function() {
       await expect(
         query.update(user),
         'to be rejected with error satisfying',
-        new Query.errors.UpdateError(new Error('update error'), query)
+        new Query.errors.UpdateError({
+          error: new Error('update error'),
+          query
+        })
       );
       stub.restore();
     });
@@ -3818,7 +3824,7 @@ describe('Query', function() {
           await expect(
             query.update(user),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsUpdatedError('no rows updated', query)
+            new Query.errors.NoRowsUpdatedError({ query })
           );
         });
       });
@@ -4138,7 +4144,10 @@ describe('Query', function() {
       await expect(
         query.delete(),
         'to be rejected with error satisfying',
-        new Query.errors.DeleteError(new Error('delete error'), query)
+        new Query.errors.DeleteError({
+          error: new Error('delete error'),
+          query
+        })
       );
       stub.restore();
     });
@@ -4173,7 +4182,7 @@ describe('Query', function() {
           await expect(
             query.delete(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsDeletedError('no rows deleted', query)
+            new Query.errors.NoRowsDeletedError({ query })
           );
         });
       });

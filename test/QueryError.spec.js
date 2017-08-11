@@ -19,14 +19,46 @@ User.fields = {
   }
 };
 
-describe('QueryError', function() {
+describe('QueryError', () => {
   it('extends KnormError', () => {
     expect(QueryError.prototype, 'to be a', KnormError);
   });
 
-  it('prepends error messages with the model name', function() {
-    expect(new QueryError('foo bar', new Query(User)), 'to satisfy', {
-      message: 'User: foo bar'
+  describe('when passed a knex error', () => {
+    const knexError = new Error(
+      'insert into "user" ("foo") values ($1) - column "foo" of relation "user" does not exist'
+    );
+
+    it('extracts the database error message from knex errors', () => {
+      expect(
+        new QueryError({ error: knexError, query: new Query(User) }),
+        'to satisfy',
+        {
+          message: 'User: column "foo" of relation "user" does not exist'
+        }
+      );
+    });
+
+    it('stores the passed error as `originalError`', () => {
+      expect(
+        new QueryError({ error: knexError, query: new Query(User) }),
+        'to satisfy',
+        {
+          originalError: knexError
+        }
+      );
+    });
+  });
+  describe('when not passed a knex error', () => {
+    it('formats a message from the constructor name', () => {
+      class SomethingWrongError extends QueryError {}
+      expect(
+        new SomethingWrongError({ query: new Query(User) }),
+        'to satisfy',
+        {
+          message: 'User: something wrong'
+        }
+      );
     });
   });
 });
