@@ -213,7 +213,7 @@ describe('queryWithSoftDelete', () => {
         await expect(
           query.delete(),
           'to be rejected with error satisfying',
-          new Query.errors.NoRowsDeletedError('no rows deleted', query)
+          new Query.errors.NoRowsDeletedError({ query })
         );
       });
 
@@ -295,7 +295,7 @@ describe('queryWithSoftDelete', () => {
         await expect(
           query.restore(),
           'to be rejected with error satisfying',
-          new Query.errors.NoRowsRestoredError('no rows restored', query)
+          new Query.errors.NoRowsRestoredError({ query })
         );
       });
 
