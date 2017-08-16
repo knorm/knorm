@@ -109,6 +109,139 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.prototype.getField', function() {
+    it("throws if the field doesn't exist in `Model.fields`", function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: Field.types.string
+        }
+      };
+
+      const foo = new Foo();
+      expect(
+        () => foo.getField('bar'),
+        'to throw',
+        new Error("Unknown field 'Foo.bar'")
+      );
+    });
+
+    it('returns a `Field` instance', function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: Field.types.string
+        }
+      };
+
+      const foo = new Foo();
+      expect(foo.getField('foo'), 'to be a', Field);
+    });
+
+    it('returns the correct field', function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: Field.types.string
+        },
+        bar: {
+          type: Field.types.string
+        }
+      };
+
+      const foo = new Foo();
+      expect(foo.getField('foo'), 'to equal', Foo.fields.foo);
+    });
+  });
+
+  describe('Model.prototype.getFields', function() {
+    it("returns all the model's fields if called with no arguments", function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: Field.types.string
+        }
+      };
+
+      const foo = new Foo();
+      expect(foo.getFields(), 'to equal', [Foo.fields.foo]);
+    });
+
+    it("throws if one the fields doesn't exist in `Model.fields`", function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: Field.types.string
+        }
+      };
+
+      const foo = new Foo();
+      expect(
+        () => foo.getFields(['bar']),
+        'to throw',
+        new Error("Unknown field 'Foo.bar'")
+      );
+    });
+
+    it('returns an array of `Field` instances', function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: Field.types.string
+        }
+      };
+
+      const foo = new Foo();
+      expect(foo.getFields(['foo']), 'to satisfy', [
+        expect.it('to be a', Field)
+      ]);
+    });
+
+    it('returns the correct fields', function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: Field.types.string
+        },
+        bar: {
+          type: Field.types.string
+        }
+      };
+
+      const foo = new Foo();
+      expect(foo.getFields(['bar', 'foo']), 'to satisfy', [
+        Foo.fields.bar,
+        Foo.fields.foo
+      ]);
+    });
+
+    it('returns the same fields if passed an array of field instances', function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: Field.types.string
+        },
+        bar: {
+          type: Field.types.string
+        }
+      };
+
+      const foo = new Foo();
+      expect(foo.getFields([Foo.fields.bar, Foo.fields.foo]), 'to satisfy', [
+        Foo.fields.bar,
+        Foo.fields.foo
+      ]);
+    });
+  });
+
   describe('Model.prototype.setData', function() {
     it('populates the instance with the data with the passed object', function() {
       class Foo extends Model {}
