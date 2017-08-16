@@ -242,6 +242,39 @@ describe('Field', function() {
     });
   });
 
+  describe('Field.prototype.throwValidationError', function() {
+    it('throws a `ValidationError`', function() {
+      class Foo extends Model {}
+      const field = new Field({
+        name: 'firstName',
+        model: Foo,
+        type: Field.types.string
+      });
+      expect(() => field.throwValidationError(), 'to throw', {
+        name: 'ValidationError'
+      });
+    });
+
+    it('throws a validation error from `Field.ValidationError`', function() {
+      // allows configuring the ValidationError class entirely
+      class CustomValidationError {}
+      const ValidationError = Field.ValidationError;
+      Field.ValidationError = CustomValidationError;
+      class Foo extends Model {}
+      const field = new Field({
+        name: 'firstName',
+        model: Foo,
+        type: Field.types.string
+      });
+      expect(
+        () => field.throwValidationError(),
+        'to throw',
+        new CustomValidationError()
+      );
+      Field.ValidationError = ValidationError;
+    });
+  });
+
   describe('Field.prototype.cast', function() {
     class User extends Model {}
 
