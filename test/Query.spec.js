@@ -3272,7 +3272,7 @@ describe('Query', function() {
           new User({ name: 'Jane Doe' })
         ]);
         await expect(spy, 'to have calls satisfying', () => {
-          spy(expect.it('to be an array'));
+          spy([{ name: 'John Doe' }, { name: 'Jane Doe' }]);
         });
         spy.restore();
       });
@@ -3310,6 +3310,137 @@ describe('Query', function() {
               'to be rejected with error satisfying',
               new Query.errors.NoRowsInsertedError({ query })
             );
+          });
+        });
+      });
+
+      describe('with a `batchSize` configured', () => {
+        it('does multiple insert operations with batched arrays of data', async function() {
+          const spy = sinon.spy(QueryBuilder.prototype, 'insert');
+          const query = new Query(User);
+          await query
+            .batchSize(1)
+            .insert([
+              new User({ name: 'John Doe' }),
+              new User({ name: 'Jane Doe' })
+            ]);
+          await expect(spy, 'to have calls satisfying', () => {
+            spy([{ name: 'John Doe' }]);
+            spy([{ name: 'Jane Doe' }]);
+          });
+          spy.restore();
+        });
+
+        it('creates the right batches', async function() {
+          const spy = sinon.spy(QueryBuilder.prototype, 'insert');
+          const users = [
+            { name: 'John Doe' },
+            { name: 'Jane Doe' },
+            { name: 'John Smith' },
+            { name: 'Jane Smith' }
+          ];
+
+          await new Query(User).batchSize(1).insert(users);
+          await expect(spy, 'to have calls satisfying', () => {
+            spy([{ name: 'John Doe' }]);
+            spy([{ name: 'Jane Doe' }]);
+            spy([{ name: 'John Smith' }]);
+            spy([{ name: 'Jane Smith' }]);
+          });
+
+          spy.reset();
+          await new Query(User).batchSize(2).insert(users);
+          await expect(spy, 'to have calls satisfying', () => {
+            spy([{ name: 'John Doe' }, { name: 'Jane Doe' }]);
+            spy([{ name: 'John Smith' }, { name: 'Jane Smith' }]);
+          });
+
+          spy.reset();
+          await new Query(User).batchSize(3).insert(users);
+          await expect(spy, 'to have calls satisfying', () => {
+            spy([
+              { name: 'John Doe' },
+              { name: 'Jane Doe' },
+              { name: 'John Smith' }
+            ]);
+            spy([{ name: 'Jane Smith' }]);
+          });
+
+          const allFourAtOnce = () => {
+            spy([
+              { name: 'John Doe' },
+              { name: 'Jane Doe' },
+              { name: 'John Smith' },
+              { name: 'Jane Smith' }
+            ]);
+          };
+
+          spy.reset();
+          await new Query(User).batchSize(4).insert(users);
+          await expect(spy, 'to have calls satisfying', allFourAtOnce);
+
+          spy.reset();
+          await new Query(User).batchSize(5).insert(users);
+          await expect(spy, 'to have calls satisfying', allFourAtOnce);
+
+          spy.reset();
+          await new Query(User).batchSize(0).insert(users);
+          await expect(spy, 'to have calls satisfying', allFourAtOnce);
+
+          spy.restore();
+        });
+
+        it('returns a single array of inserted data', async function() {
+          const query = new Query(User).batchSize(1);
+          await expect(
+            query.insert([
+              new User({ id: 1, name: 'John Doe' }),
+              new User({ id: 2, name: 'Jane Doe' }),
+              new User({ id: 3, name: 'John Smith' })
+            ]),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'John Doe' }),
+              new User({ id: 2, name: 'Jane Doe' }),
+              new User({ id: 3, name: 'John Smith' })
+            ]
+          );
+        });
+
+        describe('if no rows are inserted', function() {
+          let insertStub;
+
+          before(function() {
+            insertStub = sinon.stub(QueryBuilder.prototype, 'insert');
+          });
+
+          beforeEach(function() {
+            insertStub.reset();
+            insertStub.returns(Promise.resolve([]));
+          });
+
+          after(function() {
+            insertStub.restore();
+          });
+
+          it('resolves with am empty array', async function() {
+            const query = new Query(User).batchSize(1);
+            await expect(
+              query.insert([new User({ name: 'John Doe' })]),
+              'to be fulfilled with value satisfying',
+              []
+            );
+          });
+
+          describe("with 'require' option configured", function() {
+            it('rejects with a NoRowsInsertedError', async function() {
+              const query = new Query(User).batchSize(1).require();
+              await expect(
+                query.insert([new User({ name: 'John Doe' })]),
+                'to be rejected with error satisfying',
+                new Query.errors.NoRowsInsertedError({ query })
+              );
+            });
           });
         });
       });
