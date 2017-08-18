@@ -1935,9 +1935,9 @@ describe('Model', function() {
           .stub(UserQuery.prototype, 'setOptions')
           .returnsThis();
         const user = new User({ name: 'John Doe' });
-        await expect(user.insert({ foo: 'bar' }), 'to be fulfilled');
+        await expect(user.insert({ returning: 'name' }), 'to be fulfilled');
         await expect(stub, 'to have calls satisfying', () => {
-          stub({ foo: 'bar' });
+          stub({ returning: 'name' });
         });
         stub.restore();
       });
@@ -1997,9 +1997,9 @@ describe('Model', function() {
         const stub = sinon
           .stub(UserQuery.prototype, 'setOptions')
           .returnsThis();
-        await expect(user.update({ foo: 'bar' }), 'to be fulfilled');
+        await expect(user.update({ returning: 'name' }), 'to be fulfilled');
         await expect(stub, 'to have calls satisfying', () => {
-          stub({ foo: 'bar' });
+          stub({ returning: 'name' });
         });
         stub.restore();
       });
@@ -2301,7 +2301,7 @@ describe('Model', function() {
         const data = { name: 'John Doe' };
         await expect(User.save(data), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(data);
+          spy(data, undefined); // options are undefined
         });
         await expect(
           knex,
@@ -2319,7 +2319,7 @@ describe('Model', function() {
         user.name = 'Jane Doe';
         await expect(User.save(user), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(user);
+          spy(user, undefined); // options are undefined
         });
         await expect(
           knex,
@@ -2331,13 +2331,13 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.setOptions', async function() {
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
+      it('passes any options passed to Query.prototype.save', async function() {
+        const spy = sinon.spy(UserQuery.prototype, 'save');
         const data = { name: 'John Doe' };
         const options = { require: true };
         await expect(User.save(data, options), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(options);
+          spy(data, options);
         });
         spy.restore();
       });
@@ -2349,7 +2349,7 @@ describe('Model', function() {
         const data = { id: 1, name: 'John Doe' };
         await expect(User.insert(data), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(data);
+          spy(data, undefined); // options are undefined
         });
         await expect(
           knex,
@@ -2361,13 +2361,13 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.setOptions', async function() {
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
+      it('passes any options passed to Query.prototype.insert', async function() {
+        const spy = sinon.spy(UserQuery.prototype, 'insert');
         const data = { name: 'John Doe' };
         const options = { require: true };
         await expect(User.insert(data, options), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(options);
+          spy(data, options);
         });
         spy.restore();
       });
@@ -2380,7 +2380,7 @@ describe('Model', function() {
         user.name = 'Jane Doe';
         await expect(User.update(user), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(user);
+          spy(user, undefined); // options are undefined
         });
         await expect(
           knex,
@@ -2392,14 +2392,14 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.setOptions', async function() {
+      it('passes any options passed to Query.prototype.update', async function() {
         const user = await User.insert({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
+        const spy = sinon.spy(UserQuery.prototype, 'update');
         user.name = 'Jane Doe';
         const options = { require: true };
         await expect(User.update(user, options), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(options);
+          spy(user, options);
         });
         spy.restore();
       });
@@ -2413,14 +2413,14 @@ describe('Model', function() {
           new User({ id: 1, name: 'John Doe' })
         ]);
         await expect(spy, 'to have calls satisfying', () => {
-          spy();
+          spy(undefined); // options are undefined
         });
         spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.setOptions', async function() {
+      it('passes any options passed to Query.prototype.fetch', async function() {
         await User.save({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
+        const spy = sinon.spy(UserQuery.prototype, 'fetch');
         const options = { forge: false };
         await expect(
           User.fetch(options),
@@ -2442,14 +2442,14 @@ describe('Model', function() {
           new User({ id: 1, name: 'John Doe' })
         ]);
         await expect(spy, 'to have calls satisfying', () => {
-          spy();
+          spy(undefined); // options are undefined
         });
         spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.setOptions', async function() {
+      it('passes any options passed to Query.prototype.delete', async function() {
         await User.save({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
+        const spy = sinon.spy(UserQuery.prototype, 'delete');
         const options = { forge: false };
         await expect(
           User.delete(options),

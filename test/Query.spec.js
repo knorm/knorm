@@ -413,6 +413,18 @@ describe('Query', function() {
       );
     });
 
+    it('accepts options', async function() {
+      const query = new Query(User);
+      await expect(
+        query.fetch({ first: true, fields: ['id', 'name'] }),
+        'to be fulfilled with value exhaustively satisfying',
+        new User({
+          id: 1,
+          name: 'User 1'
+        })
+      );
+    });
+
     it('rejects with a FetchError if a database error occurs', async function() {
       const stub = sinon
         .stub(QueryBuilder.prototype, 'select')
@@ -2787,6 +2799,31 @@ describe('Query', function() {
       ]);
     });
 
+    it('accepts options', async function() {
+      const query = new Query(User);
+      await expect(
+        query.insert(new User({ name: 'John Doe' }), { returning: 'name' }),
+        'to be fulfilled with value satisfying',
+        new User({ name: 'John Doe' })
+      );
+    });
+
+    it('rejects with a InsertError if the insert operation fails', async function() {
+      const stub = sinon
+        .stub(QueryBuilder.prototype, 'insert')
+        .returns(Promise.reject(new Error('insert error')));
+      const query = new Query(User);
+      await expect(
+        query.insert(new User({ name: 'John Doe' })),
+        'to be rejected with error satisfying',
+        new Query.errors.InsertError({
+          error: new Error('insert error'),
+          query
+        })
+      );
+      stub.restore();
+    });
+
     describe('with a `returning` option', function() {
       it('returns only the fields requested', async function() {
         const query = new Query(User).returning('name');
@@ -2832,22 +2869,6 @@ describe('Query', function() {
           })
         );
       });
-    });
-
-    it('rejects with a InsertError if the insert operation fails', async function() {
-      const stub = sinon
-        .stub(QueryBuilder.prototype, 'insert')
-        .returns(Promise.reject(new Error('insert error')));
-      const query = new Query(User);
-      await expect(
-        query.insert(new User({ name: 'John Doe' })),
-        'to be rejected with error satisfying',
-        new Query.errors.InsertError({
-          error: new Error('insert error'),
-          query
-        })
-      );
-      stub.restore();
     });
 
     describe('with a custom `id` field', function() {
@@ -3513,6 +3534,63 @@ describe('Query', function() {
       });
     });
 
+    it('casts updated fields configured with pre-save cast functions before validating them', async function() {
+      const query = new Query(User);
+      user.jsonField = ['foo', 'bar'];
+      await expect(query.update(user), 'to be fulfilled');
+      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+        {
+          id: 1,
+          name: 'John Doe',
+          json_field: expect.it(
+            'when passed as parameter to',
+            value => {
+              if (typeof value === 'string') {
+                // postgres 9.1. (on CI) doesn't automatically JSON.parse
+                return JSON.parse(value);
+              }
+              return value;
+            },
+            'to equal',
+            ['foo', 'bar']
+          )
+        }
+      ]);
+    });
+
+    it('accepts options', async function() {
+      await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
+      const query = new Query(User);
+      await expect(
+        query.update({ name: 'Foo' }, { where: { id: 1 } }),
+        'to be fulfilled'
+      );
+      await expect(
+        knex,
+        'with table',
+        User.table,
+        'to have sorted rows satisfying',
+        [{ id: 1, name: 'Foo' }, { id: 2, name: 'Jane Doe' }]
+      );
+    });
+
+    it('rejects with a UpdateError if the update operation fails', async function() {
+      const stub = sinon
+        .stub(QueryBuilder.prototype, 'update')
+        .returns(Promise.reject(new Error('update error')));
+      const query = new Query(User);
+      user.name = 'Jane Doe';
+      await expect(
+        query.update(user),
+        'to be rejected with error satisfying',
+        new Query.errors.UpdateError({
+          error: new Error('update error'),
+          query
+        })
+      );
+      stub.restore();
+    });
+
     describe("with a 'where' option", function() {
       it('updates only the rows matching the query', async function() {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
@@ -3524,6 +3602,18 @@ describe('Query', function() {
           User.table,
           'to have sorted rows satisfying',
           [{ id: 1, name: 'Foo' }, { id: 2, name: 'Jane Doe' }]
+        );
+      });
+    });
+
+    describe("with a 'returning' option", function() {
+      it('returns instances populated with only the requested fields', async function() {
+        await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
+        const query = new Query(User).returning(['id', 'name']);
+        await expect(
+          query.update({ name: 'Foo' }),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [new User({ id: 1, name: 'Foo' }), new User({ id: 2, name: 'Foo' })]
         );
       });
     });
@@ -3713,30 +3803,6 @@ describe('Query', function() {
       });
     });
 
-    it('casts updated fields configured with pre-save cast functions before validating them', async function() {
-      const query = new Query(User);
-      user.jsonField = ['foo', 'bar'];
-      await expect(query.update(user), 'to be fulfilled');
-      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 1,
-          name: 'John Doe',
-          json_field: expect.it(
-            'when passed as parameter to',
-            value => {
-              if (typeof value === 'string') {
-                // postgres 9.1. (on CI) doesn't automatically JSON.parse
-                return JSON.parse(value);
-              }
-              return value;
-            },
-            'to equal',
-            ['foo', 'bar']
-          )
-        }
-      ]);
-    });
-
     describe('with a `returning` option', function() {
       it('returns only the fields requested', async function() {
         const query = new Query(User).returning('name');
@@ -3786,23 +3852,6 @@ describe('Query', function() {
           })
         );
       });
-    });
-
-    it('rejects with a UpdateError if the update operation fails', async function() {
-      const stub = sinon
-        .stub(QueryBuilder.prototype, 'update')
-        .returns(Promise.reject(new Error('update error')));
-      const query = new Query(User);
-      user.name = 'Jane Doe';
-      await expect(
-        query.update(user),
-        'to be rejected with error satisfying',
-        new Query.errors.UpdateError({
-          error: new Error('update error'),
-          query
-        })
-      );
-      stub.restore();
     });
 
     describe('with a custom id field', function() {
@@ -3989,13 +4038,24 @@ describe('Query', function() {
       const user2 = new User({ name: 'Jane Doe' });
       await expect(query.save([user1, user2]), 'to be fulfilled');
       await expect(spy, 'to have calls satisfying', () => {
-        spy([user1, user2]);
+        spy([user1, user2], undefined); // options are undefined
       });
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
         { id: 1, name: 'John Doe' },
         { id: 2, name: 'Jane Doe' }
       ]);
       spy.restore();
+    });
+
+    it('proxies options to Query.prototype.insert', async function() {
+      const query = new Query(User);
+      await expect(
+        query.save([{ name: 'John Doe' }, { name: 'Jane Doe' }], {
+          returning: 'id'
+        }),
+        'to be fulfilled with sorted rows exhaustively satisfying',
+        [new User({ id: 1 }), new User({ id: 2 })]
+      );
     });
 
     describe('when passed an object', function() {
@@ -4005,7 +4065,7 @@ describe('Query', function() {
         const user = new User({ name: 'John Doe' });
         await expect(query.save(user), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(user);
+          spy(user, undefined); // options are undefined
         });
         await expect(
           knex,
@@ -4024,7 +4084,7 @@ describe('Query', function() {
         const user = { id: 1, name: 'Jane Doe' };
         await expect(query.save(user), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
-          spy(user);
+          spy(user, undefined); // options are undefined
         });
         await expect(
           knex,
@@ -4034,6 +4094,19 @@ describe('Query', function() {
           [{ id: 1, name: 'Jane Doe' }]
         );
         spy.restore();
+      });
+
+      it('proxies options to Query.prototype.update', async function() {
+        await new Query(User).insert(new User({ id: 1, name: 'John Doe' }));
+        const query = new Query(User);
+        await expect(
+          query.save(
+            { id: 1, name: 'Jane Doe' },
+            { returning: ['id', 'name', 'confirmed'] }
+          ),
+          'to be fulfilled with value exhaustively satisfying',
+          new User({ id: 1, name: 'Jane Doe', confirmed: false })
+        );
       });
     });
   });
@@ -4114,6 +4187,33 @@ describe('Query', function() {
           int_to_string: null
         }
       ]);
+    });
+
+    it('accepts options', async function() {
+      const query = new Query(User);
+      await expect(query.delete({ where: { id: 1 } }), 'to be fulfilled');
+      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+        {
+          id: 2,
+          name: 'Jane Doe'
+        }
+      ]);
+    });
+
+    it('rejects with a DeleteError if the delete operation fails', async function() {
+      const stub = sinon
+        .stub(QueryBuilder.prototype, 'delete')
+        .returns(Promise.reject(new Error('delete error')));
+      const query = new Query(User);
+      await expect(
+        query.delete(),
+        'to be rejected with error satisfying',
+        new Query.errors.DeleteError({
+          error: new Error('delete error'),
+          query
+        })
+      );
+      stub.restore();
     });
 
     describe("with a 'where' option", function() {
@@ -4265,22 +4365,6 @@ describe('Query', function() {
           await expect(knex, 'with table', User.table, 'not to be empty');
         });
       });
-    });
-
-    it('rejects with a DeleteError if the delete operation fails', async function() {
-      const stub = sinon
-        .stub(QueryBuilder.prototype, 'delete')
-        .returns(Promise.reject(new Error('delete error')));
-      const query = new Query(User);
-      await expect(
-        query.delete(),
-        'to be rejected with error satisfying',
-        new Query.errors.DeleteError({
-          error: new Error('delete error'),
-          query
-        })
-      );
-      stub.restore();
     });
 
     describe('if no row is deleted', function() {
