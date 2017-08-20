@@ -51,7 +51,8 @@
     "database"
   ],
   "dependencies": {
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "validator": "^8.0.0"
   },
   "repository": {
     "type": "git",
