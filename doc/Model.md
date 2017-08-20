@@ -16,8 +16,8 @@ Model.idField = 'email';
 // then Model is expected to have a field named 'email'
 Model.fields = {
   email: {
-    type: Field.types.string,
-    required: true,
+    type: 'email', // or type: 'string' if you don't need to validate the emails
+    required: true
   },
   // ... other fields
 };

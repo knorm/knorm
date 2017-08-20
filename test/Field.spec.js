@@ -778,6 +778,15 @@ describe('Field', function() {
           });
           await expect(field.validate(Buffer.from('')), 'to be fulfilled');
         });
+
+        it("email values against the 'email' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.email
+          });
+          await expect(field.validate('foo@bar.com'), 'to be fulfilled');
+        });
       });
 
       describe('rejects for invalid types', function() {
@@ -959,6 +968,30 @@ describe('Field', function() {
             type: Field.types.binary
           });
           await expect(field.validate({}), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        it("invalid email values against the 'email' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.email
+          });
+          await expect(field.validate('foo@bar'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        it("integer values against the 'email' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.email
+          });
+          await expect(field.validate(1), 'to be rejected with', {
             name: 'ValidationError',
             type: 'TypeError'
           });
