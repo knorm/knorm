@@ -2434,6 +2434,33 @@ describe('Model', function() {
       });
     });
 
+    describe('Model.count', function() {
+      it('counts data from the database via Query.prototype.count', async function() {
+        await User.save({ name: 'John Doe' });
+        const spy = sinon.spy(UserQuery.prototype, 'count');
+        await expect(User.count(), 'to be fulfilled with value satisfying', 1);
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(undefined); // options are undefined
+        });
+        spy.restore();
+      });
+
+      it('passes any options passed to Query.prototype.count', async function() {
+        await User.save({ name: 'John Doe' });
+        const spy = sinon.spy(UserQuery.prototype, 'count');
+        const options = { field: 'id' };
+        await expect(
+          User.count(options),
+          'to be fulfilled with value satisfying',
+          1
+        );
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(options);
+        });
+        spy.restore();
+      });
+    });
+
     describe('Model.delete', function() {
       it('deletes data from the database via Query.prototype.delete', async function() {
         await User.save({ name: 'John Doe' });
