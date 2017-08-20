@@ -228,6 +228,19 @@ describe('Field', function() {
         }
       });
     });
+
+    it('clones the schemas for json(b) fields', function() {
+      class Foo extends Model {}
+      const field = new Field({
+        name: 'bar',
+        model: Foo,
+        type: Field.types.json,
+        schema: { foo: { required: true } }
+      });
+      expect(field.clone(), 'to satisfy', {
+        validators: { schema: { foo: { required: true } } }
+      });
+    });
   });
 
   describe('Field.prototype.getColumnName', function() {
@@ -547,7 +560,7 @@ describe('Field', function() {
     });
 
     describe('type', function() {
-      it('rejects with a FieldTypeError if an invalid value is set', async function() {
+      it('rejects with a TypeError if an invalid value is set', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -666,45 +679,6 @@ describe('Field', function() {
             type: Field.types.uuidV4
           });
           await expect(field.validate(uuid.v4()), 'to be fulfilled');
-        });
-
-        it("json string against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(field.validate('"foo"'), 'to be fulfilled');
-        });
-
-        it("json string object against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(field.validate('{"foo":1}'), 'to be fulfilled');
-        });
-
-        it("json string array against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(
-            field.validate('[{ "foo": "foo", "bar": "bar" }]'),
-            'to be fulfilled'
-          );
-        });
-
-        it("json string objects against the 'jsonb' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.jsonb
-          });
-          await expect(field.validate('{"foo":1}'), 'to be fulfilled');
         });
 
         it("floating point values against the 'decimal' type", async function() {
@@ -873,10 +847,7 @@ describe('Field', function() {
           await expect(
             field.validate('not-valid-uuid'),
             'to be rejected with',
-            {
-              name: 'ValidationError',
-              type: 'TypeError'
-            }
+            { name: 'ValidationError', type: 'TypeError' }
           );
         });
 
@@ -891,50 +862,6 @@ describe('Field', function() {
             name: 'ValidationError',
             type: 'TypeError'
           });
-        });
-
-        it("invalid json against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(
-            field.validate('{not: "valid"}'),
-            'to be rejected with',
-            {
-              name: 'ValidationError',
-              type: 'TypeError'
-            }
-          );
-        });
-
-        it("false against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(field.validate(false), 'to be rejected with', {
-            name: 'ValidationError',
-            type: 'TypeError'
-          });
-        });
-
-        it("invalid json against the 'jsonb' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.jsonb
-          });
-          await expect(
-            field.validate('{not: "valid"}'),
-            'to be rejected with',
-            {
-              name: 'ValidationError',
-              type: 'TypeError'
-            }
-          );
         });
 
         it("strings against the 'decimal' type", async function() {
@@ -1420,6 +1347,172 @@ describe('Field', function() {
           }
         });
         await expect(field.validate(), 'to be fulfilled');
+      });
+    });
+
+    describe('for `json` and `jsonb` fields', function() {
+      describe('when passed a string value', function() {
+        it("fulfils for a valid json string against the 'json' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json
+          });
+          await expect(
+            field.validate('[{ "foo": "foo", "bar": "bar" }]'),
+            'to be fulfilled'
+          );
+        });
+
+        it("fulfils for valid json strings against the 'jsonb' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.jsonb
+          });
+          await expect(field.validate('{"foo":1}'), 'to be fulfilled');
+        });
+
+        it("rejects for invalid json against the 'json' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json
+          });
+          await expect(
+            field.validate('{not: "valid"}'),
+            'to be rejected with',
+            { name: 'ValidationError', type: 'TypeError' }
+          );
+        });
+
+        it("rejects for invalid json against the 'jsonb' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.jsonb
+          });
+          await expect(field.validate(']'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+      });
+
+      describe('with `schema` validators configured', function() {
+        const field = new Field({
+          name: 'json',
+          model: User,
+          type: Field.types.json,
+          schema: {
+            foo: { required: true, type: Field.types.string },
+            bar: [{ type: Field.types.date }],
+            quux: []
+          }
+        });
+
+        it('runs the validators against object values', async function() {
+          await expect(field.validate({ foo: 1 }), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+          await expect(field.validate({ foo: 'bar' }), 'to be fulfilled');
+        });
+
+        it('runs the validators against every item in an array value', async function() {
+          await expect(
+            field.validate({ foo: 'bar', bar: new Date() }),
+            'to be rejected with',
+            { name: 'ValidationError', type: 'TypeError' }
+          );
+          await expect(
+            field.validate({ foo: 'bar', bar: [new Date()] }),
+            'to be fulfilled'
+          );
+        });
+
+        it('passes validation for every item if the schema validator is an empty array', async function() {
+          await expect(
+            field.validate({ foo: 'bar', quux: [] }),
+            'to be fulfilled'
+          );
+          await expect(
+            field.validate({ foo: 'bar', quux: [1] }),
+            'to be fulfilled'
+          );
+          await expect(
+            field.validate({ foo: 'bar', quux: ['foo'] }),
+            'to be fulfilled'
+          );
+        });
+
+        it('parses string values and runs the validators against the parsed value', async function() {
+          await expect(field.validate('{"foo":null}'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'RequiredError'
+          });
+          await expect(field.validate('{"foo":"bar"}'), 'to be fulfilled');
+        });
+
+        it('rejects if passed an array value for a field that is not configured as an array', async function() {
+          await expect(
+            field.validate({ foo: ['bar'] }),
+            'to be rejected with',
+            { name: 'ValidationError', type: 'TypeError' }
+          );
+        });
+
+        it('rejects if passed a non-array value for a field that is configured as an array', async function() {
+          await expect(
+            field.validate({ bar: new Date() }),
+            'to be rejected with',
+            { name: 'ValidationError', type: 'TypeError' }
+          );
+        });
+
+        describe('as an array', function() {
+          const field = new Field({
+            name: 'json',
+            model: User,
+            type: Field.types.jsonb,
+            schema: [{ foo: { required: true, type: Field.types.string } }]
+          });
+
+          it('rejects if the value is not an array', async function() {
+            await expect(
+              field.validate({ foo: ['bar'] }),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'TypeError' }
+            );
+          });
+
+          it('rejects if one item in the value fails validation', async function() {
+            await expect(
+              field.validate([{ foo: 'foo' }, { foo: 'bar' }, { foo: 1 }]),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'TypeError' }
+            );
+          });
+
+          it('fulfils if every item in the value passes validation', async function() {
+            await expect(
+              field.validate([{ foo: 'bar' }, { foo: 'quux' }]),
+              'to be fulfilled'
+            );
+          });
+
+          it('fulfils for all array values if `schema` is an empty array', async function() {
+            const field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.jsonb,
+              schema: []
+            });
+            await expect(field.validate([]), 'to be fulfilled');
+            await expect(field.validate(['foo']), 'to be fulfilled');
+            await expect(field.validate([[1]]), 'to be fulfilled');
+          });
+        });
       });
     });
   });
