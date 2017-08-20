@@ -2537,6 +2537,15 @@ describe('Query', function() {
       );
     });
 
+    it('accepts the other Query options', async function() {
+      const query = new Query(User);
+      await expect(
+        query.count({ where: { confirmed: true } }),
+        'to be fulfilled with',
+        1
+      );
+    });
+
     it('rejects with a CountError if a database error occurs', async function() {
       const stub = sinon
         .stub(QueryBuilder.prototype, 'first')
