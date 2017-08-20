@@ -787,6 +787,95 @@ describe('Query', function() {
       });
     });
 
+    describe("with 'distinct' configured", function() {
+      it('resolves with instances matching the distinct fields', async function() {
+        await expect(
+          new Query(User).distinct('age').fetch(),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ age: 10 })]
+        );
+        await expect(
+          new Query(User).distinct(['id', 'name']).fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+        await expect(
+          new Query(User).distinct(['name']).fetch(),
+          'to be fulfilled with value satisfying',
+          rows =>
+            expect(
+              rows,
+              'when sorted by',
+              (a, b) => (a.name > b.name ? 1 : -1),
+              'to exhaustively satisfy',
+              [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
+            )
+        );
+      });
+
+      it('resolves with all instances matching the query', async function() {
+        await expect(
+          new Query(User).distinct(['id', 'name']).fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('supports instances fetched without an id field', async function() {
+        await expect(
+          new Query(User).distinct(['name']).fetch(),
+          'to be fulfilled with value satisfying',
+          rows =>
+            expect(
+              rows,
+              'when sorted by',
+              (a, b) => (a.name > b.name ? 1 : -1),
+              'to exhaustively satisfy',
+              [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
+            )
+        );
+      });
+
+      it('supports leftJoin', async function() {
+        await expect(
+          new Query(User).distinct(['name']).leftJoin(Image).fetch(),
+          'to be fulfilled with value satisfying',
+          rows =>
+            expect(
+              rows,
+              'when sorted by',
+              (a, b) => (a.name > b.name ? 1 : -1),
+              'to exhaustively satisfy',
+              [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
+            )
+        );
+      });
+
+      it('supports innerJoin', async function() {
+        await knex(ImageCategory.table).insert([
+          { id: 1, name: 'User images' }
+        ]);
+        await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
+        await knex(Image.table).insert([{ id: 2, user_id: 2, category_id: 1 }]);
+        await expect(
+          new Query(User).distinct(['id', 'name']).innerJoin(Image).fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+        await truncateImageTable();
+        await truncateImageCategoryTable();
+      });
+    });
+
     describe("with a 'whereNot' configured", function() {
       it('resolves with only the rows matching the query', async function() {
         const query = new Query(User).whereNot({ id: 1 });
@@ -1093,31 +1182,12 @@ describe('Query', function() {
     describe("with a 'leftJoin' configured", function() {
       before(async function() {
         await knex(ImageCategory.table).insert([
-          {
-            id: 1,
-            name: 'User images'
-          }
+          { id: 1, name: 'User images' }
         ]);
-        await knex(Image.table).insert([
-          {
-            id: 1,
-            user_id: 1,
-            category_id: 1
-          }
-        ]);
+        await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
         await knex(Message.table).insert([
-          {
-            id: 1,
-            text: 'Hi User 2',
-            sender_id: 1,
-            receiver_id: 2
-          },
-          {
-            id: 2,
-            text: 'Hi User 1',
-            sender_id: 2,
-            receiver_id: 1
-          }
+          { id: 1, text: 'Hi User 2', sender_id: 1, receiver_id: 2 },
+          { id: 2, text: 'Hi User 1', sender_id: 2, receiver_id: 1 }
         ]);
       });
 
@@ -2347,18 +2417,9 @@ describe('Query', function() {
     describe("with an 'innerJoin' configured", function() {
       before(async function() {
         await knex(ImageCategory.table).insert([
-          {
-            id: 1,
-            name: 'User images'
-          }
+          { id: 1, name: 'User images' }
         ]);
-        await knex(Image.table).insert([
-          {
-            id: 1,
-            user_id: 1,
-            category_id: 1
-          }
-        ]);
+        await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
       });
 
       after(async function() {
@@ -2534,6 +2595,15 @@ describe('Query', function() {
         query.count({ distinct: User.fields.age }),
         'to be fulfilled with',
         1
+      );
+    });
+
+    it("throws an error if multiple 'distinct' fields are configured", async function() {
+      const query = new Query(User);
+      await expect(
+        query.count({ distinct: ['id', User.fields.age] }),
+        'to be rejected with error satisfying',
+        new Error('Cannot count multiple distinct fields')
       );
     });
 
