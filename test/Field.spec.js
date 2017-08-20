@@ -140,7 +140,7 @@ describe('Field', function() {
     });
 
     describe('with `cast` options', function() {
-      it('throws if `cast.save` is not a function', function() {
+      it('throws if `cast.forSave` is not a function', function() {
         class Foo extends Model {}
         expect(
           () =>
@@ -149,7 +149,7 @@ describe('Field', function() {
               model: Foo,
               type: Field.types.string,
               cast: {
-                save: 'foo'
+                forSave: 'foo'
               }
             }),
           'to throw',
@@ -159,7 +159,7 @@ describe('Field', function() {
         );
       });
 
-      it('throws if `cast.fetch` is not a function', function() {
+      it('throws if `cast.forFetch` is not a function', function() {
         class Foo extends Model {}
         expect(
           () =>
@@ -168,7 +168,7 @@ describe('Field', function() {
               model: Foo,
               type: Field.types.string,
               cast: {
-                fetch: 'foo'
+                forFetch: 'foo'
               }
             }),
           'to throw',
@@ -219,12 +219,12 @@ describe('Field', function() {
         model: Foo,
         type: Field.types.string,
         cast: {
-          save() {}
+          forSave() {}
         }
       });
       expect(field.clone(), 'to satisfy', {
         castors: {
-          save() {}
+          forSave() {}
         }
       });
     });
@@ -292,99 +292,99 @@ describe('Field', function() {
       });
     });
 
-    describe('with a `save` cast function', function() {
-      it('calls the function with the value if the `save` option is enabled', function() {
-        const save = sinon.spy();
+    describe('with a `forSave` cast function', function() {
+      it('calls the function with the value if the `forSave` option is enabled', function() {
+        const forSave = sinon.spy();
         const field = new Field({
           name: 'firstName',
           model: User,
           type: Field.types.string,
           cast: {
-            save
+            forSave
           }
         });
         field.cast('bar value', 'a model instance', { forSave: true });
-        expect(save, 'was called with', 'bar value');
+        expect(forSave, 'was called with', 'bar value');
       });
 
       it('calls the function with `this` set to the passed model instance', function() {
-        const save = sinon.spy();
+        const forSave = sinon.spy();
         const field = new Field({
           name: 'firstName',
           model: User,
           type: Field.types.string,
           cast: {
-            save
+            forSave
           }
         });
         field.cast('bar value', 'a model instance', { forSave: true });
-        expect(save, 'was called on', 'a model instance');
+        expect(forSave, 'was called on', 'a model instance');
       });
     });
 
-    describe('with a `fetch` cast function', function() {
-      it('calls the function with the value if the `fetch` option is enabled', function() {
-        const fetch = sinon.spy();
+    describe('with a `forFetch` cast function', function() {
+      it('calls the function with the value if the `forFetch` option is enabled', function() {
+        const forFetch = sinon.spy();
         const field = new Field({
           name: 'firstName',
           model: User,
           type: Field.types.string,
           cast: {
-            fetch
+            forFetch
           }
         });
         field.cast('bar value', 'a model instance', { forFetch: true });
-        expect(fetch, 'was called with', 'bar value');
+        expect(forFetch, 'was called with', 'bar value');
       });
 
       it('calls the function with `this` set to the passed model instance', function() {
-        const fetch = sinon.spy();
+        const forFetch = sinon.spy();
         const field = new Field({
           name: 'firstName',
           model: User,
           type: Field.types.string,
           cast: {
-            fetch
+            forFetch
           }
         });
         field.cast('bar value', 'a model instance', { forFetch: true });
-        expect(fetch, 'was called on', 'a model instance');
+        expect(forFetch, 'was called on', 'a model instance');
       });
     });
 
-    describe('with both `fetch` and `save` cast functions', function() {
-      it('calls only the `fetch` cast function if the `forFetch` option is enabled', function() {
-        const save = sinon.spy();
-        const fetch = sinon.spy();
+    describe('with both `forFetch` and `forSave` cast functions', function() {
+      it('calls only the `forFetch` cast function if the `forFetch` option is enabled', function() {
+        const forSave = sinon.spy();
+        const forFetch = sinon.spy();
         const field = new Field({
           name: 'firstName',
           model: User,
           type: Field.types.string,
           cast: {
-            save,
-            fetch
+            forSave,
+            forFetch
           }
         });
         field.cast('bar value', 'a model instance', { forFetch: true });
-        expect(fetch, 'was called');
-        expect(save, 'was not called');
+        expect(forFetch, 'was called');
+        expect(forSave, 'was not called');
       });
 
-      it('calls only the `save` cast function if the `forSave` option is enabled', function() {
-        const save = sinon.spy();
-        const fetch = sinon.spy();
+      it('calls only the `forSave` cast function if the `forSave` option is enabled', function() {
+        const forSave = sinon.spy();
+        const forFetch = sinon.spy();
         const field = new Field({
           name: 'firstName',
           model: User,
           type: Field.types.string,
           cast: {
-            save,
-            fetch
+            forSave,
+            forFetch
           }
         });
         field.cast('bar value', 'a model instance', { forSave: true });
-        expect(save, 'was called');
-        expect(fetch, 'was not called');
+        expect(forSave, 'was called');
+        expect(forFetch, 'was not called');
       });
     });
   });

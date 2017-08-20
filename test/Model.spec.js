@@ -982,7 +982,7 @@ describe('Model', function() {
           required: true,
           type: Field.types.string,
           cast: {
-            save: fooSaveCast
+            forSave: fooSaveCast
           }
         },
         bar: {
@@ -1011,14 +1011,14 @@ describe('Model', function() {
             required: true,
             type: Field.types.string,
             cast: {
-              save: fooSaveCast
+              forSave: fooSaveCast
             }
           },
           bar: {
             required: true,
             type: Field.types.string,
             cast: {
-              save: barSaveCast
+              forSave: barSaveCast
             }
           }
         };
@@ -1043,14 +1043,14 @@ describe('Model', function() {
             required: true,
             type: Field.types.string,
             cast: {
-              save: fooSaveCast
+              forSave: fooSaveCast
             }
           },
           bar: {
             required: true,
             type: Field.types.string,
             cast: {
-              save: barSaveCast
+              forSave: barSaveCast
             }
           }
         };
@@ -1072,14 +1072,14 @@ describe('Model', function() {
             required: true,
             type: Field.types.string,
             cast: {
-              save() {}
+              forSave() {}
             }
           },
           bar: {
             required: true,
             type: Field.types.string,
             cast: {
-              save() {}
+              forSave() {}
             }
           }
         };
@@ -1102,7 +1102,7 @@ describe('Model', function() {
           required: true,
           type: Field.types.string,
           cast: {
-            save() {}
+            forSave() {}
           }
         }
       };
@@ -1128,7 +1128,7 @@ describe('Model', function() {
           required: true,
           type: Field.types.string,
           cast: {
-            save() {}
+            forSave() {}
           }
         }
       };
@@ -1150,7 +1150,7 @@ describe('Model', function() {
           required: true,
           type: Field.types.string,
           cast: {
-            save() {}
+            forSave() {}
           }
         }
       };
@@ -1172,7 +1172,7 @@ describe('Model', function() {
           required: true,
           type: Field.types.string,
           cast: {
-            save() {
+            forSave() {
               return 'new value';
             }
           }
@@ -1194,7 +1194,7 @@ describe('Model', function() {
           required: true,
           type: Field.types.string,
           cast: {
-            save() {
+            forSave() {
               return;
             }
           }
@@ -1216,7 +1216,7 @@ describe('Model', function() {
           required: true,
           type: Field.types.string,
           cast: {
-            save() {
+            forSave() {
               return null;
             }
           }
@@ -1238,7 +1238,7 @@ describe('Model', function() {
           default: true,
           type: Field.types.string,
           cast: {
-            save() {}
+            forSave() {}
           }
         }
       };

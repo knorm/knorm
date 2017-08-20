@@ -92,10 +92,9 @@ User.fields = {
     type: Field.types.string
   },
   jsonField: {
-    // TODO: jsonb
     type: Field.types.json,
     cast: {
-      save(value) {
+      forSave(value) {
         if (value !== null) {
           return JSON.stringify(value);
         }
@@ -105,7 +104,7 @@ User.fields = {
   intToString: {
     type: Field.types.integer,
     cast: {
-      fetch(value) {
+      forFetch(value) {
         if (value !== null) {
           return String(value);
         }
