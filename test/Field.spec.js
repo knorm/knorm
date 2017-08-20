@@ -614,6 +614,15 @@ describe('Field', function() {
           await expect(field.validate(new Date()), 'to be fulfilled');
         });
 
+        it("dates against the 'date' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.date
+          });
+          await expect(field.validate(new Date()), 'to be fulfilled');
+        });
+
         it("true against the 'boolean' type", async function() {
           const field = new Field({
             name: 'firstName',
@@ -801,6 +810,19 @@ describe('Field', function() {
             name: 'firstName',
             model: User,
             type: Field.types.dateTime
+          });
+          const dateString = new Date().toString();
+          await expect(field.validate(dateString), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        it("for date strings against the 'date' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.date
           });
           const dateString = new Date().toString();
           await expect(field.validate(dateString), 'to be rejected with', {
