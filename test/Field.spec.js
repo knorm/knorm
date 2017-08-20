@@ -689,6 +689,15 @@ describe('Field', function() {
           );
         });
 
+        it("json string objects against the 'jsonb' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.jsonb
+          });
+          await expect(field.validate('{"foo":1}'), 'to be fulfilled');
+        });
+
         it("floating point values against the 'decimal' type", async function() {
           const field = new Field({
             name: 'firstName',
@@ -879,6 +888,22 @@ describe('Field', function() {
             name: 'ValidationError',
             type: 'TypeError'
           });
+        });
+
+        it("invalid json against the 'jsonb' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.jsonb
+          });
+          await expect(
+            field.validate('{not: "valid"}'),
+            'to be rejected with',
+            {
+              name: 'ValidationError',
+              type: 'TypeError'
+            }
+          );
         });
 
         it("strings against the 'decimal' type", async function() {
