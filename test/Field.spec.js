@@ -963,7 +963,7 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it("does not reject if the passed value is 'null'", async function() {
+      it('does not reject if the passed value is `null`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1018,7 +1018,7 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it("does not reject if the passed value is 'null'", async function() {
+      it('does not reject if the passed value is `null`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1043,7 +1043,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not reject an if the value is included in oneOf', async function() {
+      it('does not reject if the value is included in oneOf', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1076,12 +1076,70 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it("does not reject if the passed value is 'null'", async function() {
+      it('does not reject if the passed value is `null`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
           type: Field.types.integer,
           oneOf: [1, 2]
+        });
+        await expect(field.validate(null), 'to be fulfilled');
+      });
+    });
+
+    describe('equals', function() {
+      it('rejects with an EqualsError if the value does not equal the expected value', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer,
+          equals: 1
+        });
+        await expect(field.validate(3), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'EqualsError'
+        });
+      });
+
+      it('does not reject if the value equals the expected value', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer,
+          equals: 1
+        });
+        await expect(field.validate(1), 'to be fulfilled');
+      });
+
+      it('checks against the casing of strings', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.string,
+          equals: 'READ'
+        });
+        await expect(field.validate('read'), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'EqualsError'
+        });
+      });
+
+      it('does not reject if the value is undefined', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer,
+          equals: 1
+        });
+        await expect(field.validate(undefined), 'to be fulfilled');
+      });
+
+      it('does not reject if the passed value is `null`', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer,
+          equals: 1
         });
         await expect(field.validate(null), 'to be fulfilled');
       });
