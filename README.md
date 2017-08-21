@@ -9,6 +9,37 @@
 Soft-delete plugin for [knorm](https://www.npmjs.com/package/knorm). It exports
 an ES6 class mixin that adds support for soft-deleting rows in the database.
 
+## Installation
+```bash
+npm install --save knorm knorm-soft-delete
+```
+> knorm-soft-delete has a peer dependency on
+[knorm](https://www.npmjs.com/package/knorm)
+
+## Usage
+### 1. Enhance knorm's Query class
+
+```js
+const { Query: KnormQuery } = require('knorm');
+const withSoftDelete = require('knorm-soft-delete');
+
+class Query extends withSoftDelete(KnormQuery) {}
+```
+
+### 2. Enhance knorm's Model class
+
+Then configure your ORM with the knex instance:
+
+```js
+const { Model: KnormModel } = require('knorm');
+
+const options = { deleted: true, deletedAt: true };
+class Model extends withSoftDelete(KnormModel, options) {}
+Model.Query = Query; // configure Model with the enhanced Query class
+```
+
+## How it works
+
 This plugin adds `deleted` (by default) and `deletedAt` (if configured) fields
 to your models and also updates your query methods so that the `delete` method
 does not actually delete a row but rather updates the `deleted` column.
@@ -57,35 +88,6 @@ await Model.restore({ where: { id: 1 } });
 await new Model({ id: 1 }).hardDelete();
 // or:
 await Model.hardDelete({ where: { id: 1 } });
-```
-
-## Installation
-```bash
-npm install --save knorm knorm-soft-delete
-```
-> knorm-soft-delete has a peer dependency on
-[knorm](https://www.npmjs.com/package/knorm)
-
-## Usage
-### 1. Enhance knorm's Query class
-
-```js
-const { Query: KnormQuery } = require('knorm');
-const withSoftDelete = require('knorm-soft-delete');
-
-class Query extends withSoftDelete(KnormQuery) {}
-```
-
-### 2. Enhance knorm's Model class
-
-Then configure your ORM with the knex instance:
-
-```js
-const { Model: KnormModel } = require('knorm');
-
-const options = { deleted: true, deletedAt: true };
-class Model extends withSoftDelete(KnormModel, options) {}
-Model.Query = Query; // configure Model with the enhanced Query class
 ```
 
 ## Options
