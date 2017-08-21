@@ -30,6 +30,9 @@ await Model.query.withDeleted().where({ foo: 'bar' }).fetch();
 // or:
 await Model.query.where({ foo: 'bar', deleted: [ true, false ] }).fetch();
 ```
+> **NOTE:** `withDeleted` performs better than
+`where({ deleted: [true, false] })`
+
 > `where({ deleted: [true, false] })` translates to
 `WHERE deleted IN (true, false)`
 
