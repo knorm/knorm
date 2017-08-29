@@ -595,6 +595,19 @@ describe('Field', function() {
       });
 
       describe('resolves for valid types', function() {
+        it("any value type against the 'any' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.any
+          });
+          await expect(field.validate('foo'), 'to be fulfilled');
+          await expect(field.validate(1), 'to be fulfilled');
+          await expect(field.validate(true), 'to be fulfilled');
+          await expect(field.validate(0.1), 'to be fulfilled');
+          await expect(field.validate(new Date()), 'to be fulfilled');
+        });
+
         it("strings against the 'string' type", async function() {
           const field = new Field({
             name: 'firstName',
