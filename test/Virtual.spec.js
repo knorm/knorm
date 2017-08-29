@@ -89,7 +89,7 @@ describe('Virtual', function() {
     });
   });
 
-  describe('Virtual.prototype.setModel', function() {
+  describe('Virtual.prototype.updateModel', function() {
     it('allows chaining', function() {
       class Foo extends Model {}
       const virtual = new Virtual({
@@ -97,7 +97,7 @@ describe('Virtual', function() {
         model: Foo,
         descriptor: { get: () => 'foo' }
       });
-      expect(virtual.clone(), 'to equal', virtual);
+      expect(virtual.updateModel(Foo), 'to equal', virtual);
     });
   });
 

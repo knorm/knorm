@@ -17,7 +17,7 @@ describe('Field', function() {
       expect(
         () => new Field({ name: 'foo' }),
         'to throw',
-        new Error("Field 'foo' requires a subclass of Model")
+        new Error('Field `foo` requires a subclass of `Model`')
       );
     });
 
@@ -30,7 +30,7 @@ describe('Field', function() {
             model: Foo
           }),
         'to throw',
-        new Error("Field 'Foo.bar' has no type configured")
+        new Error('Field `Foo.bar` has no type configured')
       );
     });
 
@@ -44,7 +44,7 @@ describe('Field', function() {
             type: 'bar'
           }),
         'to throw',
-        new Error("Field 'Foo.bar' has an invalid type ('bar')")
+        new Error('Field `Foo.bar` has an invalid type `bar`')
       );
     });
 
@@ -61,37 +61,112 @@ describe('Field', function() {
             }
           }),
         'to throw',
-        new Error("Custom validator for field 'Foo.bar' should be a function")
+        new Error('Custom validator for field `Foo.bar` should be a function')
       );
     });
 
-    it("calls setModel with the 'model' config passed", function() {
-      class Foo extends Model {}
-      const stub = sinon.stub(Field.prototype, 'setModel');
-      new Field({
-        name: 'bar',
-        model: Foo,
-        type: Field.types.string
-      });
-      expect(stub, 'to have calls satisfying', () => {
-        stub(expect.it('to be model class', Foo));
-      });
-      stub.restore();
-    });
+    describe('with a field reference configured', function() {
+      it("adds the reference to the field's model's references", function() {
+        class User extends Model {}
+        class Image extends Model {}
 
-    it("calls setReference with the reference if a 'references' config is passed", function() {
-      class Foo extends Model {}
-      const stub = sinon.stub(Field.prototype, 'setReference');
-      new Field({
-        name: 'bar',
-        references: 'foo bar',
-        model: Foo,
-        type: Field.types.string
+        const id = new Field({
+          name: 'id',
+          model: User,
+          type: Field.types.integer
+        });
+        const createdAt = new Field({
+          name: 'createdAt',
+          model: User,
+          type: Field.types.dateTime
+        });
+        new Field({
+          name: 'userId',
+          model: Image,
+          type: Field.types.integer,
+          references: id
+        });
+        new Field({
+          name: 'userCreatedAt',
+          model: Image,
+          type: Field.types.dateTime,
+          references: createdAt
+        });
+
+        expect(User.references, 'to equal', {});
+        expect(Image.references, 'to equal', {
+          User: {
+            userId: id,
+            userCreatedAt: createdAt
+          }
+        });
       });
-      expect(stub, 'to have calls satisfying', () => {
-        stub('foo bar');
+
+      it('adds reverse-references to the referenced model', function() {
+        class User extends Model {}
+        class Image extends Model {}
+
+        const id = new Field({
+          name: 'id',
+          model: User,
+          type: Field.types.integer
+        });
+        const createdAt = new Field({
+          name: 'createdAt',
+          model: User,
+          type: Field.types.dateTime
+        });
+        const userId = new Field({
+          name: 'userId',
+          model: Image,
+          type: Field.types.integer,
+          references: id
+        });
+        const userCreatedAt = new Field({
+          name: 'userCreatedAt',
+          model: Image,
+          type: Field.types.dateTime,
+          references: createdAt
+        });
+
+        expect(Image.referenced, 'to equal', {});
+        expect(User.referenced, 'to equal', {
+          Image: {
+            id: [userId],
+            createdAt: [userCreatedAt]
+          }
+        });
       });
-      stub.restore();
+
+      it("doesn't overwrite reverse-references to the same field", function() {
+        class User extends Model {}
+        class Image extends Model {}
+
+        const id = new Field({
+          name: 'id',
+          model: User,
+          type: Field.types.integer
+        });
+        const userId1 = new Field({
+          name: 'userId1',
+          model: Image,
+          type: Field.types.integer,
+          references: id
+        });
+        const userId2 = new Field({
+          name: 'userId2',
+          model: Image,
+          type: Field.types.integer,
+          references: id
+        });
+
+        expect(Image.referenced, 'to equal', {});
+        expect(User.referenced, 'to equal', {
+          Image: {
+            id: [userId1, userId2]
+          }
+        });
+      });
     });
 
     describe('with a column name configured', function() {
@@ -154,7 +229,7 @@ describe('Field', function() {
             }),
           'to throw',
           new Error(
-            "Pre-save cast function for field 'Foo.bar' should be a function"
+            'Pre-save cast function for field `Foo.bar` should be a function'
           )
         );
       });
@@ -173,7 +248,7 @@ describe('Field', function() {
             }),
           'to throw',
           new Error(
-            "Post-fetch cast function for field 'Foo.bar' should be a function"
+            'Post-fetch cast function for field `Foo.bar` should be a function'
           )
         );
       });
@@ -225,6 +300,23 @@ describe('Field', function() {
       expect(field.clone(), 'to satisfy', {
         castors: {
           forSave() {}
+        }
+      });
+    });
+
+    it('clones the schemas for json(b) fields', function() {
+      class Foo extends Model {}
+      const field = new Field({
+        name: 'bar',
+        model: Foo,
+        type: Field.types.json,
+        schema: { foo: { type: Field.types.string, required: true } }
+      });
+      expect(field.clone(), 'to satisfy', {
+        validators: {
+          schema: {
+            foo: { type: Field.types.string, validators: { required: true } }
+          }
         }
       });
     });
@@ -547,7 +639,7 @@ describe('Field', function() {
     });
 
     describe('type', function() {
-      it('rejects with a FieldTypeError if an invalid value is set', async function() {
+      it('rejects with a TypeError if an invalid value is set', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -578,6 +670,19 @@ describe('Field', function() {
       });
 
       describe('resolves for valid types', function() {
+        it("any value type against the 'any' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.any
+          });
+          await expect(field.validate('foo'), 'to be fulfilled');
+          await expect(field.validate(1), 'to be fulfilled');
+          await expect(field.validate(true), 'to be fulfilled');
+          await expect(field.validate(0.1), 'to be fulfilled');
+          await expect(field.validate(new Date()), 'to be fulfilled');
+        });
+
         it("strings against the 'string' type", async function() {
           const field = new Field({
             name: 'firstName',
@@ -666,45 +771,6 @@ describe('Field', function() {
             type: Field.types.uuidV4
           });
           await expect(field.validate(uuid.v4()), 'to be fulfilled');
-        });
-
-        it("json string against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(field.validate('"foo"'), 'to be fulfilled');
-        });
-
-        it("json string object against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(field.validate('{"foo":1}'), 'to be fulfilled');
-        });
-
-        it("json string array against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(
-            field.validate('[{ "foo": "foo", "bar": "bar" }]'),
-            'to be fulfilled'
-          );
-        });
-
-        it("json string objects against the 'jsonb' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.jsonb
-          });
-          await expect(field.validate('{"foo":1}'), 'to be fulfilled');
         });
 
         it("floating point values against the 'decimal' type", async function() {
@@ -873,10 +939,7 @@ describe('Field', function() {
           await expect(
             field.validate('not-valid-uuid'),
             'to be rejected with',
-            {
-              name: 'ValidationError',
-              type: 'TypeError'
-            }
+            { name: 'ValidationError', type: 'TypeError' }
           );
         });
 
@@ -891,50 +954,6 @@ describe('Field', function() {
             name: 'ValidationError',
             type: 'TypeError'
           });
-        });
-
-        it("invalid json against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(
-            field.validate('{not: "valid"}'),
-            'to be rejected with',
-            {
-              name: 'ValidationError',
-              type: 'TypeError'
-            }
-          );
-        });
-
-        it("false against the 'json' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json
-          });
-          await expect(field.validate(false), 'to be rejected with', {
-            name: 'ValidationError',
-            type: 'TypeError'
-          });
-        });
-
-        it("invalid json against the 'jsonb' type", async function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.jsonb
-          });
-          await expect(
-            field.validate('{not: "valid"}'),
-            'to be rejected with',
-            {
-              name: 'ValidationError',
-              type: 'TypeError'
-            }
-          );
         });
 
         it("strings against the 'decimal' type", async function() {
@@ -1422,150 +1441,200 @@ describe('Field', function() {
         await expect(field.validate(), 'to be fulfilled');
       });
     });
+
+    describe('for `json` and `jsonb` fields', function() {
+      describe('when passed a string value', function() {
+        let json;
+        let jsonb;
+
+        before(function() {
+          json = new Field({
+            name: 'json',
+            model: User,
+            type: Field.types.json
+          });
+
+          jsonb = new Field({
+            name: 'jsonb',
+            model: User,
+            type: Field.types.jsonb
+          });
+        });
+
+        it("fulfils for a valid json string against the 'json' type", async function() {
+          await expect(
+            json.validate('[{ "foo": "foo", "bar": "bar" }]'),
+            'to be fulfilled'
+          );
+        });
+
+        it("fulfils for valid json strings against the 'jsonb' type", async function() {
+          await expect(jsonb.validate('{"foo":1}'), 'to be fulfilled');
+        });
+
+        it("rejects for invalid json against the 'json' type", async function() {
+          await expect(json.validate('{not: "valid"}'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        it("rejects for invalid json against the 'jsonb' type", async function() {
+          await expect(jsonb.validate(']'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+      });
+
+      describe('with `schema` configured as an object', function() {
+        let field;
+
+        before(function() {
+          field = new Field({
+            name: 'json',
+            model: User,
+            type: Field.types.json,
+            schema: { foo: { required: true, type: Field.types.string } }
+          });
+        });
+
+        it('throws the correct error if a schema config has no `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: User,
+                type: Field.types.json,
+                schema: { foo: { required: true } }
+              }),
+            'to throw',
+            new Error('Field `User.json.foo` has no type configured')
+          );
+        });
+
+        it('throws the correct error if a schema config has an invalid `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: User,
+                type: Field.types.json,
+                schema: { foo: { required: true, type: 'foo' } }
+              }),
+            'to throw',
+            new Error('Field `User.json.foo` has an invalid type `foo`')
+          );
+        });
+
+        it('rejects if passed an array value', async function() {
+          await expect(
+            field.validate([{ foo: 'bar' }]),
+            'to be rejected with',
+            { name: 'ValidationError', type: 'SchemaError' }
+          );
+        });
+
+        describe('when passed an object value', function() {
+          it('runs the validators against the object', async function() {
+            await expect(field.validate({ foo: 1 }), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+            await expect(field.validate({ foo: 'bar' }), 'to be fulfilled');
+          });
+
+          it('ignores keys that are not specified in the schema', async function() {
+            await expect(
+              field.validate({ foo: 'foo', bar: [] }),
+              'to be fulfilled'
+            );
+          });
+        });
+
+        describe('when passed a string value', function() {
+          it('JSON.parses the value and runs the validators against the result', async function() {
+            await expect(
+              field.validate('{"foo":null}'),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'RequiredError' }
+            );
+            await expect(field.validate('{"foo":"bar"}'), 'to be fulfilled');
+          });
+        });
+      });
+
+      describe('with `schema` configured as an array', function() {
+        let field;
+
+        before(function() {
+          field = new Field({
+            name: 'json',
+            model: User,
+            type: Field.types.json,
+            schema: [{ foo: { required: true, type: Field.types.string } }]
+          });
+        });
+
+        it('rejects if passed a non-array value', async function() {
+          await expect(field.validate({ foo: 'bar' }), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'SchemaError'
+          });
+        });
+
+        it('fulfils if every item in the value passes validation', async function() {
+          await expect(
+            field.validate([{ foo: 'bar' }, { foo: 'quux' }]),
+            'to be fulfilled'
+          );
+        });
+
+        it('ignores keys in the array items that are not specified in the schema', async function() {
+          await expect(
+            field.validate([{ foo: 'foo', bar: [] }]),
+            'to be fulfilled'
+          );
+        });
+
+        it('rejects if one item in the value fails validation', async function() {
+          await expect(
+            field.validate([{ foo: 'foo' }, { foo: 'bar' }, { foo: 1 }]),
+            'to be rejected with',
+            { name: 'ValidationError', type: 'TypeError' }
+          );
+        });
+      });
+
+      describe('with `schema` configured as an empty array', function() {
+        let field;
+
+        before(function() {
+          field = new Field({
+            name: 'json',
+            model: User,
+            type: Field.types.json,
+            schema: []
+          });
+        });
+
+        it('rejects if passed a non-array value', async function() {
+          await expect(field.validate({ foo: 'bar' }), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'SchemaError'
+          });
+        });
+
+        it('fulfils for all array values', async function() {
+          await expect(field.validate([]), 'to be fulfilled');
+          await expect(field.validate(['foo']), 'to be fulfilled');
+          await expect(field.validate([[1]]), 'to be fulfilled');
+        });
+      });
+    });
   });
 
-  describe('Field.prototype.setReference', function() {
-    it("stores the reference in the field's data properties", function() {
-      class User extends Model {}
-
-      const firstName = new Field({
-        name: 'firstName',
-        model: User,
-        type: Field.types.string
-      });
-      const lastName = new Field({
-        name: 'lastName',
-        model: User,
-        type: Field.types.string
-      });
-
-      firstName.setReference(lastName);
-
-      expect(firstName.references, 'to equal', lastName);
-    });
-
-    it("adds the reference to the field's model's references", function() {
-      class User extends Model {}
-      class Image extends Model {}
-
-      const id = new Field({
-        name: 'id',
-        model: User,
-        type: Field.types.integer
-      });
-      const createdAt = new Field({
-        name: 'createdAt',
-        model: User,
-        type: Field.types.dateTime
-      });
-      const userId = new Field({
-        name: 'userId',
-        model: Image,
-        type: Field.types.integer
-      });
-      const userCreatedAt = new Field({
-        name: 'userCreatedAt',
-        model: Image,
-        type: Field.types.dateTime
-      });
-
-      userId.setReference(id);
-      userCreatedAt.setReference(createdAt);
-
-      expect(User.references, 'to equal', {});
-      expect(Image.references, 'to equal', {
-        User: {
-          userId: id,
-          userCreatedAt: createdAt
-        }
-      });
-    });
-
-    it('adds reverse-references to the referenced model', function() {
-      class User extends Model {}
-      class Image extends Model {}
-
-      const id = new Field({
-        name: 'id',
-        model: User,
-        type: Field.types.integer
-      });
-      const createdAt = new Field({
-        name: 'createdAt',
-        model: User,
-        type: Field.types.dateTime
-      });
-      const userId = new Field({
-        name: 'userId',
-        model: Image,
-        type: Field.types.integer
-      });
-      const userCreatedAt = new Field({
-        name: 'userCreatedAt',
-        model: Image,
-        type: Field.types.dateTime
-      });
-
-      userId.setReference(id);
-      userCreatedAt.setReference(createdAt);
-
-      expect(Image.referenced, 'to equal', {});
-      expect(User.referenced, 'to equal', {
-        Image: {
-          id: [userId],
-          createdAt: [userCreatedAt]
-        }
-      });
-    });
-
-    it("doesn't overwrite reverse-references to the same field", function() {
-      class User extends Model {}
-      class Image extends Model {}
-
-      const id = new Field({
-        name: 'id',
-        model: User,
-        type: Field.types.integer
-      });
-      const userId1 = new Field({
-        name: 'userId1',
-        model: Image,
-        type: Field.types.integer
-      });
-      const userId2 = new Field({
-        name: 'userId2',
-        model: Image,
-        type: Field.types.integer
-      });
-
-      userId1.setReference(id);
-      userId2.setReference(id);
-
-      expect(Image.referenced, 'to equal', {});
-      expect(User.referenced, 'to equal', {
-        Image: {
-          id: [userId1, userId2]
-        }
-      });
-    });
-
-    it('allows chaining', function() {
-      class User extends Model {}
-      const firstName = new Field({
-        name: 'firstName',
-        model: User,
-        type: Field.types.string
-      });
-      const lastName = new Field({
-        name: 'lastName',
-        model: User,
-        type: Field.types.string
-      });
-      expect(firstName.setReference(lastName), 'to equal', firstName);
-    });
-  });
-
-  describe('Field.prototype.setModel', function() {
+  describe('Field.prototype.updateModel', function() {
     class User extends Model {}
 
     it('allows chaining', function() {
@@ -1574,10 +1643,10 @@ describe('Field', function() {
         model: User,
         type: Field.types.string
       });
-      expect(field.setModel(User), 'to equal', field);
+      expect(field.updateModel(User), 'to equal', field);
     });
 
-    describe('when called again', function() {
+    describe('when called again on the same field', function() {
       class Employee extends User {}
 
       it('updates the model that the field belongs to', function() {
@@ -1588,7 +1657,7 @@ describe('Field', function() {
         });
 
         expect(field.model, 'to equal', User);
-        field.setModel(Employee);
+        field.updateModel(Employee);
         expect(field.model, 'to equal', Employee);
       });
 
@@ -1616,13 +1685,32 @@ describe('Field', function() {
 
           class UserImage extends User {}
 
-          userId.setModel(UserImage);
+          userId.updateModel(UserImage);
 
           expect(User.referenced, 'to equal', {
             UserImage: {
               id: [userId]
             }
           });
+        });
+      });
+
+      describe('when the field has a `schema`', function() {
+        it("updates the nested fields' model", function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json,
+            schema: {
+              foo: {
+                type: Field.types.string
+              }
+            }
+          });
+
+          expect(field.validators.schema.foo.model, 'to equal', User);
+          field.updateModel(Employee);
+          expect(field.validators.schema.foo.model, 'to equal', Employee);
         });
       });
     });

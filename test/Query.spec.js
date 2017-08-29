@@ -2743,7 +2743,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('casts fields configured with pre-save cast functions before validating them', async function() {
+    it('casts fields configured with pre-save cast functions before insert', async function() {
       const query = new Query(User);
       const user = new User({
         id: 1,
@@ -3612,7 +3612,7 @@ describe('Query', function() {
       });
     });
 
-    it('casts updated fields configured with pre-save cast functions before validating them', async function() {
+    it('casts updated fields configured with pre-save cast functions before update', async function() {
       const query = new Query(User);
       user.jsonField = ['foo', 'bar'];
       await expect(query.update(user), 'to be fulfilled');
