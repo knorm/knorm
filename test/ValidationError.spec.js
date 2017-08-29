@@ -25,7 +25,7 @@ describe('ValidationError', () => {
       'to satisfy',
       {
         type: 'RequiredError',
-        message: 'Missing required value for field `firstName` of `User`'
+        message: 'Missing required value for field `User.firstName`'
       }
     );
   });
@@ -42,7 +42,7 @@ describe('ValidationError', () => {
       'to satisfy',
       {
         type: 'RequiredError',
-        message: 'Missing required value for field `firstName` of `User`'
+        message: 'Missing required value for field `User.firstName`'
       }
     );
   });

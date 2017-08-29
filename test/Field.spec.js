@@ -17,7 +17,7 @@ describe('Field', function() {
       expect(
         () => new Field({ name: 'foo' }),
         'to throw',
-        new Error("Field 'foo' requires a subclass of Model")
+        new Error('Field `foo` requires a subclass of `Model`')
       );
     });
 
@@ -30,7 +30,7 @@ describe('Field', function() {
             model: Foo
           }),
         'to throw',
-        new Error("Field 'Foo.bar' has no type configured")
+        new Error('Field `Foo.bar` has no type configured')
       );
     });
 
@@ -44,7 +44,7 @@ describe('Field', function() {
             type: 'bar'
           }),
         'to throw',
-        new Error("Field 'Foo.bar' has an invalid type ('bar')")
+        new Error('Field `Foo.bar` has an invalid type `bar`')
       );
     });
 
@@ -61,7 +61,7 @@ describe('Field', function() {
             }
           }),
         'to throw',
-        new Error("Custom validator for field 'Foo.bar' should be a function")
+        new Error('Custom validator for field `Foo.bar` should be a function')
       );
     });
 
@@ -154,7 +154,7 @@ describe('Field', function() {
             }),
           'to throw',
           new Error(
-            "Pre-save cast function for field 'Foo.bar' should be a function"
+            'Pre-save cast function for field `Foo.bar` should be a function'
           )
         );
       });
@@ -173,7 +173,7 @@ describe('Field', function() {
             }),
           'to throw',
           new Error(
-            "Post-fetch cast function for field 'Foo.bar' should be a function"
+            'Post-fetch cast function for field `Foo.bar` should be a function'
           )
         );
       });
@@ -1409,6 +1409,34 @@ describe('Field', function() {
             type: Field.types.json,
             schema: { foo: { required: true, type: Field.types.string } }
           });
+        });
+
+        it('throws the correct error if a schema config has no `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: User,
+                type: Field.types.json,
+                schema: { foo: { required: true } }
+              }),
+            'to throw',
+            new Error('Field `User.json.foo` has no type configured')
+          );
+        });
+
+        it('throws the correct error if a schema config has an invalid `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: User,
+                type: Field.types.json,
+                schema: { foo: { required: true, type: 'foo' } }
+              }),
+            'to throw',
+            new Error('Field `User.json.foo` has an invalid type `foo`')
+          );
         });
 
         it('rejects if passed an array value', async function() {
