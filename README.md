@@ -10,6 +10,7 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
 - model validation (before insert and update operations) with custom error
   classes and support for async custom validators
 - value casting before insert and update operations and after fetch operations
+- JSON schema validation (similar to [Mongoose JS](http://mongoosejs.com/))
 - SQL joins with full JavaScript syntax
 - virtual fields (i.e. computed fields) with support for async getters
 - model field names to database column names transformations (and vice-versa
@@ -271,5 +272,5 @@ PRs are very welcome!
 
 ## Credits
 
-Knorm is inspired in part by the [Mongoose](http://mongoosejs.com/) and
-[Bookshelf](http://bookshelfjs.org/) APIs.
+Knorm is inspired in part by the [Mongoose JS](http://mongoosejs.com/) and
+[Bookshelf.js](http://bookshelfjs.org/) APIs.
