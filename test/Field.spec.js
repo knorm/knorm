@@ -1165,7 +1165,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not reject if the value is undefined', async function() {
+      it('does not reject if the value is `undefined`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1535,6 +1535,14 @@ describe('Field', function() {
           );
         });
 
+        it('fulfils if the value is `undefined`', async function() {
+          await expect(field.validate(undefined), 'to be fulfilled');
+        });
+
+        it('fulfils if the value is `null`', async function() {
+          await expect(field.validate(null), 'to be fulfilled');
+        });
+
         describe('when passed an object value', function() {
           it('runs the validators against the object', async function() {
             await expect(field.validate({ foo: 1 }), 'to be rejected with', {
@@ -1581,6 +1589,14 @@ describe('Field', function() {
             name: 'ValidationError',
             type: 'SchemaError'
           });
+        });
+
+        it('fulfils if the value is `undefined`', async function() {
+          await expect(field.validate(undefined), 'to be fulfilled');
+        });
+
+        it('fulfils if the value is `null`', async function() {
+          await expect(field.validate(null), 'to be fulfilled');
         });
 
         it('fulfils if every item in the value passes validation', async function() {
