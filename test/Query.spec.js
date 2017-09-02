@@ -564,6 +564,16 @@ describe('Query', function() {
           ]
         );
       });
+
+      describe('vial the `lean` alias', function() {
+        it('resolves with plain JS objects', async function() {
+          const query = new Query(User).lean();
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+            expect.it('not to be a', User),
+            expect.it('not to be a', User)
+          ]);
+        });
+      });
     });
 
     describe("with a 'where' configured", function() {
