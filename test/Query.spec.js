@@ -2466,14 +2466,15 @@ describe('Query', function() {
         );
       });
 
-      it("rejects with a NoRowsFetchedError if the join doesn't match any rows", async function() {
-        const imageQuery = new Query(Image);
-        const query = new Query(User).where({ id: 2 }).innerJoin(imageQuery);
+      it("resolves with an empty array if the join doesn't match any rows", async function() {
+        const query = new Query(User)
+          .where({ id: 2 })
+          .innerJoin(new Query(Image));
 
         await expect(
           query.fetch(),
-          'to be rejected with error satisfying',
-          new Query.errors.NoRowsFetchedError({ query: imageQuery })
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          []
         );
       });
     });
@@ -2530,14 +2531,15 @@ describe('Query', function() {
         );
       });
 
-      it("rejects with a NoRowsFetchedError if the join doesn't match any rows", async function() {
-        const imageQuery = new Query(Image);
-        const query = new Query(User).where({ id: 2 }).join(imageQuery);
+      it("resolves wih an empty array if the join doesn't match any rows", async function() {
+        const query = new Query(User)
+          .where({ id: 2 })
+          .innerJoin(new Query(Image));
 
         await expect(
           query.fetch(),
-          'to be rejected with error satisfying',
-          new Query.errors.NoRowsFetchedError({ query: imageQuery })
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          []
         );
       });
     });
