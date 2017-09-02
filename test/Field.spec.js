@@ -683,6 +683,24 @@ describe('Field', function() {
           await expect(field.validate(new Date()), 'to be fulfilled');
         });
 
+        it("integers against the 'number' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.number
+          });
+          await expect(field.validate(1), 'to be fulfilled');
+        });
+
+        it("decimals against the 'number' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.number
+          });
+          await expect(field.validate(1.2), 'to be fulfilled');
+        });
+
         it("strings against the 'string' type", async function() {
           const field = new Field({
             name: 'firstName',
@@ -701,7 +719,7 @@ describe('Field', function() {
           await expect(field.validate('foo'), 'to be fulfilled');
         });
 
-        it("numbers against the 'integer' type", async function() {
+        it("integers against the 'integer' type", async function() {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -856,6 +874,18 @@ describe('Field', function() {
       });
 
       describe('rejects for invalid types', function() {
+        it("true against the 'number' type", async function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.number
+          });
+          await expect(field.validate(true), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
         it("for fractions against the 'integer' type", async function() {
           const field = new Field({
             name: 'firstName',
