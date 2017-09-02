@@ -1473,7 +1473,7 @@ describe('Field', function() {
     });
 
     describe('for `json` and `jsonb` fields', function() {
-      describe('when passed a string value', function() {
+      describe('without a `schema` configured', function() {
         let json;
         let jsonb;
 
@@ -1488,6 +1488,36 @@ describe('Field', function() {
             name: 'jsonb',
             model: User,
             type: Field.types.jsonb
+          });
+        });
+
+        it('fulfils if the value is `undefined`', async function() {
+          await expect(json.validate(undefined), 'to be fulfilled');
+        });
+
+        it('fulfils if the value is `null`', async function() {
+          await expect(jsonb.validate(null), 'to be fulfilled');
+        });
+
+        it('fulfils for arrays', async function() {
+          await expect(json.validate([1, 2, 3]), 'to be fulfilled');
+        });
+
+        it('fulfils for objects', async function() {
+          await expect(jsonb.validate({ a: 'b' }), 'to be fulfilled');
+        });
+
+        it('rejects for integers', async function() {
+          await expect(json.validate(1), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        it('rejects for boolean valuess', async function() {
+          await expect(jsonb.validate(true), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
           });
         });
 
@@ -1591,13 +1621,8 @@ describe('Field', function() {
         });
 
         describe('when passed a string value', function() {
-          it('JSON.parses the value and runs the validators against the result', async function() {
-            await expect(
-              field.validate('{"foo":null}'),
-              'to be rejected with',
-              { name: 'ValidationError', type: 'RequiredError' }
-            );
-            await expect(field.validate('{"foo":"bar"}'), 'to be fulfilled');
+          it('does not run validators on the JSON.parsed value', async function() {
+            await expect(field.validate('{"foo":1}'), 'to be fulfilled');
           });
         });
       });
@@ -1675,6 +1700,12 @@ describe('Field', function() {
           await expect(field.validate([]), 'to be fulfilled');
           await expect(field.validate(['foo']), 'to be fulfilled');
           await expect(field.validate([[1]]), 'to be fulfilled');
+        });
+
+        describe('when passed a string value', function() {
+          it('does not run validators on the JSON.parsed value', async function() {
+            await expect(field.validate('{"foo":1}'), 'to be fulfilled');
+          });
         });
       });
     });
