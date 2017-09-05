@@ -1274,6 +1274,51 @@ describe('Field', function() {
       });
     });
 
+    describe('regex', function() {
+      it('rejects with an RegexError if the value does not match the regex', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer,
+          regex: /[0-2]/
+        });
+        await expect(field.validate(3), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'RegexError'
+        });
+      });
+
+      it('does not reject if the value matches the regex', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.string,
+          regex: /hello/
+        });
+        await expect(field.validate('hello world'), 'to be fulfilled');
+      });
+
+      it('does not reject if the value is undefined', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer,
+          equals: 1
+        });
+        await expect(field.validate(undefined), 'to be fulfilled');
+      });
+
+      it('does not reject if the passed value is `null`', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer,
+          equals: 1
+        });
+        await expect(field.validate(null), 'to be fulfilled');
+      });
+    });
+
     describe('with a custom validator', function() {
       it('calls the validator with the passed value', async function() {
         const validate = sinon.spy();
