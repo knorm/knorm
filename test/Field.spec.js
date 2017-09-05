@@ -1626,6 +1626,45 @@ describe('Field', function() {
           await expect(field.validate(null), 'to be fulfilled');
         });
 
+        describe('with a custom `validate` function', () => {
+          let field;
+          let validate;
+
+          before(function() {
+            validate = sinon.spy();
+            field = new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.json,
+              schema: {
+                foo: {
+                  type: 'string',
+                  validate
+                }
+              }
+            });
+          });
+
+          beforeEach(function() {
+            validate.reset();
+          });
+
+          it('calls the validator with the passed value', async function() {
+            await field.validate({ foo: 'bar' });
+            await expect(validate, 'to have calls satisfying', () => {
+              validate('bar');
+            });
+          });
+
+          it("calls the validator with 'this' set to the passed model instance", async function() {
+            await field.validate({ foo: 'bar' }, 'a model instance');
+            await expect(validate, 'was called once').and(
+              'was called on',
+              'a model instance'
+            );
+          });
+        });
+
         describe('when passed an object value', function() {
           it('runs the validators against the object', async function() {
             await expect(field.validate({ foo: 1 }), 'to be rejected with', {
