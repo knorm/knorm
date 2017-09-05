@@ -1507,43 +1507,21 @@ describe('Field', function() {
           await expect(jsonb.validate({ a: 'b' }), 'to be fulfilled');
         });
 
-        it('rejects for integers', async function() {
-          await expect(json.validate(1), 'to be rejected with', {
-            name: 'ValidationError',
-            type: 'TypeError'
-          });
+        it('fulfils for integers', async function() {
+          await expect(json.validate(1), 'to be fulfilled');
         });
 
-        it('rejects for boolean valuess', async function() {
-          await expect(jsonb.validate(true), 'to be rejected with', {
-            name: 'ValidationError',
-            type: 'TypeError'
-          });
+        it('fulfils for boolean valuess', async function() {
+          await expect(jsonb.validate(true), 'to be fulfilled');
         });
 
-        it("fulfils for a valid json string against the 'json' type", async function() {
-          await expect(
-            json.validate('[{ "foo": "foo", "bar": "bar" }]'),
-            'to be fulfilled'
-          );
+        it('fulfils for valid jsons', async function() {
+          await expect(json.validate('[{ "foo": "foo" }]'), 'to be fulfilled');
         });
 
-        it("fulfils for valid json strings against the 'jsonb' type", async function() {
-          await expect(jsonb.validate('{"foo":1}'), 'to be fulfilled');
-        });
-
-        it("rejects for invalid json against the 'json' type", async function() {
-          await expect(json.validate('{not: "valid"}'), 'to be rejected with', {
-            name: 'ValidationError',
-            type: 'TypeError'
-          });
-        });
-
-        it("rejects for invalid json against the 'jsonb' type", async function() {
-          await expect(jsonb.validate(']'), 'to be rejected with', {
-            name: 'ValidationError',
-            type: 'TypeError'
-          });
+        it('fulfils for invalid json strings', async function() {
+          // i.e it doesn't validate the json string
+          await expect(jsonb.validate('{not: "valid"}'), 'to be fulfilled');
         });
       });
 
