@@ -20,7 +20,7 @@
     "knorm": "^0.7.0"
   },
   "devDependencies": {
-    "coveralls": "^2.12.0",
+    "coveralls": "^3.0.0",
     "eslint": "^4.2.0",
     "eslint-config-prettier": "^2.3.0",
     "eslint-plugin-prettier": "^2.1.2",
