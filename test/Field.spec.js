@@ -1430,90 +1430,98 @@ describe('Field', function() {
         await expect(field.validate(), 'to be fulfilled');
       });
 
-      it('runs the new validators if the validator returns an object with validators', async function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          validate() {
-            return {
-              maxLength: 2
-            };
-          }
-        });
-        await expect(field.validate('bar value'), 'to be rejected with', {
-          name: 'ValidationError',
-          type: 'MaxLengthError'
-        });
-      });
-
-      it("runs the new validator if the first validator returns an object with a 'validate' function", async function() {
-        const secondValidateSpy = sinon.spy();
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          validate() {
-            return {
-              validate: secondValidateSpy
-            };
-          }
-        });
-        await field.validate('bar value');
-        expect(secondValidateSpy, 'to have calls satisfying', () => {
-          secondValidateSpy('bar value');
-        });
-      });
-
-      it("runs the new custom validator with 'this' set to the passed model instance", async function() {
-        const secondValidateSpy = sinon.spy();
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          validate() {
-            return {
-              validate: secondValidateSpy
-            };
-          }
-        });
-        await field.validate('bar value', 'a model instance');
-        await expect(secondValidateSpy, 'was called once').and(
-          'was called on',
-          'a model instance'
-        );
-      });
-
-      it('runs the new custom validator asynchronously', async function() {
-        let called;
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          validate() {
-            return {
+      describe('when the validator returns an object', function() {
+        describe('with valid validators', function() {
+          it('runs the new validators', async function() {
+            const field = new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.string,
               validate() {
-                return Promise.resolve().then(() => {
-                  called = true;
-                });
+                return {
+                  maxLength: 2
+                };
               }
-            };
-          }
+            });
+            await expect(field.validate('bar value'), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'MaxLengthError'
+            });
+          });
         });
-        await field.validate('bar value');
-        expect(called, 'to be true');
-      });
 
-      it("does nothing if the validator returns an object that doesn't contain validators", async function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.string,
-          validate() {
-            return new Date();
-          }
+        describe('with a `validate` function', function() {
+          it('runs the new custom validator', async function() {
+            const secondValidateSpy = sinon.spy();
+            const field = new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.string,
+              validate() {
+                return {
+                  validate: secondValidateSpy
+                };
+              }
+            });
+            await field.validate('bar value');
+            expect(secondValidateSpy, 'to have calls satisfying', () => {
+              secondValidateSpy('bar value');
+            });
+          });
+
+          it('runs the new validator with `this` set to the passed model instance', async function() {
+            const secondValidateSpy = sinon.spy();
+            const field = new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.string,
+              validate() {
+                return {
+                  validate: secondValidateSpy
+                };
+              }
+            });
+            await field.validate('bar value', 'a model instance');
+            await expect(secondValidateSpy, 'was called once').and(
+              'was called on',
+              'a model instance'
+            );
+          });
+
+          it('runs the new validator asynchronously', async function() {
+            let called;
+            const field = new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.string,
+              validate() {
+                return {
+                  validate() {
+                    return Promise.resolve().then(() => {
+                      called = true;
+                    });
+                  }
+                };
+              }
+            });
+            await field.validate('bar value');
+            expect(called, 'to be true');
+          });
         });
-        await expect(field.validate(), 'to be fulfilled');
+
+        describe('with no validators', function() {
+          it('does nothing', async function() {
+            const field = new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.string,
+              validate() {
+                return new Date();
+              }
+            });
+            await expect(field.validate(), 'to be fulfilled');
+          });
+        });
       });
     });
 
