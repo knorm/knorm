@@ -4309,18 +4309,15 @@ describe('Query', function() {
     describe("with a 'where' option", function() {
       it('deletes only the rows matching the query', async function() {
         const query = new Query(User).where({ id: 1 });
-        await expect(query.delete(), 'to be fulfilled');
+        await expect(query.delete(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'John Doe' })
+        ]);
         await expect(
           knex,
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 2,
-              name: 'Jane Doe'
-            }
-          ]
+          [{ id: 2, name: 'Jane Doe' }]
         );
       });
     });
