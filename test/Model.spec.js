@@ -2116,17 +2116,18 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it("allows overriding the 'where' option if a 'where' option is passed", async function() {
+      it('appends the `where` clause if a `where` option is passed', async function() {
         await User.insert({ id: 1, name: 'John Doe' });
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
-          user.fetch({ where: { id: 1, name: 'John Doe' } }),
+          user.fetch({ where: { name: 'John Doe' } }),
           'to be fulfilled with value satisfying',
           new User({ id: 1, name: 'John Doe' })
         );
         await expect(spy, 'to have calls satisfying', () => {
-          spy({ id: 1, name: 'John Doe' });
+          spy({ name: 'John Doe' });
+          spy({ id: 1 });
         });
         spy.restore();
       });
@@ -2224,16 +2225,17 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it("allows overriding the 'where' option if a 'where' option is passed", async function() {
+      it('appends the `where` clause if a `where` option is passed', async function() {
         await User.insert({ id: 1, name: 'John Doe' });
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
-          user.delete({ where: { id: 1 } }),
+          user.delete({ where: { name: 'John Doe' } }),
           'to be fulfilled with value satisfying',
           new User({ id: 1, name: 'John Doe' })
         );
         await expect(spy, 'to have calls satisfying', () => {
+          spy({ name: 'John Doe' });
           spy({ id: 1 });
         });
         spy.restore();
