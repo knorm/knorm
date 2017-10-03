@@ -348,7 +348,10 @@ describe('queryWithSoftDelete', () => {
       it('does not inadvertently include other rows by doing an OR WHERE match', async () => {
         await new Query(User).where({ id: 1 }).delete();
         await expect(
-          new Query(User).withDeleted().where({ id: 1 }).fetch(),
+          new Query(User)
+            .withDeleted()
+            .where({ id: 1 })
+            .fetch(),
           'to be fulfilled with value satisfying',
           [{ id: 1 }]
         );
@@ -427,7 +430,10 @@ describe('queryWithSoftDelete', () => {
       it('allows fetching soft-deleted rows with `whereNot`', async () => {
         await new Query(User).where({ id: 1 }).delete();
         await expect(
-          new Query(User).where({ id: 1 }).whereNot({ deleted: false }).fetch(),
+          new Query(User)
+            .where({ id: 1 })
+            .whereNot({ deleted: false })
+            .fetch(),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }]
         );
@@ -436,7 +442,10 @@ describe('queryWithSoftDelete', () => {
       it('allows fetching soft-deleted rows with `orWhere`', async () => {
         await new Query(User).where({ id: 1 }).delete();
         await expect(
-          new Query(User).where({ id: 2 }).orWhere({ deleted: true }).fetch(),
+          new Query(User)
+            .where({ id: 2 })
+            .orWhere({ deleted: true })
+            .fetch(),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }, { id: 2 }]
         );
