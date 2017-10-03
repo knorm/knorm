@@ -154,15 +154,17 @@ describe('queryWithSoftDelete', () => {
         clock.restore();
       });
 
-      it('resolves with the soft-deleted record', async () => {
+      it('resolves with the soft-deleted record in an array to conform with Query.prototype.delete', async () => {
         await expect(
           new Query(User).where({ id: 1 }).delete(),
           'to be fulfilled with value satisfying',
-          new User({
-            id: 1,
-            deleted: true,
-            deletedAt: expect.it('to be a date')
-          })
+          [
+            new User({
+              id: 1,
+              deleted: true,
+              deletedAt: expect.it('to be a date')
+            })
+          ]
         );
       });
 
