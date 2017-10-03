@@ -164,8 +164,14 @@ Image.fields = {
 
 const createImageTable = table => {
   table.increments();
-  table.integer('user_id').references('id').inTable(User.table);
-  table.integer('category_id').references('id').inTable(User.table);
+  table
+    .integer('user_id')
+    .references('id')
+    .inTable(User.table);
+  table
+    .integer('category_id')
+    .references('id')
+    .inTable(User.table);
 };
 
 const truncateImageTable = async () => {
@@ -194,8 +200,14 @@ const createMessageTable = table => {
   table.increments();
   table.timestamps();
   table.text('text').notNullable();
-  table.integer('sender_id').references('id').inTable(User.table);
-  table.integer('receiver_id').references('id').inTable(User.table);
+  table
+    .integer('sender_id')
+    .references('id')
+    .inTable(User.table);
+  table
+    .integer('receiver_id')
+    .references('id')
+    .inTable(User.table);
 };
 
 const truncateMessageTable = async () => {
@@ -853,7 +865,10 @@ describe('Query', function() {
 
       it('supports leftJoin', async function() {
         await expect(
-          new Query(User).distinct(['name']).leftJoin(Image).fetch(),
+          new Query(User)
+            .distinct(['name'])
+            .leftJoin(Image)
+            .fetch(),
           'to be fulfilled with value satisfying',
           rows =>
             expect(
@@ -873,7 +888,10 @@ describe('Query', function() {
         await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
         await knex(Image.table).insert([{ id: 2, user_id: 2, category_id: 1 }]);
         await expect(
-          new Query(User).distinct(['id', 'name']).innerJoin(Image).fetch(),
+          new Query(User)
+            .distinct(['id', 'name'])
+            .innerJoin(Image)
+            .fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
             new User({ id: 1, name: 'User 1' }),
@@ -1345,7 +1363,9 @@ describe('Query', function() {
           ]
         );
 
-        await knex('image').where({ id: 2 }).delete();
+        await knex('image')
+          .where({ id: 2 })
+          .delete();
       });
 
       describe("with 'fields' configured on the child query", function() {
@@ -1558,7 +1578,9 @@ describe('Query', function() {
             ]
           );
 
-          await knex('image').where({ id: 2 }).delete();
+          await knex('image')
+            .where({ id: 2 })
+            .delete();
         });
       });
 
@@ -1603,7 +1625,9 @@ describe('Query', function() {
             ]
           );
 
-          await knex('image').where({ id: 2 }).delete();
+          await knex('image')
+            .where({ id: 2 })
+            .delete();
         });
       });
 
@@ -1655,7 +1679,9 @@ describe('Query', function() {
             ]
           );
 
-          await knex('image').where({ id: 2 }).delete();
+          await knex('image')
+            .where({ id: 2 })
+            .delete();
         });
       });
 
@@ -1705,7 +1731,10 @@ describe('Query', function() {
             ]
           );
 
-          await knex('image').where({ id: 2 }).orWhere({ id: 3 }).delete();
+          await knex('image')
+            .where({ id: 2 })
+            .orWhere({ id: 3 })
+            .delete();
         });
       });
 
@@ -1757,7 +1786,9 @@ describe('Query', function() {
             ]
           );
 
-          await knex('image').where({ id: 2 }).delete();
+          await knex('image')
+            .where({ id: 2 })
+            .delete();
         });
       });
 
@@ -1810,7 +1841,9 @@ describe('Query', function() {
             ]
           );
 
-          await knex('image').where({ id: 2 }).delete();
+          await knex('image')
+            .where({ id: 2 })
+            .delete();
         });
       });
 
@@ -1870,7 +1903,10 @@ describe('Query', function() {
             ]
           );
 
-          await knex('image').where({ id: 2 }).orWhere({ id: 3 }).delete();
+          await knex('image')
+            .where({ id: 2 })
+            .orWhere({ id: 3 })
+            .delete();
         });
       });
 
@@ -2073,7 +2109,9 @@ describe('Query', function() {
             ]
           );
 
-          await knex('image').where({ id: 2 }).delete();
+          await knex('image')
+            .where({ id: 2 })
+            .delete();
         });
       });
 
@@ -2978,7 +3016,10 @@ describe('Query', function() {
 
       before(async function() {
         await knex.schema.createTable(UuidAsId.table, table => {
-          table.string('uuid').unique().notNullable();
+          table
+            .string('uuid')
+            .unique()
+            .notNullable();
           table.string('name');
         });
       });
@@ -3961,7 +4002,10 @@ describe('Query', function() {
 
       before(async function() {
         await knex.schema.createTable(UuidAsId.table, table => {
-          table.string('uuid').unique().notNullable();
+          table
+            .string('uuid')
+            .unique()
+            .notNullable();
           table.string('name');
         });
       });
