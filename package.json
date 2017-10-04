@@ -42,7 +42,11 @@
     "lib": "lib",
     "test": "test"
   },
-  "keywords": ["knorm", "plugin", "soft-delete"],
+  "keywords": [
+    "knorm",
+    "plugin",
+    "soft-delete"
+  ],
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/joelmukuthu/knorm-soft-delete.git"
