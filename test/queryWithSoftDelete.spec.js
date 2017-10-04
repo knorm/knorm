@@ -154,6 +154,15 @@ describe('queryWithSoftDelete', () => {
         clock.restore();
       });
 
+      it('passes any options passed to Query.prototype.update', async () => {
+        const spy = sinon.spy(Query.prototype, 'update');
+        await new Query(User).delete({ fields: 'name' });
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(expect.it('to be an object'), { fields: 'name' });
+        });
+        spy.restore();
+      });
+
       it('resolves with the soft-deleted record in an array to conform with Query.prototype.delete', async () => {
         await expect(
           new Query(User).where({ id: 1 }).delete(),
@@ -260,6 +269,15 @@ describe('queryWithSoftDelete', () => {
           'to have sorted rows satisfying',
           [{ id: 1, deleted_at: null }, { id: 2, deleted_at: null }]
         );
+      });
+
+      it('passes any options passed to Query.prototype.update', async () => {
+        const spy = sinon.spy(Query.prototype, 'update');
+        await new Query(User).restore({ fields: 'name' });
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(expect.it('to be an object'), { fields: 'name' });
+        });
+        spy.restore();
       });
 
       it('resolves with the restored record', async () => {
@@ -392,6 +410,15 @@ describe('queryWithSoftDelete', () => {
         await new Query(User).hardDelete();
         await expect(knex, 'with table', User.table, 'to be empty');
       });
+
+      it('passes any options passed to KnormQuery.prototype.delete', async () => {
+        const spy = sinon.spy(KnormQuery.prototype, 'delete');
+        await new Query(User).hardDelete({ fields: 'name' });
+        await expect(spy, 'to have calls satisfying', () => {
+          spy({ fields: 'name' });
+        });
+        spy.restore();
+      });
     });
 
     describe('Query.prototype.fetch', () => {
@@ -516,6 +543,15 @@ describe('queryWithSoftDelete', () => {
           [{ id: 1, deleted: false }]
         );
       });
+
+      it('passes any options passed to Query.prototype.setOptions', async () => {
+        const spy = sinon.spy(Query.prototype, 'setOptions');
+        await new User().restore({ require: false });
+        await expect(spy, 'to have calls satisfying', () => {
+          spy({ require: false });
+        });
+        spy.restore();
+      });
     });
 
     describe('Model.restore', () => {
@@ -526,7 +562,7 @@ describe('queryWithSoftDelete', () => {
           deleted: true,
           deletedAt: new Date()
         });
-        await User.restore({ where: { id: 1 } });
+        await User.restore();
         await expect(
           knex,
           'with table',
@@ -534,6 +570,15 @@ describe('queryWithSoftDelete', () => {
           'to have sorted rows satisfying',
           [{ id: 1, deleted: false }]
         );
+      });
+
+      it('passes any options passed to Query.prototype.restore', async () => {
+        const spy = sinon.spy(Query.prototype, 'restore');
+        await User.restore({ where: { id: 1 } });
+        await expect(spy, 'to have calls satisfying', () => {
+          spy({ where: { id: 1 } });
+        });
+        spy.restore();
       });
     });
 
@@ -554,24 +599,53 @@ describe('queryWithSoftDelete', () => {
         await user.hardDelete();
         await expect(knex, 'with table', User.table, 'to be empty');
       });
+
+      it('resolves with instances of all the deleted rows if more than one row is deleted', async function() {
+        await User.insert({ id: 1, name: 'one' });
+        await User.insert({ id: 2, name: 'two' });
+        await expect(
+          new User().hardDelete(),
+          'to be fulfilled with value satisfying',
+          instances =>
+            expect(
+              instances,
+              'when sorted by',
+              (a, b) => a.id - b.id,
+              'to satisfy',
+              [
+                new User({ id: 1, name: 'one' }),
+                new User({ id: 2, name: 'two' })
+              ]
+            )
+        );
+      });
     });
 
     describe('Model.hardDelete', () => {
-      it('hard-deletes a record', async () => {
+      it('hard-deletes records', async () => {
         await User.insert({ id: 1, name: 'one' });
-        await User.hardDelete({ where: { id: 1 } });
+        await User.hardDelete();
         await expect(knex, 'with table', User.table, 'to be empty');
       });
 
-      it('hard-deletes a soft-deleted record', async () => {
+      it('hard-deletes soft-deleted records', async () => {
         await User.insert({
           id: 1,
           name: 'one',
           deleted: true,
           deletedAt: new Date()
         });
-        await User.hardDelete({ where: { id: 1 } });
+        await User.hardDelete();
         await expect(knex, 'with table', User.table, 'to be empty');
+      });
+
+      it('passes any options passed to Query.prototype.hardDelete', async () => {
+        const spy = sinon.spy(Query.prototype, 'hardDelete');
+        await User.hardDelete({ where: { id: 1 } });
+        await expect(spy, 'to have calls satisfying', () => {
+          spy({ where: { id: 1 } });
+        });
+        spy.restore();
       });
     });
   });
