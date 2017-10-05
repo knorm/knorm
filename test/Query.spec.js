@@ -3749,7 +3749,7 @@ describe('Query', function() {
       });
     });
 
-    describe('when more than one rows are updated', function() {
+    describe('with multiple rows in the table', function() {
       beforeEach(async function() {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
       });
@@ -3828,120 +3828,14 @@ describe('Query', function() {
       });
     });
 
-    describe('when only one row is updated', function() {
-      beforeEach(async function() {
-        await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
-      });
-
-      it('updates only the row matching the id', async function() {
-        await expect(
-          new Query(User).update({ id: 1, name: 'Johnie Doe' }),
-          'to be fulfilled'
-        );
-        await expect(
-          knex,
-          'with table',
-          User.table,
-          'to have sorted rows satisfying',
-          [{ id: 1, name: 'Johnie Doe' }, { id: 2, name: 'Jane Doe' }]
-        );
-      });
-
-      it('resolves with an instance of the model', async function() {
-        const query = new Query(User);
-        user.name = 'Jane Doe';
-        await expect(
-          query.update(user),
-          'to be fulfilled with value exhaustively satisfying',
-          expect.it('to be a', User)
-        );
-      });
-
-      it('populates the instance with all the fields from the database', async function() {
-        const query = new Query(User);
-        user.name = 'Jane Doe';
-        await expect(
-          query.update(user),
-          'to be fulfilled with value satisfying',
-          new User({
-            id: 1,
-            name: 'Jane Doe',
-            confirmed: false,
-            description: null,
-            age: null,
-            dateOfBirth: null,
-            dbDefault: 'set-by-db',
-            jsonField: null,
-            intToString: null
-          })
-        );
-      });
-
-      it('resolves with the same instance that was passed', async function() {
-        const query = new Query(User);
-        user.name = 'Jane Doe';
-        await expect(
-          query.update(user),
-          'to be fulfilled with value exhaustively satisfying',
-          updatedUser => {
-            expect(updatedUser === user, 'to be true');
-          }
-        );
-      });
-
-      it("doesn't modify other instance data properties", async function() {
-        const query = new Query(User);
-        user.name = 'Jane Doe';
-        user.leaveMeIntact = 'okay';
-        await query.update(user);
-        await expect(
-          user,
-          'to exhaustively satisfy',
-          Object.assign(
-            new User({
-              id: 1,
-              name: 'Jane Doe',
-              confirmed: false,
-              description: null,
-              age: null,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            }),
-            {
-              leaveMeIntact: 'okay'
-            }
-          )
-        );
-      });
-
-      it('casts updated fields configured with post-fetch cast functions after updating', async function() {
-        const query = new Query(User);
-        user.intToString = 10;
-        await expect(
-          query.update(user),
-          'to be fulfilled with value satisfying',
-          { intToString: '10' }
-        );
-        await expect(
-          knex,
-          'with table',
-          User.table,
-          'to have sorted rows satisfying',
-          [{ id: 1, int_to_string: 10 }, { id: 2, int_to_string: null }]
-        );
-      });
-    });
-
     describe('with a `returning` option', function() {
-      it('returns only the fields requested', async function() {
+      it('returns the `id` field and the fields requested', async function() {
         const query = new Query(User).returning('name');
         user.name = 'Jane Doe';
         await expect(
           query.update(user),
-          'to be fulfilled with value satisfying',
-          new User({ name: 'Jane Doe' })
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1, name: 'Jane Doe' })]
         );
       });
 
@@ -3950,8 +3844,8 @@ describe('Query', function() {
         user.name = 'Jane Doe';
         await expect(
           query.update(user),
-          'to be fulfilled with value satisfying',
-          new User({ name: 'Jane Doe', confirmed: false })
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1, name: 'Jane Doe', confirmed: false })]
         );
       });
 
@@ -3963,8 +3857,8 @@ describe('Query', function() {
         user.name = 'Jane Doe';
         await expect(
           query.update(user),
-          'to be fulfilled with value satisfying',
-          new User({ name: 'Jane Doe', confirmed: false })
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1, name: 'Jane Doe', confirmed: false })]
         );
       });
 
@@ -3976,72 +3870,14 @@ describe('Query', function() {
         user.name = 'Jane Doe';
         await expect(
           query.update(user),
-          'to be fulfilled with value satisfying',
-          Object.assign(new User(), {
-            theName: 'Jane Doe',
-            theConfirmed: false
-          })
-        );
-      });
-    });
-
-    describe('with a custom id field', function() {
-      class UuidAsId extends KnormModel {}
-      UuidAsId.Query = Query;
-      UuidAsId.table = 'uuid_as_id';
-      UuidAsId.fieldNames.id = 'uuid';
-      UuidAsId.fields = {
-        uuid: {
-          type: Field.types.string,
-          required: true
-        },
-        name: {
-          type: Field.types.string
-        }
-      };
-
-      before(async function() {
-        await knex.schema.createTable(UuidAsId.table, table => {
-          table
-            .string('uuid')
-            .unique()
-            .notNullable();
-          table.string('name');
-        });
-      });
-
-      after(async function() {
-        await knex.schema.dropTable(UuidAsId.table);
-      });
-
-      afterEach(async function() {
-        await knex(UuidAsId.table).truncate();
-      });
-
-      it('updates an instance of the model', async function() {
-        const instance = await new Query(UuidAsId).insert(
-          new UuidAsId({ uuid: 'foo', name: 'bar' })
-        );
-        const spy = sinon.spy(Query.prototype, 'where');
-        const query = new Query(UuidAsId);
-        instance.name = 'foobar';
-        await expect(query.update(instance), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ uuid: 'foo' });
-        });
-        await expect(
-          knex,
-          'with table',
-          UuidAsId.table,
-          'to have rows satisfying',
+          'to be fulfilled with value exhaustively satisfying',
           [
-            {
-              uuid: 'foo',
-              name: 'foobar'
-            }
+            Object.assign(new User({ id: 1 }), {
+              theName: 'Jane Doe',
+              theConfirmed: false
+            })
           ]
         );
-        spy.restore();
       });
     });
 
@@ -4239,7 +4075,7 @@ describe('Query', function() {
             { returning: ['id', 'name', 'confirmed'] }
           ),
           'to be fulfilled with value exhaustively satisfying',
-          new User({ id: 1, name: 'Jane Doe', confirmed: false })
+          [new User({ id: 1, name: 'Jane Doe', confirmed: false })]
         );
       });
     });
