@@ -2018,16 +2018,15 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it("does not pass the `id` to Query.prototype.where if it's unset", async function() {
+      it('rejects if the `id` is not set', async function() {
         await User.insert({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
           new User({ name: 'John Doe' }).update(),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'John Doe' })
+          'to be rejected with error satisfying',
+          new Error(
+            'User: cannot update an instance if the `id` field is not set'
+          )
         );
-        await expect(spy, 'was not called');
-        spy.restore();
       });
 
       it('appends the `where` clause if a `where` option is passed', async function() {
@@ -2080,28 +2079,6 @@ describe('Model', function() {
         user.leaveMeIntact = 'okay';
         await expect(user.update(), 'to be fulfilled');
         await expect(user.leaveMeIntact, 'to be', 'okay');
-      });
-
-      describe('if more than one row is updated', function() {
-        it('resolves with instances of all the updated rows', async function() {
-          await User.insert({ id: 1, name: 'John Doe' });
-          await User.insert({ id: 2, name: 'Jane Doe' });
-          await expect(
-            new User({ name: 'Mr & Mrs Smith' }).update(),
-            'to be fulfilled with value satisfying',
-            instances =>
-              expect(
-                instances,
-                'when sorted by',
-                (a, b) => a.id - b.id,
-                'to satisfy',
-                [
-                  new User({ id: 1, name: 'Mr & Mrs Smith' }),
-                  new User({ id: 2, name: 'Mr & Mrs Smith' })
-                ]
-              )
-          );
-        });
       });
 
       describe('with a custom id field', function() {
@@ -2213,16 +2190,15 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it("does not pass the `id` to Query.prototype.where if it's unset", async function() {
+      it('rejects if the `id` is unset', async function() {
         await User.insert({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
           new User().fetch(),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'John Doe' })
+          'to be rejected with error satisfying',
+          new Error(
+            'User: cannot fetch an instance if the `id` field is not set'
+          )
         );
-        await expect(spy, 'was not called');
-        spy.restore();
       });
 
       it('appends the `where` clause if a `where` option is passed', async function() {
@@ -2322,16 +2298,15 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it("does not pass the `id` to Query.prototype.where if it's unset", async function() {
+      it('rejects if the `id` is unset', async function() {
         await User.insert({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
           new User().delete(),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'John Doe' })
+          'to be rejected with error satisfying',
+          new Error(
+            'User: cannot delete an instance if the `id` field is not set'
+          )
         );
-        await expect(spy, 'was not called');
-        spy.restore();
       });
 
       it('appends the `where` clause if a `where` option is passed', async function() {
@@ -2369,28 +2344,6 @@ describe('Model', function() {
               null
             );
           });
-        });
-      });
-
-      describe('if more than one row is deleted', function() {
-        it('resolves with instances of all the deleted rows', async function() {
-          await User.insert({ id: 1, name: 'John Doe' });
-          await User.insert({ id: 2, name: 'Jane Doe' });
-          await expect(
-            new User().delete(),
-            'to be fulfilled with value satisfying',
-            instances =>
-              expect(
-                instances,
-                'when sorted by',
-                (a, b) => a.id - b.id,
-                'to satisfy',
-                [
-                  new User({ id: 1, name: 'John Doe' }),
-                  new User({ id: 2, name: 'Jane Doe' })
-                ]
-              )
-          );
         });
       });
 
