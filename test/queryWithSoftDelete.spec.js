@@ -284,7 +284,7 @@ describe('queryWithSoftDelete', () => {
         await expect(
           new Query(User).where({ id: 1 }).restore(),
           'to be fulfilled with value satisfying',
-          new User({ id: 1, deleted: false, deletedAt: null })
+          [new User({ id: 1, deleted: false, deletedAt: null })]
         );
       });
 
@@ -544,11 +544,27 @@ describe('queryWithSoftDelete', () => {
         );
       });
 
+      it('rejects if the `id` field is not set', async () => {
+        await expect(
+          new User().restore(),
+          'to be rejected with error satisfying',
+          new Error(
+            'User: cannot restore an instance if the `id` field is not set'
+          )
+        );
+      });
+
       it('passes any options passed to Query.prototype.setOptions', async () => {
+        const user = await new User({
+          id: 1,
+          name: 'one',
+          deleted: true,
+          deletedAt: new Date()
+        }).insert();
         const spy = sinon.spy(Query.prototype, 'setOptions');
-        await new User().restore({ require: false });
+        await user.restore({ transaction: {} });
         await expect(spy, 'to have calls satisfying', () => {
-          spy({ require: false });
+          spy({ transaction: {} });
         });
         spy.restore();
       });
@@ -600,24 +616,24 @@ describe('queryWithSoftDelete', () => {
         await expect(knex, 'with table', User.table, 'to be empty');
       });
 
-      it('resolves with instances of all the deleted rows if more than one row is deleted', async function() {
-        await User.insert({ id: 1, name: 'one' });
-        await User.insert({ id: 2, name: 'two' });
+      it('rejects if the `id` field is not set', async () => {
         await expect(
           new User().hardDelete(),
-          'to be fulfilled with value satisfying',
-          instances =>
-            expect(
-              instances,
-              'when sorted by',
-              (a, b) => a.id - b.id,
-              'to satisfy',
-              [
-                new User({ id: 1, name: 'one' }),
-                new User({ id: 2, name: 'two' })
-              ]
-            )
+          'to be rejected with error satisfying',
+          new Error(
+            'User: cannot hard delete an instance if the `id` field is not set'
+          )
         );
+      });
+
+      it('passes any options passed to Query.prototype.setOptions', async () => {
+        const user = await new User({ id: 1, name: 'one' }).insert();
+        const spy = sinon.spy(Query.prototype, 'setOptions');
+        await user.hardDelete({ transaction: {} });
+        await expect(spy, 'to have calls satisfying', () => {
+          spy({ transaction: {} });
+        });
+        spy.restore();
       });
     });
 
