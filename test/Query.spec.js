@@ -3749,6 +3749,28 @@ describe('Query', function() {
       });
     });
 
+    describe("with 'first' configured", function() {
+      it('returns the first updated instance', async function() {
+        await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
+        const query = new Query(User).first(true);
+        await expect(
+          query.update({ name: 'Foo' }),
+          'to be fulfilled with value exhaustively satisfying',
+          new User({
+            id: 1,
+            name: 'Foo',
+            confirmed: false,
+            description: null,
+            age: null,
+            dateOfBirth: null,
+            dbDefault: 'set-by-db',
+            jsonField: null,
+            intToString: null
+          })
+        );
+      });
+    });
+
     describe('with multiple rows in the table', function() {
       beforeEach(async function() {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
@@ -4260,6 +4282,27 @@ describe('Query', function() {
               theConfirmed: true
             })
           ]
+        );
+      });
+    });
+
+    describe("with 'first' configured", function() {
+      it('resolves with the first deleted model', async function() {
+        const query = new Query(User).first(true);
+        await expect(
+          query.delete(),
+          'to be fulfilled with value exhaustively satisfying',
+          new User({
+            id: 1,
+            name: 'John Doe',
+            confirmed: true,
+            description: null,
+            age: null,
+            dateOfBirth: null,
+            dbDefault: 'set-by-db',
+            jsonField: null,
+            intToString: '10'
+          })
         );
       });
     });
