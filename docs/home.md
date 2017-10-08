@@ -28,15 +28,38 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
 
 > NOTE: knorm does not create or run knex migrations
 
-## Documentation
+## Installation
 
-View the [documentation site](http://knorm.github.io)
+```bash
+npm install --save knorm
+```
 
-## License
+> knorm has a peer dependency on [knex](http://knexjs.org)
 
-[MIT License](./LICENSE.md)
+## Docs
 
-## Credits
+- Guides
+  - [Getting started](./guides/getting-started.md)
+  - [Relations](./guides/relations.md)
+- API
+  - [Field](./api/field.md)
+  - [Model](./api/model.md)
+  - [Query](./api/query.md)
+  - [Transaction](./api/transaction.md)
 
-Knorm is inspired in part by the [Mongoose JS](http://mongoosejs.com/) and
-[Bookshelf.js](http://bookshelfjs.org/) APIs.
+## Plugins
+- [knorm-timestamps](https://www.npmjs.com/package/knorm-timestamps)
+- [knorm-soft-delete](https://www.npmjs.com/package/knorm-soft-delete)
+
+## TODOs
+
+- build and test ES5 classes and include them in releases
+- add more documentation (in the meantime, the tests are a good source of
+  documentation)
+- run tests against other databases besides PostgreSQL
+- add support for databases that don't support RETURNING clauses
+- add a tool to generate models from DESCRIBE queries
+
+> run `npm run todo` to see TODOs in the code
+
+PRs are very welcome!
