@@ -9,6 +9,8 @@
 A purely ES6 class-based ORM for [Knex.js](http://knexjs.org). Features:
 - model validation (before insert and update operations) with custom error
   classes and support for async custom validators
+- value casting before insert and update operations and after fetch operations
+- JSON schema validation (similar to [Mongoose JS](http://mongoosejs.com/))
 - SQL joins with full JavaScript syntax
 - virtual fields (i.e. computed fields) with support for async getters
 - model field names to database column names transformations (and vice-versa
@@ -114,14 +116,6 @@ Model.fields = {
   id: {
     type: Field.types.integer,
     required: true // This is a validation rule
-  },
-  createdAt: {
-    type: Field.types.dateTime,
-    default: () => new Date() // default values can be plain values or functions
-  },
-  updatedAt: {
-    type: Field.types.dateTime,
-    default: () => new Date()
   }
 };
 // Note that the 'required' and 'default' field options are optional; however,
@@ -130,30 +124,24 @@ Model.fields = {
 // with Knex's schema builder.
 ```
 
-If your `id` or timestamp fields have names other than `id`, `createdAt` and
-`updatedAt` respectively, you can configure that as well:
+If your `id` field has a name other than `id`, you can configure the field name:
 
 ```js
-Model.idField = 'uuid';
-Model.createdAtField = 'created';
-Model.updatedAtField = 'updated';
+Model.fieldNames = {
+  id: 'uuid'
+};
 // In this case your base fields will be something like:
 Model.fields = {
   uuid: {
     type: Field.types.uuid,
     required: true
-  },
-  created: {
-    type: Field.types.dateTime,
-    default: () => new Date()
-  },
-  updated: {
-    type: Field.types.dateTime,
-    default: () => new Date()
   }
 };
 // You can also override this for any model that extends Model
 ```
+
+> To add [timestamps](http://knexjs.org/#Schema-timestamps) support, check out
+the [knorm-timestamps](https://www.npmjs.com/package/knorm-timestamps) plugin
 
 ### 3. Add some model classes
 
@@ -225,10 +213,10 @@ Message.virtuals = {
 ```
 
 `User` and `Message` will inherit all the fields (add virtuals) added to `Model`
-so they'll also have the `id`, `createdAt` and `updatedAt` fields. This will
-also work with thier child classes, so if you create an `Employee` model that
-inherits from `User` it will get all the fields defined in `User` and `Model`.
-You can use this scheme to build more complicated ORMs.
+so they'll also have the `id` field. This will also work with thier child
+classes, so if you create an `Employee` model that inherits from `User` it will
+get all the fields defined in `User` and `Model`. You can use this scheme to
+build more complicated ORMs.
 
 ### 4. Example
 
@@ -246,7 +234,7 @@ const emailConfirmedUsersWithUnreadMessages => async () => {
 
   const confirmedUsersWithUnreadMessages = await User.query
     .where({ confirmed: true })
-    .join( // this does a LEFT JOIN from the 'user' to the 'message' table
+    .leftJoin( // this does a LEFT JOIN from the 'user' to the 'message' table
       Message.query
         .on('receiverId')
         .as('unreadMessages')
@@ -288,5 +276,5 @@ PRs are very welcome!
 
 ## Credits
 
-Knorm is inspired in part by the [Mongoose](http://mongoosejs.com/) and
-[Bookshelf](http://bookshelfjs.org/) APIs.
+Knorm is inspired in part by the [Mongoose JS](http://mongoosejs.com/) and
+[Bookshelf.js](http://bookshelfjs.org/) APIs.

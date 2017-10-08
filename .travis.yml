@@ -1,17 +1,17 @@
+language: node_js
+
 services:
-  - postgresql: "9.6"
+  - postgresql
+
+addons:
+  postgresql: "9.4"
+
+env:
+  - POSTGRES_USER=knorm POSTGRES_PASSWORD=knorm POSTGRES_DB=knorm POSTGRES_PORT=5432
 
 before_script:
   - psql -c 'create database knorm;' -U postgres
-
-env:
-  - POSTGRES_DB=knorm
-
-language: node_js
-
-cache:
-  directories:
-    - node_modules
+  - psql -c "create user knorm with password 'knorm';" -U postgres
 
 script:
   - npm run ci

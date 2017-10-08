@@ -1,18 +1,18 @@
 {
-  "extends": [
-    "eslint:recommended",
-    "onelint"
-  ],
   "env": {
-    "es6": true,
-    "node": true
+    "node": true,
+    "es6": true
   },
+  "plugins": ["prettier"],
+  "extends": ["eslint:recommended", "prettier"],
   "parserOptions": {
     "ecmaVersion": 2017
   },
   "rules": {
-    "comma-dangle": ["error", "always-multiline"],
-    "no-multiple-empty-lines": ["error", { "max": 1, "maxBOF": 0, "maxEOF": 0 }],
-    "no-unused-vars": [2, { "args": "after-used" }]
+    "curly": ["error", "all"],
+    "eqeqeq": ["error", "always"],
+    "prefer-const": "error",
+    "prettier/prettier": ["error", { "singleQuote": true }],
+    "no-var": "error"
   }
 }

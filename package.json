@@ -1,42 +1,44 @@
 {
   "name": "knorm",
-  "version": "0.2.0",
+  "version": "0.8.1",
   "description": "A purely class-based ORM for Knex.js",
   "main": "index.js",
   "scripts": {
     "test": "mocha 'test/**/*.spec.js'",
     "coverage": "nyc npm test",
     "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "ci": "npm-run-all lint coverage coveralls",
-    "postgres": "node script/postgres start",
-    "postgres:stop": "node script/postgres stop",
-    "postgres:remove": "node script/postgres remove",
+    "postgres": "knorm-postgres start",
+    "postgres:stop": "knorm-postgres stop",
+    "postgres:remove": "knorm-postgres remove",
     "todo": "grep -rn -e TODO -e FIXME lib",
     "doctoc": "doctoc README.md --github"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "knex": "^0.12.7"
+    "knex": "^0.13.0"
   },
   "devDependencies": {
-    "coveralls": "^2.12.0",
+    "coveralls": "^3.0.0",
     "doctoc": "^1.3.0",
-    "eslint": "^4.2.0",
-    "eslint-config-onelint": "^2.0.0",
+    "eslint": "^4.7.2",
+    "eslint-config-prettier": "^2.6.0",
+    "eslint-plugin-prettier": "^2.3.1",
     "knex": "^0.13.0",
+    "knorm-postgres": "^2.0.0",
     "mocha": "^3.2.0",
     "npm-run-all": "^4.0.2",
     "nyc": "^11.0.2",
     "pg": "^7.0.2",
+    "prettier": "^1.7.2",
     "proxyquire": "^1.7.11",
-    "shelljs": "^0.7.7",
-    "sinon": "^2.2.0",
+    "sinon": "^4.0.0",
     "unexpected": "^10.29.0",
     "unexpected-knex": "^1.2.0",
-    "unexpected-sinon": "^10.7.0",
-    "yargs": "^8.0.1"
+    "unexpected-sinon": "^10.7.0"
   },
   "directories": {
     "doc": "doc",
@@ -49,7 +51,8 @@
     "database"
   ],
   "dependencies": {
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "validator": "^9.0.0"
   },
   "repository": {
     "type": "git",
