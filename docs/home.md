@@ -26,7 +26,7 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
   through [plugins](/#/?id=plugins ":ignore :target=_self")
 - good test coverage
 
-> NOTE: knorm does not create or run knex migrations
+!> NOTE: knorm does not create or run knex migrations
 
 ## Installation
 
@@ -39,13 +39,17 @@ npm install --save knorm
 ## Docs
 
 - Guides
-  - [Getting started](./guides/getting-started.md)
-  - [Relations](./guides/relations.md)
+  - [Getting started](guides/getting-started.md)
+  - [Relations](guides/relations.md)
+  - [Validation](guides/validation.md)
 - API
-  - [Field](./api/field.md)
-  - [Model](./api/model.md)
-  - [Query](./api/query.md)
-  - [Transaction](./api/transaction.md)
+  - [Model](api/model.md)
+  - [Field](api/field.md)
+  - [Query](api/query.md)
+  - [Transaction](api/transaction.md)
+  - [KnormError](api/knorm-error.md)
+  - [QueryError](api/query-error.md)
+  - [ValidationError](api/validation-error.md)
 
 ## Plugins
 - [knorm-timestamps](https://www.npmjs.com/package/knorm-timestamps)
@@ -59,6 +63,8 @@ npm install --save knorm
 - run tests against other databases besides PostgreSQL
 - add support for databases that don't support RETURNING clauses
 - add a tool to generate models from DESCRIBE queries
+- add a tool to generate models from knex migrations
+- add a tool to generate knex migrations from models
 
 > run `npm run todo` to see TODOs in the code
 

@@ -131,7 +131,10 @@ Image.fields = {
 };
 ```
 
-## Model(data = {})
+## Model.Query
+## Model.Field
+
+## Model([data])
 
 Creates an instance of a model and optionally accepts an object data to assign
 the instance. If a `data` object is provided, it's passed to
@@ -142,7 +145,7 @@ the instance. If a `data` object is provided, it's passed to
 const user = new User();
 ```
 
-## Model.prototype.setData({}) : Model
+## Model.prototype.setData(data) : Model
 
 This sets an instance's data, accepting an object with key/value pairs mapping
 field names (or virtual field names) to values. All the keys in it must be valid
@@ -166,3 +169,22 @@ user.firstName = 'fooo';
 
 In this case the field names will not be validated against the list of
 configured field or virtual field names.
+
+## Model.prototype.getData([options])
+## Model.prototype.setDefaults([options])
+## Model.prototype.validate([options])
+## Model.prototype.cast([options])
+## Model.prototype.fetch([options])
+## Model.prototype.save([options])
+## Model.prototype.insert([options])
+## Model.prototype.update([options])
+## Model.prototype.delete([options])
+## Model.count([options])
+## Model.fetch([options])
+## Model.save(data, [options])
+## Model.insert(data, [options])
+## Model.update(data, [options])
+## Model.delete([options])
+## Model.fetchById(id, [options])
+## Model.updateById(id, data, [options])
+## Model.deleteById(id, [options])
