@@ -1,7 +1,7 @@
 {
   "name": "knorm",
   "version": "0.8.1",
-  "description": "A purely class-based ORM for Knex.js",
+  "description": "A purely ES6 class-based ORM for Knex.js",
   "main": "index.js",
   "scripts": {
     "test": "mocha 'test/**/*.spec.js'",

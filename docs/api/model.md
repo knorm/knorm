@@ -2,11 +2,8 @@
 
 This is the base class that all Knorm models should inherit. It provides the
 core functionality for setting and getting a model's data and provides
-interfaces to [Field](./Field.md) for data validation and [Query](./Query.md)
+interfaces to [Field](./field.md) for data validation and [Query](./query.md)
 for database operations.
-
-<!-- START doctoc -->
-<!-- END doctoc -->
 
 *For the following examples, assume this setup:*
 ```js
@@ -27,7 +24,7 @@ User.table = 'user';
 
 This is a static field that can be used to configure a model's fields. The value
 assigned to `Model.fields` must be an object mapping field names to
-[field configs](./Field.md#Field). A field config must contain at least a `type`
+[field configs](./field.md). A field config must contain at least a `type`
 option:
 
 ```js
@@ -48,8 +45,8 @@ in a child model without overwriting the parent's fields but if the same field
 name is passed in a child model, then it overwrites the parent's field. This
 allows specifying a different field config in a child model.
 
-> NOTE: avoid using any of the [Model.reserved](#Model.reserved) fields as
-field names.
+> NOTE: this setter will throw if you try to add a field whose name is already
+a `Model.prototype` property, or is added as a virtual already.
 
 ```js
 class Employee extends User {}
@@ -104,61 +101,32 @@ fields are automatically added to the instance. These are used in
 [Model.prototype.setData](#Model.prototype.setData) and
 [Model.prototype.getData](#Model.prototype.getData).
 
-> NOTE: avoid using any of the [Model.reserved](#Model.reserved) fields or
-[Model.fields](#Model.fields) as virtual field names.
+> NOTE: this setter will throw if you try to add a field whose name is already
+a `Model.prototype` property, or is added as a field already.
 
 > Also, avoid using arrow functions for getters and setters if you wish to
 access the instance using `this`.
 
-## Model.idField
+## Model.fieldNames
 
-Knorm expects models to have an `id` field (used for instance in SQL joins). By
-default it expects this field to be named `'id'` (owing to the fact that knex's
+Knorm expects models to have an `id` field. By default it expects this field to
+be named `'id'` (owing to the fact that knex's
 [SchemaBuilder.prototype.increments](http://knexjs.org/#Schema-increments)
 creates a column named `'id'`). If your `id` field has a different name, you can
-configure it using `Model.idField`:
+configure it using `Model.fieldNames`:
 
 ```js
 class Image extends Model {}
 
-Image.idField = 'uuid';
+Image.fieldNames = {
+  id: 'uuid'
+};
 
 // then Image is expected to have a field named 'uuid'
 Image.fields = {
   uuid: {
-    type: Field.types.uuid,
+    type: 'uuid',
     required: true
-  }
-};
-```
-
-## Model.createdAtField / Model.updatedAtField
-
-Knorm doesn't require models to have an `createdAt` and `updatedAt` fields but
-will do the right thing if they do exist (for instance,
-[`Query.prototype.update`](#Query.prototype.update) populates the `updatedAt`
-field if it has a default value set). By
-default, knorm expects these fields to be named `'createdAt'` and `'updatedAt'`
-(owing to the fact that knex's
-[SchemaBuilder.prototype.timestamps](http://knexjs.org/#Schema-timestamps)
-creates columns named `'created_at'` and `updated_at`). If your timestamp fields
-have different names, you can configure them using `Model.createdAtField` and
-`Model.updatedAtField`. However, only resort to this if you can't map column
-names to field names using
-[Field.prototype.getColumnName](./Field.md#Field.prototype.getColumnName).
-
-```js
-Image.createdAtField = 'created';
-Image.updatedAtField = 'updated';
-
-Image.fields = {
-  created: {
-    type: Field.types.dateTime,
-    default: () => new Date()
-  },
-  updated: {
-    type: Field.types.dateTime,
-    default: () => new Date()
   }
 };
 ```
