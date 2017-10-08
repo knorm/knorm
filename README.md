@@ -8,7 +8,7 @@
 
 A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
 
-!> NOTE: currently supports
+> NOTE: currently supports
 [PostgreSQL, MSSQL and Oracle databases](http://knexjs.org/#Builder-returning)
 
 ## Features
@@ -30,7 +30,7 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
 
 ## Documentation
 
-View the [documentation site](http://knorm.github.io)
+View the [documentation site](https://joelmukuthu.github.io/knorm/)
 
 ## License
 
