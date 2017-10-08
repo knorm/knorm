@@ -63,26 +63,6 @@ describe('Model', function() {
 
         expect(foo.theValue, 'to be', 'bar');
       });
-
-      it('throws if the virtuals name is already assigned to an instance property', function() {
-        class Foo extends Model {
-          bar() {}
-        }
-
-        Foo.virtuals = {
-          bar: {
-            get() {}
-          }
-        };
-
-        expect(
-          () => new Foo(),
-          'to throw',
-          new Error(
-            "Cannot add Getter/Setter for virtual 'Foo.bar' (Foo.prototype.bar is already assigned)"
-          )
-        );
-      });
     });
 
     describe('with data provided', function() {
@@ -1302,6 +1282,46 @@ describe('Model', function() {
         });
       });
 
+      it('throws if the field-name is already assigned to an instance property', function() {
+        class Foo extends Model {
+          bar() {}
+        }
+
+        expect(
+          () =>
+            (Foo.fields = {
+              bar: {
+                type: 'string'
+              }
+            }),
+          'to throw',
+          new Error(
+            'Foo: cannot add field `bar` (`Foo.prototype.bar` is already assigned)'
+          )
+        );
+      });
+
+      it('throws if the field-name is already added as a virtual', function() {
+        class Foo extends Model {}
+
+        Foo.virtuals = {
+          bar: {
+            get() {}
+          }
+        };
+
+        expect(
+          () =>
+            (Foo.fields = {
+              bar: {
+                type: 'string'
+              }
+            }),
+          'to throw',
+          new Error('Foo: cannot add field `bar` (`bar` is a virtual)')
+        );
+      });
+
       describe('when a model is subclassed', function() {
         it('allows overwriting fields defined in the parent', function() {
           class User extends Model {}
@@ -1470,6 +1490,46 @@ describe('Model', function() {
             }
           })
         });
+      });
+
+      it('throws if the virtual-name is already assigned to an instance property', function() {
+        class Foo extends Model {
+          bar() {}
+        }
+
+        expect(
+          () =>
+            (Foo.virtuals = {
+              bar: {
+                get() {}
+              }
+            }),
+          'to throw',
+          new Error(
+            'Foo: cannot add virtual `bar` (`Foo.prototype.bar` is already assigned)'
+          )
+        );
+      });
+
+      it('throws if the virtual-name is already added as a field', function() {
+        class Foo extends Model {}
+
+        Foo.fields = {
+          bar: {
+            type: 'string'
+          }
+        };
+
+        expect(
+          () =>
+            (Foo.virtuals = {
+              bar: {
+                get() {}
+              }
+            }),
+          'to throw',
+          new Error('Foo: cannot add virtual `bar` (`bar` is a field)')
+        );
       });
 
       describe('when a model is subclassed', function() {
