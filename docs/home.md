@@ -23,7 +23,7 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
 - custom error classes for database errors
 - improved syntax for transactions
 - full and easy configuration and extendability (owing to ES6 classes). also
-  through [plugins](/#/?id=plugins ":ignore :target=_self")
+  through [plugins](#plugins)
 - good test coverage
 
 !> NOTE: knorm does not create or run knex migrations

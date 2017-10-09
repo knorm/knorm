@@ -11,3 +11,4 @@
   - [KnormError](api/knorm-error.md)
   - [QueryError](api/query-error.md)
   - [ValidationError](api/validation-error.md)
+- [Changelog](changelog.md)

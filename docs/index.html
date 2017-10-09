@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>knorm - A purely ES6 class-based ORM for Knex.js</title>
+  <title>knorm</title>
   <meta name="description" content="A purely class-based ORM for Knex.js">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <link rel="stylesheet" href="//unpkg.com/docsify-copy-code/styles.css">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">Loading...</div>
 </body>
+<script src="//unpkg.com/docsify-copy-code/index.js"></script>
 <script>
   window.$docsify = {
     name: 'knorm',
@@ -17,8 +19,15 @@
     homepage: 'home.md',
     loadSidebar: true,
     subMaxLevel: 2,
-    auto2top: true
+    auto2top: true,
+    alias: {
+      '.*?/changelog': 'https://raw.githubusercontent.com/joelmukuthu/knorm/master/CHANGELOG.md'
+    },
+    plugins: [
+      DocsifyCopyCodePlugin.init()
+    ]
   }
 </script>
 <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+<script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
 </html>
