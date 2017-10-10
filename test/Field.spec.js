@@ -1349,7 +1349,7 @@ describe('Field', function() {
         );
       });
 
-      it('does not call the validator if no value is passed', async function() {
+      it('does not call the validator if the value is `undefined`', async function() {
         const validate = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -1361,7 +1361,7 @@ describe('Field', function() {
         await expect(validate, 'was not called');
       });
 
-      it("does not call the validator if the passed value is 'null'", async function() {
+      it('calls the validator if the passed value is `null`', async function() {
         const validate = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -1370,7 +1370,7 @@ describe('Field', function() {
           validate
         });
         await field.validate(null);
-        await expect(validate, 'was not called');
+        await expect(validate, 'was called once');
       });
 
       it('rejects with the error thrown from the validator', async function() {
