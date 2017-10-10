@@ -3,9 +3,8 @@
 Knorm supports relations using `LEFT JOIN` and `INNER JOIN` statements, meaning
 relational data can be fetched using one database query.
 
-> The following examples extend the setup in the
-[getting started guide](./getting-started.md) i.e. assume the models already
-have an `id` field.
+> The examples on this page extend the setup in the
+[getting started guide](guides/getting-started.md)
 
 ## One-to-one and one-to-many relations
 

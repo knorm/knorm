@@ -5,8 +5,6 @@
 Knorm has a peer dependency on [knex](http://knexjs.org). If you haven't
 installed it yet, [install it now](http://knexjs.org/#Installation).
 
-> For simplicity, this guide assumes that you have
-
 As an example, let's set up a postgres connection:
 
 ```js
@@ -24,9 +22,9 @@ const knex = require('knex'){
 
 ## Set up the ORM
 
-To create an ORM, extend the Query, Model and Transaction (if needed) exported
-by knorm. You can then configure the ORM with the knex instance that will be
-used for interacting with the database:
+To create an ORM, extend the Query, Model and Transaction (if needed) classes
+exported by knorm. You can then configure the ORM with the knex instance that
+will be used for interacting with the database:
 
 ```js
 const knorm = require('knorm');
@@ -67,8 +65,8 @@ Model.Field = Field; // update Model with the new Field class
 ### Configure common fields (optional)
 
 If you have fields that are common to all your models, add them to the base
-`Model` class. Knorm requires models to have an `id` field, `Model` is a good
-place to add it:
+`Model` class. Since knorm requires models to have an `id` field, `Model` is a
+good place to add it:
 
 ```js
 Model.fields = {
@@ -77,15 +75,17 @@ Model.fields = {
   }
 };
 ```
-> The `type` is required. With only a few exceptions, these types map one-to-one
-with the types you use with Knex's schema builder.
+> The field `type` is required. With only a few exceptions, these types map
+one-to-one with the types you use with Knex's schema builder. See
+[Model.fields](api/model.md#modelfields) for more info.
 
-If your `id` field has a name other than `id`, you can configure the field name:
+If your `id` field has a name other than "id", you can configure the field name:
 
 ```js
 Model.fieldNames = {
   id: 'uuid'
 };
+
 // In this case your base fields will be something like:
 Model.fields = {
   uuid: {
@@ -94,14 +94,15 @@ Model.fields = {
   }
 };
 ```
-> You can also override the field-name for any model that extends `Model`
+> You can also override the field-name for any model that extends `Model`. See
+[Model.fieldNames](api/model.md#modelfieldnames) for more info.
 
 > To add [timestamps](http://knexjs.org/#Schema-timestamps) support, check out
 the [knorm-timestamps](https://www.npmjs.com/package/knorm-timestamps) plugin
 
 ## Add models
 
-Then you're ready to add some models:
+Then you can create some models:
 
 ```js
 class User extends Model {
@@ -131,6 +132,9 @@ User.fields = {
   }
 };
 ```
+> See [the validation guide](guides/validation.md) for more info on validation
+
+> See [Model.fields](api/model.md#modelfields) for more info on field configs
 
 You can also define virtual fields. If virtuals are defined on a model, every
 instance of the model will have the virtual's getters/setters added.
@@ -146,11 +150,15 @@ User.virtuals = {
   }
 }
 ```
+> See [Model.virtuals](api/model.md#modelvirtuals) for more info on virtuals
 
 `User` will inherit all the fields (add virtuals) added to `Model` so it'll also
 have the `id` field. This will also work with thier child classes, so if you
 create an `Employee` model that inherits from `User` it will get all the fields
 defined in `User` and `Model`. You can use this to build more complicated ORMs.
+See [the Model docs](api/model.md) for more info on
+[field inheritance](api/model.md#modelfields) and
+[virtuals inheritance](api/model.md#modelvirtuals).
 
 ## Example
 

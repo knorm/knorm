@@ -5,10 +5,8 @@ core functionality for setting and getting a model's data and provides
 interfaces to [Field](./field.md) for data validation and [Query](./query.md)
 for database operations.
 
-*For the following examples, assume this setup:*
-```js
-const { Model } = require('knorm');
-```
+> The examples on this page extend the setup in the
+[getting started guide](guides/getting-started.md)
 
 ## Model.table *(required)*
 
@@ -37,16 +35,15 @@ User.fields = {
   }
 };
 ```
-
-`User.fields` now contains `firstName` and `lastName` fields.
+> `User.fields` now contains `firstName` and `lastName` fields.
 
 Fields are inherited when a model is inherited. It's possible to add fields
 in a child model without overwriting the parent's fields but if the same field
 name is passed in a child model, then it overwrites the parent's field. This
 allows specifying a different field config in a child model.
 
-> NOTE: this setter will throw if you try to add a field whose name is already
-a `Model.prototype` property, or is added as a virtual already.
+!> this setter will throw if you try to add a field whose name is already a
+`Model.prototype` property, or is added as a [virtual](#modelvirtuals) already.
 
 ```js
 class Employee extends User {}
@@ -61,8 +58,7 @@ Employee.fields = {
   }
 };
 ```
-
-`Employee.fields` now contains `firstName`, `lastName` and `employeeId` fields
+> `Employee.fields` now contains `firstName`, `lastName` and `employeeId` fields
 while `User.fields` still contains `firstName` and `lastName` fields.
 `Employee.fields.firstName` has a `minLength` validation while
 `User.fields.firstName` doesn't.
@@ -89,20 +85,21 @@ User.virtuals = {
 };
 ```
 
-Note that async getters (getters that return a promise) are supported. That
-allows getters that do database calls, cache data etc. Async setters are however
-not supported.
+Async getters (getters that return a `Promise`) are supported. That allows
+getters that do database calls, cache data etc. Async setters are however
+__not__ supported.
 
 Virtuals also behave like regular fields in that they are also inherited when a
-model is inherited, can be added to or overwriten much like `Model.fields`.
+model is inherited, can be added to or overwriten much like
+[Model.fields](#modelfields).
 
 When an instance of the model is created, getters and setters for the virtual
 fields are automatically added to the instance. These are used in
-[Model.prototype.setData](#Model.prototype.setData) and
-[Model.prototype.getData](#Model.prototype.getData).
+[Model.prototype.setData](#modelprototypesetdatadata-model) and
+[Model.prototype.getData](#modelprototypegetdataoptions-object).
 
-> NOTE: this setter will throw if you try to add a field whose name is already
-a `Model.prototype` property, or is added as a field already.
+!> this setter will throw if you try to add a field whose name is already
+a `Model.prototype` property, or is added as a [field](#modelfields) already.
 
 > Also, avoid using arrow functions for getters and setters if you wish to
 access the instance using `this`.
@@ -132,13 +129,14 @@ Image.fields = {
 ```
 
 ## Model.Query
+
 ## Model.Field
 
 ## Model([data])
 
 Creates an instance of a model and optionally accepts an object data to assign
 the instance. If a `data` object is provided, it's passed to
-[Model.prototype.setData](#Model.prototype.setData).
+[Model.prototype.setData](#modelprototypesetdatadata-model).
 
 
 ```js
@@ -170,7 +168,7 @@ user.firstName = 'fooo';
 In this case the field names will not be validated against the list of
 configured field or virtual field names.
 
-## Model.prototype.getData([options])
+## Model.prototype.getData([options]) : Object
 ## Model.prototype.setDefaults([options])
 ## Model.prototype.validate([options])
 ## Model.prototype.cast([options])
