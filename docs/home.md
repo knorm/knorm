@@ -40,8 +40,8 @@ npm install --save knorm
 
 - Guides
   - [Getting started](guides/getting-started.md)
-  - [Relations](guides/relations.md)
   - [Validation](guides/validation.md)
+  - [Relations](guides/relations.md)
 - API
   - [Model](api/model.md)
   - [Field](api/field.md)
