@@ -4,7 +4,7 @@ const Field = require('../lib/Field');
 const Virtual = require('../lib/Virtual');
 const Query = require('../lib/Query');
 const sinon = require('sinon');
-const knex = require('./lib/knex')();
+const knex = require('./lib/knex');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))

@@ -3,7 +3,7 @@ const QueryBuilder = require('knex/lib/query/builder');
 const KnormModel = require('../lib/Model');
 const KnormField = require('../lib/Field');
 const KnormQuery = require('../lib/Query');
-const knex = require('./lib/knex')();
+const knex = require('./lib/knex');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
