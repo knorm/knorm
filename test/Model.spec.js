@@ -1044,7 +1044,7 @@ describe('Model', function() {
         await expect(barSaveCast, 'was called once');
       });
 
-      it('rejects if the list of fields contains unknown fields', function() {
+      it('throws if the list of fields contains unknown fields', function() {
         class Foo extends Model {}
 
         Foo.fields = {
@@ -1067,8 +1067,8 @@ describe('Model', function() {
         const foo = new Foo();
 
         expect(
-          foo.cast({ fields: ['quux'] }),
-          'to be rejected with',
+          () => foo.cast({ fields: ['quux'] }),
+          'to throw',
           new Error("Unknown field 'Foo.quux'")
         );
       });
@@ -1210,7 +1210,7 @@ describe('Model', function() {
       expect(foo.bar, 'to be', null);
     });
 
-    it('resolves with the model instance to allow chaining', function() {
+    it('returns the model instance to allow chaining', function() {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -1225,11 +1225,7 @@ describe('Model', function() {
 
       const foo = new Foo();
 
-      expect(
-        foo.cast({ fields: ['bar'] }, { forSave: true }),
-        'to be fulfilled with',
-        foo
-      );
+      expect(foo.cast({ fields: ['bar'] }, { forSave: true }), 'to be', foo);
     });
   });
 
