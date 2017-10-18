@@ -14,7 +14,7 @@
     "postgres:stop": "knorm-postgres stop",
     "postgres:remove": "knorm-postgres remove",
     "todo": "grep -rn -e TODO -e FIXME lib",
-    "docsify": "docsify serve docs"
+    "docs": "docsify serve docs"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
