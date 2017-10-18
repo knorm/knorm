@@ -15,21 +15,31 @@ User.fields = {
 ```
 > `type`, `required` and `minLength` are validation rules
 
+A model instance is validated before
+[insert](api/model.md#modelprototypeinsertoptions-promise-gt-model) and
+[update](api/model.md#modelprototypeupdateoptions-promise-gt-model). Before inserts,
+all fields will be validated (__*except the `id` field if it's `undefined`*__)
+whereas before updates, only the fields that have values set will be validated.
+
+> You can trigger validation any time on a model instance via
+[Model.prototype.validate](api/model.md#modelprototypevalidateoptions-promise-gt-model)
+
 ## Validators
 
 These validators are supported:
 
-| Validator   | Type     |  Description                                        |
-| ----------- | -------- | --------------------------------------------------- |
-| `type`      | string   | See [Field.types](api/field.md#fieldtypes) for all the supported field types. |
-| `required`  | boolean  | Whether or not a field is required, defaults to `false`. This validator ensures that a field's value is not `undefined` or `null`. |
-| `minLength` | integer  | Validates that the field value's `length` is at least as long as this value. Supported only for `string` field types. |
-| `maxLength` | integer  | Validates that the field value's `length` is not longer than this value. Supported only for `string` field types. |
-| `oneOf`     | array    | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings. |
-| `equals`    | mixed    | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings. |
-| `regex`     | RegExp   | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex. |
-| `schema`    | object   | See [JSON validation](#json-validation) |
-| `validate`  | function | See [custom validation](#custom-validation) |
+| Validator    | Type     |  Description                                        |
+| ------------ | -------- | --------------------------------------------------- |
+| `type`       | string   | See [Field.types](api/field.md#fieldtypes) for all the supported field types. |
+| `required`   | boolean  | Whether or not a field is required, defaults to `false`. This validator ensures that a field's value is not `undefined` or `null`. |
+| `minLength`  | integer  | Validates that the field value's `length` is at least as long as this value. Supported only for `string` and `array` (for [JSON validation](#json-validation)) field types. |
+| `maxLength`  | integer  | Validates that the field value's `length` is not longer than this value. Supported only for `string` and `array` (for [JSON validation](#json-validation)) field types. |
+| `oneOf`      | array    | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings. |
+| `equals`     | mixed    | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings. |
+| `regex`      | RegExp   | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex. |
+| `validate`   | function | See [custom validation](#custom-validation) |
+| `schema`     | object   | See [JSON validation](#json-validation) |
+| `itemSchema` | object   | See [JSON validation](#json-validation) |
 
 ## Custom validation
 
@@ -91,9 +101,123 @@ User.fields = {
 ```
 
 !> Custom validators will __not__ be called if the value is `undefined`, but
-will be called if the value is `null`.
+will be called if the value is `null`
 
 ## JSON validation
+
+For [json](http://knexjs.org/#Schema-json) (and
+[jsonb](http://knexjs.org/#Schema-jsonb)) fields, you can have the JSON values
+validate by adding a `schema` object to the field definition object:
+
+```js
+class Upload extends Model {}
+
+Upload.fields = {
+  image: {
+    type: 'jsonb',
+    schema: {
+      filename: { type: 'string' },
+      mimetype: { type: 'string', oneOf: ['image/jpeg', 'image/png'] },
+      data: { type: 'binary', required: true }
+    }
+  }
+};
+```
+
+With this schema, these are valid:
+
+```js
+new Upload({ image: { filename: 'foo', mimetype: 'image/jpeg', data: new Buffer() }});
+// Upload.fields.image is not a required field:
+new Upload({});
+ // filename is not required:
+new Upload({ image: { mimetype: 'image/jpeg', data: new Buffer() }});
+```
+
+while these are invalid:
+
+```js
+ // mimetype 'image/gif' is not allowed:
+new Upload({ image: { filename: 'foo', mimetype: 'image/gif', data: new Buffer() }});
+ // filename should be a string:
+new Upload({ image: { filename: 1, mimetype: 'image/png', data: new Buffer() } });
+```
+> JSON `schema` validators support all the [validators](#validators), including
+a nested `schema` validator for nested objects
+
+### JSON arrays
+
+For JSON arrays, use the custom `array` field type. You can also define the
+schema of a single item by passing a `itemSchema` validation object with the
+regular [validators](#validators).
+
+```js
+class SomeData extends Model {}
+
+SomeData.fields = {
+  data: {
+    type: 'json',
+    schema: {
+      currentVersion: {
+        type: 'string',
+        required: true
+      },
+      oldVersions: {
+        type: 'array',
+        maxLength: 2,
+        itemSchema: {
+          type: 'string',
+          required: true
+        }
+      }
+    }
+  }
+}
+```
+
+### Nested objects
+
+For nested objects, use the custom `object` type. You can also define the nested
+object's schema with a nested `schema` validator.
+
+```js
+class SomeData extends Model {}
+
+SomeData.fields = {
+  data: {
+    type: 'json',
+    schema: {
+      nested: {
+        type: 'object',
+        schema: {
+          someField: { type: 'string' },
+          someOtherField: { type: 'number' }
+        }
+      }
+    }
+  }
+}
+```
+
+### Root-level JSON fields
+
+For JSON fields whose values are not nested in an object, define their validators
+with an `itemSchema` validator:
+
+```js
+class SomeData extends Model {}
+
+SomeData.fields = {
+  value: {
+    type: 'json',
+    itemSchema: {
+      type: 'string',
+      required: true,
+      maxLength: 255
+    }
+  }
+};
+```
 
 ## Overriding validators
 

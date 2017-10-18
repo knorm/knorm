@@ -2,7 +2,7 @@
 
 This is the base class that all Knorm models should inherit. It provides the
 core functionality for setting and getting a model's data and provides
-interfaces to [Field](./field.md) for data validation and [Query](./query.md)
+interfaces to [Field](api/field.md) for data validation and [Query](api/query.md)
 for database operations.
 
 > The examples on this page extend the setup in the
@@ -169,20 +169,20 @@ In this case the field names will not be validated against the list of
 configured field or virtual field names.
 
 ## Model.prototype.getData([options]) : Object
-## Model.prototype.setDefaults([options])
-## Model.prototype.validate([options])
-## Model.prototype.cast([options])
-## Model.prototype.fetch([options])
-## Model.prototype.save([options])
-## Model.prototype.insert([options])
-## Model.prototype.update([options])
-## Model.prototype.delete([options])
-## Model.count([options])
-## Model.fetch([options])
-## Model.save(data, [options])
-## Model.insert(data, [options])
-## Model.update(data, [options])
-## Model.delete([options])
+## Model.prototype.setDefaults([options]) : Model
+## Model.prototype.validate([options]) : Promise => Model
+## Model.prototype.cast([options]) : Model
+## Model.prototype.fetch([options]) : Promise => Model
+## Model.prototype.save([options]) : Promise => Model
+## Model.prototype.insert([options]) : Promise => Model
+## Model.prototype.update([options]) : Promise => Model
+## Model.prototype.delete([options]) : Promise => Model
+## Model.count([options]) : Promise => Number
+## Model.fetch([options]) : Promise => [Model]
+## Model.save(data, [options]) : Promise => [Model]
+## Model.insert(data, [options]) : Promise => [Model]
+## Model.update(data, [options]) : Promise => [Model]
+## Model.delete([options]) : Promise => [Model]
 ## Model.fetchById(id, [options])
 ## Model.updateById(id, data, [options])
 ## Model.deleteById(id, [options])

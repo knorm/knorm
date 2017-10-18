@@ -1,13 +1,13 @@
 ## Query.knex
 ## Query(model)
-## Query.prototype.count([options])
-## Query.prototype.fetch([options])
-## Query.prototype.save(data, [options])
-## Query.prototype.insert(data, [options])
-## Query.prototype.update(data, [options])
-## Query.prototype.delete([options])
+## Query.prototype.count([options]) : Promise => Number
+## Query.prototype.fetch([options]) : Promise => [Model]
+## Query.prototype.save(data, [options]) : Promise => [Model]
+## Query.prototype.insert(data, [options]) : Promise => [Model]
+## Query.prototype.update(data, [options]) : Promise => [Model]
+## Query.prototype.delete([options]) : Promise => [Model]
 
-## Query.prototype.setOptions(options)
+## Query.prototype.setOptions(options) : Query
 
 ## Query.prototype.field(field)
 ## Query.prototype.distinct(field)
