@@ -61,7 +61,7 @@ describe('Field', function() {
             }
           }),
         'to throw',
-        new Error('Custom validator for field `Foo.bar` should be a function')
+        new Error('`validate` option for field `Foo.bar` should be a function')
       );
     });
 
@@ -229,7 +229,7 @@ describe('Field', function() {
             }),
           'to throw',
           new Error(
-            'Pre-save cast function for field `Foo.bar` should be a function'
+            '`cast.forSave` option for field `Foo.bar` should be a function'
           )
         );
       });
@@ -248,7 +248,7 @@ describe('Field', function() {
             }),
           'to throw',
           new Error(
-            'Post-fetch cast function for field `Foo.bar` should be a function'
+            '`cast.forFetch` option for field `Foo.bar` should be a function'
           )
         );
       });
@@ -287,7 +287,7 @@ describe('Field', function() {
       });
     });
 
-    it('clones cast functions returns a clone of the field', function() {
+    it('clones cast functions', function() {
       class Foo extends Model {}
       const field = new Field({
         name: 'bar',
