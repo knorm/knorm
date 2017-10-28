@@ -170,7 +170,7 @@ configured field or virtual field names.
 
 ## Model.prototype.getData([options]) : Object
 ## Model.prototype.setDefaults([options]) : Model
-## Model.prototype.validate([options]) : Promise => Model
+## Model.prototype.validate([options]) : Promise => Model/ValidationError
 ## Model.prototype.cast([options]) : Model
 ## Model.prototype.fetch([options]) : Promise => Model
 ## Model.prototype.save([options]) : Promise => Model

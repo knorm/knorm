@@ -22,24 +22,23 @@ all fields will be validated (__*except the `id` field if it's `undefined`*__)
 whereas before updates, only the fields that have values set will be validated.
 
 > You can trigger validation any time on a model instance via
-[Model.prototype.validate](api/model.md#modelprototypevalidateoptions-promise-gt-model)
+[Model.prototype.validate](api/model.md#modelprototypevalidateoptions-promise-gt-modelvalidationerror)
 
 ## Validators
 
 These validators are supported:
 
-| Validator    | Type     |  Description                                        |
-| ------------ | -------- | --------------------------------------------------- |
-| `type`       | string   | See [Field.types](api/field.md#fieldtypes) for all the supported field types. |
-| `required`   | boolean  | Whether or not a field is required, defaults to `false`. This validator ensures that a field's value is not `undefined` or `null`. |
-| `minLength`  | integer  | Validates that the field value's `length` is at least as long as this value. Supported only for `string` and `array` (for [JSON validation](#json-validation)) field types. |
-| `maxLength`  | integer  | Validates that the field value's `length` is not longer than this value. Supported only for `string` and `array` (for [JSON validation](#json-validation)) field types. |
-| `oneOf`      | array    | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings. |
-| `equals`     | mixed    | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings. |
-| `regex`      | RegExp   | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex. |
-| `validate`   | function | See [custom validation](#custom-validation) |
-| `schema`     | object   | See [JSON validation](#json-validation) |
-| `itemSchema` | object   | See [JSON validation](#json-validation) |
+| Validator   | Type     |  Description                                        |
+| ----------- | -------- | --------------------------------------------------- |
+| `type`      | string   | See [Field.types](api/field.md#fieldtypes) for all the supported field types. |
+| `required`  | boolean  | Whether or not a field is required, defaults to `false`. This validator ensures that a field's value is not `undefined` or `null`. |
+| `minLength` | integer  | Validates that the field value's `length` is at least as long as this value. Supported only for `string`, `text` and `jsonArray` (for [JSON validation](#json-validation)) field types. |
+| `maxLength` | integer  | Validates that the field value's `length` is not longer than this value. Supported only for `string`, `text` and `jsonArray` (for [JSON validation](#json-validation)) field types. |
+| `oneOf`     | array    | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings. |
+| `equals`    | mixed    | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings. |
+| `regex`     | RegExp   | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex. |
+| `validate`  | function | See [custom validation](#custom-validation) |
+| `schema`    | object   | See [JSON validation](#json-validation) |
 
 ## Custom validation
 
@@ -61,7 +60,7 @@ that field fails with that error (or the rejection error). However, if it return
 `false` or resolves the `Promise` with `false`, then validation fails with a
 [ValidationError](api/validation-error.md).
 
-You can also hook into `Field`'s regular validation by returning an object with
+You can also continue validating by returning an object with the regular
 [validators](#validators) (or resolving the `Promise` with an object with
 validators), including another custom validator function!
 
@@ -78,6 +77,7 @@ User.fields = {
     type: 'string',
     validate(value) {
       if (this.loginType === 'email') {
+        // return new validators
         return {
           required: true,
           regex: /some-regex-for-validating-emails/
@@ -90,14 +90,14 @@ User.fields = {
     required: true,
     async validate(username) {
       // NOTE: this is just an example, it's better to do this with a UNIQUE
-      // constraint on the column in the database
-      const usernameTaken = await User.query.where({ username }).count();
+      // constraint on the column
+      const usernameTaken = await User.count({ where: { username } });
       if (usernameTaken) {
         throw new Error(`The username '${username}' is already taken`);
       }
     }
   }
-}
+};
 ```
 
 !> Custom validators will __not__ be called if the value is `undefined`, but
@@ -107,7 +107,9 @@ will be called if the value is `null`
 
 For [json](http://knexjs.org/#Schema-json) (and
 [jsonb](http://knexjs.org/#Schema-jsonb)) fields, you can have the JSON values
-validate by adding a `schema` object to the field definition object:
+validate by adding a `schema` object to the field definition object.
+
+!> JSON fields are __only__ validated if they contain a `schema` validator
 
 ```js
 class Upload extends Model {}
@@ -143,13 +145,13 @@ new Upload({ image: { filename: 'foo', mimetype: 'image/gif', data: new Buffer()
 new Upload({ image: { filename: 1, mimetype: 'image/png', data: new Buffer() } });
 ```
 > JSON `schema` validators support all the [validators](#validators), including
-a nested `schema` validator for nested objects
+nested `schema` validators [for nested objects](#nested-objects)
 
 ### JSON arrays
 
-For JSON arrays, use the custom `array` field type. You can also define the
-schema of a single item by passing a `itemSchema` validation object with the
-regular [validators](#validators).
+For JSON arrays, use the custom `jsonArray` field type. You can also define the
+schema of a single item by passing a `schema` validation object with the regular
+[validators](#validators).
 
 ```js
 class SomeData extends Model {}
@@ -163,22 +165,29 @@ SomeData.fields = {
         required: true
       },
       oldVersions: {
-        type: 'array',
+        type: 'jsonArray',
         maxLength: 2,
-        itemSchema: {
+        schema: {
           type: 'string',
           required: true
         }
       }
     }
   }
-}
+};
+
+const someData = new SomeData({
+  data: {
+    currentVersion: 'v1.0.0',
+    oldVersions: ['v0.9.0', 'v0.8.0']
+  }
+});
 ```
 
 ### Nested objects
 
-For nested objects, use the custom `object` type. You can also define the nested
-object's schema with a nested `schema` validator.
+For nested objects, use the custom `jsonObject` type. You can also define the
+nested object's schema with a nested `schema` validator.
 
 ```js
 class SomeData extends Model {}
@@ -188,7 +197,7 @@ SomeData.fields = {
     type: 'json',
     schema: {
       nested: {
-        type: 'object',
+        type: 'jsonObject',
         schema: {
           someField: { type: 'string' },
           someOtherField: { type: 'number' }
@@ -196,27 +205,54 @@ SomeData.fields = {
       }
     }
   }
-}
+};
+
+const someData = new SomeData({
+  data: {
+    nested: {
+      someField: 'some value',
+      someOtherField: 1
+    }
+  }
+});
 ```
+
+!> Nested object fields __must__ contain a `type`, just like
+[Field](#api/field.md#field) instances
 
 ### Root-level JSON fields
 
-For JSON fields whose values are not nested in an object, define their validators
-with an `itemSchema` validator:
+For JSON fields whose values are not nested in an object, define their
+validators with a `schema` validator:
 
 ```js
 class SomeData extends Model {}
-
 SomeData.fields = {
   value: {
     type: 'json',
-    itemSchema: {
+    schema: {
       type: 'string',
       required: true,
       maxLength: 255
     }
   }
 };
+const someData = new SomeData({ value: 'some value' });
+
+class RootLevelArray extends Model {}
+RootLevelArray.fields = {
+  value: {
+    type: 'json',
+    schema: {
+      type: 'jsonArray',
+      required: true,
+      schema: {
+        type: 'string'
+      }
+    }
+  }
+};
+const rootLevelArray = new RootLevelArray({ value: ['some value'] });
 ```
 
 ## Overriding validators

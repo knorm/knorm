@@ -1578,7 +1578,7 @@ describe('Field', function() {
         });
       });
 
-      describe('with `schema` configured as an object', function() {
+      describe('with a root-level `schema` object', function() {
         let field;
 
         before(function() {
@@ -1586,11 +1586,389 @@ describe('Field', function() {
             name: 'json',
             model: User,
             type: Field.types.json,
-            schema: { foo: { required: true, type: Field.types.string } }
+            schema: { type: Field.types.string, required: true }
           });
         });
 
-        it('throws the correct error if a schema config has no `type`', function() {
+        it('throws the correct error if the schema config has no `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: User,
+                type: Field.types.json,
+                schema: { required: true }
+              }),
+            'to throw',
+            new Error('Field `User.json` has no type configured')
+          );
+        });
+
+        it('throws the correct error if a schema config has an invalid `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: User,
+                type: Field.types.json,
+                schema: { required: true, type: 'foo' }
+              }),
+            'to throw',
+            new Error('Field `User.json` has an invalid type `foo`')
+          );
+        });
+
+        it('fulfils for valid values', async function() {
+          await expect(field.validate('foo'), 'to be fulfilled');
+        });
+
+        it('rejects for invalid values', async function() {
+          await expect(field.validate(1), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        it('rejects if passed an array value', async function() {
+          await expect(field.validate(['bar']), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        it('rejects if passed an object value', async function() {
+          await expect(field.validate({ foo: 'bar' }), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        describe('with `required` set to true', function() {
+          it('rejects if the value is `undefined`', async function() {
+            await expect(field.validate(undefined), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'RequiredError'
+            });
+          });
+
+          it('rejects if the value is `null`', async function() {
+            await expect(field.validate(null), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'RequiredError'
+            });
+          });
+        });
+
+        describe('with a custom `validate` function', () => {
+          let field;
+          let validate;
+
+          before(function() {
+            validate = sinon.spy();
+            field = new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.json,
+              schema: { type: 'string', validate }
+            });
+          });
+
+          beforeEach(function() {
+            validate.reset();
+          });
+
+          it('calls the validator with the passed value', async function() {
+            await field.validate('foo');
+            await expect(validate, 'to have calls satisfying', () => {
+              validate('foo');
+            });
+          });
+
+          it("calls the validator with 'this' set to the passed model instance", async function() {
+            await field.validate('foo', 'a model instance');
+            await expect(validate, 'was called once').and(
+              'was called on',
+              'a model instance'
+            );
+          });
+        });
+
+        describe('when passed a string value', function() {
+          it('does not run validators on the JSON.parsed value', async function() {
+            await expect(field.validate('{"foo":1}'), 'to be fulfilled');
+          });
+        });
+
+        describe('with a root-level `jsonArray` field with an item `schema`', function() {
+          let field;
+
+          before(function() {
+            field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.json,
+              schema: {
+                type: Field.types.jsonArray,
+                maxLength: 2,
+                schema: { type: Field.types.string, required: true }
+              }
+            });
+          });
+
+          it('rejects if passed a non-array value', async function() {
+            await expect(field.validate('bar'), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+          });
+
+          it('rejects if the value fails the `length` validators', async function() {
+            await expect(
+              field.validate(['foo', 'bar', 'quux']),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'MaxLengthError' }
+            );
+          });
+
+          it('fulfils if every item in the value passes validation', async function() {
+            await expect(field.validate(['foo', 'bar']), 'to be fulfilled');
+          });
+
+          it('rejects if one item in the value fails validation', async function() {
+            await expect(field.validate(['foo', 1]), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+          });
+
+          describe('with the item schema `required`', function() {
+            it('rejects if an array value is `undefined`', async function() {
+              await expect(field.validate([undefined]), 'to be rejected with', {
+                name: 'ValidationError',
+                type: 'RequiredError'
+              });
+            });
+
+            it('rejects if an array value is `null`', async function() {
+              await expect(field.validate([null]), 'to be rejected with', {
+                name: 'ValidationError',
+                type: 'RequiredError'
+              });
+            });
+
+            it('rejects if the array is empty', async function() {
+              await expect(field.validate([]), 'to be rejected with', {
+                name: 'ValidationError',
+                type: 'RequiredError'
+              });
+            });
+          });
+        });
+
+        describe('with a root-level `jsonArray` field with no item `schema`', function() {
+          let field;
+
+          before(function() {
+            field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.json,
+              schema: { type: Field.types.jsonArray, minLength: 2 }
+            });
+          });
+
+          it('rejects if passed a non-array value', async function() {
+            await expect(field.validate('bar'), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+          });
+
+          it('rejects if the value fails the `length` validators', async function() {
+            await expect(field.validate(['foo']), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'MinLengthError'
+            });
+          });
+
+          it('fulfils for any array values', async function() {
+            await expect(field.validate([{}, {}, {}]), 'to be fulfilled');
+            await expect(field.validate(['foo', 1, false]), 'to be fulfilled');
+          });
+        });
+
+        describe('with a root-level `jsonArray` field with a nested `schema`', function() {
+          let field;
+
+          before(function() {
+            field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.json,
+              schema: {
+                type: Field.types.jsonArray,
+                schema: {
+                  type: Field.types.jsonObject,
+                  schema: { foo: { type: Field.types.string } }
+                }
+              }
+            });
+          });
+
+          it('fulfils if the nested object value is `undefined`', async function() {
+            await expect(
+              field.validate([{ foo: undefined }]),
+              'to be fulfilled'
+            );
+          });
+
+          it('fulfils if the value is `null`', async function() {
+            await expect(field.validate([{ foo: null }]), 'to be fulfilled');
+          });
+
+          it('fulfils if every item in the value passes validation', async function() {
+            await expect(
+              field.validate([{ foo: 'foo' }, { foo: 'bar' }]),
+              'to be fulfilled'
+            );
+          });
+
+          it('ignores nested keys that are not defined in the schema', async function() {
+            await expect(
+              field.validate([{ foo: 'foo', bar: 1 }]),
+              'to be fulfilled'
+            );
+          });
+
+          it('rejects if one object in the array fails validation', async function() {
+            await expect(
+              field.validate([{ foo: 'foo' }, { foo: 1 }]),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'TypeError' }
+            );
+          });
+        });
+
+        describe('with a root-level `jsonObject` field with a nested `schema`', function() {
+          let field;
+
+          before(function() {
+            field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.json,
+              schema: {
+                type: Field.types.jsonObject,
+                schema: {
+                  type: Field.types.jsonObject,
+                  schema: { foo: { type: Field.types.string } }
+                }
+              }
+            });
+          });
+
+          it('fulfils if the value is `undefined`', async function() {
+            await expect(field.validate(undefined), 'to be fulfilled');
+          });
+
+          it('fulfils if the value is `null`', async function() {
+            await expect(field.validate(null), 'to be fulfilled');
+          });
+
+          it('rejects if the value is a number', async function() {
+            await expect(field.validate(1), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+          });
+
+          it('rejects if the value is a boolean', async function() {
+            await expect(field.validate(false), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+          });
+
+          it('ignores nested keys that are not defined in the schema', async function() {
+            await expect(
+              field.validate({ foo: 'foo', bar: 1 }),
+              'to be fulfilled'
+            );
+          });
+
+          it('rejects if the key value fails validation', async function() {
+            await expect(field.validate({ foo: 1 }), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+          });
+
+          describe('without a `required` option', function() {
+            it('fulfils if the nested key value is `undefined`', async function() {
+              await expect(
+                field.validate({ foo: undefined }),
+                'to be fulfilled'
+              );
+            });
+
+            it('fulfils if the nested key value is `null`', async function() {
+              await expect(field.validate({ foo: null }), 'to be fulfilled');
+            });
+          });
+        });
+
+        describe('with a root-level `jsonObject` field  with no nested `schema`', function() {
+          let field;
+
+          before(function() {
+            field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.json,
+              schema: {
+                type: Field.types.jsonObject
+              }
+            });
+          });
+
+          it('rejects if passed a non-object value', async function() {
+            await expect(field.validate('bar'), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+          });
+
+          it('fulfils if passed an array value', async function() {
+            await expect(field.validate(['foo', 'bar']), 'to be fulfilled');
+          });
+
+          it('fulfils if passed an object value', async function() {
+            await expect(field.validate({}), 'to be fulfilled');
+          });
+
+          it('fulfils if the value is `undefined`', async function() {
+            await expect(field.validate(undefined), 'to be fulfilled');
+          });
+
+          it('fulfils if the value is `null`', async function() {
+            await expect(field.validate(null), 'to be fulfilled');
+          });
+        });
+      });
+
+      describe('with a `schema` object with nested fields', function() {
+        let field;
+
+        before(function() {
+          field = new Field({
+            name: 'json',
+            model: User,
+            type: Field.types.json,
+            schema: { foo: { type: Field.types.string, required: true } }
+          });
+        });
+
+        it('throws the correct error if a nested field has no `type`', function() {
           expect(
             () =>
               new Field({
@@ -1604,7 +1982,7 @@ describe('Field', function() {
           );
         });
 
-        it('throws the correct error if a schema config has an invalid `type`', function() {
+        it('throws the correct error if a nested field has an invalid `type`', function() {
           expect(
             () =>
               new Field({
@@ -1619,10 +1997,29 @@ describe('Field', function() {
         });
 
         it('rejects if passed an array value', async function() {
+          // Missing required value for field `User.json.foo`
           await expect(
             field.validate([{ foo: 'bar' }]),
             'to be rejected with',
-            { name: 'ValidationError', type: 'SchemaError' }
+            { name: 'ValidationError', type: 'RequiredError' }
+          );
+        });
+
+        it('rejects for invalid object values', async function() {
+          await expect(field.validate({ foo: 1 }), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+        });
+
+        it('fulfils for valid object values', async function() {
+          await expect(field.validate({ foo: 'bar' }), 'to be fulfilled');
+        });
+
+        it('ignores object keys that are not specified in the schema', async function() {
+          await expect(
+            field.validate({ foo: 'foo', bar: [] }),
+            'to be fulfilled'
           );
         });
 
@@ -1644,12 +2041,7 @@ describe('Field', function() {
               name: 'firstName',
               model: User,
               type: Field.types.json,
-              schema: {
-                foo: {
-                  type: 'string',
-                  validate
-                }
-              }
+              schema: { foo: { type: 'string', validate } }
             });
           });
 
@@ -1673,108 +2065,170 @@ describe('Field', function() {
           });
         });
 
-        describe('when passed an object value', function() {
-          it('runs the validators against the object', async function() {
-            await expect(field.validate({ foo: 1 }), 'to be rejected with', {
-              name: 'ValidationError',
-              type: 'TypeError'
+        describe('with a nested `jsonArray` field with an item `schema`', function() {
+          let field;
+
+          before(function() {
+            field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.json,
+              schema: {
+                foo: {
+                  type: Field.types.jsonArray,
+                  maxLength: 2,
+                  schema: { type: Field.types.string, required: true }
+                }
+              }
             });
-            await expect(field.validate({ foo: 'bar' }), 'to be fulfilled');
           });
 
-          it('ignores keys that are not specified in the schema', async function() {
+          it('rejects if passed a non-array value', async function() {
             await expect(
-              field.validate({ foo: 'foo', bar: [] }),
+              field.validate({ foo: 'bar' }),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'TypeError' }
+            );
+          });
+
+          it('rejects if the value fails the `length` validators', async function() {
+            await expect(
+              field.validate({ foo: ['foo', 'bar', 'quux'] }),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'MaxLengthError' }
+            );
+          });
+
+          it('fulfils if the value is `undefined`', async function() {
+            await expect(field.validate(undefined), 'to be fulfilled');
+          });
+
+          it('fulfils if the value is `null`', async function() {
+            await expect(field.validate(null), 'to be fulfilled');
+          });
+
+          it('fulfils if every item in the value passes validation', async function() {
+            await expect(
+              field.validate({ foo: ['foo', 'bar'] }),
+              'to be fulfilled'
+            );
+          });
+
+          it('ignores keys in the array items that are not specified in the schema', async function() {
+            await expect(
+              field.validate({ foo: ['foo'], bar: [] }),
+              'to be fulfilled'
+            );
+          });
+
+          it('rejects if one item in the value fails validation', async function() {
+            await expect(
+              field.validate({ foo: ['foo', 1] }),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'TypeError' }
+            );
+          });
+        });
+
+        describe('with a nested `jsonArray` field with no item `schema`', function() {
+          let field;
+
+          before(function() {
+            field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.json,
+              schema: { foo: { type: Field.types.jsonArray, minLength: 2 } }
+            });
+          });
+
+          it('rejects if passed a non-array value', async function() {
+            await expect(
+              field.validate({ foo: 'bar' }),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'TypeError' }
+            );
+          });
+
+          it('rejects if the value fails the `length` validators', async function() {
+            await expect(
+              field.validate({ foo: ['foo'] }),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'MinLengthError' }
+            );
+          });
+
+          it('fulfils for any array values', async function() {
+            await expect(
+              field.validate({ foo: ['foo', 1, false, {}] }),
               'to be fulfilled'
             );
           });
         });
 
-        describe('when passed a string value', function() {
-          it('does not run validators on the JSON.parsed value', async function() {
-            await expect(field.validate('{"foo":1}'), 'to be fulfilled');
+        describe('with a nested `jsonObject` field', function() {
+          let field;
+
+          before(function() {
+            field = new Field({
+              name: 'json',
+              model: User,
+              type: Field.types.json,
+              schema: {
+                foo: {
+                  type: Field.types.jsonObject,
+                  schema: { bar: { type: Field.types.integer, required: true } }
+                }
+              }
+            });
           });
-        });
-      });
 
-      describe('with `schema` configured as an array', function() {
-        let field;
-
-        before(function() {
-          field = new Field({
-            name: 'json',
-            model: User,
-            type: Field.types.json,
-            schema: [{ foo: { required: true, type: Field.types.string } }]
+          it('rejects if passed a nested array value', async function() {
+            await expect(
+              field.validate({ foo: { bar: [1] } }),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'TypeError' }
+            );
           });
-        });
 
-        it('rejects if passed a non-array value', async function() {
-          await expect(field.validate({ foo: 'bar' }), 'to be rejected with', {
-            name: 'ValidationError',
-            type: 'SchemaError'
+          it('rejects for invalid nested object values', async function() {
+            await expect(
+              field.validate({ foo: { bar: 'bar' } }),
+              'to be rejected with',
+              { name: 'ValidationError', type: 'TypeError' }
+            );
           });
-        });
 
-        it('fulfils if the value is `undefined`', async function() {
-          await expect(field.validate(undefined), 'to be fulfilled');
-        });
-
-        it('fulfils if the value is `null`', async function() {
-          await expect(field.validate(null), 'to be fulfilled');
-        });
-
-        it('fulfils if every item in the value passes validation', async function() {
-          await expect(
-            field.validate([{ foo: 'bar' }, { foo: 'quux' }]),
-            'to be fulfilled'
-          );
-        });
-
-        it('ignores keys in the array items that are not specified in the schema', async function() {
-          await expect(
-            field.validate([{ foo: 'foo', bar: [] }]),
-            'to be fulfilled'
-          );
-        });
-
-        it('rejects if one item in the value fails validation', async function() {
-          await expect(
-            field.validate([{ foo: 'foo' }, { foo: 'bar' }, { foo: 1 }]),
-            'to be rejected with',
-            { name: 'ValidationError', type: 'TypeError' }
-          );
-        });
-      });
-
-      describe('with `schema` configured as an empty array', function() {
-        let field;
-
-        before(function() {
-          field = new Field({
-            name: 'json',
-            model: User,
-            type: Field.types.json,
-            schema: []
+          it('fulfils for valid nested object values', async function() {
+            await expect(
+              field.validate({ foo: { bar: 1 } }),
+              'to be fulfilled'
+            );
           });
-        });
 
-        it('rejects if passed a non-array value', async function() {
-          await expect(field.validate({ foo: 'bar' }), 'to be rejected with', {
-            name: 'ValidationError',
-            type: 'SchemaError'
+          it('ignores object keys that are not specified in the nested schema', async function() {
+            await expect(
+              field.validate({ foo: { bar: 1, quux: 'quux' } }),
+              'to be fulfilled'
+            );
           });
-        });
 
-        it('fulfils for all array values', async function() {
-          await expect(field.validate([]), 'to be fulfilled');
-          await expect(field.validate(['foo']), 'to be fulfilled');
-          await expect(field.validate([[1]]), 'to be fulfilled');
-        });
+          describe('with the nested schema `required`', function() {
+            it('rejects if the value is `undefined` and the schema specifies `required`', async function() {
+              await expect(
+                field.validate({ foo: { bar: undefined } }),
+                'to be rejected with',
+                { name: 'ValidationError', type: 'RequiredError' }
+              );
+            });
 
-        describe('when passed a string value', function() {
-          it('does not run validators on the JSON.parsed value', async function() {
-            await expect(field.validate('{"foo":1}'), 'to be fulfilled');
+            it('rejects if the value is `null`', async function() {
+              await expect(
+                field.validate({ foo: { bar: null } }),
+                'to be rejected with',
+                { name: 'ValidationError', type: 'RequiredError' }
+              );
+            });
           });
         });
       });
@@ -1825,9 +2279,7 @@ describe('Field', function() {
           });
 
           expect(User.referenced, 'to equal', {
-            Image: {
-              id: [userId]
-            }
+            Image: { id: [userId] }
           });
 
           class UserImage extends User {}
@@ -1835,9 +2287,7 @@ describe('Field', function() {
           userId.updateModel(UserImage);
 
           expect(User.referenced, 'to equal', {
-            UserImage: {
-              id: [userId]
-            }
+            UserImage: { id: [userId] }
           });
         });
       });
@@ -1848,11 +2298,7 @@ describe('Field', function() {
             name: 'firstName',
             model: User,
             type: Field.types.json,
-            schema: {
-              foo: {
-                type: Field.types.string
-              }
-            }
+            schema: { foo: { type: Field.types.string } }
           });
 
           expect(field.validators.schema.foo.model, 'to equal', User);
