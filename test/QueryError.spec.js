@@ -25,13 +25,12 @@ describe('QueryError', () => {
   });
 
   describe('when passed a knex error', () => {
-    const knexError = new Error(
-      'insert into "user" ("foo") values ($1) - column "foo" of relation "user" does not exist'
-    );
-
-    it('extracts the database error message from knex errors', () => {
+    it('extracts the database error message from knex QueryBuilder errors', () => {
+      const queryBuilderError = new Error(
+        'insert into "user" ("foo") values ($1) - column "foo" of relation "user" does not exist'
+      );
       expect(
-        new QueryError({ error: knexError, query: new Query(User) }),
+        new QueryError({ error: queryBuilderError, query: new Query(User) }),
         'to satisfy',
         {
           message: 'User: column "foo" of relation "user" does not exist'
@@ -39,7 +38,19 @@ describe('QueryError', () => {
       );
     });
 
+    it('does not erroneously truncate other knex errors', () => {
+      const knexError = new Error('connect ECONNREFUSED 127.0.0.1:5616');
+      expect(
+        new QueryError({ error: knexError, query: new Query(User) }),
+        'to satisfy',
+        {
+          message: 'User: connect ECONNREFUSED 127.0.0.1:5616'
+        }
+      );
+    });
+
     it('stores the passed error as `originalError`', () => {
+      const knexError = new Error('connect ECONNREFUSED 127.0.0.1:5616');
       expect(
         new QueryError({ error: knexError, query: new Query(User) }),
         'to satisfy',

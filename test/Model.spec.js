@@ -1898,7 +1898,7 @@ describe('Model', function() {
       });
 
       it('updates a row if it has an `id`', async function() {
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
           user.save(),
@@ -2004,7 +2004,7 @@ describe('Model', function() {
     describe('Model.prototype.update', function() {
       it('updates a row to the database via Query.prototype.update', async function() {
         const spy = sinon.spy(UserQuery.prototype, 'update');
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(user.update(), 'to be fulfilled');
         await expect(spy, 'to have calls satisfying', () => {
@@ -2021,7 +2021,7 @@ describe('Model', function() {
       });
 
       it('passes any options passed to Query.prototype.setOptions', async function() {
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         const stub = sinon
           .stub(UserQuery.prototype, 'setOptions')
@@ -2034,7 +2034,7 @@ describe('Model', function() {
       });
 
       it("sets 'require' to true by default", async function() {
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         const stub = sinon
           .stub(QueryBuilder.prototype, 'update')
@@ -2046,7 +2046,7 @@ describe('Model', function() {
       });
 
       it("allows overriding the 'require' option to false", async function() {
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         const stub = sinon
           .stub(QueryBuilder.prototype, 'update')
@@ -2060,7 +2060,7 @@ describe('Model', function() {
       });
 
       it('passes the `id` set on the model to Query.prototype.where', async function() {
-        const user = await User.insert({ id: 1, name: 'John Doe' });
+        const user = await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(UserQuery.prototype, 'where');
         user.name = 'Jane Doe';
         await expect(
@@ -2075,7 +2075,7 @@ describe('Model', function() {
       });
 
       it('rejects if the `id` is not set', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         await expect(
           new User({ name: 'John Doe' }).update(),
           'to be rejected with error satisfying',
@@ -2086,7 +2086,7 @@ describe('Model', function() {
       });
 
       it('appends the `where` clause if a `where` option is passed', async function() {
-        const user = await User.insert({ id: 1, name: 'John Doe' });
+        const user = await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(UserQuery.prototype, 'where');
         user.name = 'Jane Doe';
         await expect(
@@ -2107,7 +2107,7 @@ describe('Model', function() {
         });
         class OtherUser extends User {}
         OtherUser.fields = { fromDb: { type: 'string', column: 'from_db' } };
-        const user = await OtherUser.insert({ name: 'John Doe' });
+        const user = await new OtherUser({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
           user.update(),
@@ -2120,7 +2120,7 @@ describe('Model', function() {
       });
 
       it('resolves with the same instance that was passed', async function() {
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
           user.update(),
@@ -2130,7 +2130,7 @@ describe('Model', function() {
       });
 
       it("doesn't modify other instance data properties", async function() {
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         user.leaveMeIntact = 'okay';
         await expect(user.update(), 'to be fulfilled');
@@ -2174,9 +2174,10 @@ describe('Model', function() {
         });
 
         it('updates an instance of the model', async function() {
-          const instance = await UuidAsId.insert(
-            new UuidAsId({ uuid: 'foo', name: 'bar' })
-          );
+          const instance = await new UuidAsId({
+            uuid: 'foo',
+            name: 'bar'
+          }).insert();
           const spy = sinon.spy(Query.prototype, 'where');
           instance.name = 'foobar';
           await expect(instance.update(), 'to be fulfilled');
@@ -2202,7 +2203,7 @@ describe('Model', function() {
 
     describe('Model.prototype.fetch', function() {
       it('fetches a model from the database via Query.prototype.fetch', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
         const spy = sinon.spy(UserQuery.prototype, 'fetch');
         await expect(
@@ -2217,7 +2218,7 @@ describe('Model', function() {
       });
 
       it('passes any options passed to Query.prototype.setOptions', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
         const spy = sinon.spy(UserQuery.prototype, 'setOptions');
         await expect(
@@ -2232,7 +2233,7 @@ describe('Model', function() {
       });
 
       it('passes the `id` set on the model to Query.prototype.where', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
@@ -2247,7 +2248,7 @@ describe('Model', function() {
       });
 
       it('rejects if the `id` is unset', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         await expect(
           new User().fetch(),
           'to be rejected with error satisfying',
@@ -2258,7 +2259,7 @@ describe('Model', function() {
       });
 
       it('appends the `where` clause if a `where` option is passed', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
@@ -2275,7 +2276,7 @@ describe('Model', function() {
 
       describe('if no rows are matched', function() {
         it('rejects with a NoRowsFetchedError', async function() {
-          await User.insert({ id: 1, name: 'John Doe' });
+          await new User({ id: 1, name: 'John Doe' }).insert();
           const user = new User({ id: 2 });
           await expect(user.fetch(), 'to be rejected with error satisfying', {
             name: 'NoRowsFetchedError'
@@ -2284,7 +2285,7 @@ describe('Model', function() {
 
         describe("if the 'require' option is set to false", function() {
           it('does not reject with a NoRowsFetchedError', async function() {
-            await User.insert({ id: 1, name: 'John Doe' });
+            await new User({ id: 1, name: 'John Doe' }).insert();
             const user = new User({ id: 2 });
             await expect(
               user.fetch({ require: false }),
@@ -2296,7 +2297,7 @@ describe('Model', function() {
       });
 
       it('prevents extra forging by Query.prototype.fetch', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'forge');
         await expect(user.fetch(), 'to be fulfilled');
@@ -2309,7 +2310,7 @@ describe('Model', function() {
 
     describe('Model.prototype.delete', function() {
       it('deletes a model from the database via Query.prototype.delete', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
         const spy = sinon.spy(UserQuery.prototype, 'delete');
         await expect(
@@ -2325,7 +2326,7 @@ describe('Model', function() {
       });
 
       it('passes any options passed to Query.prototype.setOptions', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
         const spy = sinon.spy(UserQuery.prototype, 'setOptions');
         await expect(
@@ -2340,7 +2341,7 @@ describe('Model', function() {
       });
 
       it('passes the `id` set on the model to Query.prototype.where', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
@@ -2355,7 +2356,7 @@ describe('Model', function() {
       });
 
       it('rejects if the `id` is unset', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         await expect(
           new User().delete(),
           'to be rejected with error satisfying',
@@ -2366,7 +2367,7 @@ describe('Model', function() {
       });
 
       it('appends the `where` clause if a `where` option is passed', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
         await expect(
@@ -2383,7 +2384,7 @@ describe('Model', function() {
 
       describe('if no rows are deleted', function() {
         it('rejects with a NoRowsDeletedError', async function() {
-          await User.insert({ id: 1, name: 'John Doe' });
+          await new User({ id: 1, name: 'John Doe' }).insert();
           const user = new User({ id: 2 });
           await expect(user.delete(), 'to be rejected with error satisfying', {
             name: 'NoRowsDeletedError'
@@ -2392,7 +2393,7 @@ describe('Model', function() {
 
         describe("if the 'require' option is set to false", function() {
           it('does not reject with a NoRowsDeletedError', async function() {
-            await User.insert({ id: 1, name: 'John Doe' });
+            await new User({ id: 1, name: 'John Doe' }).insert();
             const user = new User({ id: 2 });
             await expect(
               user.delete({ require: false }),
@@ -2404,7 +2405,7 @@ describe('Model', function() {
       });
 
       it('prevents extra forging by Query.prototype.delete', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'forge');
         await expect(user.delete(), 'to be fulfilled');
@@ -2434,7 +2435,7 @@ describe('Model', function() {
       });
 
       it('updates a row to the database via Query.prototype.save', async function() {
-        const user = await User.save({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).save();
         const spy = sinon.spy(UserQuery.prototype, 'save');
         user.name = 'Jane Doe';
         await expect(User.save(user), 'to be fulfilled');
@@ -2495,7 +2496,7 @@ describe('Model', function() {
 
     describe('Model.update', function() {
       it('updates a row to the database via Query.prototype.update', async function() {
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         const spy = sinon.spy(UserQuery.prototype, 'update');
         user.name = 'Jane Doe';
         await expect(User.update(user), 'to be fulfilled');
@@ -2513,7 +2514,7 @@ describe('Model', function() {
       });
 
       it('passes any options passed to Query.prototype.update', async function() {
-        const user = await User.insert({ name: 'John Doe' });
+        const user = await new User({ name: 'John Doe' }).insert();
         const spy = sinon.spy(UserQuery.prototype, 'update');
         user.name = 'Jane Doe';
         const options = { require: true };
@@ -2612,7 +2613,7 @@ describe('Model', function() {
 
     describe('Model.fetchById', function() {
       it('fetches data from the database via Model.prototype.fetch', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(User.prototype, 'fetch');
         await expect(
           User.fetchById(1),
@@ -2626,7 +2627,7 @@ describe('Model', function() {
       });
 
       it('passes any options passed to Model.prototype.fetch', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(UserQuery.prototype, 'setOptions');
         await expect(
           User.fetchById(1, { forge: false }),
@@ -2642,7 +2643,7 @@ describe('Model', function() {
 
     describe('Model.deleteById', function() {
       it('deletes data from the database via Model.prototype.delete', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(User.prototype, 'delete');
         await expect(
           User.deleteById(1),
@@ -2656,7 +2657,7 @@ describe('Model', function() {
       });
 
       it('passes any options passed to Model.prototype.delete', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(UserQuery.prototype, 'setOptions');
         await expect(
           User.deleteById(1, { forge: false }),
@@ -2672,7 +2673,7 @@ describe('Model', function() {
 
     describe('Model.updateById', function() {
       it('updates data in the database via Model.prototype.update', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(User.prototype, 'update');
         await expect(
           User.updateById(1, { name: 'Jane Doe' }),
@@ -2693,7 +2694,7 @@ describe('Model', function() {
       });
 
       it('passes any options passed to Model.prototype.update', async function() {
-        await User.insert({ id: 1, name: 'John Doe' });
+        await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(UserQuery.prototype, 'setOptions');
         await expect(
           User.updateById(1, { name: 'Jane Doe' }, { forge: false }),
