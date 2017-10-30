@@ -2859,12 +2859,12 @@ describe('Query', function() {
       ]);
     });
 
-    it('resolves with an instance of the model', async function() {
+    it('resolves with an array containing an instance of the model', async function() {
       const query = new Query(User);
       await expect(
         query.insert(new User({ name: 'John Doe' })),
         'to be fulfilled with value exhaustively satisfying',
-        expect.it('to be a', User)
+        [expect.it('to be a', User)]
       );
     });
 
@@ -2874,7 +2874,7 @@ describe('Query', function() {
       await expect(
         query.insert(user),
         'to be fulfilled with value exhaustively satisfying',
-        insertedUser => {
+        ([insertedUser]) => {
           expect(insertedUser === user, 'to be true');
         }
       );
@@ -2887,7 +2887,7 @@ describe('Query', function() {
       await expect(
         query.insert(user),
         'to be fulfilled with value satisfying',
-        { leaveMeIntact: 'okay' }
+        [{ leaveMeIntact: 'okay' }]
       );
     });
 
@@ -2896,17 +2896,19 @@ describe('Query', function() {
       await expect(
         query.insert(new User({ name: 'John Doe' })),
         'to be fulfilled with value satisfying',
-        new User({
-          id: 1,
-          name: 'John Doe',
-          confirmed: false,
-          description: null,
-          age: null,
-          dateOfBirth: null,
-          dbDefault: 'set-by-db',
-          jsonField: null,
-          intToString: null
-        })
+        [
+          new User({
+            id: 1,
+            name: 'John Doe',
+            confirmed: false,
+            description: null,
+            age: null,
+            dateOfBirth: null,
+            dbDefault: 'set-by-db',
+            jsonField: null,
+            intToString: null
+          })
+        ]
       );
     });
 
@@ -2916,7 +2918,7 @@ describe('Query', function() {
       await expect(
         query.insert(user),
         'to be fulfilled with value satisfying',
-        { intToString: '10' }
+        [{ intToString: '10' }]
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
         {
@@ -2932,7 +2934,7 @@ describe('Query', function() {
       await expect(
         query.insert(new User({ name: 'John Doe' }), { returning: 'name' }),
         'to be fulfilled with value satisfying',
-        new User({ name: 'John Doe' })
+        [new User({ name: 'John Doe' })]
       );
     });
 
@@ -2958,7 +2960,7 @@ describe('Query', function() {
         await expect(
           query.insert(new User({ name: 'John Doe' })),
           'to be fulfilled with value satisfying',
-          new User({ name: 'John Doe' })
+          [new User({ name: 'John Doe' })]
         );
       });
 
@@ -2967,7 +2969,7 @@ describe('Query', function() {
         await expect(
           query.insert(new User({ name: 'John Doe' })),
           'to be fulfilled with value satisfying',
-          new User({ name: 'John Doe', confirmed: false })
+          [new User({ name: 'John Doe', confirmed: false })]
         );
       });
 
@@ -2979,7 +2981,7 @@ describe('Query', function() {
         await expect(
           query.insert(new User({ name: 'John Doe' })),
           'to be fulfilled with value satisfying',
-          new User({ name: 'John Doe', confirmed: false })
+          [new User({ name: 'John Doe', confirmed: false })]
         );
       });
 
@@ -2991,10 +2993,12 @@ describe('Query', function() {
         await expect(
           query.insert(new User({ name: 'John Doe' })),
           'to be fulfilled with value satisfying',
-          Object.assign(new User(), {
-            theName: 'John Doe',
-            theConfirmed: false
-          })
+          [
+            Object.assign(new User(), {
+              theName: 'John Doe',
+              theConfirmed: false
+            })
+          ]
         );
       });
     });
@@ -3091,6 +3095,27 @@ describe('Query', function() {
       });
     });
 
+    describe("with 'first' configured", function() {
+      it('returns the first inserted instance', async function() {
+        const query = new Query(User).first(true);
+        await expect(
+          query.insert(new User({ id: 1, name: 'John Doe' })),
+          'to be fulfilled with value exhaustively satisfying',
+          new User({
+            id: 1,
+            name: 'John Doe',
+            confirmed: false,
+            description: null,
+            age: null,
+            dateOfBirth: null,
+            dbDefault: 'set-by-db',
+            jsonField: null,
+            intToString: null
+          })
+        );
+      });
+    });
+
     describe('if no row is inserted', function() {
       let insertStub;
 
@@ -3107,12 +3132,12 @@ describe('Query', function() {
         insertStub.restore();
       });
 
-      it('resolves with null', async function() {
+      it('resolves with an empty array', async function() {
         const query = new Query(User);
         await expect(
           query.insert(new User({ name: 'John Doe' })),
           'to be fulfilled with value satisfying',
-          null
+          []
         );
       });
 
@@ -3604,7 +3629,9 @@ describe('Query', function() {
 
     beforeEach(async function() {
       const query = new Query(User);
-      user = await query.insert(new User({ id: 1, name: 'John Doe' }));
+      user = await query
+        .first(true)
+        .insert(new User({ id: 1, name: 'John Doe' }));
     });
 
     afterEach(async function() {
