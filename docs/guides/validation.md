@@ -242,13 +242,10 @@ const someData = new SomeData({ value: 'some value' });
 class RootLevelArray extends Model {}
 RootLevelArray.fields = {
   value: {
-    type: 'json',
+    type: 'jsonArray',
     schema: {
-      type: 'jsonArray',
       required: true,
-      schema: {
-        type: 'string'
-      }
+      type: 'string'
     }
   }
 };
