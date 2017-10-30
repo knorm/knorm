@@ -1943,7 +1943,7 @@ describe('Model', function() {
         await expect(
           user.save({ require: false }),
           'to be fulfilled with value satisfying',
-          []
+          null
         );
         stub.restore();
       });
@@ -1995,7 +1995,7 @@ describe('Model', function() {
         await expect(
           user.insert({ require: false }),
           'to be fulfilled with value satisfying',
-          []
+          null
         );
         stub.restore();
       });

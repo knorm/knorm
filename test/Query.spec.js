@@ -3141,6 +3141,15 @@ describe('Query', function() {
         );
       });
 
+      it('resolves with `null` if the `first` option is configured', async function() {
+        const query = new Query(User).first(true);
+        await expect(
+          query.insert(new User({ name: 'John Doe' })),
+          'to be fulfilled with value satisfying',
+          null
+        );
+      });
+
       describe("with 'require' option configured", function() {
         it('rejects with a NoRowsInsertedError', async function() {
           const query = new Query(User).require();
@@ -4006,9 +4015,19 @@ describe('Query', function() {
         updateStub.restore();
       });
 
-      it('resolves with null', async function() {
+      it('resolves with an empty array', async function() {
         user.name = 'Jane Doe';
         const query = new Query(User);
+        await expect(
+          query.update(user),
+          'to be fulfilled with value satisfying',
+          []
+        );
+      });
+
+      it('resolves with `null` if the `first` option is configured', async function() {
+        user.name = 'Jane Doe';
+        const query = new Query(User).first(true);
         await expect(
           query.update(user),
           'to be fulfilled with value satisfying',
@@ -4420,9 +4439,17 @@ describe('Query', function() {
         deleteStub.restore();
       });
 
-      it('resolves with null', async function() {
+      it('resolves with an empty array', async function() {
         await expect(
           new Query(User).delete(),
+          'to be fulfilled with value satisfying',
+          []
+        );
+      });
+
+      it('resolves with `null` if the `first` option is configured', async function() {
+        await expect(
+          new Query(User).first(true).delete(),
           'to be fulfilled with value satisfying',
           null
         );
