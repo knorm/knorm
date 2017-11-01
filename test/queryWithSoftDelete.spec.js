@@ -305,7 +305,7 @@ describe('queryWithSoftDelete', () => {
         await expect(
           new Query(User).restore(),
           'to be fulfilled with value satisfying',
-          null
+          []
         );
       });
 
