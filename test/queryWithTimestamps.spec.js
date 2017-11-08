@@ -1,6 +1,8 @@
 const { Model: KnormModel, Query: KnormQuery } = require('knorm');
 const sinon = require('sinon');
-const expect = require('unexpected').clone().use(require('unexpected-knex'));
+const expect = require('unexpected')
+  .clone()
+  .use(require('unexpected-knex'));
 const modelWithTimestamps = require('../lib/modelWithTimestamps');
 const queryWithTimestamps = require('../lib/queryWithTimestamps');
 const knex = require('./lib/knex');
@@ -131,6 +133,15 @@ describe('queryWithTimestamps', () => {
               updated_at: new Date(2000)
             }
           ]
+        );
+      });
+
+      it('passes options to Query.prototype.update', async () => {
+        await new User({ id: 1 }).insert();
+        await expect(
+          User.update({}, { where: { id: 1 }, first: true }),
+          'to be fulfilled with value satisfying',
+          new User({ id: 1 })
         );
       });
     });
