@@ -1,3 +1,13 @@
+<a name="0.9.2"></a>
+## [0.9.2](https://github.com/joelmukuthu/knorm/compare/v0.9.1...v0.9.2) (2017-11-16)
+
+
+### Bug Fixes
+
+* fix regex validation error messages ([fdab926](https://github.com/joelmukuthu/knorm/commit/fdab926))
+
+
+
 <a name="0.9.1"></a>
 ## [0.9.1](https://github.com/joelmukuthu/knorm/compare/v0.9.0...v0.9.1) (2017-11-01)
 

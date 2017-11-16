@@ -1,6 +1,6 @@
 {
   "name": "knorm",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "A purely ES6 class-based ORM for Knex.js",
   "main": "index.js",
   "scripts": {
