@@ -14,7 +14,8 @@
     "postgres:stop": "knorm-postgres stop",
     "postgres:remove": "knorm-postgres remove",
     "todo": "grep -rn -e TODO -e FIXME lib",
-    "docs": "docsify serve docs"
+    "docs": "docsify serve docs",
+    "changelog": "standard-changelog"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -36,6 +37,7 @@
     "prettier": "^1.7.2",
     "proxyquire": "^1.7.11",
     "sinon": "^4.0.0",
+    "standard-changelog": "^1.0.5",
     "unexpected": "^10.29.0",
     "unexpected-knex": "^1.2.0",
     "unexpected-sinon": "^10.7.0"
