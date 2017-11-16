@@ -217,15 +217,12 @@ Model.fields = {
 ### BREAKING CHANGES
 
 * **Query:** QueryError arguments have changed and KnormError
-does not auto-format messages anymore
-* due to:
-
-- removed Field.errors in place of only Field.ValidationError
-- changed ValidationError arguments
+does not auto-format messages anymore due to:
+  - removed Field.errors in place of only Field.ValidationError
+  - changed ValidationError arguments
 * Field.prototype.cast/Model.prototype.cast options are changed:
-
-options.save => options.forSave
-options.fetch => options.forFetch
+  - options.save => options.forSave
+  - options.fetch => options.forFetch
 
 
 
