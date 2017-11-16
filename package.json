@@ -15,7 +15,8 @@
     "postgres:remove": "knorm-postgres remove",
     "todo": "grep -rn -e TODO -e FIXME lib",
     "docs": "docsify serve docs",
-    "changelog": "standard-changelog"
+    "changelog": "standard-changelog",
+    "release": "standard-version"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -38,9 +39,18 @@
     "proxyquire": "^1.7.11",
     "sinon": "^4.0.0",
     "standard-changelog": "^1.0.5",
+    "standard-version": "^4.2.0",
     "unexpected": "^10.29.0",
     "unexpected-knex": "^1.2.0",
     "unexpected-sinon": "^10.7.0"
+  },
+  "standard-version": {
+    "skip": {
+      "changelog": true
+    },
+    "scripts": {
+      "postbump": "npm run changelog"
+    }
   },
   "directories": {
     "doc": "doc",
