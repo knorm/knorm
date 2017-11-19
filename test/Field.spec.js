@@ -1231,7 +1231,7 @@ describe('Field', function() {
     });
 
     describe('equals', function() {
-      it('rejects with an EqualsError if the value does not equal the expected value', async function() {
+      it('rejects with an `EqualsError` if the value does not equal the expected value', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1242,6 +1242,20 @@ describe('Field', function() {
           name: 'ValidationError',
           type: 'EqualsError'
         });
+      });
+
+      it('allows `equals` with a value of zero', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer,
+          equals: 0
+        });
+        await expect(field.validate(1), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'EqualsError'
+        });
+        await expect(field.validate(0), 'to be fulfilled');
       });
 
       it('does not reject if the value equals the expected value', async function() {
