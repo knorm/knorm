@@ -1049,7 +1049,7 @@ describe('Field', function() {
     });
 
     describe('minLength', function() {
-      it('rejects with a MinLengthError if the value is shorter than the minLength', async function() {
+      it('rejects with a `MinLengthError` if the value is shorter than the minLength', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1104,7 +1104,7 @@ describe('Field', function() {
     });
 
     describe('maxLength', function() {
-      it('rejects with a MaxLengthError if the value is longer than the maxLength', async function() {
+      it('rejects with a `MaxLengthError` if the value is longer than the maxLength', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1115,6 +1115,20 @@ describe('Field', function() {
           name: 'ValidationError',
           type: 'MaxLengthError'
         });
+      });
+
+      it('allows a `minLength` of zero', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.string,
+          maxLength: 0
+        });
+        await expect(field.validate('1'), 'to be rejected with', {
+          name: 'ValidationError',
+          type: 'MaxLengthError'
+        });
+        await expect(field.validate(''), 'to be fulfilled');
       });
 
       it('does not reject an if the value is the same lenth as the maxLength', async function() {
