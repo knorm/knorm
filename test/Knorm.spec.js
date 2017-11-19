@@ -46,4 +46,11 @@ describe('Knorm', () => {
       expect(wasCalled, 'to be true');
     });
   });
+
+  describe('with the `fieldNames` option provided', () => {
+    it('passes the option to `Model`', () => {
+      const { Model } = new Knorm({ knex, fieldNames: { id: 'uuid' } });
+      expect(Model.fieldNames, 'to satisfy', { id: 'uuid' });
+    });
+  });
 });
