@@ -2138,24 +2138,26 @@ describe('Model', function() {
       });
 
       describe('with a custom id field', function() {
-        class UuidAsIdQuery extends Query {}
-        UuidAsIdQuery.knex = knex;
-
-        class UuidAsId extends Model {}
-        UuidAsId.Query = UuidAsIdQuery;
-        UuidAsId.table = 'uuid_as_id';
-        UuidAsId.fields = {
-          uuid: {
-            type: Field.types.string,
-            required: true
-          },
-          name: {
-            type: Field.types.string
-          }
-        };
-        UuidAsId.fieldNames.id = 'uuid';
+        let UuidAsId;
 
         before(async function() {
+          class UuidAsIdQuery extends Query {}
+          UuidAsIdQuery.knex = knex;
+
+          UuidAsId = class extends Model {};
+          UuidAsId.Query = UuidAsIdQuery;
+          UuidAsId.table = 'uuid_as_id';
+          UuidAsId.fields = {
+            uuid: {
+              type: Field.types.string,
+              required: true
+            },
+            name: {
+              type: Field.types.string
+            }
+          };
+          UuidAsId.fieldNames.id = 'uuid';
+
           await knex.schema.createTable(UuidAsId.table, table => {
             table
               .string('uuid')
@@ -2710,25 +2712,27 @@ describe('Model', function() {
   });
 
   describe('with a custom `id` field-name', function() {
-    class EmailAsIdQuery extends Query {}
-    EmailAsIdQuery.knex = knex;
-
-    class EmailAsId extends Model {}
-    EmailAsId.Query = EmailAsIdQuery;
-    EmailAsId.table = 'user';
-    EmailAsId.fields = {
-      email: {
-        type: Field.types.string,
-        required: true
-      },
-      name: {
-        type: Field.types.string,
-        required: true
-      }
-    };
-    EmailAsId.fieldNames.id = 'email';
+    let EmailAsId;
+    let EmailAsIdQuery;
 
     before(async function() {
+      EmailAsIdQuery = class extends Query {};
+      EmailAsIdQuery.knex = knex;
+
+      EmailAsId = class extends Model {};
+      EmailAsId.Query = EmailAsIdQuery;
+      EmailAsId.table = 'user';
+      EmailAsId.fields = {
+        email: {
+          type: Field.types.string,
+          required: true
+        },
+        name: {
+          type: Field.types.string,
+          required: true
+        }
+      };
+      EmailAsId.fieldNames.id = 'email';
       await knex.schema.createTable(EmailAsId.table, table => {
         table.string('email').primary();
         table.string('name').notNullable();
