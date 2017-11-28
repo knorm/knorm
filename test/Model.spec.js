@@ -1788,16 +1788,70 @@ describe('Model', function() {
   });
 
   describe('Model.references', function() {
-    it("is a getter that returns the model's references", function() {
-      class Foo extends Model {}
-      expect(Foo.references, 'to equal', {});
-    });
-  });
+    describe('as a getter', function() {
+      it("returns the model's references", function() {
+        class Foo extends Model {}
+        class Bar extends Model {}
 
-  describe('Model.referenced', function() {
-    it("is a getter that returns the model's back-references", function() {
-      class Foo extends Model {}
-      expect(Foo.referenced, 'to equal', {});
+        Foo.fields = { id: { type: 'integer' } };
+        Bar.fields = { fooId: { type: 'integer', references: Foo.fields.id } };
+
+        expect(Bar.references, 'to exhaustively satisfy', {
+          fooId: Foo.fields.id
+        });
+      });
+
+      describe('when a model is subclassed', function() {
+        let Foo;
+
+        before(function() {
+          Foo = class extends Model {};
+          Foo.fields = { id: { type: 'integer' }, id2: { type: 'integer' } };
+        });
+
+        it('updates references defined in the parent', function() {
+          class Bar extends Model {}
+          class Quux extends Bar {}
+
+          Bar.fields = {
+            fooId: { type: 'integer', references: Foo.fields.id }
+          };
+          Quux.fields = {
+            fooId: { type: 'integer', references: Foo.fields.id2 }
+          };
+
+          expect(Model.references, 'to exhaustively satisfy', {});
+          expect(Bar.references, 'to exhaustively satisfy', {
+            fooId: Foo.fields.id
+          });
+          expect(Quux.references, 'to exhaustively satisfy', {
+            fooId: Foo.fields.id2
+          });
+        });
+
+        it("inherits but does not interfere with the parent's references", function() {
+          class Foo extends Model {}
+          class Bar extends Model {}
+          class Quux extends Bar {}
+
+          Foo.fields = { id: { type: 'integer' } };
+          Bar.fields = {
+            fooId: { type: 'integer', references: Foo.fields.id }
+          };
+          Quux.fields = {
+            fooId2: { type: 'integer', references: Foo.fields.id2 }
+          };
+
+          expect(Model.references, 'to exhaustively satisfy', {});
+          expect(Bar.references, 'to exhaustively satisfy', {
+            fooId: Foo.fields.id
+          });
+          expect(Quux.references, 'to exhaustively satisfy', {
+            fooId: Foo.fields.id,
+            fooId2: Foo.fields.id2
+          });
+        });
+      });
     });
   });
 
