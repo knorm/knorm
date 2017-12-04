@@ -2287,6 +2287,58 @@ describe('Query', function() {
             ]
           );
         });
+
+        it('resolves with the correct data when a field is referenced by multiple fields', async function() {
+          const query = new Query(Message).leftJoin(new Query(User).on('id'));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
+              Object.assign(
+                new Message({
+                  id: 1,
+                  senderId: 1,
+                  receiverId: 2,
+                  text: 'Hi User 2'
+                }),
+                {
+                  user: new User({
+                    id: 2,
+                    name: 'User 2',
+                    confirmed: true,
+                    description: 'this is user 2',
+                    age: 10,
+                    dateOfBirth: null,
+                    dbDefault: 'set-by-db',
+                    jsonField: null,
+                    intToString: null
+                  })
+                }
+              ),
+              Object.assign(
+                new Message({
+                  id: 2,
+                  senderId: 2,
+                  receiverId: 1,
+                  text: 'Hi User 1'
+                }),
+                {
+                  user: new User({
+                    id: 1,
+                    name: 'User 1',
+                    confirmed: false,
+                    description: 'this is user 1',
+                    age: 10,
+                    dateOfBirth: null,
+                    dbDefault: 'set-by-db',
+                    jsonField: null,
+                    intToString: '10'
+                  })
+                }
+              )
+            ]
+          );
+        });
       });
 
       describe("with a nested 'leftJoin' query", function() {
