@@ -2187,7 +2187,7 @@ describe('Field', function() {
       });
 
       describe('when the field has a `schema`', function() {
-        it("updates the nested fields' model", function() {
+        it("updates the schema's model", function() {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -2198,6 +2198,32 @@ describe('Field', function() {
           expect(field.validators.schema.foo.model, 'to equal', User);
           field.updateModel(Employee);
           expect(field.validators.schema.foo.model, 'to equal', Employee);
+        });
+
+        it('updates the model in nested schemas', function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json,
+            schema: {
+              foo: {
+                type: Field.types.jsonObject,
+                schema: { bar: { type: Field.types.string } }
+              }
+            }
+          });
+
+          expect(
+            field.validators.schema.foo.validators.schema.bar.model,
+            'to equal',
+            User
+          );
+          field.updateModel(Employee);
+          expect(
+            field.validators.schema.foo.validators.schema.bar.model,
+            'to equal',
+            Employee
+          );
         });
       });
     });
