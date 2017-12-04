@@ -10,6 +10,14 @@ describe('Knorm', () => {
     expect(Knorm.QueryError, 'to be', QueryError);
   });
 
+  it('throws an error if not provided a knex instance', () => {
+    expect(
+      () => new Knorm(),
+      'to throw',
+      new Error('Knorm: no knex instance provided')
+    );
+  });
+
   it('creates new classes when instantiated', () => {
     const orm = new Knorm({ knex });
     expect(orm.Query, 'not to be', Query);
