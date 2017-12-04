@@ -89,18 +89,6 @@ describe('Virtual', function() {
     });
   });
 
-  describe('Virtual.prototype.updateModel', function() {
-    it('allows chaining', function() {
-      class Foo extends Model {}
-      const virtual = new Virtual({
-        name: 'bar',
-        model: Foo,
-        descriptor: { get: () => 'foo' }
-      });
-      expect(virtual.updateModel(Foo), 'to equal', virtual);
-    });
-  });
-
   describe('Virtual.prototype.clone', function() {
     it('returns a clone of the virtual', function() {
       class Foo extends Model {}
@@ -118,6 +106,22 @@ describe('Virtual', function() {
           descriptor: { get: () => 'foo', set() {} }
         })
       );
+    });
+
+    describe('with a model override provided', function() {
+      it("updates the clone's model", function() {
+        class Foo extends Model {}
+        class Bar extends Foo {}
+        const virtual = new Virtual({
+          name: 'bar',
+          model: Foo,
+          descriptor: { get: () => 'foo' }
+        });
+        const clone = virtual.clone({ model: Bar });
+
+        expect(clone.model, 'to equal', Bar);
+        expect(virtual.model, 'to equal', Foo);
+      });
     });
   });
 

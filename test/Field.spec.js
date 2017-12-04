@@ -216,6 +216,77 @@ describe('Field', function() {
         }
       });
     });
+
+    describe('when called with a model override', function() {
+      class User extends Model {}
+      class Employee extends User {}
+
+      it('updates the model that the field belongs to', function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer
+        });
+        const clone = field.clone({ model: Employee });
+
+        expect(clone.model, 'to equal', Employee);
+        expect(field.model, 'to equal', User);
+      });
+
+      describe('when the field has a `schema`', function() {
+        it("updates the schema's model", function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json,
+            schema: { foo: { type: Field.types.string } }
+          });
+          const clone = field.clone({ model: Employee });
+
+          expect(clone.validators.schema.foo.model, 'to equal', Employee);
+          expect(field.validators.schema.foo.model, 'to equal', User);
+        });
+
+        it('updates the model in nested schemas', function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json,
+            schema: {
+              foo: {
+                type: Field.types.jsonObject,
+                schema: { bar: { type: Field.types.string } }
+              }
+            }
+          });
+          const clone = field.clone({ model: Employee });
+
+          expect(
+            clone.validators.schema.foo.validators.schema.bar.model,
+            'to equal',
+            Employee
+          );
+          expect(
+            field.validators.schema.foo.validators.schema.bar.model,
+            'to equal',
+            User
+          );
+        });
+
+        it('updates the model on root schemas', function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json,
+            schema: { type: Field.types.string }
+          });
+          const clone = field.clone({ model: Employee });
+
+          expect(clone.validators.schema.model, 'to equal', Employee);
+          expect(field.validators.schema.model, 'to equal', User);
+        });
+      });
+    });
   });
 
   describe('Field.prototype.getColumnName', function() {
@@ -2154,76 +2225,6 @@ describe('Field', function() {
               );
             });
           });
-        });
-      });
-    });
-  });
-
-  describe('Field.prototype.updateModel', function() {
-    class User extends Model {}
-
-    it('allows chaining', function() {
-      const field = new Field({
-        name: 'firstName',
-        model: User,
-        type: Field.types.string
-      });
-      expect(field.updateModel(User), 'to equal', field);
-    });
-
-    describe('when called again on the same field', function() {
-      class Employee extends User {}
-
-      it('updates the model that the field belongs to', function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.integer
-        });
-
-        expect(field.model, 'to equal', User);
-        field.updateModel(Employee);
-        expect(field.model, 'to equal', Employee);
-      });
-
-      describe('when the field has a `schema`', function() {
-        it("updates the schema's model", function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json,
-            schema: { foo: { type: Field.types.string } }
-          });
-
-          expect(field.validators.schema.foo.model, 'to equal', User);
-          field.updateModel(Employee);
-          expect(field.validators.schema.foo.model, 'to equal', Employee);
-        });
-
-        it('updates the model in nested schemas', function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json,
-            schema: {
-              foo: {
-                type: Field.types.jsonObject,
-                schema: { bar: { type: Field.types.string } }
-              }
-            }
-          });
-
-          expect(
-            field.validators.schema.foo.validators.schema.bar.model,
-            'to equal',
-            User
-          );
-          field.updateModel(Employee);
-          expect(
-            field.validators.schema.foo.validators.schema.bar.model,
-            'to equal',
-            Employee
-          );
         });
       });
     });
