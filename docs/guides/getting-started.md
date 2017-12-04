@@ -10,57 +10,31 @@ As an example, let's set up a postgres connection:
 ```js
 const knex = require('knex'){
   client: 'pg',
-  connection: {
-    host : '127.0.0.1',
-    user : 'your_database_user',
-    password : 'your_database_password',
-    database : 'myapp_test'
-  }
+  connection: 'postgres://user:password@127.0.0.1:5432/database'
 });
 ```
 > Note that you should only use one knex instance throughout your application.
 
 ## Set up the ORM
 
-To create an ORM, extend the Query, Model and Transaction (if needed) classes
-exported by knorm. You can then configure the ORM with the knex instance that
-will be used for interacting with the database:
+To create an ORM, use the Knorm constructor and pass the `knex` instance, among
+other [options](#knorm-options).
 
 ```js
-const knorm = require('knorm');
-const { Query: KnormQuery, Model: KnormModel, Transaction: KnormTransaction } = knorm;
-
-class Query extends KnormQuery {}
-Query.knex = knex; // the knex instance
-
-class Transaction extends KnormTransaction {}
-Transaction.knex = knex; // the knex instance
-
-class Model extends KnormModel {}
-Model.Query = Query; // Model uses Query for executing database operations
+const Knorm = require('knorm');
+const orm = new Knorm({ knex });
 ```
-> You should always extend the classes provided by knorm and configure the
-child classes, especially if you want to create several ORMs in the same
-application.
+> the orm created contains `Model`, `Field`, `Query` and other knorm classes.
 
-### Configure field-name to column-name mapping (optional)
+### Knorm options
 
-If you need to snake-case field names or put hyphens in there or something of
-this nature, you can override the `Field` class and then configure `Model`
-appropriately:
+These options are supported:
 
-```js
-const { snakeCase } = require('lodash');
-const { Field: KnormField } = knorm;
-
-class Field extends KnormField {
-  getColumnName(fieldName) {
-    return snakeCase(fieldName);
-  }
-}
-
-Model.Field = Field; // update Model with the new Field class
-```
+| Option | Type | Description                                        |
+| ------ | ---- | --------------------------------------------------- |
+| `knex` | function (__required__) | the knex instance |
+| `fieldNameToColumnName` | function | a function used to map field names to column names e.g. [snakeCase](https://lodash.com/docs/4.17.4#snakeCase) |
+| `fieldNames` | object | field-name mappings (see the next section for more info). |
 
 ### Configure common fields (optional)
 
@@ -69,29 +43,27 @@ If you have fields that are common to all your models, add them to the base
 good place to add it:
 
 ```js
+const { Model } = new Knorm({ knex });
+
 Model.fields = {
-  id: {
-    type: 'integer'
-  }
+  id: { type: 'integer' }
 };
 ```
 > The field `type` is required. With only a few exceptions, these types map
 one-to-one with the types you use with Knex's schema builder. See
 [Model.fields](api/model.md#modelfields) for more info.
 
-If your `id` field has a name other than "id", you can configure the field name:
+If your `id` field has a name other than "id", use the `fieldNames` option:
 
 ```js
-Model.fieldNames = {
-  id: 'uuid'
-};
+const { Model } = new Knorm({
+  knex,
+  fieldNames: { id: 'uuid' }
+});
 
 // In this case your base fields will be something like:
 Model.fields = {
-  uuid: {
-    type: 'uuid',
-    required: true // validation rule
-  }
+  uuid: { type: 'uuid' }
 };
 ```
 > You can also override the field-name for any model that extends `Model`. See
