@@ -1788,16 +1788,70 @@ describe('Model', function() {
   });
 
   describe('Model.references', function() {
-    it("is a getter that returns the model's references", function() {
-      class Foo extends Model {}
-      expect(Foo.references, 'to equal', {});
-    });
-  });
+    describe('as a getter', function() {
+      it("returns the model's references", function() {
+        class Foo extends Model {}
+        class Bar extends Model {}
 
-  describe('Model.referenced', function() {
-    it("is a getter that returns the model's back-references", function() {
-      class Foo extends Model {}
-      expect(Foo.referenced, 'to equal', {});
+        Foo.fields = { id: { type: 'integer' } };
+        Bar.fields = { fooId: { type: 'integer', references: Foo.fields.id } };
+
+        expect(Bar.references, 'to exhaustively satisfy', {
+          fooId: Foo.fields.id
+        });
+      });
+
+      describe('when a model is subclassed', function() {
+        let Foo;
+
+        before(function() {
+          Foo = class extends Model {};
+          Foo.fields = { id: { type: 'integer' }, id2: { type: 'integer' } };
+        });
+
+        it('updates references defined in the parent', function() {
+          class Bar extends Model {}
+          class Quux extends Bar {}
+
+          Bar.fields = {
+            fooId: { type: 'integer', references: Foo.fields.id }
+          };
+          Quux.fields = {
+            fooId: { type: 'integer', references: Foo.fields.id2 }
+          };
+
+          expect(Model.references, 'to exhaustively satisfy', {});
+          expect(Bar.references, 'to exhaustively satisfy', {
+            fooId: Foo.fields.id
+          });
+          expect(Quux.references, 'to exhaustively satisfy', {
+            fooId: Foo.fields.id2
+          });
+        });
+
+        it("inherits but does not interfere with the parent's references", function() {
+          class Foo extends Model {}
+          class Bar extends Model {}
+          class Quux extends Bar {}
+
+          Foo.fields = { id: { type: 'integer' } };
+          Bar.fields = {
+            fooId: { type: 'integer', references: Foo.fields.id }
+          };
+          Quux.fields = {
+            fooId2: { type: 'integer', references: Foo.fields.id2 }
+          };
+
+          expect(Model.references, 'to exhaustively satisfy', {});
+          expect(Bar.references, 'to exhaustively satisfy', {
+            fooId: Foo.fields.id
+          });
+          expect(Quux.references, 'to exhaustively satisfy', {
+            fooId: Foo.fields.id,
+            fooId2: Foo.fields.id2
+          });
+        });
+      });
     });
   });
 
@@ -2138,24 +2192,26 @@ describe('Model', function() {
       });
 
       describe('with a custom id field', function() {
-        class UuidAsIdQuery extends Query {}
-        UuidAsIdQuery.knex = knex;
-
-        class UuidAsId extends Model {}
-        UuidAsId.Query = UuidAsIdQuery;
-        UuidAsId.table = 'uuid_as_id';
-        UuidAsId.fields = {
-          uuid: {
-            type: Field.types.string,
-            required: true
-          },
-          name: {
-            type: Field.types.string
-          }
-        };
-        UuidAsId.fieldNames.id = 'uuid';
+        let UuidAsId;
 
         before(async function() {
+          class UuidAsIdQuery extends Query {}
+          UuidAsIdQuery.knex = knex;
+
+          UuidAsId = class extends Model {};
+          UuidAsId.Query = UuidAsIdQuery;
+          UuidAsId.table = 'uuid_as_id';
+          UuidAsId.fields = {
+            uuid: {
+              type: Field.types.string,
+              required: true
+            },
+            name: {
+              type: Field.types.string
+            }
+          };
+          UuidAsId.fieldNames.id = 'uuid';
+
           await knex.schema.createTable(UuidAsId.table, table => {
             table
               .string('uuid')
@@ -2710,25 +2766,27 @@ describe('Model', function() {
   });
 
   describe('with a custom `id` field-name', function() {
-    class EmailAsIdQuery extends Query {}
-    EmailAsIdQuery.knex = knex;
-
-    class EmailAsId extends Model {}
-    EmailAsId.Query = EmailAsIdQuery;
-    EmailAsId.table = 'user';
-    EmailAsId.fields = {
-      email: {
-        type: Field.types.string,
-        required: true
-      },
-      name: {
-        type: Field.types.string,
-        required: true
-      }
-    };
-    EmailAsId.fieldNames.id = 'email';
+    let EmailAsId;
+    let EmailAsIdQuery;
 
     before(async function() {
+      EmailAsIdQuery = class extends Query {};
+      EmailAsIdQuery.knex = knex;
+
+      EmailAsId = class extends Model {};
+      EmailAsId.Query = EmailAsIdQuery;
+      EmailAsId.table = 'user';
+      EmailAsId.fields = {
+        email: {
+          type: Field.types.string,
+          required: true
+        },
+        name: {
+          type: Field.types.string,
+          required: true
+        }
+      };
+      EmailAsId.fieldNames.id = 'email';
       await knex.schema.createTable(EmailAsId.table, table => {
         table.string('email').primary();
         table.string('name').notNullable();

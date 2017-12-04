@@ -65,110 +65,6 @@ describe('Field', function() {
       );
     });
 
-    describe('with a field reference configured', function() {
-      it("adds the reference to the field's model's references", function() {
-        class User extends Model {}
-        class Image extends Model {}
-
-        const id = new Field({
-          name: 'id',
-          model: User,
-          type: Field.types.integer
-        });
-        const createdAt = new Field({
-          name: 'createdAt',
-          model: User,
-          type: Field.types.dateTime
-        });
-        new Field({
-          name: 'userId',
-          model: Image,
-          type: Field.types.integer,
-          references: id
-        });
-        new Field({
-          name: 'userCreatedAt',
-          model: Image,
-          type: Field.types.dateTime,
-          references: createdAt
-        });
-
-        expect(User.references, 'to equal', {});
-        expect(Image.references, 'to equal', {
-          User: {
-            userId: id,
-            userCreatedAt: createdAt
-          }
-        });
-      });
-
-      it('adds reverse-references to the referenced model', function() {
-        class User extends Model {}
-        class Image extends Model {}
-
-        const id = new Field({
-          name: 'id',
-          model: User,
-          type: Field.types.integer
-        });
-        const createdAt = new Field({
-          name: 'createdAt',
-          model: User,
-          type: Field.types.dateTime
-        });
-        const userId = new Field({
-          name: 'userId',
-          model: Image,
-          type: Field.types.integer,
-          references: id
-        });
-        const userCreatedAt = new Field({
-          name: 'userCreatedAt',
-          model: Image,
-          type: Field.types.dateTime,
-          references: createdAt
-        });
-
-        expect(Image.referenced, 'to equal', {});
-        expect(User.referenced, 'to equal', {
-          Image: {
-            id: [userId],
-            createdAt: [userCreatedAt]
-          }
-        });
-      });
-
-      it("doesn't overwrite reverse-references to the same field", function() {
-        class User extends Model {}
-        class Image extends Model {}
-
-        const id = new Field({
-          name: 'id',
-          model: User,
-          type: Field.types.integer
-        });
-        const userId1 = new Field({
-          name: 'userId1',
-          model: Image,
-          type: Field.types.integer,
-          references: id
-        });
-        const userId2 = new Field({
-          name: 'userId2',
-          model: Image,
-          type: Field.types.integer,
-          references: id
-        });
-
-        expect(Image.referenced, 'to equal', {});
-        expect(User.referenced, 'to equal', {
-          Image: {
-            id: [userId1, userId2]
-          }
-        });
-      });
-    });
-
     describe('with a column name configured', function() {
       it("sets the field's column name from configured value", function() {
         class Foo extends Model {}
@@ -318,6 +214,77 @@ describe('Field', function() {
             foo: { type: Field.types.string, validators: { required: true } }
           }
         }
+      });
+    });
+
+    describe('when called with a model override', function() {
+      class User extends Model {}
+      class Employee extends User {}
+
+      it('updates the model that the field belongs to', function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: Field.types.integer
+        });
+        const clone = field.clone({ model: Employee });
+
+        expect(clone.model, 'to equal', Employee);
+        expect(field.model, 'to equal', User);
+      });
+
+      describe('when the field has a `schema`', function() {
+        it("updates the schema's model", function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json,
+            schema: { foo: { type: Field.types.string } }
+          });
+          const clone = field.clone({ model: Employee });
+
+          expect(clone.validators.schema.foo.model, 'to equal', Employee);
+          expect(field.validators.schema.foo.model, 'to equal', User);
+        });
+
+        it('updates the model in nested schemas', function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json,
+            schema: {
+              foo: {
+                type: Field.types.jsonObject,
+                schema: { bar: { type: Field.types.string } }
+              }
+            }
+          });
+          const clone = field.clone({ model: Employee });
+
+          expect(
+            clone.validators.schema.foo.validators.schema.bar.model,
+            'to equal',
+            Employee
+          );
+          expect(
+            field.validators.schema.foo.validators.schema.bar.model,
+            'to equal',
+            User
+          );
+        });
+
+        it('updates the model on root schemas', function() {
+          const field = new Field({
+            name: 'firstName',
+            model: User,
+            type: Field.types.json,
+            schema: { type: Field.types.string }
+          });
+          const clone = field.clone({ model: Employee });
+
+          expect(clone.validators.schema.model, 'to equal', Employee);
+          expect(field.validators.schema.model, 'to equal', User);
+        });
       });
     });
   });
@@ -2258,80 +2225,6 @@ describe('Field', function() {
               );
             });
           });
-        });
-      });
-    });
-  });
-
-  describe('Field.prototype.updateModel', function() {
-    class User extends Model {}
-
-    it('allows chaining', function() {
-      const field = new Field({
-        name: 'firstName',
-        model: User,
-        type: Field.types.string
-      });
-      expect(field.updateModel(User), 'to equal', field);
-    });
-
-    describe('when called again on the same field', function() {
-      class Employee extends User {}
-
-      it('updates the model that the field belongs to', function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: Field.types.integer
-        });
-
-        expect(field.model, 'to equal', User);
-        field.updateModel(Employee);
-        expect(field.model, 'to equal', Employee);
-      });
-
-      describe('when the field has a reference', function() {
-        it('updates the reverse-references to the new model', function() {
-          class Image extends Model {}
-
-          const id = new Field({
-            name: 'id',
-            model: User,
-            type: Field.types.integer
-          });
-          const userId = new Field({
-            name: 'userId',
-            model: Image,
-            type: Field.types.integer,
-            references: id
-          });
-
-          expect(User.referenced, 'to equal', {
-            Image: { id: [userId] }
-          });
-
-          class UserImage extends User {}
-
-          userId.updateModel(UserImage);
-
-          expect(User.referenced, 'to equal', {
-            UserImage: { id: [userId] }
-          });
-        });
-      });
-
-      describe('when the field has a `schema`', function() {
-        it("updates the nested fields' model", function() {
-          const field = new Field({
-            name: 'firstName',
-            model: User,
-            type: Field.types.json,
-            schema: { foo: { type: Field.types.string } }
-          });
-
-          expect(field.validators.schema.foo.model, 'to equal', User);
-          field.updateModel(Employee);
-          expect(field.validators.schema.foo.model, 'to equal', Employee);
         });
       });
     });
