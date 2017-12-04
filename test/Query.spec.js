@@ -994,6 +994,29 @@ describe('Query', function() {
       });
     });
 
+    describe("with a 'whereRaw' configured", function() {
+      it('resolves with only the rows matching the query', async function() {
+        const query = new Query(User).whereRaw('id = ?', [1]);
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10'
+            })
+          ]
+        );
+      });
+    });
+
     describe("with a 'groupBy' and 'having' configured", function() {
       it('resolves with the rows matching the grouping', async function() {
         const query = new Query(User)

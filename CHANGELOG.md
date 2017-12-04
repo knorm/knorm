@@ -1,3 +1,20 @@
+<a name="0.9.3"></a>
+## [0.9.3](https://github.com/joelmukuthu/knorm/compare/v0.9.2...v0.9.3) (2017-11-23)
+
+
+### Bug Fixes
+
+* **Field:** allow `equals` validation with a zero value ([7ec3a7a](https://github.com/joelmukuthu/knorm/commit/7ec3a7a))
+* **Field:** allow `maxLength` validation with value zero ([45846e0](https://github.com/joelmukuthu/knorm/commit/45846e0))
+* **Query:** add joins before all other options ([cd1ccdd](https://github.com/joelmukuthu/knorm/commit/cd1ccdd))
+
+
+### Features
+
+* **Query:** add whereRaw ([fc7efc9](https://github.com/joelmukuthu/knorm/commit/fc7efc9))
+
+
+
 <a name="0.9.2"></a>
 ## [0.9.2](https://github.com/joelmukuthu/knorm/compare/v0.9.1...v0.9.2) (2017-11-16)
 
