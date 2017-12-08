@@ -3079,58 +3079,6 @@ describe('Query', function() {
       });
     });
 
-    describe('with a uuid primary field', function() {
-      class UuidAsId extends KnormModel {}
-      UuidAsId.Query = Query;
-      UuidAsId.table = 'uuid_as_id';
-      UuidAsId.fields = {
-        uuid: {
-          type: Field.types.string,
-          required: true,
-          primary: true
-        },
-        name: {
-          type: Field.types.string
-        }
-      };
-
-      before(async function() {
-        await knex.schema.createTable(UuidAsId.table, table => {
-          table
-            .string('uuid')
-            .unique()
-            .notNullable();
-          table.string('name');
-        });
-      });
-
-      after(async function() {
-        await knex.schema.dropTable(UuidAsId.table);
-      });
-
-      afterEach(async function() {
-        await knex(UuidAsId.table).truncate();
-      });
-
-      it('inserts an instance of the model', async function() {
-        const query = new Query(UuidAsId);
-        const instance = new UuidAsId({ uuid: 'foo', name: 'bar' });
-        await expect(query.insert(instance), 'to be fulfilled');
-        await expect(
-          knex,
-          'with table',
-          UuidAsId.table,
-          'to have rows satisfying',
-          [
-            {
-              uuid: 'foo',
-              name: 'bar'
-            }
-          ]
-        );
-      });
-    });
-
     describe("with a 'transaction' configured", function() {
       it('does the insert within the transaction', async function() {
         const transact = async transaction => {
