@@ -1809,7 +1809,7 @@ describe('Model', function() {
           Foo.fields = { id: { type: 'integer' }, id2: { type: 'integer' } };
         });
 
-        it('updates references defined in the parent', function() {
+        it('overwrites references defined in the parent', function() {
           class Bar extends Model {}
           class Quux extends Bar {}
 
@@ -1850,6 +1850,59 @@ describe('Model', function() {
             fooId: Foo.fields.id,
             fooId2: Foo.fields.id2
           });
+        });
+      });
+    });
+  });
+
+  describe('Model.primary', function() {
+    describe('as a getter', function() {
+      it('throws an error of the model has no primary field', function() {
+        class Foo extends Model {}
+
+        expect(
+          () => Foo.primary,
+          'to throw',
+          new Error('`Foo` has no `primary` field')
+        );
+      });
+
+      it("returns the model's primary field", function() {
+        class Foo extends Model {}
+
+        Foo.fields = { id: { type: 'integer', primary: true } };
+
+        expect(Foo.primary, 'to equal', Foo.fields.id);
+      });
+
+      describe('when a model is subclassed', function() {
+        let Foo;
+
+        before(function() {
+          Foo = class extends Model {};
+          Foo.fields = { id: { type: 'integer' }, id2: { type: 'integer' } };
+        });
+
+        it("inherits the parent's primary field but references the inherited field", function() {
+          class Foo extends Model {}
+          class Bar extends Foo {}
+
+          Foo.fields = { id: { type: 'integer', primary: true } };
+
+          expect(Foo.primary, 'to equal', Foo.fields.id);
+          expect(Bar.primary, 'not to equal', Foo.fields.id);
+          expect(Bar.primary, 'to equal', Bar.fields.id);
+        });
+
+        it("allows overwriting the parent's primary field", function() {
+          class Foo extends Model {}
+          class Bar extends Foo {}
+
+          Foo.fields = { id: { type: 'integer', primary: true } };
+          Bar.fields = { uuid: { type: 'uuid', primary: true } };
+
+          expect(Foo.primary, 'to equal', Foo.fields.id);
+          expect(Bar.primary, 'to equal', Bar.fields.uuid);
         });
       });
     });

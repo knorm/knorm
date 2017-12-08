@@ -183,7 +183,7 @@ describe('Field', function() {
       });
     });
 
-    it('clones cast functions', function() {
+    it('copies cast functions', function() {
       class Foo extends Model {}
       const field = new Field({
         name: 'bar',
@@ -197,6 +197,19 @@ describe('Field', function() {
         castors: {
           forSave() {}
         }
+      });
+    });
+
+    it('copies the `primary` flag', function() {
+      class Foo extends Model {}
+      const field = new Field({
+        name: 'bar',
+        model: Foo,
+        type: Field.types.string,
+        primary: true
+      });
+      expect(field.clone(), 'to satisfy', {
+        primary: true
       });
     });
 
