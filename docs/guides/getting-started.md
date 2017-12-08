@@ -69,9 +69,6 @@ Model.fields = {
 > You can also override the field-name for any model that extends `Model`. See
 [Model.fieldNames](api/model.md#modelfieldnames) for more info.
 
-> To add [timestamps](http://knexjs.org/#Schema-timestamps) support, check out
-the [knorm-timestamps](https://www.npmjs.com/package/knorm-timestamps) plugin
-
 ## Add models
 
 Then you can create some models:
