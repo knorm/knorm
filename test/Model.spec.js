@@ -1716,77 +1716,6 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.fieldNames', function() {
-    it('returns the `id` field mapping by default', function() {
-      class User extends Model {}
-
-      expect(User.fieldNames, 'to exhaustively satisfy', {
-        id: 'id'
-      });
-    });
-
-    describe('as a setter', function() {
-      it("adds the field name mappings to the model's field name mappings", function() {
-        class User extends Model {}
-        User.fieldNames = { createdAt: 'created' };
-
-        expect(User.fieldNames, 'to exhaustively satisfy', {
-          id: 'id',
-          createdAt: 'created'
-        });
-      });
-
-      describe('when a model is subclassed', function() {
-        it('allows overwriting the field names defined in the parent', function() {
-          class User extends Model {}
-          User.fieldNames = { createdAt: 'created' };
-
-          expect(User.fieldNames, 'to exhaustively satisfy', {
-            id: 'id',
-            createdAt: 'created'
-          });
-
-          class OtherUser extends User {}
-          OtherUser.fieldNames = { createdAt: 'timeCreated' };
-
-          expect(OtherUser.fieldNames, 'to satisfy', {
-            id: 'id',
-            createdAt: 'timeCreated'
-          });
-        });
-
-        it("doesn't interfere with the parent's field name mappings", function() {
-          class User extends Model {}
-
-          expect(Model.fieldNames, 'to exhaustively satisfy', { id: 'id' });
-          expect(User.fieldNames, 'to exhaustively satisfy', { id: 'id' });
-
-          User.fieldNames = { createdAt: 'created' };
-
-          expect(Model.fieldNames, 'to exhaustively satisfy', { id: 'id' });
-          expect(User.fieldNames, 'to exhaustively satisfy', {
-            id: 'id',
-            createdAt: 'created'
-          });
-
-          class OtherUser extends User {}
-          OtherUser.fieldNames = { updatedAt: 'timeUpdated' };
-
-          expect(Model.fieldNames, 'to exhaustively satisfy', { id: 'id' });
-          expect(User.fieldNames, 'to exhaustively satisfy', {
-            id: 'id',
-            createdAt: 'created'
-          });
-          expect(OtherUser.fieldNames, 'to satisfy', {
-            id: 'id',
-            createdAt: 'created',
-            updatedAt: 'timeUpdated'
-          });
-        });
-      });
-    });
-  });
-
   describe('Model.references', function() {
     describe('as a getter', function() {
       it("returns the model's references", function() {
@@ -1863,7 +1792,7 @@ describe('Model', function() {
         expect(
           () => Foo.primary,
           'to throw',
-          new Error('`Foo` has no `primary` field')
+          new Error('`Foo` has no primary field')
         );
       });
 
@@ -1955,24 +1884,28 @@ describe('Model', function() {
   });
 
   describe('db methods', function() {
-    class UserQuery extends Query {}
-    UserQuery.knex = knex;
-
-    class User extends Model {}
-    User.Query = UserQuery;
-    User.table = 'user';
-    User.fields = {
-      id: {
-        type: Field.types.integer,
-        required: true
-      },
-      name: {
-        type: Field.types.string,
-        required: true
-      }
-    };
+    let UserQuery;
+    let User;
 
     before(async function() {
+      UserQuery = class extends Query {};
+      UserQuery.knex = knex;
+
+      User = class extends Model {};
+      User.Query = UserQuery;
+      User.table = 'user';
+      User.fields = {
+        id: {
+          type: Field.types.integer,
+          required: true,
+          primary: true
+        },
+        name: {
+          type: Field.types.string,
+          required: true
+        }
+      };
+
       await knex.schema.createTable(User.table, table => {
         table.increments();
         table.string('name').notNullable();
@@ -2166,7 +2099,7 @@ describe('Model', function() {
         stub.restore();
       });
 
-      it('passes the `id` set on the model to Query.prototype.where', async function() {
+      it('passes the primary field set on the model to Query.prototype.where', async function() {
         const user = await new User({ id: 1, name: 'John Doe' }).insert();
         const spy = sinon.spy(UserQuery.prototype, 'where');
         user.name = 'Jane Doe';
@@ -2181,14 +2114,12 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('rejects if the `id` is not set', async function() {
+      it('rejects if the primary field is not set', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         await expect(
           new User({ name: 'John Doe' }).update(),
           'to be rejected with error satisfying',
-          new Error(
-            'User: cannot update an instance if the `id` field is not set'
-          )
+          new Error('User: primary field (`id`) is not set')
         );
       });
 
@@ -2244,7 +2175,7 @@ describe('Model', function() {
         await expect(user.leaveMeIntact, 'to be', 'okay');
       });
 
-      describe('with a custom id field', function() {
+      describe('with a uuid primary field', function() {
         let UuidAsId;
 
         before(async function() {
@@ -2257,13 +2188,13 @@ describe('Model', function() {
           UuidAsId.fields = {
             uuid: {
               type: Field.types.string,
-              required: true
+              required: true,
+              primary: true
             },
             name: {
               type: Field.types.string
             }
           };
-          UuidAsId.fieldNames.id = 'uuid';
 
           await knex.schema.createTable(UuidAsId.table, table => {
             table
@@ -2341,7 +2272,7 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('passes the `id` set on the model to Query.prototype.where', async function() {
+      it('passes the primary field set on the model to Query.prototype.where', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
@@ -2356,14 +2287,12 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('rejects if the `id` is unset', async function() {
+      it('rejects if the primary field is unset', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         await expect(
           new User().fetch(),
           'to be rejected with error satisfying',
-          new Error(
-            'User: cannot fetch an instance if the `id` field is not set'
-          )
+          new Error('User: primary field (`id`) is not set')
         );
       });
 
@@ -2449,7 +2378,7 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('passes the `id` set on the model to Query.prototype.where', async function() {
+      it('passes the primary field set on the model to Query.prototype.where', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1, name: 'John Doe' });
         const spy = sinon.spy(UserQuery.prototype, 'where');
@@ -2464,14 +2393,12 @@ describe('Model', function() {
         spy.restore();
       });
 
-      it('rejects if the `id` is unset', async function() {
+      it('rejects if the primary field is unset', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         await expect(
           new User().delete(),
           'to be rejected with error satisfying',
-          new Error(
-            'User: cannot delete an instance if the `id` field is not set'
-          )
+          new Error('User: primary field (`id`) is not set')
         );
       });
 
@@ -2818,7 +2745,7 @@ describe('Model', function() {
     });
   });
 
-  describe('with a custom `id` field-name', function() {
+  describe('with an email primary field', function() {
     let EmailAsId;
     let EmailAsIdQuery;
 
@@ -2832,14 +2759,14 @@ describe('Model', function() {
       EmailAsId.fields = {
         email: {
           type: Field.types.string,
-          required: true
+          required: true,
+          primary: true
         },
         name: {
           type: Field.types.string,
           required: true
         }
       };
-      EmailAsId.fieldNames.id = 'email';
       await knex.schema.createTable(EmailAsId.table, table => {
         table.string('email').primary();
         table.string('name').notNullable();
@@ -2872,23 +2799,13 @@ describe('Model', function() {
     });
 
     describe('Model.fetchById', function() {
-      it('uses the configured id field to fetch the data', async function() {
+      it('uses the configured primary field to fetch the data', async function() {
         await EmailAsId.insert({ email: 'foo', name: 'John Doe' });
         await expect(
           EmailAsId.fetchById('foo'),
           'to be fulfilled with value satisfying',
           new EmailAsId({ email: 'foo', name: 'John Doe' })
         );
-      });
-
-      it('rejects with an error if the id field is not configured', async function() {
-        EmailAsId.fieldNames.id = 'foo';
-        await expect(
-          EmailAsId.fetchById('foo'),
-          'to be rejected with',
-          new Error("EmailAsId has no id field ('foo') configured")
-        );
-        EmailAsId.fieldNames.id = 'email';
       });
     });
 
@@ -2907,16 +2824,6 @@ describe('Model', function() {
           'to have rows satisfying',
           [{ email: 'foo', name: 'Jane Doe' }]
         );
-      });
-
-      it('rejects with an error if the id field is not configured', async function() {
-        EmailAsId.fieldNames.id = 'foo';
-        await expect(
-          EmailAsId.updateById('foo', { name: 'Jane Doe' }),
-          'to be rejected with',
-          new Error("EmailAsId has no id field ('foo') configured")
-        );
-        EmailAsId.fieldNames.id = 'email';
       });
     });
   });

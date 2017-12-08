@@ -104,27 +104,27 @@ a `Model.prototype` property, or is added as a [field](#modelfields) already.
 > Also, avoid using arrow functions for getters and setters if you wish to
 access the instance using `this`.
 
-## Model.fieldNames
+## Model.primary
 
-Knorm expects models to have an `id` field. By default it expects this field to
-be named `'id'` (owing to the fact that knex's
-[SchemaBuilder.prototype.increments](http://knexjs.org/#Schema-increments)
-creates a column named `'id'`). If your `id` field has a different name, you can
-configure it using `Model.fieldNames`:
+Knorm expects models to have a primary field. Configure your model's primary
+field using the `primary` Field config:
 
 ```js
 class Image extends Model {}
 
-Image.fieldNames = {
-  id: 'uuid'
-};
-
-// then Image is expected to have a field named 'uuid'
 Image.fields = {
-  uuid: {
-    type: 'uuid',
-    required: true
-  }
+  uuid: { type: 'uuid', primary: true }
+};
+```
+
+You can override the primary field in a child class when defining the fields for
+that model:
+
+```js
+class OtherImage extends Image {}
+
+OtherImage.fields = {
+  otherUuid: { type: 'uuidV4', primary: true }
 };
 ```
 

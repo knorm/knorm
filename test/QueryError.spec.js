@@ -15,7 +15,8 @@ User.table = 'user';
 User.fields = {
   id: {
     type: AbstractField.types.integer,
-    required: true
+    required: true,
+    primary: true
   }
 };
 

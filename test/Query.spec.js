@@ -62,7 +62,8 @@ Model.Field = Field;
 Model.fields = {
   id: {
     type: Field.types.integer,
-    required: true
+    required: true,
+    primary: true
   }
 };
 
@@ -3078,15 +3079,15 @@ describe('Query', function() {
       });
     });
 
-    describe('with a custom `id` field', function() {
+    describe('with a uuid primary field', function() {
       class UuidAsId extends KnormModel {}
       UuidAsId.Query = Query;
       UuidAsId.table = 'uuid_as_id';
-      UuidAsId.fieldNames.id = 'uuid';
       UuidAsId.fields = {
         uuid: {
           type: Field.types.string,
-          required: true
+          required: true,
+          primary: true
         },
         name: {
           type: Field.types.string
