@@ -1,4 +1,4 @@
-const { snakeCase } = require('lodash');
+const { snakeCase: fieldToColumn } = require('lodash');
 const QueryBuilder = require('knex/lib/query/builder');
 const Knorm = require('../lib/Knorm');
 const KnormQuery = require('../lib/Query');
@@ -46,10 +46,7 @@ const expect = require('unexpected')
     }
   );
 
-const { Model, Query, Field } = new Knorm({
-  knex,
-  fieldNameToColumnName: snakeCase
-});
+const { Model, Query, Field } = new Knorm({ knex, fieldToColumn });
 
 Model.fields = {
   id: {

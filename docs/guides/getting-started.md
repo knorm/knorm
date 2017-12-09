@@ -31,9 +31,9 @@ const orm = new Knorm({ knex });
 These options are supported:
 
 | Option | Type | Description                                        |
-| ------ | ---- | --------------------------------------------------- |
-| `knex` | function (__required__) | the knex instance |
-| `fieldNameToColumnName` | function | a function used to map field names to column names e.g. [snakeCase](https://lodash.com/docs/4.17.4#snakeCase) |
+| --------------- | ---- | --------------------------------------------------- |
+| `knex`          | function (__required__) | the knex instance |
+| `fieldToColumn` | function | a function used to map field names to column names e.g. [snakeCase](https://lodash.com/docs/4.17.4#snakeCase) |
 
 ### Configure common fields (optional)
 

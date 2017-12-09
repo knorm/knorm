@@ -29,11 +29,11 @@ describe('Knorm', () => {
     expect(firstOrm.Query, 'not to be', secondOrm.Query);
   });
 
-  describe('with the `fieldNameToColumnName` option provided', () => {
+  describe('with the `fieldToColumn` option provided', () => {
     it('configures it as the field-to-column-name mapping function', () => {
       const { Model } = new Knorm({
         knex,
-        fieldNameToColumnName(field) {
+        fieldToColumn(field) {
           return field.toLowerCase();
         }
       });
@@ -45,7 +45,7 @@ describe('Knorm', () => {
       let wasCalled;
       const { Model } = new Knorm({
         knex,
-        fieldNameToColumnName() {
+        fieldToColumn() {
           wasCalled = true;
           expect(this.constructor.name, 'to be', 'Field');
         }
