@@ -2015,7 +2015,7 @@ describe('Model', function() {
     });
 
     describe('Model.prototype.save', function() {
-      it('inserts a row if it has no `id`', async function() {
+      it('inserts a model if its primary field is not set', async function() {
         const user = new User({ name: 'John Doe' });
         await expect(
           user.save(),
@@ -2031,7 +2031,7 @@ describe('Model', function() {
         );
       });
 
-      it('updates a row if it has an `id`', async function() {
+      it('updates a model if its primary field is set', async function() {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
@@ -2063,7 +2063,7 @@ describe('Model', function() {
     });
 
     describe('Model.prototype.insert', function() {
-      it('inserts a row to the database', async function() {
+      it('inserts a model', async function() {
         const user = new User({ name: 'John Doe' });
         await expect(
           user.insert(),
@@ -2094,7 +2094,7 @@ describe('Model', function() {
     });
 
     describe('Model.prototype.update', function() {
-      it('updates a row to the database', async function() {
+      it('updates a model', async function() {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
@@ -2137,7 +2137,7 @@ describe('Model', function() {
     });
 
     describe('Model.prototype.fetch', function() {
-      it('fetches a model from the database', async function() {
+      it('fetches a model', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
         await expect(
@@ -2159,7 +2159,7 @@ describe('Model', function() {
     });
 
     describe('Model.prototype.delete', function() {
-      it('deletes a model from the database', async function() {
+      it('deletes a model', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
         await expect(
@@ -2182,13 +2182,12 @@ describe('Model', function() {
     });
 
     describe('Model.save', function() {
-      it('inserts a row to the database via Query.prototype.save', async function() {
-        const spy = sinon.spy(UserQuery.prototype, 'save');
-        const data = { name: 'John Doe' };
-        await expect(User.save(data), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(data, undefined); // options are undefined
-        });
+      it('inserts models', async function() {
+        await expect(
+          User.save({ name: 'John Doe' }),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1, name: 'John Doe' })]
+        );
         await expect(
           knex,
           'with table',
@@ -2196,17 +2195,15 @@ describe('Model', function() {
           'to have rows satisfying',
           [{ id: 1, name: 'John Doe' }]
         );
-        spy.restore();
       });
 
-      it('updates a row to the database via Query.prototype.save', async function() {
-        const user = await new User({ name: 'John Doe' }).save();
-        const spy = sinon.spy(UserQuery.prototype, 'save');
-        user.name = 'Jane Doe';
-        await expect(User.save(user), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(user, undefined); // options are undefined
-        });
+      it('updates models', async function() {
+        await User.insert({ name: 'John Doe' });
+        await expect(
+          User.save({ id: 1, name: 'Jane Doe' }),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1, name: 'Jane Doe' })]
+        );
         await expect(
           knex,
           'with table',
@@ -2214,29 +2211,25 @@ describe('Model', function() {
           'to have rows satisfying',
           [{ id: 1, name: 'Jane Doe' }]
         );
-        spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.save', async function() {
-        const spy = sinon.spy(UserQuery.prototype, 'save');
-        const data = { name: 'John Doe' };
-        const options = { require: true };
-        await expect(User.save(data, options), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(data, options);
-        });
-        spy.restore();
+      it('passes options along', async function() {
+        await User.save({ name: 'John Doe' });
+        await expect(
+          User.save({ id: 1, name: 'Jane Doe' }, { forge: false }),
+          'to be fulfilled with value exhaustively satisfying',
+          [{ id: 1, name: 'Jane Doe' }]
+        );
       });
     });
 
     describe('Model.insert', function() {
-      it('inserts a row to the database via Query.prototype.insert', async function() {
-        const spy = sinon.spy(UserQuery.prototype, 'insert');
-        const data = { id: 1, name: 'John Doe' };
-        await expect(User.insert(data), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(data, undefined); // options are undefined
-        });
+      it('inserts models', async function() {
+        await expect(
+          User.insert({ id: 1, name: 'John Doe' }),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1, name: 'John Doe' })]
+        );
         await expect(
           knex,
           'with table',
@@ -2244,30 +2237,25 @@ describe('Model', function() {
           'to have rows satisfying',
           [{ id: 1, name: 'John Doe' }]
         );
-        spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.insert', async function() {
-        const spy = sinon.spy(UserQuery.prototype, 'insert');
-        const data = { name: 'John Doe' };
-        const options = { require: true };
-        await expect(User.insert(data, options), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(data, options);
-        });
-        spy.restore();
+      it('passes options along', async function() {
+        await expect(
+          User.insert({ name: 'John Doe' }, { forge: false }),
+          'to be fulfilled with value exhaustively satisfying',
+          [{ id: 1, name: 'John Doe' }]
+        );
       });
     });
 
     describe('Model.update', function() {
-      it('updates a row to the database via Query.prototype.update', async function() {
-        const user = await new User({ name: 'John Doe' }).insert();
-        const spy = sinon.spy(UserQuery.prototype, 'update');
-        user.name = 'Jane Doe';
-        await expect(User.update(user), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(user, undefined); // options are undefined
-        });
+      it('updates models', async function() {
+        await new User({ name: 'John Doe' }).insert();
+        await expect(
+          User.update({ name: 'Jane Doe' }),
+          'to be fulfilled with value satisfying',
+          [new User({ id: 1, name: 'Jane Doe' })]
+        );
         await expect(
           knex,
           'with table',
@@ -2275,104 +2263,71 @@ describe('Model', function() {
           'to have rows satisfying',
           [{ id: 1, name: 'Jane Doe' }]
         );
-        spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.update', async function() {
-        const user = await new User({ name: 'John Doe' }).insert();
-        const spy = sinon.spy(UserQuery.prototype, 'update');
-        user.name = 'Jane Doe';
-        const options = { require: true };
-        await expect(User.update(user, options), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(user, options);
-        });
-        spy.restore();
+      it('passes options along', async function() {
+        await new User({ name: 'John Doe' }).insert();
+        await expect(
+          User.update({ id: 1, name: 'Jane Doe' }, { forge: false }),
+          'to be fulfilled with value exhaustively satisfying',
+          [{ id: 1, name: 'Jane Doe' }]
+        );
       });
     });
 
     describe('Model.fetch', function() {
-      it('fetches data from the database via Query.prototype.fetch', async function() {
+      it('fetches models', async function() {
         await User.save({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'fetch');
-        await expect(User.fetch(), 'to be fulfilled with value satisfying', [
-          new User({ id: 1, name: 'John Doe' })
-        ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(undefined); // options are undefined
-        });
-        spy.restore();
+        await expect(
+          User.fetch(),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1, name: 'John Doe' })]
+        );
       });
 
-      it('passes any options passed to Query.prototype.fetch', async function() {
+      it('passes options along', async function() {
         await User.save({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'fetch');
-        const options = { forge: false };
         await expect(
-          User.fetch(options),
-          'to be fulfilled with value satisfying',
+          User.fetch({ forge: false }),
+          'to be fulfilled with value exhaustively satisfying',
           [{ id: 1, name: 'John Doe' }]
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(options);
-        });
-        spy.restore();
       });
     });
 
     describe('Model.count', function() {
-      it('counts data from the database via Query.prototype.count', async function() {
+      it('counts models', async function() {
         await User.save({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'count');
         await expect(User.count(), 'to be fulfilled with value satisfying', 1);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(undefined); // options are undefined
-        });
-        spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.count', async function() {
+      it('passes options along', async function() {
         await User.save({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'count');
-        const options = { field: 'id' };
         await expect(
-          User.count(options),
+          User.count({ field: 'id' }),
           'to be fulfilled with value satisfying',
           1
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(options);
-        });
-        spy.restore();
       });
     });
 
     describe('Model.delete', function() {
-      it('deletes data from the database via Query.prototype.delete', async function() {
+      it('deletes models', async function() {
         await User.save({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'delete');
-        await expect(User.delete(), 'to be fulfilled with value satisfying', [
-          new User({ id: 1, name: 'John Doe' })
-        ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(undefined); // options are undefined
-        });
-        spy.restore();
+        await expect(
+          User.delete(),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1, name: 'John Doe' })]
+        );
       });
 
-      it('passes any options passed to Query.prototype.delete', async function() {
+      it('passes options along', async function() {
         await User.save({ name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'delete');
-        const options = { forge: false };
         await expect(
-          User.delete(options),
-          'to be fulfilled with value satisfying',
+          User.delete({ forge: false }),
+          'to be fulfilled with value exhaustively satisfying',
           [{ id: 1, name: 'John Doe' }]
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(options);
-        });
-        spy.restore();
       });
     });
 
