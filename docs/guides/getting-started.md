@@ -60,12 +60,15 @@ class Model extends orm.Model {
 }
 
 Model.fields = {
-  id: { type: 'integer', primary: true }
+  id: { type: 'integer', primary: true, updated: false }
 };
 ```
 > The field `type` is required. With only a few exceptions, these types map
 one-to-one with the types you use with Knex's schema builder. See
 [Model.fields](api/model.md#modelfields) for more info.
+
+> The `updated` flag indicates that this field should not be updated when
+updating a model.
 
 > You can also override the primary field for any model that extends `Model`.
 See [Model.primary](api/model.md#modelprimary) for more info.

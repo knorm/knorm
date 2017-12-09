@@ -213,6 +213,19 @@ describe('Field', function() {
       });
     });
 
+    it('copies the `updated` flag', function() {
+      class Foo extends Model {}
+      const field = new Field({
+        name: 'bar',
+        model: Foo,
+        type: Field.types.string,
+        updated: false
+      });
+      expect(field.clone(), 'to satisfy', {
+        updated: false
+      });
+    });
+
     it('clones the schemas for json(b) fields', function() {
       class Foo extends Model {}
       const field = new Field({

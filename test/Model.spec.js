@@ -1894,13 +1894,6 @@ describe('Model', function() {
       });
 
       describe('when a model is subclassed', function() {
-        let Foo;
-
-        before(function() {
-          Foo = class extends Model {};
-          Foo.fields = { id: { type: 'integer' }, id2: { type: 'integer' } };
-        });
-
         it("inherits the parent's primary field but references the inherited field", function() {
           class Foo extends Model {}
           class Bar extends Foo {}
@@ -1921,6 +1914,41 @@ describe('Model', function() {
 
           expect(Foo.primary, 'to equal', Foo.fields.id);
           expect(Bar.primary, 'to equal', Bar.fields.uuid);
+        });
+      });
+    });
+  });
+
+  describe('Model.notUpdated', function() {
+    describe('as a getter', function() {
+      it('returns field-names that should not be updated', function() {
+        class Foo extends Model {}
+
+        Foo.fields = { id: { type: 'integer', updated: false } };
+
+        expect(Foo.notUpdated, 'to equal', ['id']);
+      });
+
+      describe('when a model is subclassed', function() {
+        it("inherits the parent's notUpdated fields", function() {
+          class Foo extends Model {}
+          class Bar extends Foo {}
+
+          Foo.fields = { id: { type: 'integer', updated: false } };
+
+          expect(Foo.notUpdated, 'to equal', ['id']);
+          expect(Bar.notUpdated, 'to equal', ['id']);
+        });
+
+        it("allows overwriting the parent's notUpdated fields", function() {
+          class Foo extends Model {}
+          class Bar extends Foo {}
+
+          Foo.fields = { id: { type: 'integer', updated: false } };
+          Bar.fields = { id: { type: 'integer', updated: true } };
+
+          expect(Foo.notUpdated, 'to equal', ['id']);
+          expect(Bar.notUpdated, 'to equal', []);
         });
       });
     });
