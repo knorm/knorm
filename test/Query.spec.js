@@ -1,7 +1,6 @@
 const { snakeCase } = require('lodash');
 const QueryBuilder = require('knex/lib/query/builder');
-const KnormModel = require('../lib/Model');
-const KnormField = require('../lib/Field');
+const Knorm = require('../lib/Knorm');
 const KnormQuery = require('../lib/Query');
 const knex = require('./lib/knex');
 const sinon = require('sinon');
@@ -47,18 +46,11 @@ const expect = require('unexpected')
     }
   );
 
-class Query extends KnormQuery {}
-Query.knex = knex;
+const { Model, Query, Field } = new Knorm({
+  knex,
+  fieldNameToColumnName: snakeCase
+});
 
-class Field extends KnormField {
-  getColumnName(fieldName) {
-    return snakeCase(fieldName);
-  }
-}
-
-class Model extends KnormModel {}
-Model.Query = Query;
-Model.Field = Field;
 Model.fields = {
   id: {
     type: Field.types.integer,

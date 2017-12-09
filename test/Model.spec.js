@@ -1,4 +1,5 @@
 const QueryBuilder = require('knex/lib/query/builder');
+const Knorm = require('../lib/Knorm');
 const Model = require('../lib/Model');
 const Field = require('../lib/Field');
 const Virtual = require('../lib/Virtual');
@@ -1230,32 +1231,26 @@ describe('Model', function() {
   });
 
   describe('Model.prototype.getQuery', function() {
-    let Foo;
-    let FooQuery;
+    const { Model, Query } = new Knorm({ knex() {} });
 
-    before(function() {
-      FooQuery = class extends Query {};
-      FooQuery.knex = () => {};
+    class Foo extends Model {}
 
-      Foo = class extends Model {};
-      Foo.Query = FooQuery;
-      Foo.table = 'foo';
-      Foo.fields = {
-        id: {
-          type: Field.types.integer,
-          required: true,
-          primary: true
-        },
-        name: {
-          type: Field.types.string,
-          required: true
-        }
-      };
-    });
+    Foo.table = 'foo';
+    Foo.fields = {
+      id: {
+        type: Field.types.integer,
+        required: true,
+        primary: true
+      },
+      name: {
+        type: Field.types.string,
+        required: true
+      }
+    };
 
     it('passes any options passed to Query.prototype.setOptions', function() {
       const setOptions = sinon
-        .stub(FooQuery.prototype, 'setOptions')
+        .stub(Query.prototype, 'setOptions')
         .returnsThis();
       new Foo().getQuery({ forInsert: true }, { returning: 'name' });
       expect(setOptions, 'to have calls satisfying', () =>
@@ -1265,21 +1260,21 @@ describe('Model', function() {
     });
 
     it('sets `first` to `true`', function() {
-      const first = sinon.stub(FooQuery.prototype, 'first').returnsThis();
+      const first = sinon.stub(Query.prototype, 'first').returnsThis();
       new Foo().getQuery({ forInsert: true });
       expect(first, 'to have calls satisfying', () => first(true));
       first.restore();
     });
 
     it('sets `require` to `true` by default', function() {
-      const require = sinon.stub(FooQuery.prototype, 'require').returnsThis();
+      const require = sinon.stub(Query.prototype, 'require').returnsThis();
       new Foo().getQuery({ forInsert: true });
       expect(require, 'to have calls satisfying', () => require(true));
       require.restore();
     });
 
     it('allows overriding the `require` option to `false`', function() {
-      const require = sinon.stub(FooQuery.prototype, 'require').returnsThis();
+      const require = sinon.stub(Query.prototype, 'require').returnsThis();
       new Foo().getQuery({ forInsert: true }, { require: false });
       expect(require, 'to have calls satisfying', () => require(false));
       require.restore();
@@ -1287,14 +1282,14 @@ describe('Model', function() {
 
     describe('for modes other than `forInsert`', function() {
       it('sets `forge` to `false`', function() {
-        const forge = sinon.stub(FooQuery.prototype, 'forge').returnsThis();
+        const forge = sinon.stub(Query.prototype, 'forge').returnsThis();
         new Foo({ id: 1 }).getQuery({ forFetch: true });
         expect(forge, 'to have calls satisfying', () => forge(false));
         forge.restore();
       });
 
       it('passes the primary field set on the model to Query.prototype.where', function() {
-        const where = sinon.stub(FooQuery.prototype, 'where').returnsThis();
+        const where = sinon.stub(Query.prototype, 'where').returnsThis();
         new Foo({ id: 1 }).getQuery({ forUpdate: true });
         expect(where, 'to have calls satisfying', () => where({ id: 1 }));
         where.restore();
@@ -1309,7 +1304,7 @@ describe('Model', function() {
       });
 
       it('appends the `where` clause if a `where` option is passed', function() {
-        const where = sinon.stub(FooQuery.prototype, 'where').returnsThis();
+        const where = sinon.stub(Query.prototype, 'where').returnsThis();
         new Foo({ id: 1 }).getQuery(
           { forUpdate: true },
           { where: { name: 'foo' } }
@@ -1978,28 +1973,24 @@ describe('Model', function() {
   });
 
   describe('db methods', function() {
-    let UserQuery;
-    let User;
+    const { Model } = new Knorm({ knex });
+
+    class User extends Model {}
+
+    User.table = 'user';
+    User.fields = {
+      id: {
+        type: Field.types.integer,
+        required: true,
+        primary: true
+      },
+      name: {
+        type: Field.types.string,
+        required: true
+      }
+    };
 
     before(async function() {
-      UserQuery = class extends Query {};
-      UserQuery.knex = knex;
-
-      User = class extends Model {};
-      User.Query = UserQuery;
-      User.table = 'user';
-      User.fields = {
-        id: {
-          type: Field.types.integer,
-          required: true,
-          primary: true
-        },
-        name: {
-          type: Field.types.string,
-          required: true
-        }
-      };
-
       await knex.schema.createTable(User.table, table => {
         table.increments();
         table.string('name').notNullable();
