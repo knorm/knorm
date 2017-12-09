@@ -1229,6 +1229,100 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.prototype.getQuery', function() {
+    let Foo;
+    let FooQuery;
+
+    before(function() {
+      FooQuery = class extends Query {};
+      FooQuery.knex = () => {};
+
+      Foo = class extends Model {};
+      Foo.Query = FooQuery;
+      Foo.table = 'foo';
+      Foo.fields = {
+        id: {
+          type: Field.types.integer,
+          required: true,
+          primary: true
+        },
+        name: {
+          type: Field.types.string,
+          required: true
+        }
+      };
+    });
+
+    it('passes any options passed to Query.prototype.setOptions', function() {
+      const setOptions = sinon
+        .stub(FooQuery.prototype, 'setOptions')
+        .returnsThis();
+      new Foo().getQuery({ forInsert: true }, { returning: 'name' });
+      expect(setOptions, 'to have calls satisfying', () =>
+        setOptions({ returning: 'name' })
+      );
+      setOptions.restore();
+    });
+
+    it('sets `first` to `true`', function() {
+      const first = sinon.stub(FooQuery.prototype, 'first').returnsThis();
+      new Foo().getQuery({ forInsert: true });
+      expect(first, 'to have calls satisfying', () => first(true));
+      first.restore();
+    });
+
+    it('sets `require` to `true` by default', function() {
+      const require = sinon.stub(FooQuery.prototype, 'require').returnsThis();
+      new Foo().getQuery({ forInsert: true });
+      expect(require, 'to have calls satisfying', () => require(true));
+      require.restore();
+    });
+
+    it('allows overriding the `require` option to `false`', function() {
+      const require = sinon.stub(FooQuery.prototype, 'require').returnsThis();
+      new Foo().getQuery({ forInsert: true }, { require: false });
+      expect(require, 'to have calls satisfying', () => require(false));
+      require.restore();
+    });
+
+    describe('for modes other than `forInsert`', function() {
+      it('sets `forge` to `false`', function() {
+        const forge = sinon.stub(FooQuery.prototype, 'forge').returnsThis();
+        new Foo({ id: 1 }).getQuery({ forFetch: true });
+        expect(forge, 'to have calls satisfying', () => forge(false));
+        forge.restore();
+      });
+
+      it('passes the primary field set on the model to Query.prototype.where', function() {
+        const where = sinon.stub(FooQuery.prototype, 'where').returnsThis();
+        new Foo({ id: 1 }).getQuery({ forUpdate: true });
+        expect(where, 'to have calls satisfying', () => where({ id: 1 }));
+        where.restore();
+      });
+
+      it('throws if the primary field is not set', function() {
+        expect(
+          () => new Foo({}).getQuery({ forDelete: true }),
+          'to throw',
+          new Error('Foo: primary field (`id`) is not set')
+        );
+      });
+
+      it('appends the `where` clause if a `where` option is passed', function() {
+        const where = sinon.stub(FooQuery.prototype, 'where').returnsThis();
+        new Foo({ id: 1 }).getQuery(
+          { forUpdate: true },
+          { where: { name: 'foo' } }
+        );
+        expect(where, 'to have calls satisfying', () => {
+          where({ name: 'foo' });
+          where({ id: 1 });
+        });
+        where.restore();
+      });
+    });
+  });
+
   describe('Model.fields', function() {
     describe('as a getter', function() {
       it('returns no fields by default', function() {
@@ -1954,29 +2048,8 @@ describe('Model', function() {
         );
       });
 
-      it('passes along any options passed', async function() {
-        const spy = sinon.spy(User.prototype, 'insert');
-        const user = new User({ name: 'John Doe' });
-        await expect(user.save({ transaction: {} }), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ transaction: {} });
-        });
-        spy.restore();
-      });
-
-      it("sets 'require' to true by default", async function() {
-        const stub = sinon
-          .stub(QueryBuilder.prototype, 'insert')
-          .returns(Promise.resolve([]));
-        const user = new User({ name: 'John Doe' });
-        await expect(user.save(), 'to be rejected with error satisfying', {
-          name: 'NoRowsInsertedError'
-        });
-        stub.restore();
-      });
-
-      it("allows overriding the 'require' option to false", async function() {
-        const stub = sinon
+      it('passes options along', async function() {
+        const insert = sinon
           .stub(QueryBuilder.prototype, 'insert')
           .returns(Promise.resolve([]));
         const user = new User({ name: 'John Doe' });
@@ -1985,12 +2058,12 @@ describe('Model', function() {
           'to be fulfilled with value satisfying',
           null
         );
-        stub.restore();
+        insert.restore();
       });
     });
 
     describe('Model.prototype.insert', function() {
-      it('inserts a row to the database via Query.prototype.insert', async function() {
+      it('inserts a row to the database', async function() {
         const user = new User({ name: 'John Doe' });
         await expect(
           user.insert(),
@@ -2006,29 +2079,8 @@ describe('Model', function() {
         );
       });
 
-      it('passes along any options passed', async function() {
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
-        const user = new User({ name: 'John Doe' });
-        await expect(user.insert({ transaction: {} }), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ transaction: {} });
-        });
-        spy.restore();
-      });
-
-      it("sets 'require' to true by default", async function() {
-        const stub = sinon
-          .stub(QueryBuilder.prototype, 'insert')
-          .returns(Promise.resolve([]));
-        const user = new User({ name: 'John Doe' });
-        await expect(user.insert(), 'to be rejected with error satisfying', {
-          name: 'NoRowsInsertedError'
-        });
-        stub.restore();
-      });
-
-      it("allows overriding the 'require' option to false", async function() {
-        const stub = sinon
+      it('passes options along', async function() {
+        const insert = sinon
           .stub(QueryBuilder.prototype, 'insert')
           .returns(Promise.resolve([]));
         const user = new User({ name: 'John Doe' });
@@ -2037,19 +2089,19 @@ describe('Model', function() {
           'to be fulfilled with value satisfying',
           null
         );
-        stub.restore();
+        insert.restore();
       });
     });
 
     describe('Model.prototype.update', function() {
-      it('updates a row to the database via Query.prototype.update', async function() {
-        const spy = sinon.spy(UserQuery.prototype, 'update');
+      it('updates a row to the database', async function() {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
-        await expect(user.update(), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(user);
-        });
+        await expect(
+          user.update(),
+          'to be fulfilled with value exhaustively satisfying',
+          new User({ id: 1, name: 'Jane Doe' })
+        );
         await expect(
           knex,
           'with table',
@@ -2057,333 +2109,75 @@ describe('Model', function() {
           'to have rows satisfying',
           [{ id: 1, name: 'Jane Doe' }]
         );
-        spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.setOptions', async function() {
+      it('passes options along', async function() {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
-        const stub = sinon
-          .stub(UserQuery.prototype, 'setOptions')
-          .returnsThis();
-        await expect(user.update({ returning: 'name' }), 'to be fulfilled');
-        await expect(stub, 'to have calls satisfying', () => {
-          stub({ returning: 'name' });
-        });
-        stub.restore();
-      });
-
-      it("sets 'require' to true by default", async function() {
-        const user = await new User({ name: 'John Doe' }).insert();
-        user.name = 'Jane Doe';
-        const stub = sinon
-          .stub(QueryBuilder.prototype, 'update')
-          .returns(Promise.resolve([]));
-        await expect(user.update(), 'to be rejected with error satisfying', {
-          name: 'NoRowsUpdatedError'
-        });
-        stub.restore();
-      });
-
-      it("allows overriding the 'require' option to false", async function() {
-        const user = await new User({ name: 'John Doe' }).insert();
-        user.name = 'Jane Doe';
-        const stub = sinon
-          .stub(QueryBuilder.prototype, 'update')
-          .returns(Promise.resolve([]));
         await expect(
-          user.update({ require: false }),
-          'to be fulfilled with value satisfying',
+          user.update({ require: false, where: { name: 'foo' } }),
+          'to be fulfilled with value exhaustively satisfying',
           null
         );
-        stub.restore();
-      });
-
-      it('passes the primary field set on the model to Query.prototype.where', async function() {
-        const user = await new User({ id: 1, name: 'John Doe' }).insert();
-        const spy = sinon.spy(UserQuery.prototype, 'where');
-        user.name = 'Jane Doe';
-        await expect(
-          user.update(),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'Jane Doe' })
-        );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ id: 1 });
-        });
-        spy.restore();
-      });
-
-      it('rejects if the primary field is not set', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        await expect(
-          new User({ name: 'John Doe' }).update(),
-          'to be rejected with error satisfying',
-          new Error('User: primary field (`id`) is not set')
-        );
-      });
-
-      it('appends the `where` clause if a `where` option is passed', async function() {
-        const user = await new User({ id: 1, name: 'John Doe' }).insert();
-        const spy = sinon.spy(UserQuery.prototype, 'where');
-        user.name = 'Jane Doe';
-        await expect(
-          user.update({ where: { name: 'John Doe' } }),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'Jane Doe' })
-        );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ name: 'John Doe' });
-          spy({ id: 1 });
-        });
-        spy.restore();
-      });
-
-      it('populates the instance with all the fields from the database', async function() {
-        await knex.schema.table(User.table, table => {
-          table.string('from_db').defaultTo('set-by-db');
-        });
-        class OtherUser extends User {}
-        OtherUser.fields = { fromDb: { type: 'string', column: 'from_db' } };
-        const user = await new OtherUser({ name: 'John Doe' }).insert();
-        user.name = 'Jane Doe';
-        await expect(
-          user.update(),
-          'to be fulfilled with value satisfying',
-          new OtherUser({ id: 1, name: 'Jane Doe', fromDb: 'set-by-db' })
-        );
-        await knex.schema.table(User.table, table => {
-          table.dropColumn('from_db');
-        });
       });
 
       it('resolves with the same instance that was passed', async function() {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
+        user.leaveMeIntact = 'okay';
         await expect(
           user.update(),
           'to be fulfilled with value satisfying',
-          updated => expect(user === updated, 'to be true')
+          updated => {
+            expect(user === updated, 'to be true');
+            expect(user.leaveMeIntact, 'to be', 'okay');
+          }
         );
-      });
-
-      it("doesn't modify other instance data properties", async function() {
-        const user = await new User({ name: 'John Doe' }).insert();
-        user.name = 'Jane Doe';
-        user.leaveMeIntact = 'okay';
-        await expect(user.update(), 'to be fulfilled');
-        await expect(user.leaveMeIntact, 'to be', 'okay');
       });
     });
 
     describe('Model.prototype.fetch', function() {
-      it('fetches a model from the database via Query.prototype.fetch', async function() {
+      it('fetches a model from the database', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
-        const spy = sinon.spy(UserQuery.prototype, 'fetch');
         await expect(
           user.fetch(),
-          'to be fulfilled with value satisfying',
+          'to be fulfilled with value exhaustively satisfying',
           new User({ id: 1, name: 'John Doe' })
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy();
-        });
-        spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.setOptions', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        const user = new User({ id: 1 });
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
+      it('passes options along', async function() {
+        const user = await new User({ name: 'John Doe' }).insert();
+        user.name = 'Jane Doe';
         await expect(
-          user.fetch({ fields: 'name' }),
-          'to be fulfilled with value satisfying',
-          new User({ name: 'John Doe' })
+          user.fetch({ require: false, where: { name: 'foo' } }),
+          'to be fulfilled with value exhaustively satisfying',
+          null
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ fields: 'name' });
-        });
-        spy.restore();
-      });
-
-      it('passes the primary field set on the model to Query.prototype.where', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        const user = new User({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'where');
-        await expect(
-          user.fetch(),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'John Doe' })
-        );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ id: 1 });
-        });
-        spy.restore();
-      });
-
-      it('rejects if the primary field is unset', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        await expect(
-          new User().fetch(),
-          'to be rejected with error satisfying',
-          new Error('User: primary field (`id`) is not set')
-        );
-      });
-
-      it('appends the `where` clause if a `where` option is passed', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        const user = new User({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'where');
-        await expect(
-          user.fetch({ where: { name: 'John Doe' } }),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'John Doe' })
-        );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ name: 'John Doe' });
-          spy({ id: 1 });
-        });
-        spy.restore();
-      });
-
-      describe('if no rows are matched', function() {
-        it('rejects with a NoRowsFetchedError', async function() {
-          await new User({ id: 1, name: 'John Doe' }).insert();
-          const user = new User({ id: 2 });
-          await expect(user.fetch(), 'to be rejected with error satisfying', {
-            name: 'NoRowsFetchedError'
-          });
-        });
-
-        describe("if the 'require' option is set to false", function() {
-          it('does not reject with a NoRowsFetchedError', async function() {
-            await new User({ id: 1, name: 'John Doe' }).insert();
-            const user = new User({ id: 2 });
-            await expect(
-              user.fetch({ require: false }),
-              'to be fulfilled with value satisfying',
-              null
-            );
-          });
-        });
-      });
-
-      it('prevents extra forging by Query.prototype.fetch', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        const user = new User({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'forge');
-        await expect(user.fetch(), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(false);
-        });
-        spy.restore();
       });
     });
 
     describe('Model.prototype.delete', function() {
-      it('deletes a model from the database via Query.prototype.delete', async function() {
+      it('deletes a model from the database', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
-        const spy = sinon.spy(UserQuery.prototype, 'delete');
         await expect(
           user.delete(),
-          'to be fulfilled with value satisfying',
+          'to be fulfilled with value exhaustively satisfying',
           new User({ id: 1, name: 'John Doe' })
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy();
-        });
         await expect(knex, 'with table', User.table, 'to be empty');
-        spy.restore();
       });
 
-      it('passes any options passed to Query.prototype.setOptions', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        const user = new User({ id: 1 });
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
+      it('passes options along', async function() {
+        const user = await new User({ name: 'John Doe' }).insert();
+        user.name = 'Jane Doe';
         await expect(
-          user.delete({ fields: 'name' }),
-          'to be fulfilled with value satisfying',
-          new User({ name: 'John Doe' })
+          user.delete({ require: false, where: { name: 'foo' } }),
+          'to be fulfilled with value exhaustively satisfying',
+          null
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ fields: 'name' });
-        });
-        spy.restore();
-      });
-
-      it('passes the primary field set on the model to Query.prototype.where', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        const user = new User({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'where');
-        await expect(
-          user.delete(),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'John Doe' })
-        );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ id: 1 });
-        });
-        spy.restore();
-      });
-
-      it('rejects if the primary field is unset', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        await expect(
-          new User().delete(),
-          'to be rejected with error satisfying',
-          new Error('User: primary field (`id`) is not set')
-        );
-      });
-
-      it('appends the `where` clause if a `where` option is passed', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        const user = new User({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'where');
-        await expect(
-          user.delete({ where: { name: 'John Doe' } }),
-          'to be fulfilled with value satisfying',
-          new User({ id: 1, name: 'John Doe' })
-        );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ name: 'John Doe' });
-          spy({ id: 1 });
-        });
-        spy.restore();
-      });
-
-      describe('if no rows are deleted', function() {
-        it('rejects with a NoRowsDeletedError', async function() {
-          await new User({ id: 1, name: 'John Doe' }).insert();
-          const user = new User({ id: 2 });
-          await expect(user.delete(), 'to be rejected with error satisfying', {
-            name: 'NoRowsDeletedError'
-          });
-        });
-
-        describe("if the 'require' option is set to false", function() {
-          it('does not reject with a NoRowsDeletedError', async function() {
-            await new User({ id: 1, name: 'John Doe' }).insert();
-            const user = new User({ id: 2 });
-            await expect(
-              user.delete({ require: false }),
-              'to be fulfilled with value satisfying',
-              null
-            );
-          });
-        });
-      });
-
-      it('prevents extra forging by Query.prototype.delete', async function() {
-        await new User({ id: 1, name: 'John Doe' }).insert();
-        const user = new User({ id: 1, name: 'John Doe' });
-        const spy = sinon.spy(UserQuery.prototype, 'forge');
-        await expect(user.delete(), 'to be fulfilled');
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(false);
-        });
-        spy.restore();
       });
     });
 
