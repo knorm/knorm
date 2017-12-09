@@ -39,10 +39,25 @@ These options are supported:
 
 If you have fields that are common to all your models, add them to the base
 `Model` class. Since knorm requires models to have a primary field, `Model` is a
-good place to add it:
+good place to add it. You could also add some convenience methods for working
+with your primary field:
 
 ```js
-const { Model } = new Knorm({ knex });
+const orm = new Knorm({ knex });
+
+class Model extends orm.Model {
+  static async fetchById(...args) {
+    return this.fetchByPrimaryField(...args);
+  }
+
+  static async updateById(...args) {
+    return this.updateByPrimaryField(...args);
+  }
+
+  static async deleteById(...args) {
+    return this.deleteByPrimaryField(...args);
+  }
+}
 
 Model.fields = {
   id: { type: 'integer', primary: true }

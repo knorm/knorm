@@ -2376,72 +2376,52 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.fetchById', function() {
-      it('fetches data from the database via Model.prototype.fetch', async function() {
+    describe('Model.fetchByPrimaryField', function() {
+      it('fetches a model using its primary field value', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
-        const spy = sinon.spy(User.prototype, 'fetch');
         await expect(
-          User.fetchById(1),
+          User.fetchByPrimaryField(1),
           'to be fulfilled with value satisfying',
           new User({ id: 1, name: 'John Doe' })
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(undefined);
-        });
-        spy.restore();
       });
 
-      it('passes any options passed to Model.prototype.fetch', async function() {
+      it('passes options along', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
         await expect(
-          User.fetchById(1, { forge: false }),
-          'to be fulfilled with value satisfying',
-          { id: 1, name: 'John Doe' }
+          User.fetchByPrimaryField(1, { where: { name: 'foo' } }),
+          'to be rejected with error satisfying',
+          { name: 'NoRowsFetchedError' }
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ forge: false });
-        });
-        spy.restore();
       });
     });
 
-    describe('Model.deleteById', function() {
-      it('deletes data from the database via Model.prototype.delete', async function() {
+    describe('Model.deleteByPrimaryField', function() {
+      it('deletes a model using its primary field value', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
-        const spy = sinon.spy(User.prototype, 'delete');
         await expect(
-          User.deleteById(1),
+          User.deleteByPrimaryField(1),
           'to be fulfilled with value satisfying',
           new User({ id: 1, name: 'John Doe' })
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(undefined);
-        });
-        spy.restore();
+        await expect(knex, 'with table', User.table, 'to be empty');
       });
 
-      it('passes any options passed to Model.prototype.delete', async function() {
+      it('passes options along', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
         await expect(
-          User.deleteById(1, { forge: false }),
-          'to be fulfilled with value satisfying',
-          { id: 1, name: 'John Doe' }
+          User.deleteByPrimaryField(1, { where: { name: 'foo' } }),
+          'to be rejected with error satisfying',
+          { name: 'NoRowsDeletedError' }
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ forge: false });
-        });
-        spy.restore();
       });
     });
 
-    describe('Model.updateById', function() {
-      it('updates data in the database via Model.prototype.update', async function() {
+    describe('Model.updateByPrimaryField', function() {
+      it('updates a model using its primary field value', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
-        const spy = sinon.spy(User.prototype, 'update');
         await expect(
-          User.updateById(1, { name: 'Jane Doe' }),
+          User.updateByPrimaryField(1, { name: 'Jane Doe' }),
           'to be fulfilled with value satisfying',
           new User({ id: 1, name: 'Jane Doe' })
         );
@@ -2452,24 +2432,19 @@ describe('Model', function() {
           'to have rows satisfying',
           [{ id: 1, name: 'Jane Doe' }]
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(undefined);
-        });
-        spy.restore();
       });
 
-      it('passes any options passed to Model.prototype.update', async function() {
+      it('passes options along', async function() {
         await new User({ id: 1, name: 'John Doe' }).insert();
-        const spy = sinon.spy(UserQuery.prototype, 'setOptions');
         await expect(
-          User.updateById(1, { name: 'Jane Doe' }, { forge: false }),
-          'to be fulfilled with value satisfying',
-          { id: 1, name: 'Jane Doe' }
+          User.updateByPrimaryField(
+            1,
+            { name: 'Jane Doe' },
+            { where: { name: 'foo' } }
+          ),
+          'to be rejected with error satisfying',
+          { name: 'NoRowsUpdatedError' }
         );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy({ forge: false });
-        });
-        spy.restore();
       });
     });
   });
