@@ -1,7 +1,6 @@
-const { snakeCase } = require('lodash');
+const { snakeCase: fieldToColumn } = require('lodash');
 const QueryBuilder = require('knex/lib/query/builder');
-const KnormModel = require('../lib/Model');
-const KnormField = require('../lib/Field');
+const Knorm = require('../lib/Knorm');
 const KnormQuery = require('../lib/Query');
 const knex = require('./lib/knex');
 const sinon = require('sinon');
@@ -47,22 +46,14 @@ const expect = require('unexpected')
     }
   );
 
-class Query extends KnormQuery {}
-Query.knex = knex;
+const { Model, Query, Field } = new Knorm({ knex, fieldToColumn });
 
-class Field extends KnormField {
-  getColumnName(fieldName) {
-    return snakeCase(fieldName);
-  }
-}
-
-class Model extends KnormModel {}
-Model.Query = Query;
-Model.Field = Field;
 Model.fields = {
   id: {
     type: Field.types.integer,
-    required: true
+    required: true,
+    primary: true,
+    updated: false
   }
 };
 
@@ -3078,58 +3069,6 @@ describe('Query', function() {
       });
     });
 
-    describe('with a custom `id` field', function() {
-      class UuidAsId extends KnormModel {}
-      UuidAsId.Query = Query;
-      UuidAsId.table = 'uuid_as_id';
-      UuidAsId.fieldNames.id = 'uuid';
-      UuidAsId.fields = {
-        uuid: {
-          type: Field.types.string,
-          required: true
-        },
-        name: {
-          type: Field.types.string
-        }
-      };
-
-      before(async function() {
-        await knex.schema.createTable(UuidAsId.table, table => {
-          table
-            .string('uuid')
-            .unique()
-            .notNullable();
-          table.string('name');
-        });
-      });
-
-      after(async function() {
-        await knex.schema.dropTable(UuidAsId.table);
-      });
-
-      afterEach(async function() {
-        await knex(UuidAsId.table).truncate();
-      });
-
-      it('inserts an instance of the model', async function() {
-        const query = new Query(UuidAsId);
-        const instance = new UuidAsId({ uuid: 'foo', name: 'bar' });
-        await expect(query.insert(instance), 'to be fulfilled');
-        await expect(
-          knex,
-          'with table',
-          UuidAsId.table,
-          'to have rows satisfying',
-          [
-            {
-              uuid: 'foo',
-              name: 'bar'
-            }
-          ]
-        );
-      });
-    });
-
     describe("with a 'transaction' configured", function() {
       it('does the insert within the transaction', async function() {
         const transact = async transaction => {
@@ -4137,6 +4076,18 @@ describe('Query', function() {
         );
       });
     });
+
+    describe('with `Model.notUpdated` fields configured', function() {
+      it('does not update those fields', async function() {
+        const updateSpy = sinon.spy(QueryBuilder.prototype, 'update');
+        user.name = 'Jane Doe';
+        await new Query(User).update(user);
+        await expect(updateSpy, 'to have calls satisfying', () => {
+          updateSpy(expect.it('not to have key', 'id'));
+        });
+        updateSpy.restore();
+      });
+    });
   });
 
   describe('Query.prototype.save', function() {
@@ -4172,7 +4123,7 @@ describe('Query', function() {
     });
 
     describe('when passed an object', function() {
-      it('proxies to Query.prototype.insert if no id is set on the data', async function() {
+      it('proxies to Query.prototype.insert if the primary field is not set on the data', async function() {
         const spy = sinon.spy(Query.prototype, 'insert');
         const query = new Query(User);
         const user = new User({ name: 'John Doe' });
@@ -4190,7 +4141,7 @@ describe('Query', function() {
         spy.restore();
       });
 
-      it('proxies to Query.prototype.update if an id is set on the data', async function() {
+      it('proxies to Query.prototype.update if the primary field is set on the data', async function() {
         await new Query(User).insert(new User({ id: 1, name: 'John Doe' }));
         const spy = sinon.spy(Query.prototype, 'update');
         const query = new Query(User);

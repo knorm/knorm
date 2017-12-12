@@ -31,43 +31,47 @@ const orm = new Knorm({ knex });
 These options are supported:
 
 | Option | Type | Description                                        |
-| ------ | ---- | --------------------------------------------------- |
-| `knex` | function (__required__) | the knex instance |
-| `fieldNameToColumnName` | function | a function used to map field names to column names e.g. [snakeCase](https://lodash.com/docs/4.17.4#snakeCase) |
-| `fieldNames` | object | field-name mappings (see the next section for more info). |
+| --------------- | ---- | --------------------------------------------------- |
+| `knex`          | function (__required__) | the knex instance |
+| `fieldToColumn` | function | a function used to map field names to column names e.g. [snakeCase](https://lodash.com/docs/4.17.4#snakeCase) |
 
 ### Configure common fields (optional)
 
 If you have fields that are common to all your models, add them to the base
-`Model` class. Since knorm requires models to have an `id` field, `Model` is a
-good place to add it:
+`Model` class. Since knorm requires models to have a primary field, `Model` is a
+good place to add it. You could also add some convenience methods for working
+with your primary field:
 
 ```js
-const { Model } = new Knorm({ knex });
+const orm = new Knorm({ knex });
+
+class Model extends orm.Model {
+  static async fetchById(...args) {
+    return this.fetchByPrimaryField(...args);
+  }
+
+  static async updateById(...args) {
+    return this.updateByPrimaryField(...args);
+  }
+
+  static async deleteById(...args) {
+    return this.deleteByPrimaryField(...args);
+  }
+}
 
 Model.fields = {
-  id: { type: 'integer' }
+  id: { type: 'integer', primary: true, updated: false }
 };
 ```
 > The field `type` is required. With only a few exceptions, these types map
 one-to-one with the types you use with Knex's schema builder. See
 [Model.fields](api/model.md#modelfields) for more info.
 
-If your `id` field has a name other than "id", use the `fieldNames` option:
+> The `updated` flag indicates that this field should not be updated when
+updating a model.
 
-```js
-const { Model } = new Knorm({
-  knex,
-  fieldNames: { id: 'uuid' }
-});
-
-// In this case your base fields will be something like:
-Model.fields = {
-  uuid: { type: 'uuid' }
-};
-```
-> You can also override the field-name for any model that extends `Model`. See
-[Model.fieldNames](api/model.md#modelfieldnames) for more info.
+> You can also override the primary field for any model that extends `Model`.
+See [Model.primary](api/model.md#modelprimary) for more info.
 
 ## Add models
 
