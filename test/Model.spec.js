@@ -1946,24 +1946,23 @@ describe('Model', function() {
         );
       });
 
-      it("returns the model's primary field", function() {
+      it("returns the field-name of the model's primary field", function() {
         class Foo extends Model {}
 
         Foo.fields = { id: { type: 'integer', primary: true } };
 
-        expect(Foo.primary, 'to equal', Foo.fields.id);
+        expect(Foo.primary, 'to equal', 'id');
       });
 
       describe('when a model is subclassed', function() {
-        it("inherits the parent's primary field but references the inherited field", function() {
+        it("inherits the parent's primary field", function() {
           class Foo extends Model {}
           class Bar extends Foo {}
 
           Foo.fields = { id: { type: 'integer', primary: true } };
 
-          expect(Foo.primary, 'to equal', Foo.fields.id);
-          expect(Bar.primary, 'not to equal', Foo.fields.id);
-          expect(Bar.primary, 'to equal', Bar.fields.id);
+          expect(Foo.primary, 'to equal', 'id');
+          expect(Bar.primary, 'to equal', 'id');
         });
 
         it("allows overwriting the parent's primary field", function() {
@@ -1973,8 +1972,8 @@ describe('Model', function() {
           Foo.fields = { id: { type: 'integer', primary: true } };
           Bar.fields = { uuid: { type: 'uuid', primary: true } };
 
-          expect(Foo.primary, 'to equal', Foo.fields.id);
-          expect(Bar.primary, 'to equal', Bar.fields.uuid);
+          expect(Foo.primary, 'to equal', 'id');
+          expect(Bar.primary, 'to equal', 'uuid');
         });
       });
     });
