@@ -89,42 +89,6 @@ describe('Virtual', function() {
     });
   });
 
-  describe('Virtual.prototype.clone', function() {
-    it('returns a clone of the virtual', function() {
-      class Foo extends Model {}
-      const virtual = new Virtual({
-        name: 'bar',
-        model: Foo,
-        descriptor: { get: () => 'foo', set() {} }
-      });
-      expect(
-        virtual.clone(),
-        'to equal',
-        new Virtual({
-          name: 'bar',
-          model: Foo,
-          descriptor: { get: () => 'foo', set() {} }
-        })
-      );
-    });
-
-    describe('with a model override provided', function() {
-      it("updates the clone's model", function() {
-        class Foo extends Model {}
-        class Bar extends Foo {}
-        const virtual = new Virtual({
-          name: 'bar',
-          model: Foo,
-          descriptor: { get: () => 'foo' }
-        });
-        const clone = virtual.clone({ model: Bar });
-
-        expect(clone.model, 'to equal', Bar);
-        expect(virtual.model, 'to equal', Foo);
-      });
-    });
-  });
-
   describe('Virtual.prototype.hasGetter', function() {
     class Foo extends Model {}
 
