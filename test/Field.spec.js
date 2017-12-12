@@ -226,6 +226,19 @@ describe('Field', function() {
       });
     });
 
+    it('copies the `unique` flag', function() {
+      class Foo extends Model {}
+      const field = new Field({
+        name: 'bar',
+        model: Foo,
+        type: Field.types.string,
+        unique: true
+      });
+      expect(field.clone(), 'to satisfy', {
+        unique: true
+      });
+    });
+
     it('clones the schemas for json(b) fields', function() {
       class Foo extends Model {}
       const field = new Field({

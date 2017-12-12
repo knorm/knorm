@@ -1239,12 +1239,10 @@ describe('Model', function() {
     Foo.fields = {
       id: {
         type: Field.types.integer,
-        required: true,
         primary: true
       },
       name: {
-        type: Field.types.string,
-        required: true
+        type: Field.types.string
       }
     };
 
@@ -1314,6 +1312,69 @@ describe('Model', function() {
           where({ id: 1 });
         });
         where.restore();
+      });
+
+      describe('with unique fields configured', function() {
+        class Foo extends Model {}
+
+        Foo.table = 'foo';
+        Foo.fields = {
+          id: {
+            type: Field.types.integer,
+            primary: true
+          },
+          name: {
+            type: Field.types.string,
+            unique: true
+          },
+          number: {
+            type: Field.types.integer,
+            unique: true
+          }
+        };
+
+        let whereStub;
+
+        before(function() {
+          whereStub = sinon.stub(Query.prototype, 'where').returnsThis();
+        });
+
+        beforeEach(function() {
+          whereStub.reset();
+        });
+
+        after(function() {
+          whereStub.restore();
+        });
+
+        it('uses the unique fields in a where clause if the primary field is not set', function() {
+          new Foo({ name: 'foo' }).getQuery({ forUpdate: true });
+          expect(whereStub, 'to have calls satisfying', () =>
+            whereStub({ name: 'foo' })
+          );
+        });
+
+        it('uses the primary field if both unique and primary fields are set', function() {
+          new Foo({ id: 1, name: 'foo' }).getQuery({ forUpdate: true });
+          expect(whereStub, 'to have calls satisfying', () =>
+            whereStub({ id: 1 })
+          );
+        });
+
+        it('uses only one of the primary fields if more than one are set', function() {
+          new Foo({ name: 'foo', number: 1 }).getQuery({ forUpdate: true });
+          expect(whereStub, 'to have calls satisfying', () =>
+            whereStub({ name: 'foo' })
+          );
+        });
+
+        it('throws if neither the primary field nor unique fields are set', function() {
+          expect(
+            () => new Foo({}).getQuery({ forDelete: true }),
+            'to throw',
+            new Error('Foo: primary field (`id`) is not set')
+          );
+        });
       });
     });
   });
@@ -1949,6 +2010,41 @@ describe('Model', function() {
 
           expect(Foo.notUpdated, 'to equal', ['id']);
           expect(Bar.notUpdated, 'to equal', []);
+        });
+      });
+    });
+  });
+
+  describe('Model.unique', function() {
+    describe('as a getter', function() {
+      it('returns field-names of unique fields', function() {
+        class Foo extends Model {}
+
+        Foo.fields = { id: { type: 'integer', unique: true } };
+
+        expect(Foo.unique, 'to equal', ['id']);
+      });
+
+      describe('when a model is subclassed', function() {
+        it("inherits the parent's unique fields", function() {
+          class Foo extends Model {}
+          class Bar extends Foo {}
+
+          Foo.fields = { id: { type: 'integer', unique: true } };
+
+          expect(Foo.unique, 'to equal', ['id']);
+          expect(Bar.unique, 'to equal', ['id']);
+        });
+
+        it("allows overwriting the parent's unique fields", function() {
+          class Foo extends Model {}
+          class Bar extends Foo {}
+
+          Foo.fields = { id: { type: 'integer', unique: true } };
+          Bar.fields = { id: { type: 'integer', unique: false } };
+
+          expect(Foo.unique, 'to equal', ['id']);
+          expect(Bar.unique, 'to equal', []);
         });
       });
     });
