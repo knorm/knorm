@@ -29,7 +29,7 @@
     "eslint": "^4.7.2",
     "eslint-config-prettier": "^2.6.0",
     "eslint-plugin-prettier": "^2.3.1",
-    "knex": "^0.13.0",
+    "knex": "github:tgriesser/knex#master",
     "knorm-postgres": "^2.0.0",
     "mocha": "^3.2.0",
     "npm-run-all": "^4.0.2",
