@@ -1250,7 +1250,7 @@ describe('Model', function() {
       const setOptions = sinon
         .stub(Query.prototype, 'setOptions')
         .returnsThis();
-      new Foo().getQuery({ forInsert: true }, { returning: 'name' });
+      new Foo({ id: 1 }).getQuery({ returning: 'name' });
       expect(setOptions, 'to have calls satisfying', () =>
         setOptions({ returning: 'name' })
       );
@@ -1259,122 +1259,133 @@ describe('Model', function() {
 
     it('sets `first` to `true`', function() {
       const first = sinon.stub(Query.prototype, 'first').returnsThis();
-      new Foo().getQuery({ forInsert: true });
+      new Foo({ id: 1 }).getQuery();
       expect(first, 'to have calls satisfying', () => first(true));
       first.restore();
     });
 
     it('sets `require` to `true` by default', function() {
       const require = sinon.stub(Query.prototype, 'require').returnsThis();
-      new Foo().getQuery({ forInsert: true });
+      new Foo({ id: 1 }).getQuery();
       expect(require, 'to have calls satisfying', () => require(true));
       require.restore();
     });
 
     it('allows overriding the `require` option to `false`', function() {
       const require = sinon.stub(Query.prototype, 'require').returnsThis();
-      new Foo().getQuery({ forInsert: true }, { require: false });
+      new Foo({ id: 1 }).getQuery({ require: false });
       expect(require, 'to have calls satisfying', () => require(false));
       require.restore();
     });
 
-    describe('for modes other than `forInsert`', function() {
-      it('sets `forge` to `false`', function() {
-        const forge = sinon.stub(Query.prototype, 'forge').returnsThis();
-        new Foo({ id: 1 }).getQuery({ forFetch: true });
-        expect(forge, 'to have calls satisfying', () => forge(false));
-        forge.restore();
+    it('sets `forge` to `false`', function() {
+      const forge = sinon.stub(Query.prototype, 'forge').returnsThis();
+      new Foo({ id: 1 }).getQuery();
+      expect(forge, 'to have calls satisfying', () => forge(false));
+      forge.restore();
+    });
+
+    it('passes the primary field set on the model to Query.prototype.where', function() {
+      const where = sinon.stub(Query.prototype, 'where').returnsThis();
+      new Foo({ id: 1 }).getQuery();
+      expect(where, 'to have calls satisfying', () => where({ id: 1 }));
+      where.restore();
+    });
+
+    it('throws if the primary field is not set', function() {
+      expect(
+        () => new Foo({}).getQuery(),
+        'to throw',
+        new Error('Foo: primary field (`id`) is not set')
+      );
+    });
+
+    it('appends the `where` clause if a `where` option is passed', function() {
+      const where = sinon.stub(Query.prototype, 'where').returnsThis();
+      new Foo({ id: 1 }).getQuery({ where: { name: 'foo' } });
+      expect(where, 'to have calls satisfying', () => {
+        where({ name: 'foo' });
+        where({ id: 1 });
+      });
+      where.restore();
+    });
+
+    describe('with unique fields configured', function() {
+      class Foo extends Model {}
+
+      Foo.table = 'foo';
+      Foo.fields = {
+        id: {
+          type: Field.types.integer,
+          primary: true
+        },
+        name: {
+          type: Field.types.string,
+          unique: true
+        },
+        number: {
+          type: Field.types.integer,
+          unique: true
+        }
+      };
+
+      let whereStub;
+
+      before(function() {
+        whereStub = sinon.stub(Query.prototype, 'where').returnsThis();
       });
 
-      it('passes the primary field set on the model to Query.prototype.where', function() {
-        const where = sinon.stub(Query.prototype, 'where').returnsThis();
-        new Foo({ id: 1 }).getQuery({ forUpdate: true });
-        expect(where, 'to have calls satisfying', () => where({ id: 1 }));
-        where.restore();
+      beforeEach(function() {
+        whereStub.reset();
       });
 
-      it('throws if the primary field is not set', function() {
+      after(function() {
+        whereStub.restore();
+      });
+
+      it('uses the unique fields in a where clause if the primary field is not set', function() {
+        new Foo({ name: 'foo' }).getQuery();
+        expect(whereStub, 'to have calls satisfying', () =>
+          whereStub({ name: 'foo' })
+        );
+      });
+
+      it('uses the primary field if both unique and primary fields are set', function() {
+        new Foo({ id: 1, name: 'foo' }).getQuery();
+        expect(whereStub, 'to have calls satisfying', () =>
+          whereStub({ id: 1 })
+        );
+      });
+
+      it('uses only one of the primary fields if more than one are set', function() {
+        new Foo({ name: 'foo', number: 1 }).getQuery();
+        expect(whereStub, 'to have calls satisfying', () =>
+          whereStub({ name: 'foo' })
+        );
+      });
+
+      it('throws if neither the primary field nor unique fields are set', function() {
         expect(
-          () => new Foo({}).getQuery({ forDelete: true }),
+          () => new Foo({}).getQuery(),
           'to throw',
           new Error('Foo: primary field (`id`) is not set')
         );
       });
+    });
 
-      it('appends the `where` clause if a `where` option is passed', function() {
-        const where = sinon.stub(Query.prototype, 'where').returnsThis();
-        new Foo({ id: 1 }).getQuery(
-          { forUpdate: true },
-          { where: { name: 'foo' } }
+    describe('for inserts', function() {
+      it('does not throw if the primary field is not set', function() {
+        expect(
+          () => new Foo({}).getQuery({}, { forInsert: true }),
+          'not to throw'
         );
-        expect(where, 'to have calls satisfying', () => {
-          where({ name: 'foo' });
-          where({ id: 1 });
-        });
-        where.restore();
       });
 
-      describe('with unique fields configured', function() {
-        class Foo extends Model {}
-
-        Foo.table = 'foo';
-        Foo.fields = {
-          id: {
-            type: Field.types.integer,
-            primary: true
-          },
-          name: {
-            type: Field.types.string,
-            unique: true
-          },
-          number: {
-            type: Field.types.integer,
-            unique: true
-          }
-        };
-
-        let whereStub;
-
-        before(function() {
-          whereStub = sinon.stub(Query.prototype, 'where').returnsThis();
-        });
-
-        beforeEach(function() {
-          whereStub.reset();
-        });
-
-        after(function() {
-          whereStub.restore();
-        });
-
-        it('uses the unique fields in a where clause if the primary field is not set', function() {
-          new Foo({ name: 'foo' }).getQuery({ forUpdate: true });
-          expect(whereStub, 'to have calls satisfying', () =>
-            whereStub({ name: 'foo' })
-          );
-        });
-
-        it('uses the primary field if both unique and primary fields are set', function() {
-          new Foo({ id: 1, name: 'foo' }).getQuery({ forUpdate: true });
-          expect(whereStub, 'to have calls satisfying', () =>
-            whereStub({ id: 1 })
-          );
-        });
-
-        it('uses only one of the primary fields if more than one are set', function() {
-          new Foo({ name: 'foo', number: 1 }).getQuery({ forUpdate: true });
-          expect(whereStub, 'to have calls satisfying', () =>
-            whereStub({ name: 'foo' })
-          );
-        });
-
-        it('throws if neither the primary field nor unique fields are set', function() {
-          expect(
-            () => new Foo({}).getQuery({ forDelete: true }),
-            'to throw',
-            new Error('Foo: primary field (`id`) is not set')
-          );
-        });
+      it('does not construct a `where` clause', function() {
+        const where = sinon.stub(Query.prototype, 'where').returnsThis();
+        new Foo({ id: 1 }).getQuery({}, { forInsert: true });
+        expect(where, 'was not called');
+        where.restore();
       });
     });
   });
