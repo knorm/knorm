@@ -1,7 +1,8 @@
-const { Model: KnormModel, Query: KnormQuery } = require('knorm');
+const knorm = require('knorm');
+const { KnormError, Query: KnormQuery } = knorm;
+const KnormSoftDelete = require('../lib/KnormSoftDelete');
+const knormSoftDelete = require('../');
 const sinon = require('sinon');
-const modelWithSoftDelete = require('../lib/modelWithSoftDelete');
-const queryWithSoftDelete = require('../lib/queryWithSoftDelete');
 const knex = require('./lib/knex');
 const expect = require('unexpected')
   .clone()
@@ -45,44 +46,103 @@ const expect = require('unexpected')
     }
   );
 
-describe('queryWithSoftDelete', () => {
-  it('throws an error if not passed a knorm query subclass', () => {
-    class Foo {}
-    expect(
-      () => queryWithSoftDelete(Foo),
-      'to throw',
-      new Error('base class is not a knorm query class')
+describe('KnormSoftDelete', () => {
+  describe('init', () => {
+    it('throws if not passed a `Knorm` instance', () => {
+      expect(
+        () => new KnormSoftDelete().init(),
+        'to throw',
+        new KnormError('KnormSoftDelete: invalid Knorm instance provided')
+      );
+    });
+  });
+
+  describe('updateModel', () => {
+    const updateModel = config =>
+      knorm({ knex() {} }).use(knormSoftDelete(config));
+
+    it('adds a `deleted` field by default', () => {
+      const { Model } = updateModel();
+      expect(Model.fields, 'to satisfy', {
+        deleted: {
+          type: 'boolean',
+          column: 'deleted'
+        }
+      });
+    });
+
+    describe('with a `deleted` config', () => {
+      it('allows configuring the `deleted` field-name', () => {
+        const { Model } = updateModel({ deleted: { name: 'isDeleted' } });
+        expect(Model.fields, 'to satisfy', {
+          deleted: undefined,
+          isDeleted: {
+            type: 'boolean'
+          }
+        });
+      });
+
+      it('allows configuring the `deleted` field column-name', () => {
+        const { Model } = updateModel({ deleted: { column: 'is_deleted' } });
+        expect(Model.fields, 'to satisfy', {
+          deleted: {
+            column: 'is_deleted'
+          }
+        });
+      });
+    });
+
+    describe('with a `deletedAt` config', () => {
+      it('adds a `deletedAt` field', () => {
+        const { Model } = updateModel({ deletedAt: true });
+        expect(Model.fields, 'to satisfy', {
+          deletedAt: {
+            type: 'dateTime',
+            column: 'deleted_at'
+          }
+        });
+      });
+
+      it('allows configuring the `deletedAt` field-name', () => {
+        const { Model } = updateModel({ deletedAt: { name: 'deleted' } });
+        expect(Model.fields, 'to satisfy', {
+          deletedAt: undefined,
+          deleted: {
+            type: 'dateTime'
+          }
+        });
+      });
+
+      it('allows configuring the `deletedAt` field column-name', () => {
+        const { Model } = updateModel({ deletedAt: { column: 'deleted' } });
+        expect(Model.fields, 'to satisfy', {
+          deletedAt: {
+            column: 'deleted'
+          }
+        });
+      });
+    });
+  });
+
+  describe('updateQuery', () => {
+    const { Query, Model } = knorm({ knex }).use(
+      knormSoftDelete({ deletedAt: true })
     );
-  });
 
-  it("accepts knorm's query class as the base class", () => {
-    expect(() => queryWithSoftDelete(KnormQuery), 'not to throw');
-  });
+    class User extends Model {}
 
-  it('returns a knorm query subclass', () => {
-    class Foo extends KnormQuery {}
-    const Bar = queryWithSoftDelete(Foo);
-    expect(Bar.prototype, 'to be a', KnormQuery);
-  });
-
-  describe('with `deleted` and `deletedAt` fields configured', () => {
-    class Query extends queryWithSoftDelete(KnormQuery) {}
-    Query.knex = knex;
-
-    class Model extends KnormModel {}
-    Model.Query = Query;
-    Model.fields = {
+    User.table = 'user';
+    User.fields = {
       id: {
         type: 'integer',
-        required: true
+        required: true,
+        primary: true,
+        updated: false
       },
       name: {
         type: 'string'
       }
     };
-
-    class User extends modelWithSoftDelete(Model, { deletedAt: true }) {}
-    User.table = 'user';
 
     before(async () => {
       await knex.schema.createTable(User.table, table => {
@@ -154,7 +214,7 @@ describe('queryWithSoftDelete', () => {
         clock.restore();
       });
 
-      it('passes any options passed to Query.prototype.update', async () => {
+      it('passes options passed to Query.prototype.update', async () => {
         const spy = sinon.spy(Query.prototype, 'update');
         await new Query(User).delete({ fields: 'name' });
         await expect(spy, 'to have calls satisfying', () => {
@@ -244,7 +304,12 @@ describe('queryWithSoftDelete', () => {
     describe('Query.prototype.restore', () => {
       beforeEach(async () => {
         await new Query(User).insert(
-          new User({ id: 1, name: 'one', deleted: true, deletedAt: new Date() })
+          new User({
+            id: 1,
+            name: 'one',
+            deleted: true,
+            deletedAt: new Date()
+          })
         );
         await new Query(User).insert(new User({ id: 2, name: 'two' }));
       });
@@ -271,7 +336,7 @@ describe('queryWithSoftDelete', () => {
         );
       });
 
-      it('passes any options passed to Query.prototype.update', async () => {
+      it('passes options passed to Query.prototype.update', async () => {
         const spy = sinon.spy(Query.prototype, 'update');
         await new Query(User).restore({ fields: 'name' });
         await expect(spy, 'to have calls satisfying', () => {
@@ -379,7 +444,12 @@ describe('queryWithSoftDelete', () => {
     describe('Query.prototype.hardDelete', () => {
       beforeEach(async () => {
         await new Query(User).insert(
-          new User({ id: 1, name: 'one', deleted: true, deletedAt: new Date() })
+          new User({
+            id: 1,
+            name: 'one',
+            deleted: true,
+            deletedAt: new Date()
+          })
         );
         await new Query(User).insert(new User({ id: 2, name: 'two' }));
       });
@@ -411,7 +481,7 @@ describe('queryWithSoftDelete', () => {
         await expect(knex, 'with table', User.table, 'to be empty');
       });
 
-      it('passes any options passed to KnormQuery.prototype.delete', async () => {
+      it('passes options passed to KnormQuery.prototype.delete', async () => {
         const spy = sinon.spy(KnormQuery.prototype, 'delete');
         await new Query(User).hardDelete({ fields: 'name' });
         await expect(spy, 'to have calls satisfying', () => {
@@ -544,17 +614,7 @@ describe('queryWithSoftDelete', () => {
         );
       });
 
-      it('rejects if the `id` field is not set', async () => {
-        await expect(
-          new User().restore(),
-          'to be rejected with error satisfying',
-          new Error(
-            'User: cannot restore an instance if the `id` field is not set'
-          )
-        );
-      });
-
-      it('passes any options passed to Query.prototype.setOptions', async () => {
+      it('passes options passed to Query.prototype.setOptions', async () => {
         const user = await new User({
           id: 1,
           name: 'one',
@@ -588,7 +648,7 @@ describe('queryWithSoftDelete', () => {
         );
       });
 
-      it('passes any options passed to Query.prototype.restore', async () => {
+      it('passes options passed to Query.prototype.restore', async () => {
         const spy = sinon.spy(Query.prototype, 'restore');
         await User.restore({ where: { id: 1 } });
         await expect(spy, 'to have calls satisfying', () => {
@@ -616,17 +676,7 @@ describe('queryWithSoftDelete', () => {
         await expect(knex, 'with table', User.table, 'to be empty');
       });
 
-      it('rejects if the `id` field is not set', async () => {
-        await expect(
-          new User().hardDelete(),
-          'to be rejected with error satisfying',
-          new Error(
-            'User: cannot hard delete an instance if the `id` field is not set'
-          )
-        );
-      });
-
-      it('passes any options passed to Query.prototype.setOptions', async () => {
+      it('passes options passed to Query.prototype.setOptions', async () => {
         const user = await new User({ id: 1, name: 'one' }).insert();
         const spy = sinon.spy(Query.prototype, 'setOptions');
         await user.hardDelete({ transaction: {} });
@@ -655,7 +705,7 @@ describe('queryWithSoftDelete', () => {
         await expect(knex, 'with table', User.table, 'to be empty');
       });
 
-      it('passes any options passed to Query.prototype.hardDelete', async () => {
+      it('passes options passed to Query.prototype.hardDelete', async () => {
         const spy = sinon.spy(Query.prototype, 'hardDelete');
         await User.hardDelete({ where: { id: 1 } });
         await expect(spy, 'to have calls satisfying', () => {
