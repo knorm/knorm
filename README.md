@@ -17,26 +17,53 @@ npm install --save knorm knorm-soft-delete
 [knorm](https://www.npmjs.com/package/knorm)
 
 ## Usage
-### 1. Enhance knorm's Query class
 
 ```js
-const { Query: KnormQuery } = require('knorm');
-const withSoftDelete = require('knorm-soft-delete');
+const knorm = require('knorm');
+const knormSoftDelete = require('knorm-soft-delete');
 
-class Query extends withSoftDelete(KnormQuery) {}
+const orm = knorm({
+  // knorm options
+}).use(knormSoftDelete({
+  // knormSoftDelete options
+}));
 ```
 
-### 2. Enhance knorm's Model class
+## Options
 
-Then configure your ORM with the knex instance:
+### deleted
 
-```js
-const { Model: KnormModel } = require('knorm');
+The `deleted` field is always added, but the field and column names can be
+configured. By default, the field has this config:
+- field name: `deleted`
+- field type: `boolean`
+- column name: `deleted`
+- default value: `false`
 
-const options = { deleted: true, deletedAt: true };
-class Model extends withSoftDelete(KnormModel, options) {}
-Model.Query = Query; // configure Model with the enhanced Query class
-```
+If passed as an object, supports these config options:
+- `name` *string, default: deleted*: the field name to use instead of `deleted`
+- `column` *string, default: deleted*: the column name to use instead of
+  `deleted`
+
+The field type and default value cannot be configured.
+
+### deletedAt
+
+Can either be `true` or an object for further configuration. If `true`, it adds
+a field to the `Model` class with this config:
+- field-name: `deletedAt`
+- column-name: `deleted_at`
+
+If passed as an object, supports these config options:
+- `name` *string, default: deletedAt*: the field name to use instead of
+  `deletedAt`
+- `type` *string, default: dateTime*: the field type to use instead of
+  `dateTime`
+- `column` *string, default: deleted_at*: the column name to use instead of
+  `deleted_at`
+
+This field doesn't support a default value, it's value will be set to the
+current timestamp (i.e. `new Date()`) when soft-deleting.
 
 ## How it works
 
@@ -89,39 +116,3 @@ await new Model({ id: 1 }).hardDelete();
 // or:
 await Model.hardDelete({ where: { id: 1 } });
 ```
-
-## Options
-
-### deleted
-
-The `deleted` field is always added, but the field and column names can be
-configured. By default, the field has this config:
-- field name: `deleted`
-- field type: `boolean`
-- column name: `deleted`
-- default value: `false`
-
-If passed as an object, supports these config options:
-- `name` *string, default: deleted*: the field name to use instead of `deleted`
-- `column` *string, default: deleted*: the column name to use instead of
-  `deleted`
-
-The field type and default value cannot be configured.
-
-### deletedAt
-
-Can either be `true` or an object for further configuration. If `true`, it adds
-a field to the `Model` class with this config:
-- field-name: `deletedAt`
-- column-name: `deleted_at`
-
-If passed as an object, supports these config options:
-- `name` *string, default: deletedAt*: the field name to use instead of
-  `deletedAt`
-- `type` *string, default: dateTime*: the field type to use instead of
-  `dateTime`
-- `column` *string, default: deleted_at*: the column name to use instead of
-  `deleted_at`
-
-This field doesn't support a default value, it's value will be set to the
-current timestamp (i.e. `new Date()`) when soft-deleting.
