@@ -8,7 +8,7 @@ installed it yet, [install it now](http://knexjs.org/#Installation).
 As an example, let's set up a postgres connection:
 
 ```js
-const knex = require('knex'){
+const knex = require('knex')({
   client: 'pg',
   connection: 'postgres://user:password@127.0.0.1:5432/database'
 });
@@ -43,9 +43,9 @@ good place to add it. You could also add some convenience methods for working
 with your primary field:
 
 ```js
-const orm = new Knorm({ knex });
+const { Model: BaseModel } = new Knorm({ knex });
 
-class Model extends orm.Model {
+class Model extends BaseModel {
   static async fetchById(...args) {
     return this.fetchByPrimaryField(...args);
   }
@@ -121,7 +121,7 @@ User.virtuals = {
     async get() {}, // async virtual getters are also supported
     set(val) {}
   }
-}
+};
 ```
 > See [Model.virtuals](api/model.md#modelvirtuals) for more info on virtuals
 
