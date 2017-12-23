@@ -6,8 +6,7 @@
 [![dependency status](https://david-dm.org/joelmukuthu/knorm-soft-delete.svg)](https://david-dm.org/joelmukuthu/kknorm-soft-delete)
 [![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm-soft-delete.svg)](https://greenkeeper.io/)
 
-Soft-delete plugin for [knorm](https://www.npmjs.com/package/knorm). It exports
-an ES6 class mixin that adds support for soft-deleting rows in the database.
+Soft-delete plugin for [knorm](https://www.npmjs.com/package/knorm).
 
 ## Installation
 ```bash
@@ -35,17 +34,13 @@ const orm = knorm({
 
 The `deleted` field is always added, but the field and column names can be
 configured. By default, the field has this config:
-- field name: `deleted`
-- field type: `boolean`
-- column name: `deleted`
-- default value: `false`
+- field-name: `deleted`
+- column-name: `deleted`
 
 If passed as an object, supports these config options:
 - `name` *string, default: deleted*: the field name to use instead of `deleted`
 - `column` *string, default: deleted*: the column name to use instead of
   `deleted`
-
-The field type and default value cannot be configured.
 
 ### deletedAt
 
@@ -57,19 +52,16 @@ a field to the `Model` class with this config:
 If passed as an object, supports these config options:
 - `name` *string, default: deletedAt*: the field name to use instead of
   `deletedAt`
-- `type` *string, default: dateTime*: the field type to use instead of
-  `dateTime`
 - `column` *string, default: deleted_at*: the column name to use instead of
   `deleted_at`
-
-This field doesn't support a default value, it's value will be set to the
-current timestamp (i.e. `new Date()`) when soft-deleting.
 
 ## How it works
 
 This plugin adds `deleted` (by default) and `deletedAt` (if configured) fields
 to your models and also updates your query methods so that the `delete` method
-does not actually delete a row but rather updates the `deleted` column.
+does not actually delete a row but rather sets the `deleted` column to `true`
+and `deletedAt` to the current time (i.e. `new Date()`) if the field is enabled.
+For `Query.prototype.insert`, `deleted` will be set to `false`.
 
 It also modifies the behaviour of `Query.prototype.fetch`,
 `Query.prototype.update` and `Query.prototype.delete` so that they always filter
