@@ -271,20 +271,15 @@ describe('Query', function() {
     });
 
     it('throws an error if a db-method is passed as an option', function() {
-      [
-        'count',
-        'fetch',
-        'insert',
-        'update',
-        'save',
-        'delete'
-      ].forEach(method => {
-        expect(
-          () => new Query(User).setOptions({ [method]: 'bar' }),
-          'to throw',
-          new Error(`'${method}' is not an allowed option`)
-        );
-      });
+      ['count', 'fetch', 'insert', 'update', 'save', 'delete'].forEach(
+        method => {
+          expect(
+            () => new Query(User).setOptions({ [method]: 'bar' }),
+            'to throw',
+            new Error(`'${method}' is not an allowed option`)
+          );
+        }
+      );
     });
 
     it('throws an error if `setOptions` is passed as an option', function() {
