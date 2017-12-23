@@ -52,6 +52,14 @@ describe('KnormSoftDelete', () => {
       expect(
         () => new KnormSoftDelete().init(),
         'to throw',
+        new KnormError('KnormSoftDelete: no Knorm instance provided')
+      );
+    });
+
+    it('throws if passed an invalid `Knorm` instance', () => {
+      expect(
+        () => new KnormSoftDelete().init({}),
+        'to throw',
         new KnormError('KnormSoftDelete: invalid Knorm instance provided')
       );
     });
@@ -223,21 +231,7 @@ describe('KnormSoftDelete', () => {
         spy.restore();
       });
 
-      it('resolves with the soft-deleted record in an array to conform with Query.prototype.delete', async () => {
-        await expect(
-          new Query(User).where({ id: 1 }).delete(),
-          'to be fulfilled with value satisfying',
-          [
-            new User({
-              id: 1,
-              deleted: true,
-              deletedAt: expect.it('to be a date')
-            })
-          ]
-        );
-      });
-
-      it('resolves with the soft-deleted records if more than one are matched', async () => {
+      it('resolves with an array of soft-deleted records', async () => {
         await new User({ id: 2, name: 'two' }).insert();
         await expect(
           new Query(User).delete(),
