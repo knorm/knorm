@@ -6,41 +6,33 @@
 [![dependency status](https://david-dm.org/joelmukuthu/knorm-timestamps.svg)](https://david-dm.org/joelmukuthu/kknorm-timestamps)
 [![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm-timestamps.svg)](https://greenkeeper.io/)
 
-Timestamps plugin for [knorm](https://www.npmjs.com/package/knorm). It exports
-an ES6 class mixin that adds support for
-[knex timestamps](http://knexjs.org/#Schema-timestamps).
+Timestamps plugin for [knorm](https://www.npmjs.com/package/knorm).
 
-This plugin adds the timestamp fields to your models and also updates your query
-methods so that the `updatedAt` field is set before any `update` calls (if it is
-configured with a default value). It will also ensure that any `update`
-calls do not overwrite the `createdAt` field.
+This plugin adds the [knex timestamp](http://knexjs.org/#Schema-timestamps)
+fields to your models and also updates your query methods so that `createdAt`
+and `updatedAt` are set to the current time (i.e. `new Date()`) for `insert`
+calls and the `updatedAt` field is set to the current time for any `update`
+calls. It will also ensure that any `update` calls do not overwrite the
+`createdAt` field.
 
 ## Installation
 ```bash
 npm install --save knorm knorm-timestamps
 ```
-> knorm-timestamps has a peer dependency on [knorm](https://www.npmjs.com/package/knorm)
+> knorm-timestamps has a peer dependency on
+[knorm](https://www.npmjs.com/package/knorm)
 
 ## Usage
-### 1. Enhance knorm's Query class
 
 ```js
-const { Query: KnormQuery } = require('knorm');
-const withTimestamps = require('knorm-timestamps');
+const knorm = require('knorm');
+const knormTimestamps = require('knorm-timestamps');
 
-class Query extends withTimestamps(KnormQuery) {}
-```
-
-### 2. Enhance knorm's Model class
-
-Then configure your ORM with the knex instance:
-
-```js
-const { Model: KnormModel } = require('knorm');
-
-const options = { createdAt: true, updatedAt: true };
-class Model extends withTimestamps(KnormModel, options) {}
-Model.Query = Query; // configure Model with the enhanced Query class
+const orm = knorm({
+  // knorm options
+}).use(knormTimestamps({
+  // knormTimestamps options
+}));
 ```
 
 ## Options
@@ -55,12 +47,8 @@ a field to the `Model` class with this config:
 If passed as an object, supports these config options:
 - `name` *string, default: createdAt*: the field name to use instead of
   `createdAt`
-- `type` *string, default: dateTime*: the field type to use instead of
-  `dateTime`
 - `column` *string, default: created_at*: the column name to use instead of
   `created_at`
-- `default` *mixed, default: undefined*: the default value to use for the field.
-  this can also be a function, e.g. `() => new Date()`
 
 ### updatedAt
 
@@ -72,9 +60,5 @@ a field to the `Model` class with this config:
 If passed as an object, supports these config options:
 - `name` *string, default: updatedAt*: the field name to use instead of
   `updatedAt`
-- `type` *string, default: dateTime*: the field type to use instead of
-  `dateTime`
 - `column` *string, default: updated_at*: the column name to use instead of
   `updated_at`
-- `default` *mixed, default: undefined*: the default value to use for the field.
-  this can also be a function, e.g. `() => new Date()`
