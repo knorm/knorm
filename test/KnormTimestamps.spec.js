@@ -4,7 +4,9 @@ const knex = require('./lib/knex');
 const KnormTimestamps = require('../lib/KnormTimestamps');
 const knormTimestamps = require('../');
 const sinon = require('sinon');
-const expect = require('unexpected').clone().use(require('unexpected-knex'));
+const expect = require('unexpected')
+  .clone()
+  .use(require('unexpected-knex'));
 
 describe('KnormTimestamps', () => {
   describe('init', () => {
