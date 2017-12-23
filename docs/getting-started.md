@@ -1,28 +1,41 @@
-# Getting started
+# knorm
 
-Knorm requires a [knex](http://knexjs.org) instance. Initialise a new ORM by
-passing a knex instance:
+[![npm version](https://badge.fury.io/js/knorm.svg)](http://badge.fury.io/js/knorm)
+[![build status](https://travis-ci.org/joelmukuthu/knorm.svg?branch=master)](https://travis-ci.org/joelmukuthu/knorm)
+[![coverage status](https://coveralls.io/repos/github/joelmukuthu/knorm/badge.svg?branch=master)](https://coveralls.io/github/joelmukuthu/knorm?branch=master)
+[![dependency status](https://david-dm.org/joelmukuthu/knorm.svg)](https://david-dm.org/joelmukuthu/knorm)
+[![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm.svg)](https://greenkeeper.io/)
+
+knorm is a purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
+
+## Supported environments
+
+These environments are currently supported:
+
+| Environment | Value | Description                                        |
+| ----------- | ---- | --------------------------------------------------- |
+| Node.js     | Version >= 7.6. | knorm uses `async/await` |
+| Databases   | PostgreSQL, MSSQL and Oracle | knorm uses the [RETURNING clause](http://knexjs.org/#Builder-returning) |
+
+## Creating an ORM
+
+Install knorm (and [knex](http://knexjs.org) if you haven't installed it yet):
+
+```bash
+npm install --save knex knorm
+```
+
+Creating a new ORM:
 
 ```js
-const knex = require('knex');
 const knorm = require('knorm');
+const knex = require('knex')({ /* knex options */ });
 
-const orm = knorm({
-  knex: knex({ /* knex options */ })
-});
+const { Model, Query, Field } = knorm({ knex });
 ```
-> the orm created contains `Model`, `Field`, `Query` and other knorm classes.
+> see the [Knorm docs](api/knorm.md#knorm) for more info on Knorm options
 
-## Knorm options
-
-These options are supported:
-
-| Option | Type | Description                                        |
-| --------------- | ---- | --------------------------------------------------- |
-| `knex`          | function (__required__) | the knex instance |
-| `fieldToColumn` | function | a function used to map field names to column names e.g. [snakeCase](https://lodash.com/docs/4.17.4#snakeCase) |
-
-## Adding fields
+## Adding common fields
 
 If you have fields that are common to all your models, add them to the base
 `Model` class. Since knorm requires models to have a primary field, `Model` is a
@@ -106,7 +119,7 @@ See [the Model docs](api/model.md) for more info on
 ## Example
 
 ```js
-(async function () {
+async function example() {
   const userCount = await User.count();
   const confirmedUsers = await User.fetch({ where: { confirmed: true }});
   const updatedUsers = await new Transaction(async transaction => {
@@ -124,5 +137,5 @@ See [the Model docs](api/model.md) for more info on
       .where({ confirmed: false })
       .update({ confirmed: true });
   });
-})();
+};
 ```

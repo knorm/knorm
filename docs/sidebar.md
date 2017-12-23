@@ -1,9 +1,10 @@
-- [Home](/)
+- [Getting started](getting-started.md)
 - Guides
-  - [Getting started](guides/getting-started.md#getting-started)
   - [Validation](guides/validation.md#validation)
   - [Relations](guides/relations.md#relations)
+  - [Plugins](guides/plugins.md#plugins)
 - API
+  - [Knorm](api/knorm.md#knorm)
   - [Model](api/model.md#model)
   - [Field](api/field.md#field)
   - [Query](api/query.md#query)
@@ -12,3 +13,4 @@
   - [QueryError](api/query-error.md#query-error)
   - [ValidationError](api/validation-error.md#validation-error)
 - [Changelog](changelog.md)
+- [License](license.md)

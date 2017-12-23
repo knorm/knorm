@@ -8,22 +8,27 @@
 
 A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
 
-> NOTE: currently supports
-[PostgreSQL, MSSQL and Oracle databases](http://knexjs.org/#Builder-returning)
+## Supported environments
+
+These environments are currently supported:
+
+| Environment | Value | Description                                        |
+| ----------- | ---- | --------------------------------------------------- |
+| Node.js     | Version >= 7.6. | knorm uses `async/await` |
+| Databases   | PostgreSQL, MSSQL and Oracle | knorm uses the [RETURNING clause](http://knexjs.org/#Builder-returning) |
 
 ## Features
 
-- model validation (before insert and update operations) with custom error
-  classes and support for custom validators (including async validators)
-- value casting before insert and update operations and after fetch operations
-- JSON schema validation (similar to [Mongoose JS](http://mongoosejs.com/))
-- SQL joins with full JavaScript syntax
+- [Validation](https://joelmukuthu.github.io/knorm/#/guides/validation)
+- [JSON fields validation](https://joelmukuthu.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
+- [Plugins support](https://joelmukuthu.github.io/knorm/#/guides/plugins)
+enabling full and easy customization
+- [Model field-name to database column-name](https://joelmukuthu.github.io/knorm/#/api/knorm?id=options) transformations (e.g. snake-casing)
+- [Relations](https://joelmukuthu.github.io/knorm/#/guides/relations) through SQL joins
 - virtual fields (i.e. computed fields) with support for sync and async getters
-- model field-name to database column-name transformations (e.g. snake-casing)
+- value casting before insert and update operations and after fetch operations
 - custom error classes for database errors
 - improved syntax for transactions
-- full and easy configuration and extendability (owing to ES6 classes). also
-  through [plugins](/#/?id=plugins ":ignore :target=_self")
 - good test coverage
 
 > NOTE: knorm does not create or run knex migrations

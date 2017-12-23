@@ -16,12 +16,13 @@
   window.$docsify = {
     name: 'knorm',
     repo: '//github.com/joelmukuthu/knorm',
-    homepage: 'home.md',
-    loadSidebar: true,
+    homepage: 'getting-started.md',
+    loadSidebar: 'sidebar.md',
     subMaxLevel: 2,
     auto2top: true,
     alias: {
-      '.*?/changelog': 'https://raw.githubusercontent.com/joelmukuthu/knorm/master/CHANGELOG.md'
+      '.*?/changelog': 'https://raw.githubusercontent.com/joelmukuthu/knorm/master/CHANGELOG.md',
+      '.*?/license': 'https://raw.githubusercontent.com/joelmukuthu/knorm/master/LICENSE.md'
     },
     plugins: [
       DocsifyCopyCodePlugin.init()
