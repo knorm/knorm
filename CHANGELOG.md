@@ -1,3 +1,59 @@
+<a name="0.10.0"></a>
+# [0.10.0](https://github.com/joelmukuthu/knorm/compare/v0.9.3...v0.10.0) (2017-12-23)
+
+
+### Bug Fixes
+
+* **Field:** do not share cast functions across clones ([626e653](https://github.com/joelmukuthu/knorm/commit/626e653))
+* **KnormError:** support error messages ([c785150](https://github.com/joelmukuthu/knorm/commit/c785150))
+* **Model:** fix inheritance ([f1b8a1c](https://github.com/joelmukuthu/knorm/commit/f1b8a1c))
+
+
+### Code Refactoring
+
+* **Field:** remove updateModel() in favour of clone() ([2320384](https://github.com/joelmukuthu/knorm/commit/2320384))
+* **Model:** remove `ById` methods ([ddd8376](https://github.com/joelmukuthu/knorm/commit/ddd8376))
+* **Model:** remove `fieldNames` ([40c8edd](https://github.com/joelmukuthu/knorm/commit/40c8edd))
+* **Model:** simplify config inheritance ([3a98135](https://github.com/joelmukuthu/knorm/commit/3a98135))
+
+
+### Features
+
+* **Knorm:** add Knorm helper class ([fab70eb](https://github.com/joelmukuthu/knorm/commit/fab70eb))
+* **Model:** add `getQuery` ([cd4141a](https://github.com/joelmukuthu/knorm/commit/cd4141a))
+* **Model:** add support for "not-updated" fields ([97a1eb4](https://github.com/joelmukuthu/knorm/commit/97a1eb4))
+* **Model:** add support for `primary` fields ([a3a8d0d](https://github.com/joelmukuthu/knorm/commit/a3a8d0d))
+* **Model:** add support for unique fields ([a1bec79](https://github.com/joelmukuthu/knorm/commit/a1bec79))
+* add support for plugins ([cf19074](https://github.com/joelmukuthu/knorm/commit/cf19074))
+
+
+### BREAKING CHANGES
+
+* **Model:** removed `Field.prototype.clone` and `Virtual.prototype.clone`
+* **Model:** previously, the primary field was assumed to be
+one of the fields that should not be updated by `Query.prototype.update`, now it
+has to be specified:
+
+```js
+Model.fields = {
+  id: { type: 'integer', primary: true, updated: false }
+};
+```
+* **Model:** ```js
+Model.fetchById => Model.fetchByPrimaryField
+Model.updateById => Model.updateByPrimaryField
+Model.deleteById => Model.deleteByPrimaryField
+```
+* **Model:** instead of using the `fieldNames` config to define
+the primary field, use the `primary` Field config:
+
+```js
+Model.fields = {
+  id: { type: 'integer', primary: true }
+};
+```
+
+
 <a name="0.9.3"></a>
 ## [0.9.3](https://github.com/joelmukuthu/knorm/compare/v0.9.2...v0.9.3) (2017-11-23)
 
@@ -430,6 +486,3 @@ to do an inner join query
 
 <a name="0.0.2"></a>
 ## 0.0.2 (2017-03-20)
-
-
-
