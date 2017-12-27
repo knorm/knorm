@@ -222,6 +222,19 @@ describe('KnormSoftDelete', () => {
         clock.restore();
       });
 
+      it('sets `deletedAt` if `update` is called with `deleted` set to true', async () => {
+        const clock = sinon.useFakeTimers({ now: 2000, toFake: ['Date'] });
+        await new Query(User).update({ deleted: true });
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have rows satisfying',
+          [{ id: 1, deleted_at: new Date(2000) }]
+        );
+        clock.restore();
+      });
+
       it('passes options passed to Query.prototype.update', async () => {
         const spy = sinon.spy(Query.prototype, 'update');
         await new Query(User).delete({ fields: 'name' });
@@ -282,7 +295,7 @@ describe('KnormSoftDelete', () => {
         );
       });
 
-      it('throws updateErrors as usual', async () => {
+      it("throws knorm's UpdateErrors without modification", async () => {
         const stub = sinon
           .stub(Query.prototype, 'update')
           .returns(Promise.reject(new Error('update error')));
