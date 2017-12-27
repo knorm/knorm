@@ -235,6 +235,22 @@ describe('KnormSoftDelete', () => {
         clock.restore();
       });
 
+      it('does not overwrite `deletedAt` if `update` is called with `deleted` and `deletedAt`', async () => {
+        const clock = sinon.useFakeTimers({ now: 2000, toFake: ['Date'] });
+        await new Query(User).update({
+          deleted: true,
+          deletedAt: new Date(3000)
+        });
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have rows satisfying',
+          [{ id: 1, deleted_at: new Date(3000) }]
+        );
+        clock.restore();
+      });
+
       it('passes options passed to Query.prototype.update', async () => {
         const spy = sinon.spy(Query.prototype, 'update');
         await new Query(User).delete({ fields: 'name' });
