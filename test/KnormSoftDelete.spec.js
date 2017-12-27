@@ -222,35 +222,6 @@ describe('KnormSoftDelete', () => {
         clock.restore();
       });
 
-      it('sets `deletedAt` if `update` is called with `deleted` set to true', async () => {
-        const clock = sinon.useFakeTimers({ now: 2000, toFake: ['Date'] });
-        await new Query(User).update({ deleted: true });
-        await expect(
-          knex,
-          'with table',
-          User.table,
-          'to have rows satisfying',
-          [{ id: 1, deleted_at: new Date(2000) }]
-        );
-        clock.restore();
-      });
-
-      it('does not overwrite `deletedAt` if `update` is called with `deleted` and `deletedAt`', async () => {
-        const clock = sinon.useFakeTimers({ now: 2000, toFake: ['Date'] });
-        await new Query(User).update({
-          deleted: true,
-          deletedAt: new Date(3000)
-        });
-        await expect(
-          knex,
-          'with table',
-          User.table,
-          'to have rows satisfying',
-          [{ id: 1, deleted_at: new Date(3000) }]
-        );
-        clock.restore();
-      });
-
       it('passes options passed to Query.prototype.update', async () => {
         const spy = sinon.spy(Query.prototype, 'update');
         await new Query(User).delete({ fields: 'name' });
@@ -600,6 +571,50 @@ describe('KnormSoftDelete', () => {
           'to have sorted rows satisfying',
           [{ id: 1, name: 'one' }, { id: 2, name: 'foo' }]
         );
+      });
+
+      it('sets `deletedAt` if called with `deleted` set to true', async () => {
+        const clock = sinon.useFakeTimers({ now: 2000, toFake: ['Date'] });
+        await new Query(User).update({ deleted: true });
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have rows satisfying',
+          [
+            { id: 1, deleted_at: new Date(2000) },
+            { id: 2, deleted_at: new Date(2000) }
+          ]
+        );
+        clock.restore();
+      });
+
+      it('does not overwrite `deletedAt` if called with `deleted` and `deletedAt`', async () => {
+        const clock = sinon.useFakeTimers({ now: 2000, toFake: ['Date'] });
+        await new Query(User).update({
+          deleted: true,
+          deletedAt: new Date(3000)
+        });
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have rows satisfying',
+          [
+            { id: 1, deleted_at: new Date(3000) },
+            { id: 2, deleted_at: new Date(3000) }
+          ]
+        );
+        clock.restore();
+      });
+
+      it('passes options passed to Query.prototype.update', async () => {
+        const spy = sinon.spy(Query.prototype, 'update');
+        await new Query(User).update({ deleted: true }, { fields: 'name' });
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(expect.it('to be an object'), { fields: 'name' });
+        });
+        spy.restore();
       });
     });
 
