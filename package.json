@@ -1,6 +1,6 @@
 {
   "name": "knorm-soft-delete",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Soft-delete plugin for knorm",
   "main": "index.js",
   "scripts": {
