@@ -1,3 +1,13 @@
+<a name="0.10.1"></a>
+## [0.10.1](https://github.com/joelmukuthu/knorm/compare/v0.10.0...v0.10.1) (2017-12-28)
+
+
+### Features
+
+* **Knorm:** support plugins as functions ([851716e](https://github.com/joelmukuthu/knorm/commit/851716e))
+
+
+
 <a name="0.10.0"></a>
 # [0.10.0](https://github.com/joelmukuthu/knorm/compare/v0.9.3...v0.10.0) (2017-12-23)
 
