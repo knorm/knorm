@@ -13,7 +13,7 @@ const { Model, Query } = knorm({ /* knorm options */ })
   .use(knormSoftDelete({ /* plugin options */ }));
 ```
 > see [knorm-soft-delete](https://www.npmjs.com/package/knorm-soft-delete) for
-more this plugin's docs
+this plugin's documentation
 
 ## Available plugins
 
@@ -24,17 +24,15 @@ more this plugin's docs
 
 ## Creating custom plugins
 
-A knorm plugin can be any object with an `init` function. When you add a plugin
-with `Knorm.prototype.use`, the `init` function is called with the knorm
-instance. You can then modify the classes on the instance:
+A knorm plugin can be a function or an object with an `init` function. When you
+add a plugin via `Knorm.prototype.use`, the function (or `init` function) is
+called with the knorm instance. You can then modify the classes on the instance:
 
 ```js
-const preventDelete = {
-  init(orm) {
-    orm.Model.Query = orm.Query = class extends orm.Query {
-      async delete() {
-        throw new Error('deleting is not allowed!');
-      }
+const preventDelete = orm => {
+  orm.Model.Query = orm.Query = class extends orm.Query {
+    async delete() {
+      throw new Error('deleting is not allowed!');
     }
   }
 };
@@ -45,4 +43,5 @@ Model.delete().catch(console.log); // logs Error('deleting is not allowed!')
 ```
 
 !> If you update the `Query` class then also update `Model.Query` so that models
-use the updated `Query` class
+use the updated `Query` class. Similarly, when you update the `Field` class,
+also update `Model.Field`.

@@ -21,7 +21,7 @@ These environments are currently supported:
 
 - [Validation](https://joelmukuthu.github.io/knorm/#/guides/validation)
 - [JSON fields validation](https://joelmukuthu.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
-- [Plugins support](https://joelmukuthu.github.io/knorm/#/guides/plugins)
+- [Plugin support](https://joelmukuthu.github.io/knorm/#/guides/plugins)
 enabling full and easy customization
 - [Model field-name to database column-name](https://joelmukuthu.github.io/knorm/#/api/knorm?id=options) transformations (e.g. snake-casing)
 - [Relations](https://joelmukuthu.github.io/knorm/#/guides/relations) through SQL joins
