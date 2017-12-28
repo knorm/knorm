@@ -92,14 +92,28 @@ describe('Knorm', () => {
       );
     });
 
-    it('passes itself to the instance', () => {
-      const init = sinon.spy().named('init');
-      knorm.use({ init });
-      expect(init, 'to have calls satisfying', () => init(knorm));
+    describe('when called with a function', function() {
+      it('passes itself to the function', () => {
+        const plugin = sinon.spy().named('plugin');
+        knorm.use(plugin);
+        expect(plugin, 'to have calls satisfying', () => plugin(knorm));
+      });
+
+      it('allows chaining', () => {
+        expect(knorm.use(() => {}), 'to equal', knorm);
+      });
     });
 
-    it('allows chaining', () => {
-      expect(knorm.use({ init() {} }), 'to equal', knorm);
+    describe('when called with an object with an `init` function', function() {
+      it('passes itself to the `init` function', () => {
+        const init = sinon.spy().named('init');
+        knorm.use({ init });
+        expect(init, 'to have calls satisfying', () => init(knorm));
+      });
+
+      it('allows chaining', () => {
+        expect(knorm.use({ init() {} }), 'to equal', knorm);
+      });
     });
   });
 });
