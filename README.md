@@ -16,11 +16,13 @@ calls. It will also ensure that any `update` calls do not overwrite the
 `createdAt` field.
 
 ## Installation
+
 ```bash
 npm install --save knorm knorm-timestamps
 ```
+
 > knorm-timestamps has a peer dependency on
-[knorm](https://www.npmjs.com/package/knorm)
+> [knorm](https://www.npmjs.com/package/knorm)
 
 ## Usage
 
@@ -30,35 +32,29 @@ const knormTimestamps = require('knorm-timestamps');
 
 const orm = knorm({
   // knorm options
-}).use(knormTimestamps({
-  // knormTimestamps options
-}));
+}).use(
+  knormTimestamps({
+    // knormTimestamps options
+  })
+);
 ```
 
 ## Options
 
 ### createdAt
 
-Can either be `true` or an object for further configuration. If `true`, it adds
-a field to the `Model` class with this config:
-- field-name: `createdAt`
-- column-name: `created_at`
+> type: object, default: `{ name: 'createdAt', column: 'created_at' }`
 
-If passed as an object, supports these config options:
-- `name` *string, default: createdAt*: the field name to use instead of
-  `createdAt`
-- `column` *string, default: created_at*: the column name to use instead of
-  `created_at`
+The `createdAt` field can be configured with these options:
+
+* `name` _string, default: createdAt_: the field name
+* `column` _string, default: created_at_: the column name
 
 ### updatedAt
 
-Can either be `true` or an object for further configuration. If `true`, it adds
-a field to the `Model` class with this config:
-- field-name: `updatedAt`
-- column-name: `updated_at`
+> type: object, default: `{ name: 'updatedAt', column: 'updated_at' }`
 
-If passed as an object, supports these config options:
-- `name` *string, default: updatedAt*: the field name to use instead of
-  `updatedAt`
-- `column` *string, default: updated_at*: the column name to use instead of
-  `updated_at`
+The `updatedAt` field can be configured with these options:
+
+* `name` _string, default: updatedAt_: the field name
+* `column` _string, default: updated_at_: the column name
