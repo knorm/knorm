@@ -1,6 +1,6 @@
 {
   "name": "knorm-timestamps",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Timestamps plugin for knorm",
   "main": "index.js",
   "scripts": {
