@@ -1622,6 +1622,88 @@ describe('Model', function() {
           });
         });
       });
+
+      describe('with `methods` configured on a field', function() {
+        it('adds `ByField` methods if `primary` is configured', function() {
+          class User extends Model {}
+
+          User.fields = {
+            id: {
+              type: Field.types.string,
+              primary: true,
+              methods: true
+            }
+          };
+
+          expect(User.fetchById, 'to be a function');
+          expect(User.updateById, 'to be a function');
+          expect(User.deleteById, 'to be a function');
+        });
+
+        it('adds `ByField` methods if `unique` is configured', function() {
+          class User extends Model {}
+
+          User.fields = {
+            id: {
+              type: Field.types.string,
+              unique: true,
+              methods: true
+            }
+          };
+
+          expect(User.fetchById, 'to be a function');
+          expect(User.updateById, 'to be a function');
+          expect(User.deleteById, 'to be a function');
+        });
+
+        it('does not add `ByField` methods if `unique` nor `primary` are configured', function() {
+          class User extends Model {}
+
+          User.fields = {
+            id: {
+              type: Field.types.string,
+              methods: true
+            }
+          };
+
+          expect(User.fetchById, 'to be undefined');
+          expect(User.updateById, 'to be undefined');
+          expect(User.deleteById, 'to be undefined');
+        });
+
+        it('adds the correct names for camelCased field names', function() {
+          class User extends Model {}
+
+          User.fields = {
+            someFieldName: {
+              type: Field.types.string,
+              unique: true,
+              methods: true
+            }
+          };
+
+          expect(User.fetchBySomeFieldName, 'to be a function');
+          expect(User.updateBySomeFieldName, 'to be a function');
+          expect(User.deleteBySomeFieldName, 'to be a function');
+        });
+
+        it('inherits `ByField` methods', function() {
+          class User extends Model {}
+          class OtherUser extends User {}
+
+          User.fields = {
+            id: {
+              type: Field.types.string,
+              primary: true,
+              methods: true
+            }
+          };
+
+          expect(OtherUser.fetchById, 'to be a function');
+          expect(OtherUser.updateById, 'to be a function');
+          expect(OtherUser.deleteById, 'to be a function');
+        });
+      });
     });
   });
 
@@ -2116,7 +2198,8 @@ describe('Model', function() {
       id: {
         type: Field.types.integer,
         required: true,
-        primary: true
+        primary: true,
+        methods: true
       },
       name: {
         type: Field.types.string,
@@ -2525,6 +2608,80 @@ describe('Model', function() {
           'to be rejected with error satisfying',
           { name: 'NoRowsUpdatedError' }
         );
+      });
+    });
+
+    describe('with methods configured for unique or primary fields', function() {
+      describe('Model.fetchByField', function() {
+        it('fetches a model using the field', async function() {
+          await new User({ id: 1, name: 'John Doe' }).insert();
+          await expect(
+            User.fetchById(1),
+            'to be fulfilled with value satisfying',
+            new User({ id: 1, name: 'John Doe' })
+          );
+        });
+
+        it('passes options along', async function() {
+          await new User({ id: 1, name: 'John Doe' }).insert();
+          await expect(
+            User.fetchById(1, { where: { name: 'foo' } }),
+            'to be rejected with error satisfying',
+            { name: 'NoRowsFetchedError' }
+          );
+        });
+      });
+
+      describe('Model.deleteByField', function() {
+        it('deletes a model using its primary field value', async function() {
+          await new User({ id: 1, name: 'John Doe' }).insert();
+          await expect(
+            User.deleteById(1),
+            'to be fulfilled with value satisfying',
+            new User({ id: 1, name: 'John Doe' })
+          );
+          await expect(knex, 'with table', User.table, 'to be empty');
+        });
+
+        it('passes options along', async function() {
+          await new User({ id: 1, name: 'John Doe' }).insert();
+          await expect(
+            User.deleteById(1, { where: { name: 'foo' } }),
+            'to be rejected with error satisfying',
+            { name: 'NoRowsDeletedError' }
+          );
+        });
+      });
+
+      describe('Model.updateByField', function() {
+        it('updates a model using its primary field value', async function() {
+          await new User({ id: 1, name: 'John Doe' }).insert();
+          await expect(
+            User.updateById(1, { name: 'Jane Doe' }),
+            'to be fulfilled with value satisfying',
+            new User({ id: 1, name: 'Jane Doe' })
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have rows satisfying',
+            [{ id: 1, name: 'Jane Doe' }]
+          );
+        });
+
+        it('passes options along', async function() {
+          await new User({ id: 1, name: 'John Doe' }).insert();
+          await expect(
+            User.updateById(
+              1,
+              { name: 'Jane Doe' },
+              { where: { name: 'foo' } }
+            ),
+            'to be rejected with error satisfying',
+            { name: 'NoRowsUpdatedError' }
+          );
+        });
       });
     });
   });
