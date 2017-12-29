@@ -12,9 +12,9 @@ knorm is a purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
 
 These environments are currently supported:
 
-| Environment | Value | Description                                        |
-| ----------- | ---- | --------------------------------------------------- |
-| Node.js     | Version >= 7.6. | knorm uses `async/await` |
+| Environment | Value                        | Description                                                             |
+| ----------- | ---------------------------- | ----------------------------------------------------------------------- |
+| Node.js     | Version >= 7.6.              | knorm uses `async/await`                                                |
 | Databases   | PostgreSQL, MSSQL and Oracle | knorm uses the [RETURNING clause](http://knexjs.org/#Builder-returning) |
 
 ## Creating an ORM
@@ -29,49 +29,43 @@ Creating a new ORM:
 
 ```js
 const knorm = require('knorm');
-const knex = require('knex')({ /* knex options */ });
+const knex = require('knex')({
+  /* knex options */
+});
 
 const { Model, Query, Field } = knorm({ knex });
 ```
+
 > see the [Knorm docs](api/knorm.md#knorm) for more info on Knorm options
 
 ## Adding common fields
 
 If you have fields that are common to all your models, add them to the base
 `Model` class. Since knorm requires models to have a primary field, `Model` is a
-good place to add it. You could also add some convenience methods for working
-with the primary field:
+good place to add it:
 
 ```js
 const { Model: BaseModel } = new Knorm({ knex });
 
-class Model extends BaseModel {
-  static async fetchById(...args) {
-    return this.fetchByPrimaryField(...args);
-  }
-
-  static async updateById(...args) {
-    return this.updateByPrimaryField(...args);
-  }
-
-  static async deleteById(...args) {
-    return this.deleteByPrimaryField(...args);
-  }
-}
+class Model extends BaseModel {}
 
 Model.fields = {
-  id: { type: 'integer', primary: true, updated: false }
+  id: { type: 'integer', primary: true, updated: false, methods: true }
 };
 ```
-> The field `type` is required. With only a few exceptions, these types map
-one-to-one with the types you use with Knex's schema builder. See
-[Model.fields](api/model.md#modelfields) for more info.
 
-> The `updated` flag indicates that this field should not be updated when
-updating a model.
+> The field `type` is required. With only a few exceptions, these types map
+> one-to-one with the types you use with Knex's schema builder. See
+> [Model.fields](api/model.md#modelfields) for more info.
+
+> The `updated` option indicates that this field should not be updated when
+> updating a model.
+
+> The `methods` option adds `Model.fetchById`, `Model.updateById` and
+> `Model.deleteById` static methods.
 
 > You can also override the primary field for any model that extends `Model`.
-See [Model.primary](api/model.md#modelprimary) for more info.
+> See [Model.primary](api/model.md#modelprimary) for more info.
 
 ## Adding models
 
@@ -89,7 +83,7 @@ User.table = 'user'; // configure the table-name
 User.fields = {
   name: {
     type: 'string',
-    required: true, // validation rule
+    required: true // validation rule
   },
   confirmed: {
     type: 'boolean',
@@ -102,6 +96,7 @@ User.virtuals = {
   }
 };
 ```
+
 > See [the validation guide](guides/validation.md) for more info on validation
 
 > See [Model.fields](api/model.md#modelfields) for more info on field configs
@@ -121,7 +116,7 @@ See [the Model docs](api/model.md) for more info on
 ```js
 async function example() {
   const userCount = await User.count();
-  const confirmedUsers = await User.fetch({ where: { confirmed: true }});
+  const confirmedUsers = await User.fetch({ where: { confirmed: true } });
   const updatedUsers = await new Transaction(async transaction => {
     const unconfirmedUserCount = await User.query
       .transaction(transaction)
@@ -137,5 +132,5 @@ async function example() {
       .where({ confirmed: false })
       .update({ confirmed: true });
   });
-};
+}
 ```
