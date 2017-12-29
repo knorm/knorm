@@ -1,3 +1,40 @@
+<a name="0.11.0"></a>
+# [0.11.0](https://github.com/joelmukuthu/knorm/compare/v0.10.1...v0.11.0) (2017-12-29)
+
+
+### Code Refactoring
+
+* **Model:** remove `ByPrimaryField` methods ([d52389c](https://github.com/joelmukuthu/knorm/commit/d52389c))
+
+
+### Features
+
+* **Model:** add support for `ByField` methods ([9882d41](https://github.com/joelmukuthu/knorm/commit/9882d41))
+
+
+### BREAKING CHANGES
+
+* **Model:** instead of fetchByPrimaryField etc, use:
+
+```js
+Model.fields = {
+  id: {
+    primary: true,
+    methods: true
+  }
+};
+```
+
+to have these methods automatically added:
+
+```js
+Model.fetchById;
+Model.updateById;
+Model.deleteById;
+```
+
+
+
 <a name="0.10.1"></a>
 ## [0.10.1](https://github.com/joelmukuthu/knorm/compare/v0.10.0...v0.10.1) (2017-12-28)
 
