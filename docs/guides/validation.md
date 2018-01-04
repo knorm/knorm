@@ -129,20 +129,26 @@ Upload.fields = {
 With this schema, these are valid:
 
 ```js
-new Upload({ image: { filename: 'foo', mimetype: 'image/jpeg', data: new Buffer() }});
+new Upload({
+  image: { filename: 'foo', mimetype: 'image/jpeg', data: Buffer.from('foo') }
+});
 // Upload.fields.image is not a required field:
 new Upload({});
  // filename is not required:
-new Upload({ image: { mimetype: 'image/jpeg', data: new Buffer() }});
+new Upload({ image: { mimetype: 'image/jpeg', data: Buffer.from('foo') }});
 ```
 
 while these are invalid:
 
 ```js
  // mimetype 'image/gif' is not allowed:
-new Upload({ image: { filename: 'foo', mimetype: 'image/gif', data: new Buffer() }});
+new Upload({
+  image: { filename: 'foo', mimetype: 'image/gif', data: Buffer.from('foo') }
+});
  // filename should be a string:
-new Upload({ image: { filename: 1, mimetype: 'image/png', data: new Buffer() } });
+new Upload({
+  image: { filename: 1, mimetype: 'image/png', data: Buffer.from('foo') }
+});
 ```
 > JSON `schema` validators support all the [validators](#validators), including
 nested `schema` validators [for nested objects](#nested-objects)

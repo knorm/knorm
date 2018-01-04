@@ -1,5 +1,6 @@
 - [Getting started](getting-started.md)
 - Guides
+  - [Fields](guides/fields.md#fields)
   - [Validation](guides/validation.md#validation)
   - [Relations](guides/relations.md#relations)
   - [Plugins](guides/plugins.md#plugins)
