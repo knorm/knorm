@@ -1705,6 +1705,75 @@ describe('Model', function() {
         });
       });
     });
+
+    describe('with a `getter` function', function() {
+      class User extends Model {
+        static get fields() {
+          this.setFields({
+            firstName: {
+              type: Field.types.string
+            }
+          });
+          return this.getFields();
+        }
+      }
+
+      it('returns fields added via via `Model.setFields`', function() {
+        expect(User.fields, 'to exhaustively satisfy', {
+          firstName: expect.it(
+            'to be field',
+            new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.string
+            })
+          )
+        });
+      });
+
+      it('supports field inheritance', function() {
+        class Student extends User {
+          static get fields() {
+            this.setFields({
+              studentId: {
+                type: Field.types.integer
+              }
+            });
+            return this.getFields();
+          }
+        }
+
+        expect(User.fields, 'to exhaustively satisfy', {
+          firstName: expect.it(
+            'to be field',
+            new Field({
+              name: 'firstName',
+              model: User,
+              type: Field.types.string
+            })
+          )
+        });
+
+        expect(Student.fields, 'to exhaustively satisfy', {
+          firstName: expect.it(
+            'to be field',
+            new Field({
+              name: 'firstName',
+              model: Student,
+              type: Field.types.string
+            })
+          ),
+          studentId: expect.it(
+            'to be field',
+            new Field({
+              name: 'studentId',
+              model: Student,
+              type: Field.types.integer
+            })
+          )
+        });
+      });
+    });
   });
 
   describe('Model.virtuals', function() {
