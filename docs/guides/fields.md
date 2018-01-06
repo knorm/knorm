@@ -8,15 +8,15 @@ class User extends Model {}
 User.fields = { fieldName: fieldConfig };
 ```
 
-You can also use a getter function to return the models fields, but in that case
-use `Model.setFields` and `Model.getFields` to ensure
-[field inheritance](#field-inheritance):
+You can also use a getter function to return the models fields, but first add
+the fields to the model's config to ensure they are linked to the model and that
+[field inheritance](#field-inheritance) is maintained:
 
 ```js
 class User extends Model {
   static get fields {
-    this.setFields({ fieldName: fieldConfig });
-    return this.getFields();
+    this.config.fields = { fieldName: fieldConfig };
+    return this.config.fields;
   }
 }
 ```

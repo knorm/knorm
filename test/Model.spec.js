@@ -1706,19 +1706,15 @@ describe('Model', function() {
       });
     });
 
-    describe('with a `getter` function', function() {
+    describe('with a getter function', function() {
       class User extends Model {
         static get fields() {
-          this.setFields({
-            firstName: {
-              type: Field.types.string
-            }
-          });
-          return this.getFields();
+          this.config.fields = { firstName: { type: Field.types.string } };
+          return this.config.fields;
         }
       }
 
-      it('returns fields added via via `Model.setFields`', function() {
+      it('returns fields added via the `Model.config.fields` setter', function() {
         expect(User.fields, 'to exhaustively satisfy', {
           firstName: expect.it(
             'to be field',
@@ -1734,12 +1730,8 @@ describe('Model', function() {
       it('supports field inheritance', function() {
         class Student extends User {
           static get fields() {
-            this.setFields({
-              studentId: {
-                type: Field.types.integer
-              }
-            });
-            return this.getFields();
+            this.config.fields = { studentId: { type: Field.types.integer } };
+            return this.config.fields;
           }
         }
 
