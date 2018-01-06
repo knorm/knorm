@@ -1,10 +1,6 @@
 # Relations
 
-Knorm supports relations using `LEFT JOIN` and `INNER JOIN` statements, meaning
-relational data can be fetched using one database query.
-
-> The examples on this page extend the setup in the
-[getting started guide](guides/getting-started.md)
+Relations in knorm are supported via `LEFT JOIN` and `INNER JOIN` statements.
 
 ## One-to-one and one-to-many relations
 
@@ -13,27 +9,28 @@ adding a reference from one field to another:
 
 ```js
 class Message extends Model {}
+
 Message.table = 'message';
 Message.fields = {
-    text: {
-        type: 'text',
-        required: true,
-    },
-    senderId: {
-        type: 'integer',
-        references: User.fields.id, // reference
-    },
-    receiverId: {
-        type: 'integer',
-        references: User.fields.id, // reference
-    }
+  text: {
+    type: 'text',
+    required: true
+  },
+  senderId: {
+    type: 'integer',
+    references: User.fields.id // reference
+  },
+  receiverId: {
+    type: 'integer',
+    references: User.fields.id // reference
+  }
 };
 ```
 
 Then to fetch data via a join:
 
 ```js
-(async function () {
+(async function() {
   const usersWithReceivedMessagesCount = await User.query
     .innerJoin(Message.query.on('receiverId')) // or .join()
     .count();
@@ -49,12 +46,12 @@ Then to fetch data via a join:
 
   // you can also pass query options using an object:
   const usersWithUnreadMessages = await User.query
-  .leftJoin(Message, {
-    on: 'receiverId',
-    as: 'receivedMessages',
-    where: { read: false }
-  })
-  .fetch();
+    .leftJoin(Message, {
+      on: 'receiverId',
+      as: 'receivedMessages',
+      where: { read: false }
+    })
+    .fetch();
 
   // console.log(usersWithUnreadMessages) will be something like:
   // [
@@ -102,14 +99,14 @@ UserFriend.fields = {
   friendId: {
     type: 'integer',
     references: User.fields.id
-  },
+  }
 };
 ```
 
 To fetch friend data:
 
 ```js
-(async function () {
+(async function() {
   const usersWithFriendsCount = await User.query
     .innerJoin(UserFriend.query.on('userId'))
     .count();
@@ -118,11 +115,7 @@ To fetch friend data:
     .leftJoin(
       UserFriend.query
         .on('userId')
-        .leftJoin(
-          User.query
-            .on('friendId')
-            .as('friend')
-        )
+        .leftJoin(User.query.on('friendId').as('friend'))
     )
     .fetch();
 

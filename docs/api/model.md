@@ -5,10 +5,7 @@ core functionality for setting and getting a model's data and provides
 interfaces to [Field](api/field.md) for data validation and [Query](api/query.md)
 for database operations.
 
-> The examples on this page extend the setup in the
-[getting started guide](guides/getting-started.md)
-
-## Model.table *(required)*
+## Model.table _(required)_
 
 This is a static field that configures the model's table name:
 
@@ -35,6 +32,7 @@ User.fields = {
   }
 };
 ```
+
 > `User.fields` now contains `firstName` and `lastName` fields.
 
 Fields are inherited when a model is inherited. It's possible to add fields
@@ -58,10 +56,11 @@ Employee.fields = {
   }
 };
 ```
+
 > `Employee.fields` now contains `firstName`, `lastName` and `employeeId` fields
-while `User.fields` still contains `firstName` and `lastName` fields.
-`Employee.fields.firstName` has a `minLength` validation while
-`User.fields.firstName` doesn't.
+> while `User.fields` still contains `firstName` and `lastName` fields.
+> `Employee.fields.firstName` has a `minLength` validation while
+> `User.fields.firstName` doesn't.
 
 ## Model.virtuals
 
@@ -87,7 +86,7 @@ User.virtuals = {
 
 Async getters (getters that return a `Promise`) are supported. That allows
 getters that do database calls, cache data etc. Async setters are however
-__not__ supported.
+**not** supported.
 
 Virtuals also behave like regular fields in that they are also inherited when a
 model is inherited, can be added to or overwriten much like
@@ -102,7 +101,7 @@ fields are automatically added to the instance. These are used in
 a `Model.prototype` property, or is added as a [field](#modelfields) already.
 
 > Also, avoid using arrow functions for getters and setters if you wish to
-access the instance using `this`.
+> access the instance using `this`.
 
 ## Model.primary
 
@@ -138,7 +137,6 @@ Creates an instance of a model and optionally accepts an object data to assign
 the instance. If a `data` object is provided, it's passed to
 [Model.prototype.setData](#modelprototypesetdatadata-model).
 
-
 ```js
 const user = new User();
 ```
@@ -169,20 +167,37 @@ In this case the field names will not be validated against the list of
 configured field or virtual field names.
 
 ## Model.prototype.getData([options]) : Object
+
 ## Model.prototype.setDefaults([options]) : Model
+
 ## Model.prototype.validate([options]) : Promise => Model/ValidationError
+
 ## Model.prototype.cast([options]) : Model
+
 ## Model.prototype.fetch([options]) : Promise => Model
+
 ## Model.prototype.save([options]) : Promise => Model
+
 ## Model.prototype.insert([options]) : Promise => Model
+
 ## Model.prototype.update([options]) : Promise => Model
+
 ## Model.prototype.delete([options]) : Promise => Model
+
 ## Model.count([options]) : Promise => Number
+
 ## Model.fetch([options]) : Promise => [Model]
+
 ## Model.save(data, [options]) : Promise => [Model]
+
 ## Model.insert(data, [options]) : Promise => [Model]
+
 ## Model.update(data, [options]) : Promise => [Model]
+
 ## Model.delete([options]) : Promise => [Model]
+
 ## Model.fetchById(id, [options])
+
 ## Model.updateById(id, data, [options])
+
 ## Model.deleteById(id, [options])
