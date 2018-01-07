@@ -13,21 +13,21 @@
 </body>
 <script src="//unpkg.com/docsify-copy-code/index.js"></script>
 <script>
-  window.$docsify = {
-    name: 'knorm',
-    repo: '//github.com/joelmukuthu/knorm',
-    homepage: 'getting-started.md',
-    loadSidebar: 'sidebar.md',
-    subMaxLevel: 2,
-    auto2top: true,
-    alias: {
-      '.*?/changelog': 'https://raw.githubusercontent.com/joelmukuthu/knorm/master/CHANGELOG.md',
-      '.*?/license': 'https://raw.githubusercontent.com/joelmukuthu/knorm/master/LICENSE.md'
-    },
-    plugins: [
-      DocsifyCopyCodePlugin.init()
-    ]
-  }
+window.$docsify = {
+  name: 'knorm',
+  repo: '//github.com/joelmukuthu/knorm',
+  homepage: 'guides/getting-started.md',
+  loadSidebar: 'sidebar.md',
+  subMaxLevel: 2,
+  auto2top: true,
+  alias: {
+    '.*?/changelog':
+      'https://raw.githubusercontent.com/joelmukuthu/knorm/master/CHANGELOG.md',
+    '.*?/license':
+      'https://raw.githubusercontent.com/joelmukuthu/knorm/master/LICENSE.md'
+  },
+  plugins: [DocsifyCopyCodePlugin.init()]
+};
 </script>
 <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
 <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>

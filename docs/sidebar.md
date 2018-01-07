@@ -1,6 +1,8 @@
-* [Getting started](getting-started.md)
 * Guides
+  * [Getting started](guides/getting-started.md)
+  * [Models](guides/models.md#models)
   * [Fields](guides/fields.md#fields)
+  * [Virtuals](guides/virtuals.md#virtuals)
   * [Validation](guides/validation.md#validation)
   * [Relations](guides/relations.md#relations)
   * [Plugins](guides/plugins.md#plugins)

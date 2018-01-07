@@ -1,3 +1,3 @@
 ## ValidationError(options)
 
-## ValidationError.prototype.formatMessage(options)
+## ValidationError.prototype.formatMessage(options) : string

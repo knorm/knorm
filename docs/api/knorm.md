@@ -9,6 +9,16 @@ const { Model, Query, Field } = new Knorm(options);
 class User extends Model {}
 ```
 
+A Knorm instance has the following classes:
+
+* [Model](api/model.md#model)
+* [Query](api/query.md#query)
+* [Field](api/field.md#field)
+* [Transaction](api/transaction.md#transaction)
+* [KnormError](api/knorm-error.md#knorm-error)
+* [QueryError](api/query-error.md#query-error)
+* [ValidationError](api/validation-error.md#validation-error)
+
 ## Options
 
 These options are supported:

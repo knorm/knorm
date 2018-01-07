@@ -22,10 +22,10 @@ These environments are currently supported:
 * [Validation](https://joelmukuthu.github.io/knorm/#/guides/validation)
 * [JSON fields validation](https://joelmukuthu.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
 * [Plugin support](https://joelmukuthu.github.io/knorm/#/guides/plugins)
-* [Model field-name to database column-name](https://joelmukuthu.github.io/knorm/#/api/knorm?id=options) transformations (e.g. snake-casing)
+* [Field to column-name](https://joelmukuthu.github.io/knorm/#/api/knorm?id=options) transformations (e.g. snake-casing)
 * [Relations](https://joelmukuthu.github.io/knorm/#/guides/relations) through SQL joins
-* virtual fields (i.e. computed fields) with support for sync and async getters
-* value casting before insert and update operations and after fetch operations
+* [Virtual fields](https://joelmukuthu.github.io/knorm/#/guides/virtuals) with support for `async` getters
+* [Value casting](https://joelmukuthu.github.io/knorm/#/guides/fields?id=value-casting) before insert and update operations and after fetch operations
 * custom error classes for database errors
 * improved syntax for transactions
 * good test coverage

@@ -54,18 +54,7 @@ Model.fields = {
 };
 ```
 
-> The field `type` is required. With only a few exceptions, these types map
-> one-to-one with the types you use with Knex's schema builder. See
-> [Model.fields](api/model.md#modelfields) for more info.
-
-> The `updated` option indicates that this field should not be updated when
-> updating a model.
-
-> The `methods` option adds `Model.fetchById`, `Model.updateById` and
-> `Model.deleteById` static methods.
-
-> You can also override the primary field for any model that extends `Model`.
-> See [Model.primary](api/model.md#modelprimary) for more info.
+> See [the fields guide](guides/fields.md#fields) for more info on fields
 
 ## Adding models
 
@@ -99,9 +88,7 @@ User.virtuals = {
 
 > See [the validation guide](guides/validation.md) for more info on validation
 
-> See [Model.fields](api/model.md#modelfields) for more info on field configs
-
-> See [Model.virtuals](api/model.md#modelvirtuals) for more info on virtuals
+> See [the virtuals guide](guides/virtuals.md#virtuals) for more info on virtuals
 
 A child model inherits all fields (and virtuals) added to its parent, so `User`
 will also have the `id` field. However, fields added to the child model will not
