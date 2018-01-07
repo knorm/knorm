@@ -1,20 +1,7 @@
 # Validation
 
-Validation is configured per field using the field config:
-
-```js
-class User extends Model {}
-
-User.fields = {
-  firstName: {
-    type: 'string',
-    required: true,
-    minLength: 2
-  }
-};
-```
-
-> `type`, `required` and `minLength` are validation rules
+Validation is configured per field using the
+[field config](guides/fields.md#field-config).
 
 A model instance is validated before
 [insert](api/model.md#modelprototypeinsertoptions-promise-gt-model) and
@@ -22,24 +9,10 @@ A model instance is validated before
 all fields will be validated (**_except the `id` field if it's `undefined`_**)
 whereas before updates, only the fields that have values set will be validated.
 
-> You can trigger validation any time on a model instance via
-> [Model.prototype.validate](api/model.md#modelprototypevalidateoptions-promise-gt-modelvalidationerror)
+You can trigger validation any time on a model instance via
+[Model.prototype.validate](api/model.md#modelprototypevalidateoptions-promise-gt-modelvalidationerror)
 
-## Validators
-
-These validators are supported:
-
-| Validator   | Type     | Description                                                                                                                                                                             |
-| ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`      | string   | See [field types](guides/fields.md#field-types).                                                                                                                                        |
-| `required`  | boolean  | Whether or not a field is required, defaults to `false`. This validator ensures that a field's value is not `undefined` or `null`.                                                      |
-| `minLength` | integer  | Validates that the field value's `length` is at least as long as this value. Supported only for `string`, `text` and `jsonArray` (for [JSON validation](#json-validation)) field types. |
-| `maxLength` | integer  | Validates that the field value's `length` is not longer than this value. Supported only for `string`, `text` and `jsonArray` (for [JSON validation](#json-validation)) field types.     |
-| `oneOf`     | array    | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings.                                                        |
-| `equals`    | mixed    | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings.                                                                    |
-| `regex`     | RegExp   | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex.                                      |
-| `validate`  | function | See [custom validation](#custom-validation)                                                                                                                                             |
-| `schema`    | object   | See [JSON validation](#json-validation)                                                                                                                                                 |
+> See [field configs](guides/fields.md#field-config) for the supported validators
 
 ## Custom validation
 
@@ -62,8 +35,8 @@ that field fails with that error (or the rejection error). However, if it return
 [ValidationError](api/validation-error.md).
 
 You can also continue validating by returning an object with the regular
-[validators](#validators) (or resolving the `Promise` with an object with
-validators), including another custom validator function!
+[validators](guides/fields.md#field-config) (or resolving the `Promise` with an
+object with validators), including another custom validator function!
 
 ```js
 class User extends Model {}
@@ -108,7 +81,7 @@ will be called if the value is `null`
 
 For [json](http://knexjs.org/#Schema-json) (and
 [jsonb](http://knexjs.org/#Schema-jsonb)) fields, you can have the JSON values
-validate by adding a `schema` object to the field definition object.
+validated by adding a `schema` object to the field definition object.
 
 !> JSON fields are **only** validated if they contain a `schema` validator
 
@@ -135,31 +108,32 @@ new Upload({
 });
 // Upload.fields.image is not a required field:
 new Upload({});
-// filename is not required:
+// Upload.fields.image.filename is not required:
 new Upload({ image: { mimetype: 'image/jpeg', data: Buffer.from('foo') } });
 ```
 
 while these are invalid:
 
 ```js
-// mimetype 'image/gif' is not allowed:
+// Upload.fields.image.mimetype 'image/gif' is not allowed:
 new Upload({
   image: { filename: 'foo', mimetype: 'image/gif', data: Buffer.from('foo') }
 });
-// filename should be a string:
+// Upload.fields.image.filename should be a string:
 new Upload({
   image: { filename: 1, mimetype: 'image/png', data: Buffer.from('foo') }
 });
 ```
 
-> JSON `schema` validators support all the [validators](#validators), including
-> nested `schema` validators [for nested objects](#nested-objects)
+> JSON `schema` validators support all the
+> [validators](guides/fields.md#field-config), including nested `schema`
+> validators [for nested objects](#nested-objects)
 
 ### JSON arrays
 
 For JSON arrays, use the custom `jsonArray` field type. You can also define the
 schema of a single item by passing a `schema` validation object with the regular
-[validators](#validators).
+[validators](guides/fields.md#field-config).
 
 ```js
 class SomeData extends Model {}
