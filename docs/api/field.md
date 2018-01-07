@@ -1,8 +1,6 @@
-## Field.types
+## Field(config)
 
 ## Field.ValidationError
-
-## Field(config)
 
 ## Field.prototype.validate(value, modelInstance) : Promise => undefined/ValidationError
 

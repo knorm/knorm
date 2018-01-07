@@ -31,7 +31,7 @@ These validators are supported:
 
 | Validator   | Type     | Description                                                                                                                                                                             |
 | ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`      | string   | See [Field.types](api/field.md#fieldtypes) for all the supported field types.                                                                                                           |
+| `type`      | string   | See [field types](guides/fields.md#field-types).                                                                                                                                        |
 | `required`  | boolean  | Whether or not a field is required, defaults to `false`. This validator ensures that a field's value is not `undefined` or `null`.                                                      |
 | `minLength` | integer  | Validates that the field value's `length` is at least as long as this value. Supported only for `string`, `text` and `jsonArray` (for [JSON validation](#json-validation)) field types. |
 | `maxLength` | integer  | Validates that the field value's `length` is not longer than this value. Supported only for `string`, `text` and `jsonArray` (for [JSON validation](#json-validation)) field types.     |

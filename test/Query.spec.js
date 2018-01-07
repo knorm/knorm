@@ -46,11 +46,11 @@ const expect = require('unexpected')
     }
   );
 
-const { Model, Query, Field } = new Knorm({ knex, fieldToColumn });
+const { Model, Query } = new Knorm({ knex, fieldToColumn });
 
 Model.fields = {
   id: {
-    type: Field.types.integer,
+    type: 'integer',
     required: true,
     primary: true,
     updated: false
@@ -61,29 +61,29 @@ class User extends Model {}
 User.table = 'user';
 User.fields = {
   name: {
-    type: Field.types.string,
+    type: 'string',
     required: true
   },
   description: {
-    type: Field.types.string
+    type: 'string'
   },
   age: {
-    type: Field.types.integer,
+    type: 'integer',
     default: null
   },
   confirmed: {
-    type: Field.types.boolean,
+    type: 'boolean',
     required: true,
     default: false
   },
   dateOfBirth: {
-    type: Field.types.dateTime
+    type: 'dateTime'
   },
   dbDefault: {
-    type: Field.types.string
+    type: 'string'
   },
   jsonField: {
-    type: Field.types.json,
+    type: 'json',
     cast: {
       forSave(value) {
         if (value !== null) {
@@ -93,7 +93,7 @@ User.fields = {
     }
   },
   intToString: {
-    type: Field.types.integer,
+    type: 'integer',
     cast: {
       forFetch(value) {
         if (value !== null) {
@@ -124,7 +124,7 @@ class ImageCategory extends Model {}
 ImageCategory.table = 'image_category';
 ImageCategory.fields = {
   name: {
-    type: Field.types.string,
+    type: 'string',
     required: true
   }
 };
@@ -144,11 +144,11 @@ class Image extends Model {}
 Image.table = 'image';
 Image.fields = {
   userId: {
-    type: Field.types.integer,
+    type: 'integer',
     references: User.fields.id
   },
   categoryId: {
-    type: Field.types.integer,
+    type: 'integer',
     references: ImageCategory.fields.id
   }
 };
@@ -174,15 +174,15 @@ class Message extends Model {}
 Message.table = 'message';
 Message.fields = {
   text: {
-    type: Field.types.text,
+    type: 'text',
     required: true
   },
   senderId: {
-    type: Field.types.integer,
+    type: 'integer',
     references: User.fields.id
   },
   receiverId: {
-    type: Field.types.integer,
+    type: 'integer',
     references: User.fields.id
   }
 };

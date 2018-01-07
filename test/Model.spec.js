@@ -72,7 +72,7 @@ describe('Model', function() {
 
         Foo.fields = {
           id: {
-            type: Field.types.integer
+            type: 'integer'
           }
         };
 
@@ -96,7 +96,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -113,7 +113,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -126,10 +126,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -144,7 +144,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -157,7 +157,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -174,7 +174,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -189,10 +189,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -208,10 +208,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -229,10 +229,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.integer
+          type: 'integer'
         }
       };
 
@@ -253,10 +253,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.integer
+          type: 'integer'
         }
       };
 
@@ -333,7 +333,7 @@ describe('Model', function() {
       Foo.fields = {
         foo: {
           required: true,
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -349,11 +349,11 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string,
+          type: 'string',
           default: 'foo'
         },
         bar: {
-          type: Field.types.string,
+          type: 'string',
           default: 'bar'
         }
       };
@@ -372,11 +372,11 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string,
+          type: 'string',
           default: 'foo'
         },
         bar: {
-          type: Field.types.string,
+          type: 'string',
           default: 'bar'
         }
       };
@@ -395,10 +395,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.integer
+          type: 'integer'
         }
       };
 
@@ -416,7 +416,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string,
+          type: 'string',
           default: 'foo'
         }
       };
@@ -435,7 +435,7 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string,
+            type: 'string',
             default: function() {
               return 'foo';
             }
@@ -454,15 +454,15 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string,
+            type: 'string',
             required: true
           },
           bar: {
-            type: Field.types.string,
+            type: 'string',
             required: true
           },
           computed: {
-            type: Field.types.string,
+            type: 'string',
             default: function() {
               return this.foo + this.bar;
             }
@@ -484,7 +484,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string,
+          type: 'string',
           default: true
         }
       };
@@ -501,10 +501,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -524,10 +524,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -545,7 +545,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -565,10 +565,10 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -588,10 +588,10 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -610,10 +610,10 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
-            type: Field.types.integer
+            type: 'integer'
           }
         };
 
@@ -633,7 +633,7 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -773,11 +773,11 @@ describe('Model', function() {
       Foo.fields = {
         foo: {
           required: true,
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
           required: true,
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -805,11 +805,11 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
             required: true,
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -836,11 +836,11 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
             required: true,
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -870,10 +870,10 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
-            type: Field.types.integer
+            type: 'integer'
           }
         };
 
@@ -892,7 +892,7 @@ describe('Model', function() {
 
       Foo.fields = {
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -914,7 +914,7 @@ describe('Model', function() {
 
       Foo.fields = {
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -938,7 +938,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           default: true,
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -961,14 +961,14 @@ describe('Model', function() {
       Foo.fields = {
         foo: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave: fooSaveCast
           }
         },
         bar: {
           required: true,
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -990,14 +990,14 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave: fooSaveCast
             }
           },
           bar: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave: barSaveCast
             }
@@ -1022,14 +1022,14 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave: fooSaveCast
             }
           },
           bar: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave: barSaveCast
             }
@@ -1051,14 +1051,14 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave() {}
             }
           },
           bar: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave() {}
             }
@@ -1081,7 +1081,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {}
           }
@@ -1107,7 +1107,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {}
           }
@@ -1129,7 +1129,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {}
           }
@@ -1151,7 +1151,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {
               return 'new value';
@@ -1173,7 +1173,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {
               return;
@@ -1195,7 +1195,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {
               return null;
@@ -1217,7 +1217,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           default: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {}
           }
@@ -1238,11 +1238,11 @@ describe('Model', function() {
     Foo.table = 'foo';
     Foo.fields = {
       id: {
-        type: Field.types.integer,
+        type: 'integer',
         primary: true
       },
       name: {
-        type: Field.types.string
+        type: 'string'
       }
     };
 
@@ -1316,15 +1316,15 @@ describe('Model', function() {
       Foo.table = 'foo';
       Foo.fields = {
         id: {
-          type: Field.types.integer,
+          type: 'integer',
           primary: true
         },
         name: {
-          type: Field.types.string,
+          type: 'string',
           unique: true
         },
         number: {
-          type: Field.types.integer,
+          type: 'integer',
           unique: true
         }
       };
@@ -1401,7 +1401,7 @@ describe('Model', function() {
         class User extends Model {}
         User.fields = {
           firstName: {
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -1411,7 +1411,7 @@ describe('Model', function() {
             new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string
+              type: 'string'
             })
           )
         });
@@ -1423,7 +1423,7 @@ describe('Model', function() {
         class User extends Model {}
         User.fields = {
           firstName: {
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -1433,7 +1433,7 @@ describe('Model', function() {
             new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string
+              type: 'string'
             })
           )
         });
@@ -1484,7 +1484,7 @@ describe('Model', function() {
           class User extends Model {}
           User.fields = {
             id: {
-              type: Field.types.string
+              type: 'string'
             }
           };
 
@@ -1494,7 +1494,7 @@ describe('Model', function() {
               new Field({
                 name: 'id',
                 model: User,
-                type: Field.types.string
+                type: 'string'
               })
             )
           });
@@ -1502,7 +1502,7 @@ describe('Model', function() {
           class OtherUser extends User {}
           OtherUser.fields = {
             id: {
-              type: Field.types.text
+              type: 'text'
             }
           };
 
@@ -1512,7 +1512,7 @@ describe('Model', function() {
               new Field({
                 name: 'id',
                 model: OtherUser,
-                type: Field.types.text
+                type: 'text'
               })
             )
           });
@@ -1522,7 +1522,7 @@ describe('Model', function() {
           class User extends Model {}
           User.fields = {
             firstName: {
-              type: Field.types.string
+              type: 'string'
             }
           };
 
@@ -1532,7 +1532,7 @@ describe('Model', function() {
               new Field({
                 name: 'firstName',
                 model: User,
-                type: Field.types.string
+                type: 'string'
               })
             )
           });
@@ -1550,7 +1550,7 @@ describe('Model', function() {
               new Field({
                 name: 'firstName',
                 model: Student,
-                type: Field.types.string
+                type: 'string'
               })
             )
           });
@@ -1564,7 +1564,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.integer,
+              type: 'integer',
               required: true
             }
           };
@@ -1577,7 +1577,7 @@ describe('Model', function() {
                 name: 'id',
                 model: User,
                 required: true,
-                type: Field.types.integer
+                type: 'integer'
               })
             )
           });
@@ -1585,7 +1585,7 @@ describe('Model', function() {
           class OtherUser extends User {}
           OtherUser.fields = {
             firstName: {
-              type: Field.types.string
+              type: 'string'
             }
           };
 
@@ -1597,7 +1597,7 @@ describe('Model', function() {
                 name: 'id',
                 model: User,
                 required: true,
-                type: Field.types.integer
+                type: 'integer'
               })
             )
           });
@@ -1608,7 +1608,7 @@ describe('Model', function() {
                 name: 'id',
                 model: OtherUser,
                 required: true,
-                type: Field.types.integer
+                type: 'integer'
               })
             ),
             firstName: expect.it(
@@ -1616,7 +1616,7 @@ describe('Model', function() {
               new Field({
                 name: 'firstName',
                 model: OtherUser,
-                type: Field.types.string
+                type: 'string'
               })
             )
           });
@@ -1629,7 +1629,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.string,
+              type: 'string',
               primary: true,
               methods: true
             }
@@ -1645,7 +1645,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.string,
+              type: 'string',
               unique: true,
               methods: true
             }
@@ -1661,7 +1661,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.string,
+              type: 'string',
               methods: true
             }
           };
@@ -1676,7 +1676,7 @@ describe('Model', function() {
 
           User.fields = {
             someFieldName: {
-              type: Field.types.string,
+              type: 'string',
               unique: true,
               methods: true
             }
@@ -1693,7 +1693,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.string,
+              type: 'string',
               primary: true,
               methods: true
             }
@@ -1709,7 +1709,7 @@ describe('Model', function() {
     describe('with a getter function', function() {
       class User extends Model {
         static get fields() {
-          this.config.fields = { firstName: { type: Field.types.string } };
+          this.config.fields = { firstName: { type: 'string' } };
           return this.config.fields;
         }
       }
@@ -1721,7 +1721,7 @@ describe('Model', function() {
             new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string
+              type: 'string'
             })
           )
         });
@@ -1730,7 +1730,7 @@ describe('Model', function() {
       it('supports field inheritance', function() {
         class Student extends User {
           static get fields() {
-            this.config.fields = { studentId: { type: Field.types.integer } };
+            this.config.fields = { studentId: { type: 'integer' } };
             return this.config.fields;
           }
         }
@@ -1741,7 +1741,7 @@ describe('Model', function() {
             new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string
+              type: 'string'
             })
           )
         });
@@ -1752,7 +1752,7 @@ describe('Model', function() {
             new Field({
               name: 'firstName',
               model: Student,
-              type: Field.types.string
+              type: 'string'
             })
           ),
           studentId: expect.it(
@@ -1760,7 +1760,7 @@ describe('Model', function() {
             new Field({
               name: 'studentId',
               model: Student,
-              type: Field.types.integer
+              type: 'integer'
             })
           )
         });
@@ -2257,13 +2257,13 @@ describe('Model', function() {
     User.table = 'user';
     User.fields = {
       id: {
-        type: Field.types.integer,
+        type: 'integer',
         required: true,
         primary: true,
         methods: true
       },
       name: {
-        type: Field.types.string,
+        type: 'string',
         required: true
       }
     };
