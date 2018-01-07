@@ -116,7 +116,7 @@ update and delete operations. Every model must be at least one primary field and
 can have multiple unique fields.
 
 !> Composite/multiple primary fields are not currently supported. If two fields
-are configured as primary, the latter will overwrite the former.
+are configured as primary, only the latter will be configured as a primary field.
 
 If a field is configured as primary or unique, you may also want to prevent it
 from being updated (with the `updated` option), or you can also add static
