@@ -2129,6 +2129,21 @@ describe('Model', function() {
           expect(Foo.primary, 'to equal', 'id');
           expect(Bar.primary, 'to equal', 'uuid');
         });
+
+        it("allows unsetting the parent's primary field", function() {
+          class Foo extends Model {}
+          class Bar extends Foo {}
+
+          Foo.fields = { id: { type: 'integer', primary: true } };
+          Bar.fields = { id: { type: 'uuid', primary: false } };
+
+          expect(Foo.primary, 'to equal', 'id');
+          expect(
+            () => Bar.primary,
+            'to throw',
+            new Error('`Bar` has no primary field')
+          );
+        });
       });
     });
   });
