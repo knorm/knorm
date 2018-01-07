@@ -1,5 +1,27 @@
 ## Query.knex
 
+## Query.QueryError
+
+## Query.CountError
+
+## Query.FetchError
+
+## Query.InsertError
+
+## Query.UpdateError
+
+## Query.DeleteError
+
+## Query.NoRowsCountedError
+
+## Query.NoRowsFetchedError
+
+## Query.NoRowsInsertedError
+
+## Query.NoRowsUpdatedError
+
+## Query.NoRowsDeletedError
+
 ## Query(model)
 
 ## Query.prototype.count([options]) : Promise => Number

@@ -430,7 +430,7 @@ describe('Query', function() {
       await expect(
         query.fetch(),
         'to be rejected with error satisfying',
-        new Query.errors.FetchError({ error: new Error('fetch error'), query })
+        new Query.FetchError({ error: new Error('fetch error'), query })
       );
       stub.restore();
     });
@@ -477,7 +477,7 @@ describe('Query', function() {
           await expect(
             query.fetch(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsFetchedError({ query })
+            new Query.NoRowsFetchedError({ query })
           );
         });
       });
@@ -2734,7 +2734,7 @@ describe('Query', function() {
       await expect(
         query.count(),
         'to be rejected with error satisfying',
-        new Query.errors.CountError({ error: new Error('count error'), query })
+        new Query.CountError({ error: new Error('count error'), query })
       );
       stub.restore();
     });
@@ -2775,7 +2775,7 @@ describe('Query', function() {
           await expect(
             query.count(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsCountedError({ query })
+            new Query.NoRowsCountedError({ query })
           );
         });
       });
@@ -3007,7 +3007,7 @@ describe('Query', function() {
       await expect(
         query.insert(new User({ name: 'John Doe' })),
         'to be rejected with error satisfying',
-        new Query.errors.InsertError({
+        new Query.InsertError({
           error: new Error('insert error'),
           query
         })
@@ -3165,7 +3165,7 @@ describe('Query', function() {
           await expect(
             query.insert(new User({ name: 'John Doe' })),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsInsertedError({ query })
+            new Query.NoRowsInsertedError({ query })
           );
         });
       });
@@ -3503,7 +3503,7 @@ describe('Query', function() {
             await expect(
               query.insert([new User({ name: 'John Doe' })]),
               'to be rejected with error satisfying',
-              new Query.errors.NoRowsInsertedError({ query })
+              new Query.NoRowsInsertedError({ query })
             );
           });
         });
@@ -3633,7 +3633,7 @@ describe('Query', function() {
               await expect(
                 query.insert([new User({ name: 'John Doe' })]),
                 'to be rejected with error satisfying',
-                new Query.errors.NoRowsInsertedError({ query })
+                new Query.NoRowsInsertedError({ query })
               );
             });
           });
@@ -3759,7 +3759,7 @@ describe('Query', function() {
       await expect(
         query.update(user),
         'to be rejected with error satisfying',
-        new Query.errors.UpdateError({
+        new Query.UpdateError({
           error: new Error('update error'),
           query
         })
@@ -4051,7 +4051,7 @@ describe('Query', function() {
           await expect(
             query.update(user),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsUpdatedError({ query })
+            new Query.NoRowsUpdatedError({ query })
           );
         });
       });
@@ -4267,7 +4267,7 @@ describe('Query', function() {
       await expect(
         query.delete(),
         'to be rejected with error satisfying',
-        new Query.errors.DeleteError({
+        new Query.DeleteError({
           error: new Error('delete error'),
           query
         })
@@ -4482,7 +4482,7 @@ describe('Query', function() {
           await expect(
             query.delete(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsDeletedError({ query })
+            new Query.NoRowsDeletedError({ query })
           );
         });
       });
