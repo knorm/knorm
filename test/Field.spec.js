@@ -611,11 +611,11 @@ describe('Field', function() {
           await expect(field.validate(uuid.v1()), 'to be fulfilled');
         });
 
-        it("uuid.v4 against the 'uuidV4' type", async function() {
+        it("uuid.v4 against the 'uuid4' type", async function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.uuidV4
+            type: Field.types.uuid4
           });
           await expect(field.validate(uuid.v4()), 'to be fulfilled');
         });
@@ -802,11 +802,11 @@ describe('Field', function() {
           );
         });
 
-        it("uuid.v1 against the 'uuidV4' type", async function() {
+        it("uuid.v1 against the 'uuid4' type", async function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.uuidV4
+            type: Field.types.uuid4
           });
           const uuidV1 = uuid.v1();
           await expect(field.validate(uuidV1), 'to be rejected with', {
