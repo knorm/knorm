@@ -32,7 +32,10 @@ a [field](guides/fields.md#fields).
 
 ## Virtual config
 
-The config object is similar to an accessor descriptor for
+A virtual field's config can either be a function or an object. If a function,
+it's assumed to the virtual's `get` function.
+
+As an object, the virtual config object is similar to an accessor descriptor for
 [Object.defineProperty](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty):
 
 | Option | Type     | Description                                                                                                                                      |
