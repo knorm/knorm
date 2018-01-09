@@ -129,6 +129,23 @@ new Upload({
 > [validators](guides/fields.md#field-config), including nested `schema`
 > validators [for nested objects](#nested-objects)
 
+Note that you may also define the schema with the `fieldName: fieldType`
+shorthand:
+
+```js
+class User extends Model {}
+
+User.fields = {
+  data: {
+    type: 'jsonb',
+    schema: {
+      firstName: 'string',
+      lastName: 'string'
+    }
+  }
+};
+```
+
 ### JSON arrays
 
 For JSON arrays, use the custom `array` field type. You can also define the
@@ -232,6 +249,20 @@ RootLevelArray.fields = {
   }
 };
 const rootLevelArray = new RootLevelArray({ value: ['some value'] });
+```
+
+Note that you may also define the schema with the `fieldName: fieldType`
+shorthand:
+
+```js
+class User extends Model {}
+
+User.fields = {
+  data: {
+    type: 'jsonb',
+    schema: 'string'
+  }
+};
 ```
 
 ## Overriding validators

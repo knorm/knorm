@@ -149,6 +149,122 @@ describe('Field', function() {
         );
       });
     });
+
+    describe('for `json` and `jsonb` fields with a `schema` config', function() {
+      class Foo extends Model {}
+
+      describe('with a root-level schema', function() {
+        it('throws the correct error if the schema config has no `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: Foo,
+                type: 'json',
+                schema: { required: true }
+              }),
+            'to throw',
+            new Error('Field `Foo.json` has no type configured')
+          );
+        });
+
+        it('throws the correct error if a schema config has an invalid `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: Foo,
+                type: 'json',
+                schema: { type: 'foo', required: true }
+              }),
+            'to throw',
+            new Error('Field `Foo.json` has an invalid type `foo`')
+          );
+        });
+
+        it("allows adding schema fields with the `schema: 'type'` shorthand", function() {
+          expect(
+            new Field({
+              name: 'json',
+              model: Foo,
+              type: 'array',
+              schema: 'string'
+            }),
+            'to satisfy',
+            {
+              validators: {
+                schema: expect.it(
+                  'to be field',
+                  new Field({
+                    name: 'json',
+                    path: 'json',
+                    model: Foo,
+                    type: 'string'
+                  })
+                )
+              }
+            }
+          );
+        });
+      });
+
+      describe('with a schema with nested fields', function() {
+        it('throws the correct error if a nested field has no `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: Foo,
+                type: 'json',
+                schema: { foo: { required: true } }
+              }),
+            'to throw',
+            new Error('Field `Foo.json.foo` has no type configured')
+          );
+        });
+
+        it('throws the correct error if a nested field has an invalid `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: Foo,
+                type: 'json',
+                schema: { foo: { type: 'foo', required: true } }
+              }),
+            'to throw',
+            new Error('Field `Foo.json.foo` has an invalid type `foo`')
+          );
+        });
+
+        it("allows adding schema fields with the `schema: 'type'` shorthand", function() {
+          expect(
+            new Field({
+              name: 'json',
+              model: Foo,
+              type: 'json',
+              schema: { foo: 'string' }
+            }),
+            'to satisfy',
+            {
+              validators: {
+                schema: {
+                  foo: expect.it(
+                    'to be field',
+                    new Field({
+                      name: 'foo',
+                      path: 'json.foo',
+                      model: Foo,
+                      type: 'string'
+                    })
+                  )
+                }
+              }
+            }
+          );
+        });
+      });
+    });
   });
 
   describe('Field.prototype.getColumnName', function() {
@@ -1447,34 +1563,6 @@ describe('Field', function() {
           });
         });
 
-        it('throws the correct error if the schema config has no `type`', function() {
-          expect(
-            () =>
-              new Field({
-                name: 'json',
-                model: User,
-                type: 'json',
-                schema: { required: true }
-              }),
-            'to throw',
-            new Error('Field `User.json` has no type configured')
-          );
-        });
-
-        it('throws the correct error if a schema config has an invalid `type`', function() {
-          expect(
-            () =>
-              new Field({
-                name: 'json',
-                model: User,
-                type: 'json',
-                schema: { required: true, type: 'foo' }
-              }),
-            'to throw',
-            new Error('Field `User.json` has an invalid type `foo`')
-          );
-        });
-
         it('fulfils for valid values', async function() {
           await expect(field.validate('foo'), 'to be fulfilled');
         });
@@ -1823,34 +1911,6 @@ describe('Field', function() {
             type: 'json',
             schema: { foo: { type: 'string', required: true } }
           });
-        });
-
-        it('throws the correct error if a nested field has no `type`', function() {
-          expect(
-            () =>
-              new Field({
-                name: 'json',
-                model: User,
-                type: 'json',
-                schema: { foo: { required: true } }
-              }),
-            'to throw',
-            new Error('Field `User.json.foo` has no type configured')
-          );
-        });
-
-        it('throws the correct error if a nested field has an invalid `type`', function() {
-          expect(
-            () =>
-              new Field({
-                name: 'json',
-                model: User,
-                type: 'json',
-                schema: { foo: { required: true, type: 'foo' } }
-              }),
-            'to throw',
-            new Error('Field `User.json.foo` has an invalid type `foo`')
-          );
         });
 
         it('rejects if passed an array value', async function() {

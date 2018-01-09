@@ -32,7 +32,15 @@ different `column` name per field with the [field config](#field-config).
 
 ## Field config
 
-These config options are supported:
+Field config can be a string or an object. If it's a string, it indicates the
+field's type:
+
+```js
+class User extends Model {}
+User.fields = { firstName: 'string' };
+```
+
+For object configs, these options are supported:
 
 | Option       | Type                        | Default        | Description                                                                                                                                                                              |
 | ------------ | --------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -53,8 +61,8 @@ These config options are supported:
 | `oneOf`      | array                       | none           | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings.                                                         |
 | `equals`     | mixed                       | none           | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings.                                                                     |
 | `regex`      | RegExp                      | none           | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex.                                       |
-| `validate`   | function                    | none           | See [custom validation](guides/validation.md#custom-validation)                                                                                                                          |
-| `schema`     | object                      | none           | See [JSON validation](guides/validation.md#json-validation)                                                                                                                              |
+| `validate`   | function                    | none           | Validates the field's value against a custom validation function. See [custom validation](guides/validation.md#custom-validation)                                                        |
+| `schema`     | string / object             | none           | Validates the structure of `json` (and `jsonb`) feilds. See [JSON validation](guides/validation.md#json-validation)                                                                      |
 
 ## Field types
 

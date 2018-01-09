@@ -1439,6 +1439,22 @@ describe('Model', function() {
         });
       });
 
+      it("allows adding fields via the `fieldName: 'type'` shorthand", function() {
+        class User extends Model {}
+        User.fields = { firstName: 'string' };
+
+        expect(User.fields, 'to exhaustively satisfy', {
+          firstName: expect.it(
+            'to be field',
+            new Field({
+              name: 'firstName',
+              model: User,
+              type: 'string'
+            })
+          )
+        });
+      });
+
       it('throws if the field-name is already assigned to an instance property', function() {
         class Foo extends Model {
           bar() {}
