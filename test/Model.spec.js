@@ -535,7 +535,7 @@ describe('Model', function() {
       });
     });
 
-    describe("with a 'fields' option", function() {
+    describe('with a `fields` option', function() {
       it('only returns data for the requested fields', function() {
         const foo = new Foo();
 
@@ -568,272 +568,172 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getData', function() {
-    it('resolves with an object of fields that have values', async function() {
+  describe('Model.prototype.getVirtualData', function() {
+    it('resolves with an object with virtuals and their data', async function() {
       class Foo extends Model {}
 
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
+      Foo.virtuals = {
+        bar() {
+          return 'bar';
+        }
+      };
+
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData(),
+        'to be fulfilled with value exhaustively satisfying',
+        { bar: 'bar' }
+      );
+    });
+
+    it('resolves with data from async virtuals (that return a Promise)', async function() {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        bar() {
+          return Promise.resolve('bar');
+        }
+      };
+
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData(),
+        'to be fulfilled with value exhaustively satisfying',
+        { bar: 'bar' }
+      );
+    });
+
+    it('skips virtuals that have no getters', async function() {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        quux: {
+          set() {}
+        }
+      };
+
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData(),
+        'to be fulfilled with value exhaustively satisfying',
+        { quux: undefined }
+      );
+    });
+
+    it("calls the virtuals' getters with this set to the model instance", async function() {
+      class Foo extends Model {}
+
+      const spy = sinon.spy();
+
+      Foo.virtuals = { bar: { get: spy } };
+
+      const foo = new Foo();
+
+      await foo.getVirtualData();
+      await expect(spy, 'was called once').and('was called on', foo);
+    });
+  });
+
+  describe('with a `virtuals` option', function() {
+    it('only includes the requested virtuals', async function() {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
         bar: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-
-      foo.foo = 'foo';
-      foo.bar = null;
-
-      await expect(foo.getData(), 'to be fulfilled with', {
-        foo: 'foo',
-        bar: null
-      });
-    });
-
-    it('does not include fields whose value has not been set', async function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-
-      foo.foo = 'foo';
-      await expect(foo.getData(), 'to be fulfilled with', {
-        foo: 'foo',
-        bar: undefined
-      });
-    });
-
-    it('does not include properties set on the model that are not fields', async function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-
-      foo.foo = 'foo';
-      foo.quux = 'quux';
-      await expect(foo.getData(), 'to be fulfilled with', {
-        foo: 'foo',
-        quux: undefined
-      });
-    });
-
-    describe("with a 'fields' option", function() {
-      it('only returns data for the requested fields', async function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: 'string'
-          },
-          bar: {
-            type: 'string'
+          get() {
+            return 'bar';
           }
-        };
+        },
+        quux: {
+          get() {
+            return 'quux';
+          }
+        }
+      };
 
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData({ virtuals: ['bar'] }),
+        'to be fulfilled with value exhaustively satisfying',
+        { bar: 'bar', quux: undefined }
+      );
+    });
+
+    it('rejects with an error if a requested virtual has no getter', async function() {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        bar: {
+          set() {}
+        }
+      };
+
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData({ virtuals: ['bar'] }),
+        'to be rejected with',
+        new Error("Virtual 'Foo.bar' has no getter")
+      );
+    });
+  });
+
+  describe('Model.prototype.getData', function() {
+    class Foo extends Model {}
+
+    Foo.fields = { foo: 'string', bar: 'string' };
+    Foo.virtuals = {
+      baz() {
+        return 'baz';
+      },
+      async quux() {
+        return 'quux';
+      }
+    };
+
+    it('resolves with an object with field and virtual field data', async function() {
+      const foo = new Foo();
+
+      foo.foo = 'foo';
+      foo.bar = 'bar';
+
+      await expect(
+        foo.getData(),
+        'to be fulfilled with value exhaustively satisfying',
+        { foo: 'foo', bar: 'bar', baz: 'baz', quux: 'quux' }
+      );
+    });
+
+    describe('with a `fields` option', function() {
+      it('only includes the requested fields', async function() {
         const foo = new Foo();
 
         foo.foo = 'foo';
         foo.bar = 'bar';
 
-        await expect(foo.getData({ fields: ['bar'] }), 'to be fulfilled with', {
-          foo: undefined,
-          bar: 'bar'
-        });
-      });
-
-      it('does not include a field without a value even if it has been requested', async function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: 'string'
-          },
-          bar: {
-            type: 'string'
-          }
-        };
-
-        const foo = new Foo();
-
-        foo.foo = 'foo';
         await expect(
           foo.getData({ fields: ['bar'] }),
-          'to be fulfilled with',
-          {}
-        );
-      });
-
-      it('rejects if the list of fields contains unknown fields', async function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: 'string'
-          },
-          bar: {
-            type: 'integer'
-          }
-        };
-
-        const foo = new Foo();
-
-        return expect(
-          foo.getData({ fields: ['quux'] }),
-          'to be rejected with',
-          new Error("Unknown field 'Foo.quux'")
+          'to be fulfilled with value exhaustively satisfying',
+          { foo: undefined, bar: 'bar', baz: 'baz', quux: 'quux' }
         );
       });
     });
 
-    describe("with the 'virtuals' option set to true", function() {
-      it('includes virtuals in the data', async function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: 'string'
-          }
-        };
-
-        Foo.virtuals = {
-          bar() {
-            return 'bar';
-          }
-        };
-
+    describe('with a `virtuals` option', function() {
+      it('only includes the requested virtuals', async function() {
         const foo = new Foo();
 
         foo.foo = 'foo';
-        await expect(foo.getData({ virtuals: true }), 'to be fulfilled with', {
-          foo: 'foo',
-          bar: 'bar'
-        });
-      });
-
-      it('includes data from virtuals that return a promise', async function() {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar() {
-            return Promise.resolve('bar');
-          }
-        };
-
-        const foo = new Foo();
-
-        await expect(foo.getData({ virtuals: true }), 'to be fulfilled with', {
-          bar: 'bar'
-        });
-      });
-
-      it('skips virtuals that have no getters', async function() {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          quux: {
-            set() {}
-          }
-        };
-
-        const foo = new Foo();
-
-        await expect(foo.getData({ virtuals: true }), 'to be fulfilled with', {
-          quux: undefined
-        });
-      });
-
-      it("calls the virtuals' getters with this set to the model instance", async function() {
-        class Foo extends Model {}
-
-        const spy = sinon.spy();
-        Foo.virtuals = {
-          bar: {
-            get: spy
-          }
-        };
-
-        const foo = new Foo();
-
-        await foo.getData({ virtuals: true });
-        await expect(spy, 'was called once').and('was called on', foo);
-      });
-    });
-
-    describe("with the 'virtuals' set to an array", function() {
-      it('only includes the requested virtuals', async function() {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar: {
-            get() {
-              return 'bar';
-            }
-          },
-          quux: {
-            get() {
-              return 'quux';
-            }
-          }
-        };
-
-        const foo = new Foo();
+        foo.bar = 'bar';
 
         await expect(
-          foo.getData({ virtuals: ['bar'] }),
-          'to be fulfilled with',
-          {
-            bar: 'bar',
-            quux: undefined
-          }
-        );
-      });
-
-      it("calls the virtuals' getters with this set to the model instance", async function() {
-        class Foo extends Model {}
-
-        const spy = sinon.spy();
-        Foo.virtuals = {
-          bar: {
-            get: spy
-          }
-        };
-
-        const foo = new Foo();
-
-        await foo.getData({ virtuals: ['bar'] });
-        await expect(spy, 'was called once').and('was called on', foo);
-      });
-
-      it('rejects with an error if a requested virtual has no getter', async function() {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar: {
-            set() {}
-          }
-        };
-
-        const foo = new Foo();
-
-        await expect(
-          foo.getData({ virtuals: ['bar'] }),
-          'to be rejected with',
-          new Error("Virtual 'Foo.bar' has no getter")
+          foo.getData({ virtuals: ['baz'] }),
+          'to be fulfilled with value exhaustively satisfying',
+          { foo: 'foo', bar: 'bar', baz: 'baz', quux: undefined }
         );
       });
     });
