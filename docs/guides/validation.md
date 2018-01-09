@@ -131,9 +131,9 @@ new Upload({
 
 ### JSON arrays
 
-For JSON arrays, use the custom `jsonArray` field type. You can also define the
-schema of a single item by passing a `schema` validation object with the regular
-[validators](guides/fields.md#field-config).
+For JSON arrays, use the custom `array` field type. You can also define the
+schema of a single array item by passing a `schema` validation object with the
+regular [validators](guides/fields.md#field-config).
 
 ```js
 class SomeData extends Model {}
@@ -147,7 +147,7 @@ SomeData.fields = {
         required: true
       },
       oldVersions: {
-        type: 'jsonArray',
+        type: 'array',
         maxLength: 2,
         schema: {
           type: 'string',
@@ -168,7 +168,7 @@ const someData = new SomeData({
 
 ### Nested objects
 
-For nested objects, use the custom `jsonObject` type. You can also define the
+For nested objects, use the custom `object` type. You can also define the
 nested object's schema with a nested `schema` validator.
 
 ```js
@@ -179,7 +179,7 @@ SomeData.fields = {
     type: 'json',
     schema: {
       nested: {
-        type: 'jsonObject',
+        type: 'object',
         schema: {
           someField: { type: 'string' },
           someOtherField: { type: 'number' }
@@ -224,7 +224,7 @@ const someData = new SomeData({ value: 'some value' });
 class RootLevelArray extends Model {}
 RootLevelArray.fields = {
   value: {
-    type: 'jsonArray',
+    type: 'array',
     schema: {
       required: true,
       type: 'string'

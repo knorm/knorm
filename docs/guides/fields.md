@@ -48,8 +48,8 @@ These config options are supported:
 | Validators:  |                             |                |                                                                                                                                                                                          |
 | `type`       | string                      | none           | The field type is also used as a validator.                                                                                                                                              |
 | `required`   | boolean                     | `false`        | Validates that the field value is neither `undefined` nor `null`.                                                                                                                        |
-| `minLength`  | integer                     | none           | Validates that the field value's `length` is at least as long as this value. Supported only for `string`, `text` and `jsonArray` (for [JSON validation](#json-validation)) field types.  |
-| `maxLength`  | integer                     | none           | Validates that the field value's `length` is not longer than this value. Supported only for `string`, `text` and `jsonArray` (for [JSON validation](#json-validation)) field types.      |
+| `minLength`  | integer                     | none           | Validates that the field value's `length` is at least as long as this value. Supported only for `string`, `text` and `array` (for [JSON validation](#json-validation)) field types.      |
+| `maxLength`  | integer                     | none           | Validates that the field value's `length` is not longer than this value. Supported only for `string`, `text` and `array` (for [JSON validation](#json-validation)) field types.          |
 | `oneOf`      | array                       | none           | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings.                                                         |
 | `equals`     | mixed                       | none           | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings.                                                                     |
 | `regex`      | RegExp                      | none           | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex.                                       |
@@ -78,8 +78,8 @@ These field types are supported:
 | `email`       | Similar to the `string` type but must be a valid email address    | [validator.isEmail](https://www.npmjs.com/package/validator#validators)   |
 | `number`      | All numbers, including integers and decimal values                | `typeof value === 'number'`                                               |
 | `any`         | Any value                                                         | none                                                                      |
-| `jsonObject`  | Objects i.e. `{}`                                                 | [JSON validation](guides/validation.md#json-validation)                   |
-| `jsonArray`   | Arrays i.e. `[]`                                                  | [JSON validation](guides/validation.md#json-validation)                   |
+| `object`      | Objects i.e. `{}`                                                 | [JSON validation](guides/validation.md#json-validation)                   |
+| `array`       | Arrays i.e. `[]`                                                  | [JSON validation](guides/validation.md#json-validation)                   |
 
 ## Field inheritance
 

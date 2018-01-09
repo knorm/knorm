@@ -1556,7 +1556,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonArray` field with an item `schema`', function() {
+        describe('with a root-level `array` field with an item `schema`', function() {
           let field;
 
           before(function() {
@@ -1565,7 +1565,7 @@ describe('Field', function() {
               model: User,
               type: 'json',
               schema: {
-                type: 'jsonArray',
+                type: 'array',
                 maxLength: 2,
                 schema: { type: 'string', required: true }
               }
@@ -1622,7 +1622,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonArray` field with no item `schema`', function() {
+        describe('with a root-level `array` field with no item `schema`', function() {
           let field;
 
           before(function() {
@@ -1630,7 +1630,7 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: { type: 'jsonArray', minLength: 2 }
+              schema: { type: 'array', minLength: 2 }
             });
           });
 
@@ -1654,7 +1654,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonArray` field with a nested `schema`', function() {
+        describe('with a root-level `array` field with a nested `schema`', function() {
           let field;
 
           before(function() {
@@ -1663,9 +1663,9 @@ describe('Field', function() {
               model: User,
               type: 'json',
               schema: {
-                type: 'jsonArray',
+                type: 'array',
                 schema: {
-                  type: 'jsonObject',
+                  type: 'object',
                   schema: { foo: { type: 'string' } }
                 }
               }
@@ -1706,7 +1706,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonObject` field with a nested `schema`', function() {
+        describe('with a root-level `object` field with a nested `schema`', function() {
           let field;
 
           before(function() {
@@ -1715,9 +1715,9 @@ describe('Field', function() {
               model: User,
               type: 'json',
               schema: {
-                type: 'jsonObject',
+                type: 'object',
                 schema: {
-                  type: 'jsonObject',
+                  type: 'object',
                   schema: { foo: { type: 'string' } }
                 }
               }
@@ -1774,7 +1774,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonObject` field  with no nested `schema`', function() {
+        describe('with a root-level `object` field  with no nested `schema`', function() {
           let field;
 
           before(function() {
@@ -1783,7 +1783,7 @@ describe('Field', function() {
               model: User,
               type: 'json',
               schema: {
-                type: 'jsonObject'
+                type: 'object'
               }
             });
           });
@@ -1922,7 +1922,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `jsonArray` field with an item `schema`', function() {
+        describe('with a nested `array` field with an item `schema`', function() {
           let field;
 
           before(function() {
@@ -1932,7 +1932,7 @@ describe('Field', function() {
               type: 'json',
               schema: {
                 foo: {
-                  type: 'jsonArray',
+                  type: 'array',
                   maxLength: 2,
                   schema: { type: 'string', required: true }
                 }
@@ -1987,7 +1987,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `jsonArray` field with no item `schema`', function() {
+        describe('with a nested `array` field with no item `schema`', function() {
           let field;
 
           before(function() {
@@ -1995,7 +1995,7 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: { foo: { type: 'jsonArray', minLength: 2 } }
+              schema: { foo: { type: 'array', minLength: 2 } }
             });
           });
 
@@ -2023,7 +2023,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `jsonObject` field', function() {
+        describe('with a nested `object` field', function() {
           let field;
 
           before(function() {
@@ -2033,7 +2033,7 @@ describe('Field', function() {
               type: 'json',
               schema: {
                 foo: {
-                  type: 'jsonObject',
+                  type: 'object',
                   schema: { bar: { type: 'integer', required: true } }
                 }
               }
