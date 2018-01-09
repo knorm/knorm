@@ -495,6 +495,79 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.prototype.getFieldData', function() {
+    class Foo extends Model {}
+
+    Foo.fields = { foo: 'string', bar: 'string' };
+
+    it('returns an object mapping fields to their values', function() {
+      const foo = new Foo();
+
+      foo.foo = 'foo';
+      foo.bar = null;
+
+      expect(foo.getFieldData(), 'to equal', {
+        foo: 'foo',
+        bar: null
+      });
+    });
+
+    it('does not include fields whose value has not been set', function() {
+      const foo = new Foo();
+
+      foo.foo = 'foo';
+
+      expect(foo.getFieldData(), 'to equal', {
+        foo: 'foo',
+        bar: undefined
+      });
+    });
+
+    it('does not include properties set on the model that are not fields', function() {
+      const foo = new Foo();
+
+      foo.foo = 'foo';
+      foo.quux = 'quux';
+
+      expect(foo.getFieldData(), 'to equal', {
+        foo: 'foo',
+        quux: undefined
+      });
+    });
+
+    describe("with a 'fields' option", function() {
+      it('only returns data for the requested fields', function() {
+        const foo = new Foo();
+
+        foo.foo = 'foo';
+        foo.bar = 'bar';
+
+        expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {
+          foo: undefined,
+          bar: 'bar'
+        });
+      });
+
+      it('does not include a field without a value even if it has been requested', function() {
+        const foo = new Foo();
+
+        foo.foo = 'foo';
+
+        expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {});
+      });
+
+      it('throws if the list of fields contains unknown fields', function() {
+        const foo = new Foo();
+
+        expect(
+          foo.getData({ fields: ['quux'] }),
+          'to be rejected with',
+          new Error("Unknown field 'Foo.quux'")
+        );
+      });
+    });
+  });
+
   describe('Model.prototype.getData', function() {
     it('resolves with an object of fields that have values', async function() {
       class Foo extends Model {}
