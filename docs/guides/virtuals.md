@@ -23,8 +23,8 @@ class User extends Model {
 
 When an instance of the model is created, getters and setters for the virtual
 fields are automatically added to the instance. In addition, they are also used
-in [Model.prototype.setData](api/model.md#modelprototypesetdatadata-model) and
-[Model.prototype.getData](api/model.md#modelprototypegetdataoptions-promise-gt-object).
+in [setting](guides/models.md#setting-data) and
+[getting](guides/models.md#getting-data) model data.
 
 !> Virtual names should be unique. The `Model.virtuals` setter will throw if the
 virtual's name is already a `Model.prototype` property or is already defined as
@@ -43,34 +43,7 @@ As an object, the virtual config object is similar to an accessor descriptor for
 | `get`  | function | A function that returns the virtual's value. It will be called with `this` set to the model instance. **NOTE:** `async` functions are supported. |
 | `set`  | function | A function that sets the virtual's value. It will be called with `this` set to the model instance.                                               |
 
-> Both `get` and `set` are optional, but at least one should be configured <br />
-> Beware of using arrow functions for `get` and `set` as they lose the `this` context
+!> Both `get` and `set` are optional, but at least one should be configured
 
-## Example
-
-```js
-class User extends Model {}
-
-User.fields = { firstName: { type: 'string' }, lastName: { type: 'string' } };
-
-User.virtuals = {
-  names: {
-    get() {
-      return `${this.firstName} ${this.lastName}`;
-    },
-    set(names) {
-      names = names.split(' ');
-      this.firstName = names[0];
-      this.lastName = names[1];
-    }
-  }
-};
-
-const user = new User({ firstName: 'Foo', lastName: 'Bar' });
-console.log(user.names); // => 'Foo Bar'
-
-user.names = 'Foo Quux'; // or user.setData({ names: 'Foo Quux' });
-console.log(user.firstName); // => 'Foo'
-console.log(user.lastName); // => 'Quux'
-console.log(user.names); // => 'Foo Quux'
-```
+> Beware of using arrow functions for `get` and `set` as they lose the `this`
+> context

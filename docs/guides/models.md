@@ -46,8 +46,10 @@ You can set data on the model in any of the following ways:
 ```js
 // constructor:
 const user = new User({ firstName: 'Foo', lastName: 'Bar' });
+
 // setData:
 const user = new User().setData({ firstName: 'Foo', lastName: 'Bar' });
+
 // assignment:
 const user = new User();
 user.firstName = 'Foo';
@@ -59,8 +61,10 @@ Setting data via virtuals is also supported:
 ```js
 // constructor:
 const user = new User({ names: 'Foo Bar' });
+
 // setData:
 const user = new User().setData({ names: 'Foo Bar' });
+
 // assignment:
 const user = new User();
 user.names = 'Foo Bar';
@@ -74,18 +78,23 @@ Following the example in [Setting data](#setting-data), you can get data via:
 
 ```js
 // direct property access:
-console.log(user.firstName);
-console.log(user.lastName);
-console.log(user.names);
+console.log(user.firstName); // => 'Foo'
+console.log(user.lastName); // => 'Bar'
+console.log(user.names); // => 'Foo Bar'
 
 // or:
-user.getFieldData(); // returns { firstName: 'Foo', lastName: 'Bar' }
-await user.getVirtualData(); // returns Promise => { names: 'Foo Bar' }
-await user.getData(); // returns Promise => { firstName, lastName, names }
+user.getFieldData(); // { firstName: 'Foo', lastName: 'Bar' }
+user.getVirtualDataSync(); // { names: 'Foo Bar' }
+user.getDataSync(); // { firstName: 'Foo', lastName: 'Bar', names: 'Foo Bar' }
+
+// with async virtuals:
+await user.getVirtualData(); // Promise => { names: 'Foo Bar' }
+await user.getData(); // Promise => { firstName: 'Foo', lastName: 'Bar', names: 'Foo Bar' }
 ```
 
 !> Since `async` virtual getters are intrinsically supported, the methods that
-get virtual field data always return a `Promise`
+get virtual field data always return a `Promise`. However, you can stil use the
+sync variants to ignore async virtual data.
 
 ## Customizing queries
 

@@ -37,7 +37,15 @@ user.firstName = 'fooo';
 In this case the field names will not be validated against the list of
 configured field or virtual field names.
 
+## Model.prototype.getFieldData([options]) : Object
+
+## Model.prototype.getVirtualData([options]) : Promise => Object
+
+## Model.prototype.getVirtualDataSync([options]) : Object
+
 ## Model.prototype.getData([options]) : Promise => Object
+
+## Model.prototype.getDataSync([options]) : Object
 
 ## Model.prototype.setDefaults([options]) : Model
 
