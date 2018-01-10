@@ -543,7 +543,6 @@ describe('Model', function() {
         foo.bar = 'bar';
 
         expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {
-          foo: undefined,
           bar: 'bar'
         });
       });
@@ -659,7 +658,7 @@ describe('Model', function() {
       await expect(
         foo.getVirtualData({ virtuals: ['bar'] }),
         'to be fulfilled with value exhaustively satisfying',
-        { bar: 'bar', quux: undefined }
+        { bar: 'bar' }
       );
     });
 
@@ -679,6 +678,32 @@ describe('Model', function() {
         'to be rejected with',
         new Error("Virtual 'Foo.bar' has no getter")
       );
+    });
+  });
+
+  describe('Model.prototype.getVirtualDataSync', function() {
+    class Foo extends Model {}
+
+    Foo.virtuals = {
+      foo() {
+        return 'foo';
+      },
+      async bar() {
+        return 'bar';
+      }
+    };
+
+    it('returns virtual data without async virtuals', function() {
+      const foo = new Foo();
+      expect(foo.getVirtualDataSync(), 'to equal', { foo: 'foo' });
+    });
+
+    describe('with a `virtuals` option', function() {
+      it('does not include async virtuals even if requested', async function() {
+        const foo = new Foo();
+
+        expect(foo.getVirtualDataSync({ virtuals: ['bar'] }), 'to equal', {});
+      });
     });
   });
 
@@ -718,7 +743,7 @@ describe('Model', function() {
         await expect(
           foo.getData({ fields: ['bar'] }),
           'to be fulfilled with value exhaustively satisfying',
-          { foo: undefined, bar: 'bar', baz: 'baz', quux: 'quux' }
+          { bar: 'bar', baz: 'baz', quux: 'quux' }
         );
       });
     });
@@ -733,8 +758,64 @@ describe('Model', function() {
         await expect(
           foo.getData({ virtuals: ['baz'] }),
           'to be fulfilled with value exhaustively satisfying',
-          { foo: 'foo', bar: 'bar', baz: 'baz', quux: undefined }
+          { foo: 'foo', bar: 'bar', baz: 'baz' }
         );
+      });
+    });
+  });
+
+  describe('Model.prototype.getDataSync', function() {
+    class Foo extends Model {}
+
+    Foo.fields = { foo: 'string', bar: 'string' };
+    Foo.virtuals = {
+      baz() {
+        return 'baz';
+      },
+      async quux() {
+        return 'quux';
+      }
+    };
+
+    it('returns an object with field and only sync virtual field data', function() {
+      const foo = new Foo();
+
+      foo.foo = 'foo';
+      foo.bar = 'bar';
+
+      expect(foo.getDataSync(), 'to equal', {
+        foo: 'foo',
+        bar: 'bar',
+        baz: 'baz'
+      });
+    });
+
+    describe('with a `fields` option', function() {
+      it('only includes the requested fields', function() {
+        const foo = new Foo();
+
+        foo.foo = 'foo';
+        foo.bar = 'bar';
+
+        expect(foo.getDataSync({ fields: ['bar'] }), 'to equal', {
+          bar: 'bar',
+          baz: 'baz'
+        });
+      });
+    });
+
+    describe('with a `virtuals` option', function() {
+      it('only includes the requested sync virtuals', function() {
+        const foo = new Foo();
+
+        foo.foo = 'foo';
+        foo.bar = 'bar';
+
+        expect(foo.getDataSync({ virtuals: ['baz'] }), 'to equal', {
+          foo: 'foo',
+          bar: 'bar',
+          baz: 'baz'
+        });
       });
     });
   });
