@@ -4,14 +4,7 @@ services:
   - postgresql
 
 addons:
-  postgresql: "9.4"
-
-env:
-  - POSTGRES_USER=knorm POSTGRES_PASSWORD=knorm POSTGRES_DB=knorm POSTGRES_PORT=5432
-
-before_script:
-  - psql -c 'create database knorm;' -U postgres
-  - psql -c "create user knorm with password 'knorm';" -U postgres
+  postgresql: "9.6"
 
 script:
   - npm run ci
