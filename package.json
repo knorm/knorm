@@ -31,7 +31,9 @@
     "nyc": "^11.4.1",
     "pg": "^7.4.1",
     "prettier": "^1.10.2",
-    "unexpected": "^10.36.2"
+    "sinon": "^4.1.4",
+    "unexpected": "^10.36.2",
+    "unexpected-sinon": "^10.8.2"
   },
   "directories": {
     "lib": "lib",

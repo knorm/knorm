@@ -28,8 +28,6 @@ const knormPostgres = require('knorm-postgres');
 
 const orm = knorm({
   // knorm options
-}).use(knormPostgres({
-  // knormPostgres options
-}));
+}).use(knormPostgres());
 ```
 
