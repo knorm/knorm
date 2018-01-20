@@ -1285,7 +1285,7 @@ describe('Model', function() {
   });
 
   describe('Model.prototype.getQuery', function() {
-    const { Model, Query } = new Knorm({ knex() {} });
+    const { Model, Query } = new Knorm({ knex });
 
     class Foo extends Model {}
 

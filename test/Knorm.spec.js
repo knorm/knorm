@@ -73,7 +73,7 @@ describe('Knorm', () => {
     let knorm;
 
     beforeEach(() => {
-      knorm = new Knorm({ knex() {} });
+      knorm = new Knorm({ knex });
     });
 
     it('throws if not provided a plugin', () => {
