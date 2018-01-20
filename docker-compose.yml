@@ -2,6 +2,6 @@ version: '3'
 services:
   db:
     image: postgres:9.6
-    container_name: knorm-postgres
+    container_name: knorm-timestamps
     ports:
       - "5432:5432"
