@@ -3656,7 +3656,7 @@ describe('Query', function() {
       await truncateUserTable();
     });
 
-    it('updates rows in the database table from a model instance', async function() {
+    it.only('updates rows in the database table from a model instance', async function() {
       const query = new Query(User);
       user.name = 'Jane Doe';
       await expect(query.update(user), 'to be fulfilled');
@@ -3750,7 +3750,7 @@ describe('Query', function() {
       );
     });
 
-    it('rejects with a UpdateError if the update operation fails', async function() {
+    it('rejects with an UpdateError if the update operation fails', async function() {
       const stub = sinon
         .stub(QueryBuilder.prototype, 'update')
         .returns(Promise.reject(new Error('update error')));
