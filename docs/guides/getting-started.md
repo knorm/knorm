@@ -68,25 +68,25 @@ class User extends Model {
   }
 }
 
-User.table = 'user'; // configure the table-name
+User.table = 'user';
 User.fields = {
-  name: {
-    type: 'string',
-    required: true // validation rule
-  },
+  names: 'string',
   confirmed: {
     type: 'boolean',
-    default: false // default value
+    default: false
   }
 };
 User.virtuals = {
-  upperCaseName() {
-    return this.name ? this.name.toUpperCase() : undefined;
+  initials() {
+    return this.names
+      ? this.names
+          .split(' ')
+          .map(part => part[0])
+          .join('')
+      : undefined;
   }
 };
 ```
-
-> See [the validation guide](guides/validation.md) for more info on validation
 
 > See [the virtuals guide](guides/virtuals.md#virtuals) for more info on virtuals
 
