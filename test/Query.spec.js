@@ -270,31 +270,10 @@ describe('Query', function() {
       );
     });
 
-    it('throws an error if a db-method is passed as an option', function() {
-      ['count', 'fetch', 'insert', 'update', 'save', 'delete'].forEach(
-        method => {
-          expect(
-            () => new Query(User).setOptions({ [method]: 'bar' }),
-            'to throw',
-            new Error(`'${method}' is not an allowed option`)
-          );
-        }
-      );
-    });
-
-    it('throws an error if `setOptions` is passed as an option', function() {
+    it('supports query builder methods', function() {
       expect(
-        () => new Query(User).setOptions({ setOptions: 'bar' }),
-        'to throw',
-        new Error("'setOptions' is not an allowed option")
-      );
-    });
-
-    it('throws an error if a private method is passed as an option', function() {
-      expect(
-        () => new Query(User).setOptions({ _addFields: 'bar' }),
-        'to throw',
-        new Error("'_addFields' is not an allowed option")
+        () => new Query(User).setOptions({ where: { foo: 'bar' } }),
+        'not to throw'
       );
     });
   });
@@ -424,7 +403,7 @@ describe('Query', function() {
 
     it('rejects with a FetchError if a database error occurs', async function() {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'select')
+        .stub(QueryBuilder.prototype, 'then')
         .returns(Promise.reject(new Error('fetch error')));
       const query = new Query(User);
       await expect(
@@ -435,11 +414,11 @@ describe('Query', function() {
       stub.restore();
     });
 
-    describe('if no rows are matched', function() {
+    describe('if no rows are fetched', function() {
       let selectStub;
 
       before(function() {
-        selectStub = sinon.stub(QueryBuilder.prototype, 'select');
+        selectStub = sinon.stub(QueryBuilder.prototype, 'then');
       });
 
       beforeEach(function() {
@@ -513,21 +492,12 @@ describe('Query', function() {
         ]);
       });
 
-      it('casts fields with post-fetch cast functions', async function() {
+      it('does not cast fields with post-fetch cast functions', async function() {
         const query = new Query(User).forge(false);
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
-          [
-            {
-              id: 1,
-              intToString: '10'
-            },
-            {
-              id: 2,
-              intToString: null
-            }
-          ]
+          [{ id: 1, intToString: 10 }, { id: 2, intToString: null }]
         );
       });
 
@@ -546,7 +516,7 @@ describe('Query', function() {
               dateOfBirth: null,
               dbDefault: 'set-by-db',
               jsonField: null,
-              intToString: '10'
+              intToString: 10
             },
             {
               id: 2,
@@ -563,7 +533,7 @@ describe('Query', function() {
         );
       });
 
-      describe('vial the `lean` alias', function() {
+      describe('via the `lean` alias', function() {
         it('resolves with plain JS objects', async function() {
           const query = new Query(User).lean();
           await expect(query.fetch(), 'to be fulfilled with value satisfying', [
@@ -646,104 +616,13 @@ describe('Query', function() {
         );
       });
 
-      it('throws an error of the string is an unknown field name', async function() {
-        await expect(
-          () => new Query(User).fields('foo'),
-          'to throw',
-          new Error("Unknown field 'User.foo'")
-        );
-      });
-
-      describe('as a Field instance', function() {
-        it('resolves with instances containing the requested fields', async function() {
-          const query = new Query(User).fields(User.fields.name);
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new User({ id: 1, name: 'User 1' }),
-              new User({ id: 2, name: 'User 2' })
-            ]
-          );
-        });
-
-        it('throws an error if the field does not belong to the model', async function() {
-          await expect(
-            () => new Query(User).fields(Image.fields.userId),
-            'to throw',
-            new Error("Field 'Image.userId' is not a field of 'User'")
-          );
-        });
-      });
-
       describe('as an object with string values', function() {
         it('uses the string values as aliases for the fields', async function() {
-          const query = new Query(User).fields({ age: 'ages' });
+          const query = new Query(User).fields({ ages: 'age' });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              Object.assign(new User({ id: 1 }), { ages: 10 }),
-              Object.assign(new User({ id: 2 }), { ages: 10 })
-            ]
-          );
-        });
-
-        it('still casts the field values even when using aliases', async function() {
-          const query = new Query(User).fields({ intToString: 'shouldBeCast' });
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              Object.assign(new User({ id: 1 }), { shouldBeCast: '10' }),
-              Object.assign(new User({ id: 2 }), { shouldBeCast: null })
-            ]
-          );
-        });
-      });
-
-      describe('as an object with Field instance values', function() {
-        it('resolves with instances containing the requested fields', async function() {
-          const query = new Query(User).fields(User.fields);
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db'
-              }),
-              new User({
-                id: 2,
-                name: 'User 2',
-                confirmed: true,
-                description: 'this is user 2',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db'
-              })
-            ]
-          );
-        });
-
-        it('throws an error if the keys are not fields that belong to the model', async function() {
-          await expect(
-            () => new Query(User).fields({ userId: Image.fields.userId }),
-            'to throw',
-            new Error("Unknown field 'User.userId'")
-          );
-        });
-
-        it('throws an error if the field value does not belong to the model', async function() {
-          await expect(
-            () => new Query(User).fields({ age: Image.fields.userId }),
-            'to throw',
-            new Error("Field 'Image.userId' is not a field of 'User'")
+            [new User({ id: 1, ages: 10 }), new User({ id: 2, ages: 10 })]
           );
         });
       });
@@ -755,39 +634,8 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              new User({
-                name: 'User 1',
-                age: 10,
-                confirmed: false
-              }),
-              new User({
-                name: 'User 2',
-                age: 10,
-                confirmed: true
-              })
-            ]
-          );
-        });
-      });
-
-      describe('as an array of Field instances', function() {
-        it('resolves with instances containing the requested fields', async function() {
-          const query = new Query(User).fields([
-            User.fields.age,
-            User.fields.confirmed
-          ]);
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new User({
-                age: 10,
-                confirmed: false
-              }),
-              new User({
-                age: 10,
-                confirmed: true
-              })
+              new User({ name: 'User 1', age: 10, confirmed: false }),
+              new User({ name: 'User 2', age: 10, confirmed: true })
             ]
           );
         });
@@ -1007,7 +855,7 @@ describe('Query', function() {
       it('resolves with the rows matching the grouping', async function() {
         const query = new Query(User)
           .groupBy(['id', 'age'])
-          .having({ age: 10 });
+          .having('age', '=', 10);
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1166,53 +1014,6 @@ describe('Query', function() {
         });
         spy.restore();
       });
-
-      describe("via the 'within' alias", function() {
-        it('does the fetch within the transaction', async function() {
-          const spy = sinon.spy(QueryBuilder.prototype, 'transacting');
-          await expect(
-            knex.transaction(async transaction => {
-              const users = await new Query(User).within(transaction).fetch();
-
-              return users;
-            }),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10'
-              }),
-              new User({
-                id: 2,
-                name: 'User 2',
-                confirmed: true,
-                description: 'this is user 2',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: null
-              })
-            ]
-          );
-          await expect(spy, 'to have calls satisfying', () => {
-            spy(
-              expect.it('to satisfy', {
-                commit: expect.it('to be a function'),
-                rollback: expect.it('to be a function')
-              })
-            );
-          });
-          spy.restore();
-        });
-      });
     });
 
     describe("with a 'leftJoin' configured", function() {
@@ -1248,44 +1049,24 @@ describe('Query', function() {
         );
       });
 
-      it("rejects with an error if a fetch is attempted from the joined model's query", async function() {
-        const imageQuery = new Query(Image);
-        new Query(User).leftJoin(imageQuery);
-        await expect(
-          imageQuery.fetch(),
-          'to be rejected with error satisfying',
-          new Error(
-            "Cannot fetch from a child query. (Image.query is User.query's child)"
-          )
-        );
-      });
-
       it('includes the joined model in the returned instance using a camel-cased property name', async function() {
         const query = new Query(User).leftJoin(new Query(Image));
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
-            Object.assign(
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10'
-              }),
-              {
-                image: new Image({
-                  id: 1,
-                  userId: 1,
-                  categoryId: 1
-                })
-              }
-            ),
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10',
+              image: new Image({ id: 1, userId: 1, categoryId: 1 })
+            }),
             new User({
               id: 2,
               name: 'User 2',
@@ -1306,34 +1087,28 @@ describe('Query', function() {
           .leftJoin(new Query(Image))
           .where({ id: 2 });
 
-        const user2 = new User({
-          id: 2,
-          name: 'User 2',
-          confirmed: true,
-          description: 'this is user 2',
-          age: 10,
-          dateOfBirth: null,
-          dbDefault: 'set-by-db',
-          jsonField: null,
-          intToString: null
-        });
-        user2.image = undefined;
-
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
-          [user2]
+          [
+            new User({
+              id: 2,
+              name: 'User 2',
+              confirmed: true,
+              description: 'this is user 2',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: null,
+              image: undefined
+            })
+          ]
         );
       });
 
       it('includes the joined model as an array if more than one rows are matched', async function() {
-        await knex('image').insert([
-          {
-            id: 2,
-            user_id: 1,
-            category_id: 1
-          }
-        ]);
+        await knex(Image.table).insert([{ id: 2, user_id: 1, category_id: 1 }]);
 
         const query = new Query(User)
           .where({ id: 1 })
@@ -1342,7 +1117,38 @@ describe('Query', function() {
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
-            Object.assign(
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10',
+              image: [
+                new Image({ id: 1, userId: 1, categoryId: 1 }),
+                new Image({ id: 2, userId: 1, categoryId: 1 })
+              ]
+            })
+          ]
+        );
+
+        await knex(Image.table)
+          .where({ id: 2 })
+          .delete();
+      });
+
+      describe("with 'fields' configured on the joined query", function() {
+        it('returns only the requested fields from the joined model', async function() {
+          const query = new Query(User)
+            .where({ id: 1 })
+            .leftJoin(new Query(Image).fields('id'));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
               new User({
                 id: 1,
                 name: 'User 1',
@@ -1352,64 +1158,15 @@ describe('Query', function() {
                 dateOfBirth: null,
                 dbDefault: 'set-by-db',
                 jsonField: null,
-                intToString: '10'
-              }),
-              {
-                image: [
-                  new Image({
-                    id: 1,
-                    userId: 1,
-                    categoryId: 1
-                  }),
-                  new Image({
-                    id: 2,
-                    userId: 1,
-                    categoryId: 1
-                  })
-                ]
-              }
-            )
-          ]
-        );
-
-        await knex('image')
-          .where({ id: 2 })
-          .delete();
-      });
-
-      describe("with 'fields' configured on the child query", function() {
-        it('returns only the requested fields from the joined model', async function() {
-          const query = new Query(User)
-            .where({ id: 1 })
-            .leftJoin(new Query(Image).fields('id'));
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: new Image({
-                    id: 1
-                  })
-                }
-              )
+                intToString: '10',
+                image: new Image({ id: 1 })
+              })
             ]
           );
         });
       });
 
-      describe("with 'as' configured on the child query", function() {
+      describe("with 'as' configured on the joined query", function() {
         it('uses the passed string as the property name of the joined model', async function() {
           const query = new Query(User)
             .where({ id: 1 })
@@ -1418,26 +1175,18 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  theImage: new Image({
-                    id: 1,
-                    userId: 1,
-                    categoryId: 1
-                  })
-                }
-              )
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                theImage: new Image({ id: 1, userId: 1, categoryId: 1 })
+              })
             ]
           );
         });
@@ -1477,83 +1226,71 @@ describe('Query', function() {
         );
       });
 
-      describe("with 'on' configured on the child query", function() {
+      describe("with 'on' configured on the joined query", function() {
         it('creates a join on the provided field', async function() {
           const query = new Query(User).leftJoin([
-            new Query(Message).on(Message.fields.senderId).as('sentMessage'),
+            new Query(Message).on('senderId').as('sentMessage'),
             new Query(Message).on('receiverId').as('receivedMessage')
           ]);
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                sentMessage: new Message({
                   id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
+                  text: 'Hi User 2',
+                  senderId: 1,
+                  receiverId: 2
                 }),
-                {
-                  sentMessage: new Message({
-                    id: 1,
-                    text: 'Hi User 2',
-                    senderId: 1,
-                    receiverId: 2
-                  }),
-                  receivedMessage: new Message({
-                    id: 2,
-                    text: 'Hi User 1',
-                    senderId: 2,
-                    receiverId: 1
-                  })
-                }
-              ),
-              Object.assign(
-                new User({
+                receivedMessage: new Message({
                   id: 2,
-                  name: 'User 2',
-                  confirmed: true,
-                  description: 'this is user 2',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: null
+                  text: 'Hi User 1',
+                  senderId: 2,
+                  receiverId: 1
+                })
+              }),
+              new User({
+                id: 2,
+                name: 'User 2',
+                confirmed: true,
+                description: 'this is user 2',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: null,
+                sentMessage: new Message({
+                  id: 2,
+                  text: 'Hi User 1',
+                  senderId: 2,
+                  receiverId: 1
                 }),
-                {
-                  sentMessage: new Message({
-                    id: 2,
-                    text: 'Hi User 1',
-                    senderId: 2,
-                    receiverId: 1
-                  }),
-                  receivedMessage: new Message({
-                    id: 1,
-                    text: 'Hi User 2',
-                    senderId: 1,
-                    receiverId: 2
-                  })
-                }
-              )
+                receivedMessage: new Message({
+                  id: 1,
+                  text: 'Hi User 2',
+                  senderId: 1,
+                  receiverId: 2
+                })
+              })
             ]
           );
         });
       });
 
-      describe("with 'where' configured on the child query", function() {
+      describe("with 'where' configured on the joined query", function() {
         it('fulfils the requested query on the joined model', async function() {
-          await knex('image').insert([
-            {
-              id: 2,
-              user_id: 1,
-              category_id: 1
-            }
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 }
           ]);
 
           const query = new Query(User).leftJoin(
@@ -1564,43 +1301,35 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: new Image({
-                    id: 2,
-                    userId: 1,
-                    categoryId: 1
-                  })
-                }
-              )
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: new Image({
+                  id: 2,
+                  userId: 1,
+                  categoryId: 1
+                })
+              })
             ]
           );
 
-          await knex('image')
+          await knex(Image.table)
             .where({ id: 2 })
             .delete();
         });
       });
 
-      describe("with 'whereNot' configured on the child query", function() {
+      describe("with 'whereNot' configured on the joined query", function() {
         it('fulfils the requested query on the joined model', async function() {
-          await knex('image').insert([
-            {
-              id: 2,
-              user_id: 1,
-              category_id: 1
-            }
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 }
           ]);
 
           const query = new Query(User).leftJoin(
@@ -1611,43 +1340,35 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: new Image({
                   id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: new Image({
-                    id: 1,
-                    userId: 1,
-                    categoryId: 1
-                  })
-                }
-              )
+                  userId: 1,
+                  categoryId: 1
+                })
+              })
             ]
           );
 
-          await knex('image')
+          await knex(Image.table)
             .where({ id: 2 })
             .delete();
         });
       });
 
-      describe("with 'orWhere' configured on the child query", function() {
+      describe("with 'orWhere' configured on the joined query", function() {
         it('fulfils the requested query on the joined model', async function() {
-          await knex('image').insert([
-            {
-              id: 2,
-              user_id: 1,
-              category_id: 1
-            }
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 }
           ]);
 
           const query = new Query(User).leftJoin(
@@ -1658,103 +1379,114 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: [
-                    new Image({
-                      id: 2,
-                      userId: 1,
-                      categoryId: 1
-                    }),
-                    new Image({
-                      id: 1,
-                      userId: 1,
-                      categoryId: 1
-                    })
-                  ]
-                }
-              )
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: [
+                  new Image({ id: 2, userId: 1, categoryId: 1 }),
+                  new Image({ id: 1, userId: 1, categoryId: 1 })
+                ]
+              })
             ]
           );
 
-          await knex('image')
+          await knex(Image.table)
             .where({ id: 2 })
             .delete();
         });
       });
 
-      describe("with 'orWhereNot' configured on the child query", function() {
+      describe("with 'orWhereNot' configured on the joined query", function() {
         it('fulfils the requested query on the joined model', async function() {
-          await knex('image').insert([
-            {
-              id: 2,
-              user_id: 1,
-              category_id: 1
-            },
-            {
-              id: 3,
-              user_id: 1,
-              category_id: 1
-            }
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 }
           ]);
 
           const query = new Query(User).leftJoin(
-            new Query(Image).orWhereNot({ id: [1, 2] })
+            new Query(Image).orWhereNot({ id: 1 })
           );
 
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: new Image({
-                    id: 3,
-                    userId: 1,
-                    categoryId: 1
-                  })
-                }
-              )
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: new Image({
+                  id: 2,
+                  userId: 1,
+                  categoryId: 1
+                })
+              })
             ]
           );
 
-          await knex('image')
+          await knex(Image.table)
+            .where({ id: 2 })
+            .delete();
+        });
+      });
+
+      describe("with 'orWhereNotIn' configured on the joined query", function() {
+        it('fulfils the requested query on the joined model', async function() {
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 },
+            { id: 3, user_id: 1, category_id: 1 }
+          ]);
+
+          const query = new Query(User).leftJoin(
+            new Query(Image).orWhereNotIn('id', [1, 2])
+          );
+
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: new Image({
+                  id: 3,
+                  userId: 1,
+                  categoryId: 1
+                })
+              })
+            ]
+          );
+
+          await knex(Image.table)
             .where({ id: 2 })
             .orWhere({ id: 3 })
             .delete();
         });
       });
 
-      describe("with 'orderBy' configured on the child query", function() {
+      describe("with 'orderBy' configured on the joined query", function() {
         it('fulfils the requested order on the joined model', async function() {
-          await knex('image').insert([
-            {
-              id: 2,
-              user_id: 1,
-              category_id: 1
-            }
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 }
           ]);
 
           const query = new Query(User)
@@ -1765,50 +1497,34 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with value exhaustively satisfying',
             [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: [
-                    new Image({
-                      id: 2,
-                      userId: 1,
-                      categoryId: 1
-                    }),
-                    new Image({
-                      id: 1,
-                      userId: 1,
-                      categoryId: 1
-                    })
-                  ]
-                }
-              )
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: [
+                  new Image({ id: 2, userId: 1, categoryId: 1 }),
+                  new Image({ id: 1, userId: 1, categoryId: 1 })
+                ]
+              })
             ]
           );
 
-          await knex('image')
+          await knex(Image.table)
             .where({ id: 2 })
             .delete();
         });
       });
 
-      describe("with 'groupBy' configured on the child query", function() {
+      describe("with 'groupBy' configured on the joined query", function() {
         it('fulfils the requested grouping on the joined model', async function() {
-          await knex('image').insert([
-            {
-              id: 2,
-              user_id: 1,
-              category_id: 1
-            }
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 }
           ]);
 
           const query = new Query(User)
@@ -1820,99 +1536,69 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: [
-                    new Image({
-                      id: 1,
-                      userId: 1,
-                      categoryId: 1
-                    }),
-                    new Image({
-                      id: 2,
-                      userId: 1,
-                      categoryId: 1
-                    })
-                  ]
-                }
-              )
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: [
+                  new Image({ id: 1, userId: 1, categoryId: 1 }),
+                  new Image({ id: 2, userId: 1, categoryId: 1 })
+                ]
+              })
             ]
           );
 
-          await knex('image')
+          await knex(Image.table)
             .where({ id: 2 })
             .delete();
         });
       });
 
-      describe("with 'having' configured on the child query", function() {
+      describe("with 'having' configured on the joined query", function() {
         it('fulfils the requested order on the joined model', async function() {
-          await knex('image').insert([
-            {
-              id: 2,
-              user_id: 1,
-              category_id: 1
-            },
-            {
-              id: 3,
-              user_id: 2,
-              category_id: 1
-            }
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 },
+            { id: 3, user_id: 2, category_id: 1 }
           ]);
 
           const query = new Query(User)
             .where({ id: 1 })
             .groupBy('id')
             .leftJoin(
-              new Query(Image).groupBy(['id', 'userId']).having({ userId: 1 })
+              new Query(Image)
+                .groupBy(['id', 'userId'])
+                .having('userId', '=', 1)
             );
 
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: [
-                    new Image({
-                      id: 1,
-                      userId: 1,
-                      categoryId: 1
-                    }),
-                    new Image({
-                      id: 2,
-                      userId: 1,
-                      categoryId: 1
-                    })
-                  ]
-                }
-              )
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: [
+                  new Image({ id: 1, userId: 1, categoryId: 1 }),
+                  new Image({ id: 2, userId: 1, categoryId: 1 })
+                ]
+              })
             ]
           );
 
-          await knex('image')
+          await knex(Image.table)
             .where({ id: 2 })
             .orWhere({ id: 3 })
             .delete();
@@ -1939,12 +1625,8 @@ describe('Query', function() {
                   dateOfBirth: null,
                   dbDefault: 'set-by-db',
                   jsonField: null,
-                  intToString: '10',
-                  image: new Image({
-                    id: 1,
-                    userId: 1,
-                    categoryId: 1
-                  })
+                  intToString: 10,
+                  image: new Image({ id: 1, userId: 1, categoryId: 1 })
                 },
                 {
                   id: 2,
@@ -1972,27 +1654,19 @@ describe('Query', function() {
               query.fetch(),
               'to be fulfilled with sorted rows exhaustively satisfying',
               [
-                Object.assign(
-                  new User({
-                    id: 1,
-                    name: 'User 1',
-                    confirmed: false,
-                    description: 'this is user 1',
-                    age: 10,
-                    dateOfBirth: null,
-                    dbDefault: 'set-by-db',
-                    jsonField: null,
-                    intToString: '10'
-                  }),
-                  {
-                    image: {
-                      id: 1,
-                      userId: 1,
-                      categoryId: 1
-                    }
-                  }
-                ),
-                {
+                new User({
+                  id: 1,
+                  name: 'User 1',
+                  confirmed: false,
+                  description: 'this is user 1',
+                  age: 10,
+                  dateOfBirth: null,
+                  dbDefault: 'set-by-db',
+                  jsonField: null,
+                  intToString: '10',
+                  image: { id: 1, userId: 1, categoryId: 1 }
+                }),
+                new User({
                   id: 2,
                   name: 'User 2',
                   confirmed: true,
@@ -2002,7 +1676,7 @@ describe('Query', function() {
                   dbDefault: 'set-by-db',
                   jsonField: null,
                   intToString: null
-                }
+                })
               ]
             );
           });
@@ -2027,12 +1701,8 @@ describe('Query', function() {
                   dateOfBirth: null,
                   dbDefault: 'set-by-db',
                   jsonField: null,
-                  intToString: '10',
-                  image: {
-                    id: 1,
-                    userId: 1,
-                    categoryId: 1
-                  }
+                  intToString: 10,
+                  image: { id: 1, userId: 1, categoryId: 1 }
                 },
                 {
                   id: 2,
@@ -2077,12 +1747,8 @@ describe('Query', function() {
         });
 
         it('includes the joined model as an array if more than one rows are matched', async function() {
-          await knex('image').insert([
-            {
-              id: 2,
-              user_id: 1,
-              category_id: 1
-            }
+          await knex(Image.table).insert([
+            { id: 2, user_id: 1, category_id: 1 }
           ]);
 
           const query = new Query(User)
@@ -2103,22 +1769,14 @@ describe('Query', function() {
                 jsonField: null,
                 intToString: '10',
                 image: [
-                  {
-                    id: 1,
-                    userId: 1,
-                    categoryId: 1
-                  },
-                  {
-                    id: 2,
-                    userId: 1,
-                    categoryId: 1
-                  }
+                  { id: 1, userId: 1, categoryId: 1 },
+                  { id: 2, userId: 1, categoryId: 1 }
                 ]
               }
             ]
           );
 
-          await knex('image')
+          await knex(Image.table)
             .where({ id: 2 })
             .delete();
         });
@@ -2130,26 +1788,18 @@ describe('Query', function() {
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
-            Object.assign(
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10'
-              }),
-              {
-                image: new Image({
-                  id: 1,
-                  userId: 1,
-                  categoryId: 1
-                })
-              }
-            ),
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10',
+              image: new Image({ id: 1, userId: 1, categoryId: 1 })
+            }),
             new User({
               id: 2,
               name: 'User 2',
@@ -2171,24 +1821,18 @@ describe('Query', function() {
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
-            Object.assign(
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10'
-              }),
-              {
-                image: new Image({
-                  id: 1
-                })
-              }
-            ),
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10',
+              image: new Image({ id: 1 })
+            }),
             new User({
               id: 2,
               name: 'User 2',
@@ -2211,26 +1855,22 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new Image({
+              new Image({
+                id: 1,
+                userId: 1,
+                categoryId: 1,
+                user: new User({
                   id: 1,
-                  userId: 1,
-                  categoryId: 1
-                }),
-                {
-                  user: new User({
-                    id: 1,
-                    name: 'User 1',
-                    confirmed: false,
-                    description: 'this is user 1',
-                    age: 10,
-                    dateOfBirth: null,
-                    dbDefault: 'set-by-db',
-                    jsonField: null,
-                    intToString: '10'
-                  })
-                }
-              )
+                  name: 'User 1',
+                  confirmed: false,
+                  description: 'this is user 1',
+                  age: 10,
+                  dateOfBirth: null,
+                  dbDefault: 'set-by-db',
+                  jsonField: null,
+                  intToString: '10'
+                })
+              })
             ]
           );
         });
@@ -2241,58 +1881,22 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new Image({
+              new Image({
+                id: 1,
+                userId: 1,
+                categoryId: 1,
+                user: new User({
                   id: 1,
-                  userId: 1,
-                  categoryId: 1
-                }),
-                {
-                  user: new User({
-                    id: 1,
-                    name: 'User 1',
-                    confirmed: false,
-                    description: 'this is user 1',
-                    age: 10,
-                    dateOfBirth: null,
-                    dbDefault: 'set-by-db',
-                    jsonField: null,
-                    intToString: '10'
-                  })
-                }
-              )
-            ]
-          );
-        });
-
-        it("supports the 'on' option as a field object", async function() {
-          const query = new Query(Image).leftJoin(
-            new Query(User).on(User.fields.id)
-          );
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              Object.assign(
-                new Image({
-                  id: 1,
-                  userId: 1,
-                  categoryId: 1
-                }),
-                {
-                  user: new User({
-                    id: 1,
-                    name: 'User 1',
-                    confirmed: false,
-                    description: 'this is user 1',
-                    age: 10,
-                    dateOfBirth: null,
-                    dbDefault: 'set-by-db',
-                    jsonField: null,
-                    intToString: '10'
-                  })
-                }
-              )
+                  name: 'User 1',
+                  confirmed: false,
+                  description: 'this is user 1',
+                  age: 10,
+                  dateOfBirth: null,
+                  dbDefault: 'set-by-db',
+                  jsonField: null,
+                  intToString: '10'
+                })
+              })
             ]
           );
         });
@@ -2303,48 +1907,40 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new Message({
-                  id: 1,
-                  senderId: 1,
-                  receiverId: 2,
-                  text: 'Hi User 2'
-                }),
-                {
-                  user: new User({
-                    id: 2,
-                    name: 'User 2',
-                    confirmed: true,
-                    description: 'this is user 2',
-                    age: 10,
-                    dateOfBirth: null,
-                    dbDefault: 'set-by-db',
-                    jsonField: null,
-                    intToString: null
-                  })
-                }
-              ),
-              Object.assign(
-                new Message({
+              new Message({
+                id: 1,
+                senderId: 1,
+                receiverId: 2,
+                text: 'Hi User 2',
+                user: new User({
                   id: 2,
-                  senderId: 2,
-                  receiverId: 1,
-                  text: 'Hi User 1'
-                }),
-                {
-                  user: new User({
-                    id: 1,
-                    name: 'User 1',
-                    confirmed: false,
-                    description: 'this is user 1',
-                    age: 10,
-                    dateOfBirth: null,
-                    dbDefault: 'set-by-db',
-                    jsonField: null,
-                    intToString: '10'
-                  })
-                }
-              )
+                  name: 'User 2',
+                  confirmed: true,
+                  description: 'this is user 2',
+                  age: 10,
+                  dateOfBirth: null,
+                  dbDefault: 'set-by-db',
+                  jsonField: null,
+                  intToString: null
+                })
+              }),
+              new Message({
+                id: 2,
+                senderId: 2,
+                receiverId: 1,
+                text: 'Hi User 1',
+                user: new User({
+                  id: 1,
+                  name: 'User 1',
+                  confirmed: false,
+                  description: 'this is user 1',
+                  age: 10,
+                  dateOfBirth: null,
+                  dbDefault: 'set-by-db',
+                  jsonField: null,
+                  intToString: '10'
+                })
+              })
             ]
           );
         });
@@ -2359,34 +1955,26 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: new Image({
                   id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: Object.assign(
-                    new Image({
-                      id: 1,
-                      userId: 1,
-                      categoryId: 1
-                    }),
-                    {
-                      imageCategory: new ImageCategory({
-                        id: 1,
-                        name: 'User images'
-                      })
-                    }
-                  )
-                }
-              ),
+                  userId: 1,
+                  categoryId: 1,
+                  imageCategory: new ImageCategory({
+                    id: 1,
+                    name: 'User images'
+                  })
+                })
+              }),
               new User({
                 id: 2,
                 name: 'User 2',
@@ -2416,58 +2004,42 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: new Image({
                   id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: Object.assign(
-                    new Image({
+                  userId: 1,
+                  categoryId: 1,
+                  imageCategory: new ImageCategory({
+                    id: 1,
+                    name: 'User images',
+                    image: new Image({
                       id: 1,
                       userId: 1,
-                      categoryId: 1
-                    }),
-                    {
-                      imageCategory: Object.assign(
-                        new ImageCategory({
-                          id: 1,
-                          name: 'User images'
-                        }),
-                        {
-                          image: Object.assign(
-                            new Image({
-                              id: 1,
-                              userId: 1,
-                              categoryId: 1
-                            }),
-                            {
-                              user: new User({
-                                id: 1,
-                                name: 'User 1',
-                                confirmed: false,
-                                description: 'this is user 1',
-                                age: 10,
-                                dateOfBirth: null,
-                                dbDefault: 'set-by-db',
-                                jsonField: null,
-                                intToString: '10'
-                              })
-                            }
-                          )
-                        }
-                      )
-                    }
-                  )
-                }
-              ),
+                      categoryId: 1,
+                      user: new User({
+                        id: 1,
+                        name: 'User 1',
+                        confirmed: false,
+                        description: 'this is user 1',
+                        age: 10,
+                        dateOfBirth: null,
+                        dbDefault: 'set-by-db',
+                        jsonField: null,
+                        intToString: '10'
+                      })
+                    })
+                  })
+                })
+              }),
               new User({
                 id: 2,
                 name: 'User 2',
@@ -2484,8 +2056,8 @@ describe('Query', function() {
         });
       });
 
-      describe('with the child query options passed as a second parameter', function() {
-        it('passes the options to the child query via Query.prototype.setOptions', async function() {
+      describe('with the joined query options passed as a second parameter', function() {
+        it('passes the options to the joined query via Query.prototype.setOptions', async function() {
           const imageQuery = new Query(Image);
           const spy = sinon.spy(imageQuery, 'setOptions');
           const query = new Query(User)
@@ -2498,24 +2070,18 @@ describe('Query', function() {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              Object.assign(
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                }),
-                {
-                  image: new Image({
-                    id: 1
-                  })
-                }
-              )
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10',
+                image: new Image({ id: 1 })
+              })
             ]
           );
         });
@@ -2541,26 +2107,18 @@ describe('Query', function() {
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
-            Object.assign(
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10'
-              }),
-              {
-                image: new Image({
-                  id: 1,
-                  userId: 1,
-                  categoryId: 1
-                })
-              }
-            )
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10',
+              image: new Image({ id: 1, userId: 1, categoryId: 1 })
+            })
           ]
         );
       });
@@ -2581,18 +2139,9 @@ describe('Query', function() {
     describe("with a 'join' configured", function() {
       before(async function() {
         await knex(ImageCategory.table).insert([
-          {
-            id: 1,
-            name: 'User images'
-          }
+          { id: 1, name: 'User images' }
         ]);
-        await knex(Image.table).insert([
-          {
-            id: 1,
-            user_id: 1,
-            category_id: 1
-          }
-        ]);
+        await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
       });
 
       after(async function() {
@@ -2606,26 +2155,18 @@ describe('Query', function() {
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
-            Object.assign(
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10'
-              }),
-              {
-                image: new Image({
-                  id: 1,
-                  userId: 1,
-                  categoryId: 1
-                })
-              }
-            )
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10',
+              image: new Image({ id: 1, userId: 1, categoryId: 1 })
+            })
           ]
         );
       });
@@ -2664,19 +2205,8 @@ describe('Query', function() {
           date_of_birth: null
         }
       ]);
-      await knex('image_category').insert([
-        {
-          id: 1,
-          name: 'User images'
-        }
-      ]);
-      await knex('image').insert([
-        {
-          id: 1,
-          user_id: 1,
-          category_id: 1
-        }
-      ]);
+      await knex('image_category').insert([{ id: 1, name: 'User images' }]);
+      await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
     });
 
     after(async function() {
@@ -2701,17 +2231,13 @@ describe('Query', function() {
 
     it("accepts a 'distinct' option to count distinct fields", async function() {
       const query = new Query(User);
-      await expect(
-        query.count({ distinct: User.fields.age }),
-        'to be fulfilled with',
-        1
-      );
+      await expect(query.count({ distinct: 'age' }), 'to be fulfilled with', 1);
     });
 
     it("throws an error if multiple 'distinct' fields are configured", async function() {
       const query = new Query(User);
       await expect(
-        query.count({ distinct: ['id', User.fields.age] }),
+        query.count({ distinct: ['id', 'age'] }),
         'to be rejected with error satisfying',
         new Error('Cannot count multiple distinct fields')
       );
@@ -2728,7 +2254,7 @@ describe('Query', function() {
 
     it('rejects with a CountError if a database error occurs', async function() {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'first')
+        .stub(QueryBuilder.prototype, 'then')
         .returns(Promise.reject(new Error('count error')));
       const query = new Query(User);
       await expect(
@@ -2792,11 +2318,7 @@ describe('Query', function() {
       const user = new User({ id: 1, name: 'John Doe', confirmed: true });
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 1,
-          name: 'John Doe',
-          confirmed: true
-        }
+        { id: 1, name: 'John Doe', confirmed: true }
       ]);
     });
 
@@ -2805,39 +2327,8 @@ describe('Query', function() {
       const user = { id: 1, name: 'John Doe', confirmed: true };
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 1,
-          name: 'John Doe',
-          confirmed: true
-        }
+        { id: 1, name: 'John Doe', confirmed: true }
       ]);
-    });
-
-    it('rejects with an error if the object contains invalid field names', async function() {
-      const query = new Query(User);
-      await expect(
-        query.insert({ foo: 'bar' }),
-        'to be rejected with error exhaustively satisfying',
-        new Error("Unknown field or virtual 'User.foo'")
-      );
-    });
-
-    it('rejects with an error if passed a non-object value', async function() {
-      const query = new Query(User);
-      await expect(
-        query.insert(1),
-        'to be rejected with error exhaustively satisfying',
-        new Error("Cannot insert non-object '1'")
-      );
-    });
-
-    it('rejects with an error if passed an instance of a different model', async function() {
-      const query = new Query(User);
-      await expect(
-        query.insert(new Message()),
-        'to be rejected with error exhaustively satisfying',
-        new Error('Cannot insert an instance of Message with User.query')
-      );
     });
 
     it('populates fields with default values before insert', async function() {
@@ -2845,12 +2336,7 @@ describe('Query', function() {
       const user = new User({ id: 1, name: 'John Doe' });
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 1,
-          name: 'John Doe',
-          confirmed: false,
-          age: null
-        }
+        { id: 1, name: 'John Doe', confirmed: false, age: null }
       ]);
     });
 
@@ -2870,7 +2356,7 @@ describe('Query', function() {
             'when passed as parameter to',
             value => {
               if (typeof value === 'string') {
-                // postgres 9.1. (on CI) doesn't automatically JSON.parse
+                // TODO: remove this: postgres 9.1. (on CI) doesn't automatically JSON.parse
                 return JSON.parse(value);
               }
               return value;
@@ -2896,10 +2382,7 @@ describe('Query', function() {
       await expect(
         query.insert({ id: 1, name: 1 }),
         'to be rejected with error satisfying',
-        {
-          name: 'ValidationError',
-          type: 'TypeError'
-        }
+        { name: 'ValidationError', type: 'TypeError' }
       );
     });
 
@@ -2982,11 +2465,7 @@ describe('Query', function() {
         [{ intToString: '10' }]
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 1,
-          name: 'John Doe',
-          int_to_string: 10
-        }
+        { id: 1, name: 'John Doe', int_to_string: 10 }
       ]);
     });
 
@@ -3007,10 +2486,7 @@ describe('Query', function() {
       await expect(
         query.insert(new User({ name: 'John Doe' })),
         'to be rejected with error satisfying',
-        new Query.InsertError({
-          error: new Error('insert error'),
-          query
-        })
+        new Query.InsertError({ error: new Error('insert error'), query })
       );
       stub.restore();
     });
@@ -3034,32 +2510,15 @@ describe('Query', function() {
         );
       });
 
-      it('accepts an array of field instances', async function() {
-        const query = new Query(User).returning([
-          User.fields.name,
-          User.fields.confirmed
-        ]);
-        await expect(
-          query.insert(new User({ name: 'John Doe' })),
-          'to be fulfilled with value satisfying',
-          [new User({ name: 'John Doe', confirmed: false })]
-        );
-      });
-
       it('allows using aliases for the fields returned from the database', async function() {
         const query = new Query(User).returning({
-          name: 'theName',
-          confirmed: 'theConfirmed'
+          theName: 'name',
+          theConfirmed: 'confirmed'
         });
         await expect(
           query.insert(new User({ name: 'John Doe' })),
           'to be fulfilled with value satisfying',
-          [
-            Object.assign(new User(), {
-              theName: 'John Doe',
-              theConfirmed: false
-            })
-          ]
+          [new User({ theName: 'John Doe', theConfirmed: false })]
         );
       });
     });
@@ -3081,26 +2540,6 @@ describe('Query', function() {
         );
 
         await expect(knex, 'with table', User.table, 'to be empty');
-      });
-
-      describe("via the 'within' alias", function() {
-        it('does the insert within the transaction', async function() {
-          const transact = async transaction => {
-            await new Query(User)
-              .within(transaction)
-              .insert(new User({ name: 'John Doe' }));
-
-            throw new Error('foo');
-          };
-
-          await expect(
-            knex.transaction(transact),
-            'to be rejected with error satisfying',
-            new Error('foo')
-          );
-
-          await expect(knex, 'with table', User.table, 'to be empty');
-        });
       });
     });
 
@@ -3129,7 +2568,7 @@ describe('Query', function() {
       let insertStub;
 
       before(function() {
-        insertStub = sinon.stub(QueryBuilder.prototype, 'insert');
+        insertStub = sinon.stub(QueryBuilder.prototype, 'then');
       });
 
       beforeEach(function() {
@@ -3214,33 +2653,6 @@ describe('Query', function() {
         );
       });
 
-      it('rejects with an error if one object contains invalid field names', async function() {
-        const query = new Query(User);
-        await expect(
-          query.insert([{ name: 'foo' }, { foo: 'bar' }]),
-          'to be rejected with error exhaustively satisfying',
-          new Error("Unknown field or virtual 'User.foo'")
-        );
-      });
-
-      it('rejects with an error if an item is not an object', async function() {
-        const query = new Query(User);
-        await expect(
-          query.insert([1]),
-          'to be rejected with error exhaustively satisfying',
-          new Error("Cannot insert non-object '1'")
-        );
-      });
-
-      it('rejects with an error if passed an instance of a different model', async function() {
-        const query = new Query(User);
-        await expect(
-          query.insert([new User(), new Message()]),
-          'to be rejected with error exhaustively satisfying',
-          new Error('Cannot insert an instance of Message with User.query')
-        );
-      });
-
       it('populates fields with default values before insert', async function() {
         const query = new Query(User);
         await expect(
@@ -3306,11 +2718,7 @@ describe('Query', function() {
             new User({ id: 1, name: 'Jane Doe', confirmed: 'false' })
           ]),
           'to be rejected with error satisfying',
-          {
-            name: 'ValidationError',
-            type: 'TypeError',
-            message: /confirmed/
-          }
+          { name: 'ValidationError', type: 'TypeError', message: /confirmed/ }
         );
       });
 
@@ -3322,11 +2730,7 @@ describe('Query', function() {
             { id: 1, name: 'Jane Doe', confirmed: 'false' }
           ]),
           'to be rejected with error satisfying',
-          {
-            name: 'ValidationError',
-            type: 'TypeError',
-            message: /confirmed/
-          }
+          { name: 'ValidationError', type: 'TypeError', message: /confirmed/ }
         );
       });
 
@@ -3646,8 +3050,7 @@ describe('Query', function() {
     let user;
 
     beforeEach(async function() {
-      const query = new Query(User);
-      user = await query
+      user = await new Query(User)
         .first(true)
         .insert(new User({ id: 1, name: 'John Doe' }));
     });
@@ -3672,33 +3075,6 @@ describe('Query', function() {
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
         { id: 1, name: 'Jane Doe' }
       ]);
-    });
-
-    it('rejects with an error if the object contains invalid field names', async function() {
-      const query = new Query(User);
-      await expect(
-        query.update({ foo: 'bar' }),
-        'to be rejected with error exhaustively satisfying',
-        new Error("Unknown field or virtual 'User.foo'")
-      );
-    });
-
-    it('rejects with an error if passed a non-object value', async function() {
-      const query = new Query(User);
-      await expect(
-        query.update(1),
-        'to be rejected with error exhaustively satisfying',
-        new Error("Cannot update non-object '1'")
-      );
-    });
-
-    it('rejects with an error if passed an instance of a different model', async function() {
-      const query = new Query(User);
-      await expect(
-        query.update(new Message()),
-        'to be rejected with error exhaustively satisfying',
-        new Error('Cannot update an instance of Message with User.query')
-      );
     });
 
     it("validates the instance's fields before saving", async function() {
@@ -3752,7 +3128,7 @@ describe('Query', function() {
 
     it('rejects with a UpdateError if the update operation fails', async function() {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'update')
+        .stub(QueryBuilder.prototype, 'then')
         .returns(Promise.reject(new Error('update error')));
       const query = new Query(User);
       user.name = 'Jane Doe';
@@ -3916,34 +3292,16 @@ describe('Query', function() {
         );
       });
 
-      it('accepts an array of field objects', async function() {
-        const query = new Query(User).returning([
-          User.fields.name,
-          User.fields.confirmed
-        ]);
-        user.name = 'Jane Doe';
-        await expect(
-          query.update(user),
-          'to be fulfilled with value exhaustively satisfying',
-          [new User({ id: 1, name: 'Jane Doe', confirmed: false })]
-        );
-      });
-
       it('allows using aliases for the returned fields', async function() {
         const query = new Query(User).returning({
-          name: 'theName',
-          confirmed: 'theConfirmed'
+          theName: 'name',
+          theConfirmed: 'confirmed'
         });
         user.name = 'Jane Doe';
         await expect(
           query.update(user),
           'to be fulfilled with value exhaustively satisfying',
-          [
-            Object.assign(new User({ id: 1 }), {
-              theName: 'Jane Doe',
-              theConfirmed: false
-            })
-          ]
+          [new User({ id: 1, theName: 'Jane Doe', theConfirmed: false })]
         );
       });
     });
@@ -3968,12 +3326,7 @@ describe('Query', function() {
           'with table',
           User.table,
           'to have rows satisfying',
-          [
-            {
-              id: 1,
-              name: 'John Doe'
-            }
-          ]
+          [{ id: 1, name: 'John Doe' }]
         );
       });
 
@@ -3997,12 +3350,7 @@ describe('Query', function() {
             'with table',
             User.table,
             'to have rows satisfying',
-            [
-              {
-                id: 1,
-                name: 'John Doe'
-              }
-            ]
+            [{ id: 1, name: 'John Doe' }]
           );
         });
       });
@@ -4011,16 +3359,13 @@ describe('Query', function() {
     describe('if no row is updated', function() {
       let updateStub;
 
-      before(function() {
-        updateStub = sinon.stub(QueryBuilder.prototype, 'update');
-      });
-
       beforeEach(function() {
-        updateStub.reset();
-        updateStub.returns(Promise.resolve([]));
+        updateStub = sinon
+          .stub(QueryBuilder.prototype, 'then')
+          .returns(Promise.resolve([]));
       });
 
-      after(function() {
+      afterEach(function() {
         updateStub.restore();
       });
 
@@ -4261,7 +3606,7 @@ describe('Query', function() {
 
     it('rejects with a DeleteError if the delete operation fails', async function() {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'delete')
+        .stub(QueryBuilder.prototype, 'then')
         .returns(Promise.reject(new Error('delete error')));
       const query = new Query(User);
       await expect(
@@ -4316,38 +3661,17 @@ describe('Query', function() {
         );
       });
 
-      it('accepts an array of field objects', async function() {
-        const query = new Query(User).returning([
-          User.fields.name,
-          User.fields.confirmed
-        ]);
-        await expect(
-          query.delete(),
-          'to be fulfilled with value exhaustively satisfying',
-          [
-            new User({ id: 1, name: 'John Doe', confirmed: true }),
-            new User({ id: 2, name: 'Jane Doe', confirmed: true })
-          ]
-        );
-      });
-
       it('allows using aliases for the returned fields', async function() {
         const query = new Query(User).returning({
-          name: 'theName',
-          confirmed: 'theConfirmed'
+          theName: 'name',
+          theConfirmed: 'confirmed'
         });
         await expect(
           query.delete(),
           'to be fulfilled with value exhaustively satisfying',
           [
-            Object.assign(new User({ id: 1 }), {
-              theName: 'John Doe',
-              theConfirmed: true
-            }),
-            Object.assign(new User({ id: 2 }), {
-              theName: 'Jane Doe',
-              theConfirmed: true
-            })
+            new User({ id: 1, theName: 'John Doe', theConfirmed: true }),
+            new User({ id: 2, theName: 'Jane Doe', theConfirmed: true })
           ]
         );
       });
@@ -4390,7 +3714,7 @@ describe('Query', function() {
               dateOfBirth: null,
               dbDefault: 'set-by-db',
               jsonField: null,
-              intToString: '10'
+              intToString: 10
             },
             {
               id: 2,
@@ -4424,39 +3748,18 @@ describe('Query', function() {
 
         await expect(knex, 'with table', User.table, 'not to be empty');
       });
-
-      describe("via the 'within' alias", function() {
-        it('does the delete within the transaction', async function() {
-          const transact = async transaction => {
-            await new Query(User).transaction(transaction).delete();
-
-            throw new Error('foo');
-          };
-
-          await expect(
-            knex.transaction(transact),
-            'to be rejected with error satisfying',
-            new Error('foo')
-          );
-
-          await expect(knex, 'with table', User.table, 'not to be empty');
-        });
-      });
     });
 
     describe('if no row is deleted', function() {
       let deleteStub;
 
-      before(function() {
-        deleteStub = sinon.stub(QueryBuilder.prototype, 'delete');
-      });
-
       beforeEach(function() {
-        deleteStub.reset();
-        deleteStub.returns(Promise.resolve([]));
+        deleteStub = sinon
+          .stub(QueryBuilder.prototype, 'then')
+          .returns(Promise.resolve([]));
       });
 
-      after(function() {
+      afterEach(function() {
         deleteStub.restore();
       });
 
