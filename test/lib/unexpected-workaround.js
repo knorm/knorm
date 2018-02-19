@@ -9,7 +9,8 @@ module.exports = {
     expect.addType({
       name: 'ModelClass',
       base: 'function',
-      identify: value => value && value.prototype instanceof Model
+      identify: value =>
+        value && typeof value === 'function' && value.prototype instanceof Model
     });
 
     expect.addAssertion(
