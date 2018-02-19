@@ -90,54 +90,6 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getField', function() {
-    it("throws if the field doesn't exist in `Model.fields`", function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(
-        () => foo.getField('bar'),
-        'to throw',
-        new Error("Unknown field 'Foo.bar'")
-      );
-    });
-
-    it('returns a `Field` instance', function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getField('foo'), 'to be a', Field);
-    });
-
-    it('returns the correct field', function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getField('foo'), 'to equal', Foo.fields.foo);
-    });
-  });
-
   describe('Model.prototype.getFields', function() {
     it("returns all the model's fields if called with no arguments", function() {
       class Foo extends Model {}
@@ -150,23 +102,6 @@ describe('Model', function() {
 
       const foo = new Foo();
       expect(foo.getFields(), 'to equal', [Foo.fields.foo]);
-    });
-
-    it("throws if one the fields doesn't exist in `Model.fields`", function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(
-        () => foo.getFields(['bar']),
-        'to throw',
-        new Error("Unknown field 'Foo.bar'")
-      );
     });
 
     it('returns an array of `Field` instances', function() {
@@ -248,27 +183,6 @@ describe('Model', function() {
       expect(foo.bar, 'to equal', 1);
     });
 
-    it('throws if the passed object contains unknown fields', function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'integer'
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(
-        () => foo.setData({ quux: 'quux' }),
-        'to throw',
-        new Error("Unknown field or virtual 'Foo.quux'")
-      );
-    });
-
     it('populates virtuals if provided in the object', function() {
       class Foo extends Model {}
 
@@ -307,7 +221,9 @@ describe('Model', function() {
       expect(
         () => foo.setData({ bar: 1 }),
         'to throw',
-        new Error("Virtual 'Foo.bar' has no setter")
+        new TypeError(
+          'Cannot set property bar of #<Foo> which has only a getter'
+        )
       );
     });
 
@@ -388,27 +304,6 @@ describe('Model', function() {
       foo.setDefaults({ fields: ['bar'] });
       expect(foo.foo, 'to be undefined');
       expect(foo.bar, 'to equal', 'bar');
-    });
-
-    it('throws if the list of fields contains unknown fields', function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'integer'
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(
-        () => foo.setDefaults({ fields: ['quux'] }),
-        'to throw',
-        new Error("Unknown field 'Foo.quux'")
-      );
     });
 
     it("doesn't overwrite values that have already been set", function() {
@@ -553,16 +448,6 @@ describe('Model', function() {
         foo.foo = 'foo';
 
         expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {});
-      });
-
-      it('throws if the list of fields contains unknown fields', function() {
-        const foo = new Foo();
-
-        expect(
-          foo.getData({ fields: ['quux'] }),
-          'to be rejected with',
-          new Error("Unknown field 'Foo.quux'")
-        );
       });
     });
   });
@@ -918,27 +803,6 @@ describe('Model', function() {
         fooValidationSpy.restore();
         barValidationSpy.restore();
       });
-
-      it('rejects if the list of fields contains unknown fields', function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: 'string'
-          },
-          bar: {
-            type: 'integer'
-          }
-        };
-
-        const foo = new Foo();
-
-        expect(
-          foo.validate({ fields: ['quux'] }),
-          'to be rejected with',
-          new Error("Unknown field 'Foo.quux'")
-        );
-      });
     });
 
     it('calls the validator with the set value and the model instance', async function() {
@@ -1097,35 +961,6 @@ describe('Model', function() {
 
         await expect(fooSaveCast, 'was called once');
         await expect(barSaveCast, 'was called once');
-      });
-
-      it('throws if the list of fields contains unknown fields', function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            required: true,
-            type: 'string',
-            cast: {
-              forSave() {}
-            }
-          },
-          bar: {
-            required: true,
-            type: 'string',
-            cast: {
-              forSave() {}
-            }
-          }
-        };
-
-        const foo = new Foo();
-
-        expect(
-          () => foo.cast({ fields: ['quux'] }),
-          'to throw',
-          new Error("Unknown field 'Foo.quux'")
-        );
       });
     });
 
@@ -2133,11 +1968,9 @@ describe('Model', function() {
         });
 
         it("inherits but does not interfere with the parent's references", function() {
-          class Foo extends Model {}
           class Bar extends Model {}
           class Quux extends Bar {}
 
-          Foo.fields = { id: { type: 'integer' } };
           Bar.fields = {
             fooId: { type: 'integer', references: Foo.fields.id }
           };
