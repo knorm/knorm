@@ -1935,7 +1935,7 @@ describe('Model', function() {
         Bar.fields = { fooId: { type: 'integer', references: Foo.fields.id } };
 
         expect(Bar.references, 'to exhaustively satisfy', {
-          fooId: Foo.fields.id
+          Foo: { fooId: Bar.fields.fooId }
         });
       });
 
@@ -1960,10 +1960,10 @@ describe('Model', function() {
 
           expect(Model.references, 'to exhaustively satisfy', {});
           expect(Bar.references, 'to exhaustively satisfy', {
-            fooId: Foo.fields.id
+            Foo: { fooId: Bar.fields.fooId }
           });
           expect(Quux.references, 'to exhaustively satisfy', {
-            fooId: Foo.fields.id2
+            Foo: { fooId: Quux.fields.fooId }
           });
         });
 
@@ -1980,11 +1980,10 @@ describe('Model', function() {
 
           expect(Model.references, 'to exhaustively satisfy', {});
           expect(Bar.references, 'to exhaustively satisfy', {
-            fooId: Foo.fields.id
+            Foo: { fooId: Bar.fields.fooId }
           });
           expect(Quux.references, 'to exhaustively satisfy', {
-            fooId: Foo.fields.id,
-            fooId2: Foo.fields.id2
+            Foo: { fooId: Quux.fields.fooId, fooId2: Quux.fields.fooId2 }
           });
         });
       });
