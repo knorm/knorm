@@ -2510,6 +2510,26 @@ describe('Query', function() {
         );
       });
 
+      it('supports multiple calls with an array', async function() {
+        const query = new Query(User)
+          .returning(['name'])
+          .returning(['confirmed']);
+        await expect(
+          query.insert(new User({ name: 'John Doe' })),
+          'to be fulfilled with value satisfying',
+          [new User({ name: 'John Doe', confirmed: false })]
+        );
+      });
+
+      it('supports multiple calls with a string', async function() {
+        const query = new Query(User).returning('name').returning('confirmed');
+        await expect(
+          query.insert(new User({ name: 'John Doe' })),
+          'to be fulfilled with value satisfying',
+          [new User({ name: 'John Doe', confirmed: false })]
+        );
+      });
+
       it('allows using aliases for the fields returned from the database', async function() {
         const query = new Query(User).returning({
           theName: 'name',
