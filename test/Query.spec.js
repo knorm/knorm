@@ -544,29 +544,6 @@ describe('Query', function() {
       });
     });
 
-    describe("with a 'where' configured", function() {
-      it('resolves with only the rows matching the query', async function() {
-        const query = new Query(User).where({ id: 2 });
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
-        );
-      });
-    });
-
     describe("with 'fields' configured", function() {
       it('resolves with instances containing only the requested fields', async function() {
         const query = new Query(User).fields(['id', 'name']);
@@ -737,6 +714,38 @@ describe('Query', function() {
       });
     });
 
+    describe("with a 'where' configured", function() {
+      it('resolves with only the rows matching the query', async function() {
+        const query = new Query(User).where({ id: 2 });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({
+              id: 2,
+              name: 'User 2',
+              confirmed: true,
+              description: 'this is user 2',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: null
+            })
+          ]
+        );
+      });
+
+      it('works with string arguments`', async function() {
+        const query = new Query(User).where('dbDefault', '=', 'dbDefault');
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          []
+        );
+      });
+    });
+
     describe("with a 'whereNot' configured", function() {
       it('resolves with only the rows matching the query', async function() {
         const query = new Query(User).whereNot({ id: 1 });
@@ -761,7 +770,7 @@ describe('Query', function() {
     });
 
     describe("with an 'orWhere' configured", function() {
-      it('resolves with only the rows matching the query', async function() {
+      it.only('resolves with only the rows matching the query', async function() {
         const query = new Query(User).where({ id: 1 }).orWhere({ id: 2 });
         await expect(
           query.fetch(),
@@ -831,6 +840,29 @@ describe('Query', function() {
     describe("with a 'whereRaw' configured", function() {
       it('resolves with only the rows matching the query', async function() {
         const query = new Query(User).whereRaw('id = ?', [1]);
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10'
+            })
+          ]
+        );
+      });
+
+      it('works with named bind parameters', async function() {
+        const query = new Query(User).whereRaw('int_to_string = :intToString', {
+          intToString: 10
+        });
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
