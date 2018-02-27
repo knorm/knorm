@@ -11,7 +11,7 @@ describe('WithKnex', function() {
         expect(
           () => Foo.knex,
           'to throw',
-          new Error('Foo.knex is not configured')
+          new KnormError('Foo.knex is not configured')
         );
       });
 
@@ -29,7 +29,7 @@ describe('WithKnex', function() {
         expect(
           () => WithKnex.knex,
           'to throw',
-          new Error('WithKnex.knex is not configured')
+          new KnormError('WithKnex.knex is not configured')
         );
       });
 
@@ -40,7 +40,7 @@ describe('WithKnex', function() {
         expect(
           () => Bar.knex,
           'to throw',
-          new Error('Bar.knex is not configured')
+          new KnormError('Bar.knex is not configured')
         );
       });
 
