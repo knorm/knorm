@@ -1,5 +1,7 @@
-const WithKnex = require('../lib/WithKnex');
 const expect = require('unexpected');
+const knex = require('./lib/knex');
+const WithKnex = require('../lib/WithKnex');
+const KnormError = require('../lib/KnormError');
 
 describe('WithKnex', function() {
   describe('WithKnex.knex', function() {
@@ -15,15 +17,15 @@ describe('WithKnex', function() {
 
       it('returns the configured knex instance if knex has been set', function() {
         class Foo extends WithKnex {}
-        Foo.knex = 'the knex instance';
-        expect(Foo.knex, 'to be', 'the knex instance');
+        Foo.knex = knex;
+        expect(Foo.knex, 'to equal', knex);
       });
     });
 
     describe('as a setter', function() {
       it('does not set WithKnex.knex when a subclass sets knex', function() {
         class Foo extends WithKnex {}
-        Foo.knex = 'the knex instance';
+        Foo.knex = knex;
         expect(
           () => WithKnex.knex,
           'to throw',
@@ -34,11 +36,33 @@ describe('WithKnex', function() {
       it('does not set knex for other WithKnex subclasses', function() {
         class Foo extends WithKnex {}
         class Bar extends WithKnex {}
-        Foo.knex = 'the knex instance';
+        Foo.knex = knex;
         expect(
           () => Bar.knex,
           'to throw',
           new Error('Bar.knex is not configured')
+        );
+      });
+
+      it('throws an error if not provided a knex instance', () => {
+        class Foo extends WithKnex {}
+        expect(
+          () => {
+            Foo.knex = undefined;
+          },
+          'to throw',
+          new KnormError('Foo: no knex instance provided')
+        );
+      });
+
+      it('throws an error if provided an invalid knex instance', () => {
+        class Foo extends WithKnex {}
+        expect(
+          () => {
+            Foo.knex = 'foo';
+          },
+          'to throw',
+          new KnormError('Foo: invalid knex instance provided')
         );
       });
     });

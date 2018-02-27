@@ -15,22 +15,6 @@ describe('Knorm', () => {
   });
 
   describe('constructor', () => {
-    it('throws an error if not provided a knex instance', () => {
-      expect(
-        () => new Knorm(),
-        'to throw',
-        new KnormError('Knorm: no knex instance provided')
-      );
-    });
-
-    it('throws an error if provided an invalid knex instance', () => {
-      expect(
-        () => new Knorm({ knex: 'foo' }),
-        'to throw',
-        new KnormError('Knorm: invalid knex instance provided')
-      );
-    });
-
     it('creates scoped Model, Query classes when instantiated', () => {
       const knorm = new Knorm({ knex });
       expect(knorm.Query, 'not to be', Query);
