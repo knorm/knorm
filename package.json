@@ -4,10 +4,13 @@
   "description": "An example project showcasing how to use Knorm",
   "main": "index.js",
   "scripts": {
+    "start": "npm run migrate && node index",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d postgres",
     "postgres:stop": "docker-compose stop postgres",
-    "postgres:remove": "docker-compose rm -sf postgres"
+    "postgres:remove": "docker-compose rm -sf postgres",
+    "migrate": "knex migrate:latest",
+    "rollback": "knex migrate:rollback"
   },
   "repository": {
     "type": "git",
