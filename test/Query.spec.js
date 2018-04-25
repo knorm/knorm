@@ -225,29 +225,26 @@ describe('Query', function() {
 
   describe('constructor', function() {
     it('throws an error if not passed a model', function() {
-      expect(
-        () => new Query(),
-        'to throw',
-        new Error('Query requires a Model class')
-      );
+      expect(() => new Query(), 'to throw', {
+        name: 'QueryError',
+        message: 'Query: no model provided'
+      });
     });
 
     it('throws an error if the passed model does not inherit from Model', function() {
       class Foo {}
-      expect(
-        () => new Query(Foo),
-        'to throw',
-        new Error('Query requires a subclass of Model')
-      );
+      expect(() => new Query(Foo), 'to throw', {
+        name: 'QueryError',
+        message: 'Query: invalid model provided'
+      });
     });
 
     it("throws an error if the passed model's table-name is not set", function() {
       class Foo extends Model {}
-      expect(
-        () => new Query(Foo),
-        'to throw',
-        new Error("'Foo.table' is not configured")
-      );
+      expect(() => new Query(Foo), 'to throw', {
+        name: 'QueryError',
+        message: 'Query: `Foo.table` is not configured'
+      });
     });
 
     it('throws an error if Query.knex is not configured', function() {

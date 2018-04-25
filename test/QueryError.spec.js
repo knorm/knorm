@@ -1,23 +1,14 @@
 const expect = require('unexpected').clone();
 const QueryError = require('../lib/QueryError');
 const KnormError = require('../lib/KnormError');
-const AbstractQuery = require('../lib/Query');
-const AbstractModel = require('../lib/Model');
-const knex = require('./lib/knex');
+const Knorm = require('../lib/Knorm');
 
-class Query extends AbstractQuery {}
-Query.knex = knex;
+const { Model, Query } = new Knorm({ knex() {} });
 
-class User extends AbstractModel {}
-User.Query = Query;
+class User extends Model {}
+
 User.table = 'user';
-User.fields = {
-  id: {
-    type: 'integer',
-    required: true,
-    primary: true
-  }
-};
+User.fields = { id: { type: 'integer', required: true, primary: true } };
 
 describe('QueryError', () => {
   it('extends KnormError', () => {
@@ -32,9 +23,7 @@ describe('QueryError', () => {
       expect(
         new QueryError({ error: queryBuilderError, query: new Query(User) }),
         'to satisfy',
-        {
-          message: 'User: column "foo" of relation "user" does not exist'
-        }
+        { message: 'User: column "foo" of relation "user" does not exist' }
       );
     });
 
@@ -43,9 +32,7 @@ describe('QueryError', () => {
       expect(
         new QueryError({ error: knexError, query: new Query(User) }),
         'to satisfy',
-        {
-          message: 'User: connect ECONNREFUSED 127.0.0.1:5616'
-        }
+        { message: 'User: connect ECONNREFUSED 127.0.0.1:5616' }
       );
     });
 
@@ -54,9 +41,7 @@ describe('QueryError', () => {
       expect(
         new QueryError({ error: knexError, query: new Query(User) }),
         'to satisfy',
-        {
-          originalError: knexError
-        }
+        { originalError: knexError }
       );
     });
   });
@@ -66,9 +51,7 @@ describe('QueryError', () => {
       expect(
         new SomethingWrongError({ query: new Query(User) }),
         'to satisfy',
-        {
-          message: 'User: something wrong'
-        }
+        { message: 'User: something wrong' }
       );
     });
   });
