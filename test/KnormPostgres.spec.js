@@ -1,7 +1,7 @@
 const knorm = require('knorm');
 const KnormPostgres = require('../lib/KnormPostgres');
 const knormPostgres = require('../');
-const knex = require('./lib/knex');
+const makeKnex = require('knex');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
@@ -46,7 +46,18 @@ const expect = require('unexpected')
   );
 
 const { KnormPostgresError } = KnormPostgres;
-const connection = 'postgres://postgres@127.0.0.1:5432/postgres';
+const connection = {
+  host: process.env.PGHOST || '127.0.0.1',
+  port: process.env.PGPORT || 5432,
+  user: process.env.PGUSER || 'postgres',
+  password: process.env.PGPASSWORD || '',
+  database: process.env.PGDATABASE || 'postgres'
+};
+
+const knex = makeKnex({
+  client: 'pg',
+  connection
+});
 
 describe('KnormPostgres', () => {
   before(async () =>
@@ -58,26 +69,28 @@ describe('KnormPostgres', () => {
 
   after(async () => knex.schema.dropTable('user'));
 
-  it('throws if no `connection` config is provided', async () => {
-    expect(
-      () => new KnormPostgres(),
-      'to throw',
-      new KnormPostgresError('no `connection` config provided')
-    );
-  });
-
-  it('supports passing `connection` config as an object', async () => {
+  it('supports passing `connection` config as a string', async () => {
     const knormPostgres = new KnormPostgres({
-      connection: {
-        user: 'postgres',
-        password: '',
-        host: '127.0.0.1',
-        port: 5432,
-        database: 'postgres'
-      }
+      connection: 'postgres://postgres@127.0.0.1:5432/postgres'
     });
     await expect(knormPostgres.acquireClient(), 'to be fulfilled');
     await expect(knormPostgres.releaseClient(), 'to be fulfilled');
+  });
+
+  it('uses postgres environment variables if no `connection` config is provided', async () => {
+    process.env.PGHOST = '127.0.0.1';
+    process.env.PGPORT = 5432;
+    process.env.PGUSER = 'postgres';
+    process.env.PGPASSWORD = '';
+    process.env.PGDATABASE = 'postgres';
+    const knormPostgres = new KnormPostgres();
+    await expect(knormPostgres.acquireClient(), 'to be fulfilled');
+    await expect(knormPostgres.releaseClient(), 'to be fulfilled');
+    process.env.PGHOST = undefined;
+    process.env.PGPORT = undefined;
+    process.env.PGUSER = undefined;
+    process.env.PGPASSWORD = undefined;
+    process.env.PGDATABASE = undefined;
   });
 
   describe('init', () => {
