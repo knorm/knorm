@@ -578,11 +578,24 @@ describe('KnormPostgres', () => {
       );
     });
 
-    it('releases the client after each query', async () => {
-      const spy = sinon.spy(KnormPostgres.prototype, 'releaseClient');
+    it('adds `limit` for `fetch` when `first` is true', async () => {
       await new Query(User).insert({ id: 1, name: 'foo' });
-      await new Query(User).delete();
-      await expect(spy, 'was called twice');
+      const spy = sinon.spy(KnormPostgres.prototype, 'query');
+      await expect(
+        new Query(User).first().fetch(),
+        'to be fulfilled with value satisfying',
+        { id: 1, name: 'foo' }
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            query => query.toString(),
+            'to contain',
+            'LIMIT 1'
+          )
+        );
+      });
       spy.restore();
     });
 
