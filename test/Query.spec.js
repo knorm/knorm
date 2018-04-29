@@ -1,8 +1,8 @@
 const { snakeCase: fieldToColumn } = require('lodash');
-const QueryBuilder = require('knex/lib/query/builder');
 const Knorm = require('../lib/Knorm');
-const KnormQuery = require('../lib/Query');
+const KnormError = require('../lib/KnormError');
 const knex = require('./lib/knex');
+const postgresPlugin = require('./lib/postgresPlugin');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
@@ -46,7 +46,7 @@ const expect = require('unexpected')
     }
   );
 
-const { Model, Query } = new Knorm({ knex, fieldToColumn });
+const { Model, Query } = new Knorm({ fieldToColumn }).use(postgresPlugin);
 
 Model.fields = {
   id: {
@@ -205,8 +205,8 @@ const truncateMessageTable = async () => {
   return knex(Message.table).truncate();
 };
 
-describe('Query', function() {
-  before(async function() {
+describe('Query', () => {
+  before(async () => {
     await knex.schema.createTable(User.table, createUserTable);
     await knex.schema.createTable(
       ImageCategory.table,
@@ -216,61 +216,51 @@ describe('Query', function() {
     await knex.schema.createTable(Message.table, createMessageTable);
   });
 
-  after(async function() {
+  after(async () => {
     await knex.schema.dropTable(Message.table);
     await knex.schema.dropTable(Image.table);
     await knex.schema.dropTable(ImageCategory.table);
     await knex.schema.dropTable(User.table);
   });
 
-  describe('constructor', function() {
-    it('throws an error if not passed a model', function() {
+  describe('constructor', () => {
+    it('throws an error if not passed a model', () => {
       expect(
         () => new Query(),
         'to throw',
-        new Error('Query requires a Model class')
+        new KnormError('Query: no model provided')
       );
     });
 
-    it('throws an error if the passed model does not inherit from Model', function() {
+    it('throws an error if the passed model does not inherit from Model', () => {
       class Foo {}
       expect(
         () => new Query(Foo),
         'to throw',
-        new Error('Query requires a subclass of Model')
+        new KnormError('Query: model should be a subclass of `Model`')
       );
     });
 
-    it("throws an error if the passed model's table-name is not set", function() {
+    it("throws an error if the passed model's table-name is not set", () => {
       class Foo extends Model {}
       expect(
         () => new Query(Foo),
         'to throw',
-        new Error("'Foo.table' is not configured")
-      );
-    });
-
-    it('throws an error if Query.knex is not configured', function() {
-      class Foo extends Model {}
-      Foo.table = 'foo';
-      expect(
-        () => new KnormQuery(Foo),
-        'to throw',
-        new Error('Query.knex is not configured')
+        new KnormError('Query: `Foo.table` is not set')
       );
     });
   });
 
-  describe('Query.prototype.setOptions', function() {
-    it('throws an error if passed an option that is not a Query method', function() {
+  describe('Query.prototype.setOptions', () => {
+    it('throws an error if passed an option that is not a Query method', () => {
       expect(
         () => new Query(User).setOptions({ foo: 'bar' }),
         'to throw',
-        new Error("Unknown option 'foo'")
+        new KnormError("Unknown option 'foo'")
       );
     });
 
-    it('supports query builder methods', function() {
+    it('supports query builder methods', () => {
       expect(
         () => new Query(User).setOptions({ where: { foo: 'bar' } }),
         'not to throw'
@@ -278,8 +268,8 @@ describe('Query', function() {
     });
   });
 
-  describe('Query.prototype.fetch', function() {
-    before(async function() {
+  describe('Query.prototype.fetch', () => {
+    before(async () => {
       await knex(User.table).insert([
         {
           id: 1,
@@ -304,11 +294,11 @@ describe('Query', function() {
       ]);
     });
 
-    after(async function() {
+    after(async () => {
       await truncateUserTable();
     });
 
-    it('resolves with all the rows in the table', async function() {
+    it('resolves with all the rows in the table', async () => {
       const query = new Query(User);
       await expect(
         query.fetch(),
@@ -317,7 +307,7 @@ describe('Query', function() {
       );
     });
 
-    it('resolves with instances of the model', async function() {
+    it('resolves with instances of the model', async () => {
       const query = new Query(User);
       await expect(query.fetch(), 'to be fulfilled with value satisfying', [
         expect.it('to be a', User),
@@ -325,7 +315,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('populates the instances with data for all the fields', async function() {
+    it('populates all fields of the instances', async () => {
       const query = new Query(User);
       await expect(
         query.fetch(),
@@ -357,53 +347,21 @@ describe('Query', function() {
       );
     });
 
-    it('casts fields configured with post-fetch cast functions after fetching', async function() {
+    it('casts fields configured with post-fetch cast functions', async () => {
       const query = new Query(User);
       await expect(
         query.fetch(),
-        'to be fulfilled with sorted rows exhaustively satisfying',
+        'to be fulfilled with sorted rows satisfying',
         [
-          new User({
-            id: 1,
-            name: 'User 1',
-            confirmed: false,
-            description: 'this is user 1',
-            age: 10,
-            dateOfBirth: null,
-            dbDefault: 'set-by-db',
-            jsonField: null,
-            intToString: '10'
-          }),
-          new User({
-            id: 2,
-            name: 'User 2',
-            confirmed: true,
-            description: 'this is user 2',
-            age: 10,
-            dateOfBirth: null,
-            dbDefault: 'set-by-db',
-            jsonField: null,
-            intToString: null
-          })
+          new User({ id: 1, intToString: '10' }),
+          new User({ id: 2, intToString: null })
         ]
       );
     });
 
-    it('accepts options', async function() {
-      const query = new Query(User);
-      await expect(
-        query.fetch({ first: true, fields: ['id', 'name'] }),
-        'to be fulfilled with value exhaustively satisfying',
-        new User({
-          id: 1,
-          name: 'User 1'
-        })
-      );
-    });
-
-    it('rejects with a FetchError if a database error occurs', async function() {
+    it('rejects with a FetchError if a database error occurs', async () => {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'then')
+        .stub(Query.prototype, 'query')
         .returns(Promise.reject(new Error('fetch error')));
       const query = new Query(User);
       await expect(
@@ -414,23 +372,23 @@ describe('Query', function() {
       stub.restore();
     });
 
-    describe('if no rows are fetched', function() {
+    describe('if no rows are fetched', () => {
       let selectStub;
 
-      before(function() {
-        selectStub = sinon.stub(QueryBuilder.prototype, 'then');
+      before(() => {
+        selectStub = sinon.stub(Query.prototype, 'query');
       });
 
-      beforeEach(function() {
-        selectStub.reset();
+      beforeEach(() => {
+        selectStub.resetHistory();
         selectStub.returns(Promise.resolve([]));
       });
 
-      after(function() {
+      after(() => {
         selectStub.restore();
       });
 
-      it('resolves with an empty array', async function() {
+      it('resolves with an empty array', async () => {
         const query = new Query(User);
         await expect(
           query.fetch(),
@@ -439,8 +397,8 @@ describe('Query', function() {
         );
       });
 
-      describe("with 'first' configured", function() {
-        it('resolves with null', async function() {
+      describe("with 'first' configured", () => {
+        it('resolves with null', async () => {
           const query = new Query(User).first();
           await expect(
             query.fetch(),
@@ -450,8 +408,8 @@ describe('Query', function() {
         });
       });
 
-      describe("with 'require' configured", function() {
-        it('rejects with a NoRowsFetchedError', async function() {
+      describe("with 'require' configured", () => {
+        it('rejects with a NoRowsFetchedError', async () => {
           const query = new Query(User).require();
           await expect(
             query.fetch(),
@@ -462,37 +420,27 @@ describe('Query', function() {
       });
     });
 
-    describe("with 'first' configured", function() {
-      it('resolves with an instance populated with data from the first row', async function() {
+    describe("with 'first' configured", () => {
+      it('resolves with the first row', async () => {
         const query = new Query(User).first();
         await expect(
           query.fetch(),
-          'to be fulfilled with value exhaustively satisfying',
-          new User({
-            id: 1,
-            name: 'User 1',
-            confirmed: false,
-            description: 'this is user 1',
-            age: 10,
-            dateOfBirth: null,
-            dbDefault: 'set-by-db',
-            jsonField: null,
-            intToString: '10'
-          })
+          'to be fulfilled with value satisfying',
+          new User({ id: 1 })
         );
       });
     });
 
-    describe("with 'forge' disabled", function() {
-      it('resolves with plain JS objects', async function() {
+    describe("with 'forge' disabled", () => {
+      it('resolves with plain JS objects', async () => {
         const query = new Query(User).forge(false);
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
-          expect.it('not to be a', User),
-          expect.it('not to be a', User)
+          expect.it('to be an object').and('not to be a', User),
+          expect.it('to be an object').and('not to be a', User)
         ]);
       });
 
-      it('does not cast fields with post-fetch cast functions', async function() {
+      it('does not cast fields with post-fetch cast functions', async () => {
         const query = new Query(User).forge(false);
         await expect(
           query.fetch(),
@@ -501,7 +449,7 @@ describe('Query', function() {
         );
       });
 
-      it("uses the model's field names as the objects' keys", async function() {
+      it("uses the model's field names as the objects' keys", async () => {
         const query = new Query(User).forge(false);
         await expect(
           query.fetch(),
@@ -533,19 +481,19 @@ describe('Query', function() {
         );
       });
 
-      describe('via the `lean` alias', function() {
-        it('resolves with plain JS objects', async function() {
+      describe('via the `lean` alias', () => {
+        it('resolves with plain JS objects', async () => {
           const query = new Query(User).lean();
           await expect(query.fetch(), 'to be fulfilled with value satisfying', [
-            expect.it('not to be a', User),
-            expect.it('not to be a', User)
+            expect.it('to be an object').and('not to be a', User),
+            expect.it('to be an object').and('not to be a', User)
           ]);
         });
       });
     });
 
-    describe("with 'fields' configured", function() {
-      it('resolves with instances containing only the requested fields', async function() {
+    describe("with 'fields' configured", () => {
+      it('resolves with instances containing only the requested fields', async () => {
         const query = new Query(User).fields(['id', 'name']);
         await expect(
           query.fetch(),
@@ -557,7 +505,7 @@ describe('Query', function() {
         );
       });
 
-      it('always includes the `id` field even if not requested', async function() {
+      it('always includes the `id` field even if not requested', async () => {
         const query = new Query(User).fields('name');
         await expect(
           query.fetch(),
@@ -569,7 +517,7 @@ describe('Query', function() {
         );
       });
 
-      it('resolves with instances containing only the requested fields', async function() {
+      it('resolves with instances containing only the requested fields', async () => {
         const query = new Query(User).fields(['name', 'confirmed']);
         await expect(
           query.fetch(),
@@ -581,7 +529,7 @@ describe('Query', function() {
         );
       });
 
-      it('casts the fields requested if they have post-fetch cast functions', async function() {
+      it('casts the fields requested if they have post-fetch cast functions', async () => {
         const query = new Query(User).fields('intToString');
         await expect(
           query.fetch(),
@@ -593,8 +541,8 @@ describe('Query', function() {
         );
       });
 
-      describe('as an object with string values', function() {
-        it('uses the string values as aliases for the fields', async function() {
+      describe('as an object', () => {
+        it('uses the objects keys as field aliases', async () => {
           const query = new Query(User).fields({ ages: 'age' });
           await expect(
             query.fetch(),
@@ -602,10 +550,22 @@ describe('Query', function() {
             [new User({ id: 1, ages: 10 }), new User({ id: 2, ages: 10 })]
           );
         });
+
+        it('supports SQL functions as object values', async () => {
+          const query = new Query(User).fields({ now: 'now()' });
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
+              new User({ id: 1, now: expect.it('to be a', Date) }),
+              new User({ id: 2, now: expect.it('to be a', Date) })
+            ]
+          );
+        });
       });
 
-      describe('as an array of strings', function() {
-        it('resolves with instances containing the requested fields', async function() {
+      describe('as an array of strings', () => {
+        it('resolves with instances containing the requested fields', async () => {
           const query = new Query(User).fields(['name', 'age', 'confirmed']);
           await expect(
             query.fetch(),
@@ -619,13 +579,16 @@ describe('Query', function() {
       });
     });
 
-    describe("with 'distinct' configured", function() {
-      it('resolves with instances matching the distinct fields', async function() {
+    describe("with 'distinct' configured", () => {
+      it('resolves with instances matching the distinct fields', async () => {
         await expect(
           new Query(User).distinct('age').fetch(),
           'to be fulfilled with value exhaustively satisfying',
           [new User({ age: 10 })]
         );
+      });
+
+      it('resolves with all instances matching the query', async () => {
         await expect(
           new Query(User).distinct(['id', 'name']).fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
@@ -634,6 +597,9 @@ describe('Query', function() {
             new User({ id: 2, name: 'User 2' })
           ]
         );
+      });
+
+      it('supports instances fetched without an id field', async () => {
         await expect(
           new Query(User).distinct(['name']).fetch(),
           'to be fulfilled with value satisfying',
@@ -648,9 +614,12 @@ describe('Query', function() {
         );
       });
 
-      it('resolves with all instances matching the query', async function() {
+      it('supports fields', async () => {
         await expect(
-          new Query(User).distinct(['id', 'name']).fetch(),
+          new Query(User)
+            .distinct('name')
+            .field('id')
+            .fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
             new User({ id: 1, name: 'User 1' }),
@@ -659,22 +628,7 @@ describe('Query', function() {
         );
       });
 
-      it('supports instances fetched without an id field', async function() {
-        await expect(
-          new Query(User).distinct(['name']).fetch(),
-          'to be fulfilled with value satisfying',
-          rows =>
-            expect(
-              rows,
-              'when sorted by',
-              (a, b) => (a.name > b.name ? 1 : -1),
-              'to exhaustively satisfy',
-              [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
-            )
-        );
-      });
-
-      it('supports leftJoin', async function() {
+      it('supports leftJoin', async () => {
         await expect(
           new Query(User)
             .distinct(['name'])
@@ -692,7 +646,7 @@ describe('Query', function() {
         );
       });
 
-      it('supports innerJoin', async function() {
+      it('supports `innerJoin`', async () => {
         await knex(ImageCategory.table).insert([
           { id: 1, name: 'User images' }
         ]);
@@ -714,342 +668,455 @@ describe('Query', function() {
       });
     });
 
-    describe("with a 'where' configured", function() {
-      it('resolves with only the rows matching the query', async function() {
+    // this also tests `having`
+    describe("with a 'where' configured", () => {
+      it('supports an object', async () => {
         const query = new Query(User).where({ id: 2 });
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
         );
       });
 
-      it('works with string arguments`', async function() {
-        const query = new Query(User).where('dbDefault', '=', 'dbDefault');
+      it('supports chained `where` calls', async () => {
+        const query = new Query(User)
+          .where({ id: 2 })
+          .where({ name: 'User 2' });
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
+        );
+      });
+
+      it('supports chained `and` calls', async () => {
+        const query = new Query(User).where({ id: 2 }).and({ name: 'User 2' });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
+        );
+      });
+
+      it('supports "where true|false"', async () => {
+        const query = new Query(User).where(false);
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
           []
         );
       });
-    });
 
-    describe("with a 'whereNot' configured", function() {
-      it('resolves with only the rows matching the query', async function() {
-        const query = new Query(User).whereNot({ id: 1 });
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
-        );
-      });
-    });
-
-    describe("with an 'orWhere' configured", function() {
-      it.only('resolves with only the rows matching the query', async function() {
-        const query = new Query(User).where({ id: 1 }).orWhere({ id: 2 });
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            }),
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
-        );
-      });
-    });
-
-    describe("with an 'orWhereNot' configured", function() {
-      it('resolves with only the rows matching the query', async function() {
-        const query = new Query(User).whereNot({ id: 1 }).orWhereNot({ id: 3 });
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            }),
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
-        );
-      });
-    });
-
-    describe("with a 'whereRaw' configured", function() {
-      it('resolves with only the rows matching the query', async function() {
-        const query = new Query(User).whereRaw('id = ?', [1]);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            })
-          ]
-        );
-      });
-
-      it('works with named bind parameters', async function() {
-        const query = new Query(User).whereRaw('int_to_string = :intToString', {
-          intToString: 10
-        });
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            })
-          ]
-        );
-      });
-    });
-
-    describe("with a 'groupBy' and 'having' configured", function() {
-      it('resolves with the rows matching the grouping', async function() {
-        const query = new Query(User)
-          .groupBy(['id', 'age'])
-          .having('age', '=', 10);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            }),
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
-        );
-      });
-    });
-
-    describe("with an 'orderBy' configured", function() {
-      it('resolves with rows in the requested order', async function() {
-        const query = new Query(User).orderBy({ id: 'desc' });
-        await expect(
-          query.fetch(),
-          'to be fulfilled with value exhaustively satisfying',
-          [
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            }),
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            })
-          ]
-        );
-      });
-    });
-
-    describe("with a 'limit' configured", function() {
-      it('resolves with rows matching the limit', async function() {
-        const query = new Query(User).limit(1);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with value exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            })
-          ]
-        );
-      });
-    });
-
-    describe("with an 'offset' configured", function() {
-      it('resolves with rows starting from the offset', async function() {
-        const query = new Query(User).offset(1);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with value exhaustively satisfying',
-          [
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
-        );
-      });
-    });
-
-    describe("with an 'transaction' configured", function() {
-      it('does the fetch within the transaction', async function() {
-        const spy = sinon.spy(QueryBuilder.prototype, 'transacting');
-        await expect(
-          knex.transaction(async transaction => {
-            const users = await new Query(User)
-              .transaction(transaction)
-              .fetch();
-
-            return users;
-          }),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            }),
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
-        );
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
-            expect.it('to satisfy', {
-              commit: expect.it('to be a function'),
-              rollback: expect.it('to be a function')
-            })
+      describe('with a field as the first argument', () => {
+        it('supports "field, value"', async () => {
+          const query = new Query(User);
+          query.where('id', 2);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
           );
         });
-        spy.restore();
+
+        it('supports "field, null"', async () => {
+          const query = new Query(User);
+          query.where('dateOfBirth', null);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('ignores everything after the second argument', async () => {
+          const query = new Query(User);
+          query.where('id', 1, 2);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+      });
+
+      it('supports expressions', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.not({ id: 1 }));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
+        );
+      });
+
+      it('supports multiple expressions', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.notEqual('id', 1), where.between('id', 1, 2));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
+        );
+      });
+
+      it('supports objects and expressions', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where({ id: 1 }, where.between('id', 1, 2));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 1, name: 'User 1' })]
+        );
+      });
+
+      it.skip('supports expressions with objects', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.notEqual({ id: 1 }));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
+        );
+      });
+
+      it.skip('supports `between` with an array', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.between('id', [1, 2]));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      describe('with an `or` grouping', () => {
+        it('supports a single expression', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.or(where.equal('id', 1)));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        it('supports multiple expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.or(where.equal('id', 1), where.like('name', 'User'))
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        it('supports a single object', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.or({ id: 1 }));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        it('supports objects and expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.or({ id: 1 }, where.like('name', 'User')));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+      });
+
+      describe('with an `and` grouping', () => {
+        it('supports a single expression', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.and(where.equal('id', 1)));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        it('supports multiple expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.and(where.equal('id', 1), where.like('name', 'User%'))
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        it('supports a single object', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.and({ id: 1 }));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        it('supports objects and expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.and({ id: 1 }, where.like('name', 'User%')));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+      });
+
+      describe('with `not` expressions', () => {
+        it('supports a single expression', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.not(where.equal('id', 1)));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        it('supports multiple expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.not(where.equal('id', 1)),
+            where.not(where.like('name', 'User%'))
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            []
+          );
+        });
+
+        it('supports a single object', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.not({ id: 1 }));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        it('supports objects and expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.not({ id: 1 }),
+            where.not(where.like('name', 'User%'))
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            []
+          );
+        });
+      });
+
+      describe('with raw `sql` clauses', () => {
+        it('supports a single expression', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.sql(`id <> ${query.config.placeholder}`, 1));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        it('supports a `not` wrapper for a single expression', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.not(where.sql(`id = ${query.config.placeholder}`, 1))
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        // https://github.com/CSNW/sql-bricks/issues/103
+        it.skip('supports multiple `not` wrapper', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.not(where.sql(`id = ${query.config.placeholder}`, 1)),
+            where.not(
+              where.sql(`name like ${query.config.placeholder}`, 'User%')
+            )
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        // https://github.com/CSNW/sql-bricks/issues/103
+        it.skip('supports an `and` wrapper', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.and(
+              where.sql(`id = ${query.config.placeholder}`, 1),
+              where.sql(`name like ${query.config.placeholder}`, 'User%')
+            )
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        // https://github.com/CSNW/sql-bricks/issues/103
+        it.skip('supports an `or` wrapper', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.or(
+              where.sql(`id = ${query.config.placeholder}`, 1),
+              where.sql(`name like ${query.config.placeholder}`, 'User%')
+            )
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
       });
     });
 
-    describe("with a 'leftJoin' configured", function() {
-      before(async function() {
+    describe("with 'groupBy' configured", () => {
+      it('supports a single field', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.groupBy('id').having(where.equal('age', 10));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1', age: 10 }),
+            new User({ id: 2, name: 'User 2', age: 10 })
+          ]
+        );
+      });
+
+      it('supports multiple fields', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.groupBy(['id', 'age']).having(where.equal('age', 10));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1', age: 10 }),
+            new User({ id: 2, name: 'User 2', age: 10 })
+          ]
+        );
+      });
+    });
+
+    describe("with 'orderBy' configured", () => {
+      it("supports { field: 'asc' }", async () => {
+        const query = new Query(User).orderBy({ id: 'asc' });
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+      });
+
+      it("supports { field: 'desc' }", async () => {
+        const query = new Query(User).orderBy({ id: 'desc' });
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 2, name: 'User 2' }),
+          new User({ id: 1, name: 'User 1' })
+        ]);
+      });
+
+      it('supports { field: 1 }', async () => {
+        const query = new Query(User).orderBy({ id: 1 });
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+      });
+
+      it('supports { field: -1 }', async () => {
+        const query = new Query(User).orderBy({ id: -1 });
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 2, name: 'User 2' }),
+          new User({ id: 1, name: 'User 1' })
+        ]);
+      });
+
+      it('supports a single field', async () => {
+        const query = new Query(User).orderBy('id');
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+      });
+
+      it('supports multiple fields', async () => {
+        const query = new Query(User).orderBy(['id', 'name']);
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+      });
+
+      it('supports multiple objects', async () => {
+        const query = new Query(User).orderBy({ id: 1 }, { name: 'desc' });
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+      });
+    });
+
+    describe("with a 'leftJoin' configured", () => {
+      before(async () => {
         await knex(ImageCategory.table).insert([
           { id: 1, name: 'User images' }
         ]);
@@ -1060,13 +1127,13 @@ describe('Query', function() {
         ]);
       });
 
-      after(async function() {
+      after(async () => {
         await truncateMessageTable();
         await truncateImageTable();
         await truncateImageCategoryTable();
       });
 
-      it('throws an error if the models do not reference each other', function() {
+      it('throws an error if the models do not reference each other', () => {
         class Foo extends Model {}
         Foo.table = 'foo';
         expect(
@@ -1081,7 +1148,19 @@ describe('Query', function() {
         );
       });
 
-      it('includes the joined model in the returned instance using a camel-cased property name', async function() {
+      it('includes the joined models for every instance', async () => {
+        const query = new Query(User).leftJoin(new Query(Image));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [
+            new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('populates all instance fields', async () => {
         const query = new Query(User).leftJoin(new Query(Image));
         await expect(
           query.fetch(),
@@ -1097,7 +1176,7 @@ describe('Query', function() {
               dbDefault: 'set-by-db',
               jsonField: null,
               intToString: '10',
-              image: new Image({ id: 1, userId: 1, categoryId: 1 })
+              image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
             }),
             new User({
               id: 2,
@@ -1114,32 +1193,18 @@ describe('Query', function() {
         );
       });
 
-      it('does not include the joined model if no rows were matched', async function() {
+      it('does not include the joined model if no rows were matched', async () => {
         const query = new Query(User)
           .leftJoin(new Query(Image))
           .where({ id: 2 });
-
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null,
-              image: undefined
-            })
-          ]
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
         );
       });
 
-      it('includes the joined model as an array if more than one rows are matched', async function() {
+      it('includes all joined models if more than one rows are matched', async () => {
         await knex(Image.table).insert([{ id: 2, user_id: 1, category_id: 1 }]);
 
         const query = new Query(User)
@@ -1147,22 +1212,12 @@ describe('Query', function() {
           .leftJoin(new Query(Image));
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [
             new User({
               id: 1,
               name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10',
-              image: [
-                new Image({ id: 1, userId: 1, categoryId: 1 }),
-                new Image({ id: 2, userId: 1, categoryId: 1 })
-              ]
+              image: [new Image({ id: 1 }), new Image({ id: 2 })]
             })
           ]
         );
@@ -1172,8 +1227,27 @@ describe('Query', function() {
           .delete();
       });
 
-      describe("with 'fields' configured on the joined query", function() {
-        it('returns only the requested fields from the joined model', async function() {
+      describe("with 'fields' configured on the joined query", () => {
+        it('returns only the requested fields from the joined model', async () => {
+          const query = new Query(User)
+            .where({ id: 1 })
+            .leftJoin(new Query(Image).fields('id'));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({
+                id: 1,
+                name: 'User 1',
+                image: [
+                  expect.it('to exhaustively satisfy', new Image({ id: 1 }))
+                ]
+              })
+            ]
+          );
+        });
+
+        it('returns all the fields from the parent model', async () => {
           const query = new Query(User)
             .where({ id: 1 })
             .leftJoin(new Query(Image).fields('id'));
@@ -1191,136 +1265,127 @@ describe('Query', function() {
                 dbDefault: 'set-by-db',
                 jsonField: null,
                 intToString: '10',
-                image: new Image({ id: 1 })
+                image: [new Image({ id: 1 })]
               })
             ]
           );
         });
-      });
 
-      describe("with 'as' configured on the joined query", function() {
-        it('uses the passed string as the property name of the joined model', async function() {
+        it('allows specifying separate fields on the parent model', async () => {
           const query = new Query(User)
             .where({ id: 1 })
-            .leftJoin(new Query(Image).as('theImage'));
+            .fields(['id', 'name'])
+            .leftJoin(new Query(Image).fields('id'));
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
+            [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
+          );
+        });
+      });
+
+      describe("with 'as' configured on the joined query", () => {
+        it('uses the passed string as the property name of the joined model', async () => {
+          const query = new Query(User)
+            .where({ id: 1 })
+            .leftJoin(new Query(Image).as('images'));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
             [
               new User({
                 id: 1,
                 name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                theImage: new Image({ id: 1, userId: 1, categoryId: 1 })
+                images: [new Image({ id: 1 })]
               })
             ]
           );
         });
       });
 
-      it('creates a left join to the referenced model on all fields', async function() {
-        const query = new Query(User).leftJoin(new Query(Message));
+      describe("with 'first' configured on the joined query", () => {
+        it('returns the first joined model', async () => {
+          const query = new Query(User)
+            .where({ id: 1 })
+            .leftJoin(new Query(Image).first());
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1', image: new Image({ id: 1 }) })]
+          );
+        });
+      });
+
+      it('creates a left join to the model on all fields wih references', async () => {
+        const query = new Query(User).leftJoin(
+          new Query(Message).as('messages')
+        );
+        // this query doesn't match any messages since it joins
+        // ON user.id = message.sender_id AND user.id = message.receiver_id
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            // this query doesn't match any messages since it joins
-            // ON user.id = message.sender_id AND user.id = message.receiver_id
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10'
-            }),
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
-          ]
+          'to be fulfilled with sorted rows satisfying',
+          [{ messages: undefined }, { messages: undefined }]
         );
       });
 
-      describe("with 'on' configured on the joined query", function() {
-        it('creates a join on the provided field', async function() {
+      describe("with 'on' configured on the joined query", () => {
+        it('creates a join on the provided field', async () => {
           const query = new Query(User).leftJoin([
-            new Query(Message).on('senderId').as('sentMessage'),
-            new Query(Message).on('receiverId').as('receivedMessage')
+            new Query(Message).on('senderId').as('sentMessages'),
+            new Query(Message).on('receiverId').as('receivedMessages')
           ]);
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
+            'to be fulfilled with sorted rows satisfying',
             [
               new User({
                 id: 1,
                 name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                sentMessage: new Message({
-                  id: 1,
-                  text: 'Hi User 2',
-                  senderId: 1,
-                  receiverId: 2
-                }),
-                receivedMessage: new Message({
-                  id: 2,
-                  text: 'Hi User 1',
-                  senderId: 2,
-                  receiverId: 1
-                })
+                sentMessages: [
+                  new Message({
+                    id: 1,
+                    text: 'Hi User 2',
+                    senderId: 1,
+                    receiverId: 2
+                  })
+                ],
+                receivedMessages: [
+                  new Message({
+                    id: 2,
+                    text: 'Hi User 1',
+                    senderId: 2,
+                    receiverId: 1
+                  })
+                ]
               }),
               new User({
                 id: 2,
                 name: 'User 2',
-                confirmed: true,
-                description: 'this is user 2',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: null,
-                sentMessage: new Message({
-                  id: 2,
-                  text: 'Hi User 1',
-                  senderId: 2,
-                  receiverId: 1
-                }),
-                receivedMessage: new Message({
-                  id: 1,
-                  text: 'Hi User 2',
-                  senderId: 1,
-                  receiverId: 2
-                })
+                sentMessages: [
+                  new Message({
+                    id: 2,
+                    text: 'Hi User 1',
+                    senderId: 2,
+                    receiverId: 1
+                  })
+                ],
+                receivedMessages: [
+                  new Message({
+                    id: 1,
+                    text: 'Hi User 2',
+                    senderId: 1,
+                    receiverId: 2
+                  })
+                ]
               })
             ]
           );
         });
       });
 
-      describe("with 'where' configured on the joined query", function() {
-        it('fulfils the requested query on the joined model', async function() {
+      describe("with 'where' configured on the joined query", () => {
+        it('fulfils the requested query on the joined model', async () => {
           await knex(Image.table).insert([
             { id: 2, user_id: 1, category_id: 1 }
           ]);
@@ -1331,25 +1396,8 @@ describe('Query', function() {
 
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: new Image({
-                  id: 2,
-                  userId: 1,
-                  categoryId: 1
-                })
-              })
-            ]
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1', image: [new Image({ id: 2 })] })]
           );
 
           await knex(Image.table)
@@ -1358,37 +1406,21 @@ describe('Query', function() {
         });
       });
 
-      describe("with 'whereNot' configured on the joined query", function() {
-        it('fulfils the requested query on the joined model', async function() {
+      describe("with 'where not' configured on the joined query", () => {
+        it('fulfils the requested query on the joined model', async () => {
           await knex(Image.table).insert([
             { id: 2, user_id: 1, category_id: 1 }
           ]);
 
+          const where = new Query.Where();
           const query = new Query(User).leftJoin(
-            new Query(Image).whereNot({ id: 2 })
+            new Query(Image).where(where.not({ id: 2 }))
           );
 
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: new Image({
-                  id: 1,
-                  userId: 1,
-                  categoryId: 1
-                })
-              })
-            ]
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
           );
 
           await knex(Image.table)
@@ -1397,34 +1429,25 @@ describe('Query', function() {
         });
       });
 
-      describe("with 'orWhere' configured on the joined query", function() {
-        it('fulfils the requested query on the joined model', async function() {
+      describe("with 'where or' configured on the joined query", () => {
+        it('fulfils the requested query on the joined model', async () => {
           await knex(Image.table).insert([
             { id: 2, user_id: 1, category_id: 1 }
           ]);
 
+          const where = new Query.Where();
           const query = new Query(User).leftJoin(
-            new Query(Image).where({ id: 1 }).orWhere({ id: 2 })
+            new Query(Image).where(where.or({ id: 1 }, { id: 2 }))
           );
 
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
+            'to be fulfilled with sorted rows satisfying',
             [
               new User({
                 id: 1,
                 name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: [
-                  new Image({ id: 2, userId: 1, categoryId: 1 }),
-                  new Image({ id: 1, userId: 1, categoryId: 1 })
-                ]
+                image: [new Image({ id: 2 }), new Image({ id: 1 })]
               })
             ]
           );
@@ -1435,75 +1458,26 @@ describe('Query', function() {
         });
       });
 
-      describe("with 'orWhereNot' configured on the joined query", function() {
-        it('fulfils the requested query on the joined model', async function() {
-          await knex(Image.table).insert([
-            { id: 2, user_id: 1, category_id: 1 }
-          ]);
-
-          const query = new Query(User).leftJoin(
-            new Query(Image).orWhereNot({ id: 1 })
-          );
-
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: new Image({
-                  id: 2,
-                  userId: 1,
-                  categoryId: 1
-                })
-              })
-            ]
-          );
-
-          await knex(Image.table)
-            .where({ id: 2 })
-            .delete();
-        });
-      });
-
-      describe("with 'orWhereNotIn' configured on the joined query", function() {
-        it('fulfils the requested query on the joined model', async function() {
+      describe("with 'where in' configured on the joined query", () => {
+        it('fulfils the requested query on the joined model', async () => {
           await knex(Image.table).insert([
             { id: 2, user_id: 1, category_id: 1 },
             { id: 3, user_id: 1, category_id: 1 }
           ]);
 
+          const where = new Query.Where();
           const query = new Query(User).leftJoin(
-            new Query(Image).orWhereNotIn('id', [1, 2])
+            new Query(Image).where(where.in('id', [1, 2]))
           );
 
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
+            'to be fulfilled with sorted rows satisfying',
             [
               new User({
                 id: 1,
                 name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: new Image({
-                  id: 3,
-                  userId: 1,
-                  categoryId: 1
-                })
+                image: [new Image({ id: 2 }), new Image({ id: 1 })]
               })
             ]
           );
@@ -1515,8 +1489,8 @@ describe('Query', function() {
         });
       });
 
-      describe("with 'orderBy' configured on the joined query", function() {
-        it('fulfils the requested order on the joined model', async function() {
+      describe("with 'orderBy' configured on the joined query", () => {
+        it('fulfils the requested order on the joined model', async () => {
           await knex(Image.table).insert([
             { id: 2, user_id: 1, category_id: 1 }
           ]);
@@ -1527,22 +1501,12 @@ describe('Query', function() {
 
           await expect(
             query.fetch(),
-            'to be fulfilled with value exhaustively satisfying',
+            'to be fulfilled with sorted rows satisfying',
             [
               new User({
                 id: 1,
                 name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: [
-                  new Image({ id: 2, userId: 1, categoryId: 1 }),
-                  new Image({ id: 1, userId: 1, categoryId: 1 })
-                ]
+                image: [new Image({ id: 2 }), new Image({ id: 1 })]
               })
             ]
           );
@@ -1553,8 +1517,8 @@ describe('Query', function() {
         });
       });
 
-      describe("with 'groupBy' configured on the joined query", function() {
-        it('fulfils the requested grouping on the joined model', async function() {
+      describe("with 'groupBy' configured on the joined query", () => {
+        it('fulfils the requested grouping on the joined model', async () => {
           await knex(Image.table).insert([
             { id: 2, user_id: 1, category_id: 1 }
           ]);
@@ -1566,22 +1530,12 @@ describe('Query', function() {
 
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
+            'to be fulfilled with sorted rows satisfying',
             [
               new User({
                 id: 1,
                 name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: [
-                  new Image({ id: 1, userId: 1, categoryId: 1 }),
-                  new Image({ id: 2, userId: 1, categoryId: 1 })
-                ]
+                image: [new Image({ id: 1 }), new Image({ id: 2 })]
               })
             ]
           );
@@ -1592,8 +1546,8 @@ describe('Query', function() {
         });
       });
 
-      describe("with 'having' configured on the joined query", function() {
-        it('fulfils the requested order on the joined model', async function() {
+      describe("with 'having' configured on the joined query", () => {
+        it('fulfils the requested order on the joined model', async () => {
           await knex(Image.table).insert([
             { id: 2, user_id: 1, category_id: 1 },
             { id: 3, user_id: 2, category_id: 1 }
@@ -1603,29 +1557,17 @@ describe('Query', function() {
             .where({ id: 1 })
             .groupBy('id')
             .leftJoin(
-              new Query(Image)
-                .groupBy(['id', 'userId'])
-                .having('userId', '=', 1)
+              new Query(Image).groupBy(['id', 'userId']).having({ userId: 1 })
             );
 
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
+            'to be fulfilled with sorted rows satisfying',
             [
               new User({
                 id: 1,
                 name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: [
-                  new Image({ id: 1, userId: 1, categoryId: 1 }),
-                  new Image({ id: 2, userId: 1, categoryId: 1 })
-                ]
+                image: [new Image({ id: 1 }), new Image({ id: 2 })]
               })
             ]
           );
@@ -1637,85 +1579,49 @@ describe('Query', function() {
         });
       });
 
-      describe("with 'forge' disabled", function() {
-        describe('on the parent query', function() {
-          it('still forges the joined model', async function() {
+      describe("with 'forge' disabled", () => {
+        describe('on the parent query', () => {
+          it('still forges the joined model', async () => {
             const query = new Query(User)
               .forge(false)
               .leftJoin(new Query(Image));
 
             await expect(
               query.fetch(),
-              'to be fulfilled with sorted rows exhaustively satisfying',
+              'to be fulfilled with sorted rows satisfying',
               [
-                {
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: 10,
-                  image: new Image({ id: 1, userId: 1, categoryId: 1 })
-                },
-                {
-                  id: 2,
-                  name: 'User 2',
-                  confirmed: true,
-                  description: 'this is user 2',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: null
-                }
+                expect.it('not to be a', User).and('to satisfy', {
+                  image: [expect.it('to be an', Image)]
+                }),
+                expect.it('to be an object').and('not to be a', User)
               ]
             );
           });
         });
 
-        describe('on the joined model', function() {
-          it('includes a plain object of the joined model', async function() {
+        describe('on the joined model', () => {
+          it('includes a plain object of the joined model', async () => {
             const query = new Query(User).leftJoin(
               new Query(Image).forge(false)
             );
 
             await expect(
               query.fetch(),
-              'to be fulfilled with sorted rows exhaustively satisfying',
+              'to be fulfilled with sorted rows satisfying',
               [
-                new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10',
-                  image: { id: 1, userId: 1, categoryId: 1 }
+                expect.it('to be a', User).and('to satisfy', {
+                  image: [
+                    expect.it('to be an object').and('not to be an', Image)
+                  ]
                 }),
-                new User({
-                  id: 2,
-                  name: 'User 2',
-                  confirmed: true,
-                  description: 'this is user 2',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: null
-                })
+                expect.it('to be a', User)
               ]
             );
           });
         });
 
-        describe('on both the parent and the joined models', function() {
-          it('includes plain objects of the both models', async function() {
+        describe('on both the parent and the joined models', () => {
+          it('includes plain objects of the both models', async () => {
             const query = new Query(User)
               .forge(false)
               .leftJoin(new Query(Image).forge(false));
@@ -1724,35 +1630,18 @@ describe('Query', function() {
               query.fetch(),
               'to be fulfilled with sorted rows exhaustively satisfying',
               [
-                {
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: 10,
-                  image: { id: 1, userId: 1, categoryId: 1 }
-                },
-                {
-                  id: 2,
-                  name: 'User 2',
-                  confirmed: true,
-                  description: 'this is user 2',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: null
-                }
+                expect.it('not to be a', User).and('to satisfy', {
+                  image: [
+                    expect.it('to be an object').and('not to be an', Image)
+                  ]
+                }),
+                expect.it('to be an object').and('not to be a', User)
               ]
             );
           });
         });
 
-        it('does not include the joined model if no rows were matched', async function() {
+        it('does not include the joined model if no rows were matched', async () => {
           const query = new Query(User)
             .leftJoin(new Query(Image))
             .where({ id: 2 })
@@ -1761,24 +1650,11 @@ describe('Query', function() {
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              {
-                id: 2,
-                name: 'User 2',
-                confirmed: true,
-                description: 'this is user 2',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: null,
-                image: undefined
-              }
-            ]
+            [{ image: undefined }]
           );
         });
 
-        it('includes the joined model as an array if more than one rows are matched', async function() {
+        it('includes all joined models if more than one rows are matched', async () => {
           await knex(Image.table).insert([
             { id: 2, user_id: 1, category_id: 1 }
           ]);
@@ -1788,24 +1664,8 @@ describe('Query', function() {
             .leftJoin(new Query(Image));
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              {
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: [
-                  { id: 1, userId: 1, categoryId: 1 },
-                  { id: 2, userId: 1, categoryId: 1 }
-                ]
-              }
-            ]
+            'to be fulfilled with sorted rows satisfying',
+            [{ id: 1, name: 'User 1', image: [{ id: 1 }, { id: 2 }] }]
           );
 
           await knex(Image.table)
@@ -1814,126 +1674,59 @@ describe('Query', function() {
         });
       });
 
-      it('allows passing a model directly', async function() {
+      it('allows passing a model directly', async () => {
         const query = new Query(User).leftJoin(Image);
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10',
-              image: new Image({ id: 1, userId: 1, categoryId: 1 })
-            }),
-            new User({
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            })
+            new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] }),
+            new User({ id: 2, name: 'User 2' })
           ]
         );
       });
 
-      it('allows passing options when a model is passed directly', async function() {
+      it('allows passing options when a model is passed directly', async () => {
         const query = new Query(User).leftJoin(Image, { fields: 'id' });
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [
             new User({
               id: 1,
               name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10',
-              image: new Image({ id: 1 })
+              image: [
+                expect.it('to exhaustively satisfy', new Image({ id: 1 }))
+              ]
             }),
             new User({
               id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
+              name: 'User 2'
             })
           ]
         );
       });
 
-      describe('with a reverse-reference join', function() {
-        it('resolves with the correct data (with values on the joined model casted)', async function() {
+      describe('with a reverse-reference join', () => {
+        it('resolves with the correct data', async () => {
           const query = new Query(Image).leftJoin(new Query(User));
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new Image({
-                id: 1,
-                userId: 1,
-                categoryId: 1,
-                user: new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                })
-              })
-            ]
+            'to be fulfilled with sorted rows satisfying',
+            [new Image({ id: 1, user: [new User({ id: 1, name: 'User 1' })] })]
           );
         });
 
-        it("supports the 'on' option as a string", async function() {
+        it("supports the 'on' option as a string", async () => {
           const query = new Query(Image).leftJoin(new Query(User).on('id'));
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new Image({
-                id: 1,
-                userId: 1,
-                categoryId: 1,
-                user: new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                })
-              })
-            ]
+            [new Image({ id: 1, user: [new User({ id: 1, name: 'User 1' })] })]
           );
         });
 
-        it('resolves with the correct data when a field is referenced by multiple fields', async function() {
+        it('resolves with the correct data when a field is referenced by multiple fields', async () => {
           const query = new Query(Message).leftJoin(new Query(User).on('id'));
           await expect(
             query.fetch(),
@@ -1944,42 +1737,22 @@ describe('Query', function() {
                 senderId: 1,
                 receiverId: 2,
                 text: 'Hi User 2',
-                user: new User({
-                  id: 2,
-                  name: 'User 2',
-                  confirmed: true,
-                  description: 'this is user 2',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: null
-                })
+                user: [new User({ id: 2, name: 'User 2' })]
               }),
               new Message({
                 id: 2,
                 senderId: 2,
                 receiverId: 1,
                 text: 'Hi User 1',
-                user: new User({
-                  id: 1,
-                  name: 'User 1',
-                  confirmed: false,
-                  description: 'this is user 1',
-                  age: 10,
-                  dateOfBirth: null,
-                  dbDefault: 'set-by-db',
-                  jsonField: null,
-                  intToString: '10'
-                })
+                user: [new User({ id: 1, name: 'User 1' })]
               })
             ]
           );
         });
       });
 
-      describe("with a nested 'leftJoin' query", function() {
-        it('includes the nested data in the returned data if rows are matched', async function() {
+      describe("with a nested 'leftJoin' query", () => {
+        it('includes the nested data in the returned data if rows are matched', async () => {
           const query = new Query(User).leftJoin(
             new Query(Image).leftJoin(new Query(ImageCategory))
           );
@@ -1997,15 +1770,19 @@ describe('Query', function() {
                 dbDefault: 'set-by-db',
                 jsonField: null,
                 intToString: '10',
-                image: new Image({
-                  id: 1,
-                  userId: 1,
-                  categoryId: 1,
-                  imageCategory: new ImageCategory({
+                image: [
+                  new Image({
                     id: 1,
-                    name: 'User images'
+                    userId: 1,
+                    categoryId: 1,
+                    imageCategory: [
+                      new ImageCategory({
+                        id: 1,
+                        name: 'User images'
+                      })
+                    ]
                   })
-                })
+                ]
               }),
               new User({
                 id: 2,
@@ -2023,8 +1800,8 @@ describe('Query', function() {
         });
       });
 
-      describe("with a circular 'leftJoin' query", function() {
-        it('includes the circular data in the returned data', async function() {
+      describe("with a circular 'leftJoin' query", () => {
+        it('includes the circular data in the returned data', async () => {
           const query = new Query(User).leftJoin(
             new Query(Image).leftJoin(
               new Query(ImageCategory).leftJoin(
@@ -2046,31 +1823,39 @@ describe('Query', function() {
                 dbDefault: 'set-by-db',
                 jsonField: null,
                 intToString: '10',
-                image: new Image({
-                  id: 1,
-                  userId: 1,
-                  categoryId: 1,
-                  imageCategory: new ImageCategory({
+                image: [
+                  new Image({
                     id: 1,
-                    name: 'User images',
-                    image: new Image({
-                      id: 1,
-                      userId: 1,
-                      categoryId: 1,
-                      user: new User({
+                    userId: 1,
+                    categoryId: 1,
+                    imageCategory: [
+                      new ImageCategory({
                         id: 1,
-                        name: 'User 1',
-                        confirmed: false,
-                        description: 'this is user 1',
-                        age: 10,
-                        dateOfBirth: null,
-                        dbDefault: 'set-by-db',
-                        jsonField: null,
-                        intToString: '10'
+                        name: 'User images',
+                        image: [
+                          new Image({
+                            id: 1,
+                            userId: 1,
+                            categoryId: 1,
+                            user: [
+                              new User({
+                                id: 1,
+                                name: 'User 1',
+                                confirmed: false,
+                                description: 'this is user 1',
+                                age: 10,
+                                dateOfBirth: null,
+                                dbDefault: 'set-by-db',
+                                jsonField: null,
+                                intToString: '10'
+                              })
+                            ]
+                          })
+                        ]
                       })
-                    })
+                    ]
                   })
-                })
+                ]
               }),
               new User({
                 id: 2,
@@ -2087,75 +1872,31 @@ describe('Query', function() {
           );
         });
       });
-
-      describe('with the joined query options passed as a second parameter', function() {
-        it('passes the options to the joined query via Query.prototype.setOptions', async function() {
-          const imageQuery = new Query(Image);
-          const spy = sinon.spy(imageQuery, 'setOptions');
-          const query = new Query(User)
-            .where({ id: 1 })
-            .leftJoin(imageQuery, { fields: 'id' });
-          await expect(spy, 'to have calls satisfying', () => {
-            spy({ fields: 'id' });
-          });
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
-            [
-              new User({
-                id: 1,
-                name: 'User 1',
-                confirmed: false,
-                description: 'this is user 1',
-                age: 10,
-                dateOfBirth: null,
-                dbDefault: 'set-by-db',
-                jsonField: null,
-                intToString: '10',
-                image: new Image({ id: 1 })
-              })
-            ]
-          );
-        });
-      });
     });
 
-    describe("with an 'innerJoin' configured", function() {
-      before(async function() {
+    describe("with an 'innerJoin' configured", () => {
+      before(async () => {
         await knex(ImageCategory.table).insert([
           { id: 1, name: 'User images' }
         ]);
         await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
       });
 
-      after(async function() {
+      after(async () => {
         await truncateImageTable();
         await truncateImageCategoryTable();
       });
 
-      it('returns the instances with matching data in the joined table (inner join)', async function() {
+      it('returns the instances with matching data in the joined table (inner join)', async () => {
         const query = new Query(User).innerJoin(new Query(Image));
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10',
-              image: new Image({ id: 1, userId: 1, categoryId: 1 })
-            })
-          ]
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
         );
       });
 
-      it("resolves with an empty array if the join doesn't match any rows", async function() {
+      it("resolves with an empty array if the join doesn't match any rows", async () => {
         const query = new Query(User)
           .where({ id: 2 })
           .innerJoin(new Query(Image));
@@ -2168,42 +1909,29 @@ describe('Query', function() {
       });
     });
 
-    describe("with a 'join' configured", function() {
-      before(async function() {
+    describe("with a 'join' configured", () => {
+      before(async () => {
         await knex(ImageCategory.table).insert([
           { id: 1, name: 'User images' }
         ]);
         await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
       });
 
-      after(async function() {
+      after(async () => {
         await truncateImageTable();
         await truncateImageCategoryTable();
       });
 
-      it('returns the instances with matching data in the joined table (inner join)', async function() {
+      it('returns the instances with matching data in the joined table (inner join)', async () => {
         const query = new Query(User).join(new Query(Image));
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: '10',
-              image: new Image({ id: 1, userId: 1, categoryId: 1 })
-            })
-          ]
+          [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
         );
       });
 
-      it("resolves wih an empty array if the join doesn't match any rows", async function() {
+      it("resolves wih an empty array if the join doesn't match any rows", async () => {
         const query = new Query(User)
           .where({ id: 2 })
           .innerJoin(new Query(Image));
@@ -2217,8 +1945,8 @@ describe('Query', function() {
     });
   });
 
-  describe('Query.prototype.count', function() {
-    before(async function() {
+  describe('Query.prototype.count', () => {
+    before(async () => {
       await knex(User.table).insert([
         {
           id: 1,
@@ -2241,18 +1969,18 @@ describe('Query', function() {
       await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
     });
 
-    after(async function() {
+    after(async () => {
       await truncateImageTable();
       await truncateImageCategoryTable();
       await truncateUserTable();
     });
 
-    it('resolves with the count of all the rows in the table if not passed any options', async function() {
+    it('resolves with the count of all the rows in the table if not passed any options', async () => {
       const query = new Query(User);
       await expect(query.count(), 'to be fulfilled with', 2);
     });
 
-    it("accepts a 'field' option specifying the field to count", async function() {
+    it("accepts a 'field' option specifying the field to count", async () => {
       const query = new Query(User);
       await expect(
         query.count({ field: 'dateOfBirth' }),
@@ -2261,32 +1989,32 @@ describe('Query', function() {
       );
     });
 
-    it("accepts a 'distinct' option to count distinct fields", async function() {
+    it("accepts a 'distinct' option to count distinct fields", async () => {
       const query = new Query(User);
       await expect(query.count({ distinct: 'age' }), 'to be fulfilled with', 1);
     });
 
-    it("throws an error if multiple 'distinct' fields are configured", async function() {
+    // this varies too much from db to db. write a raw query instead if needed
+    it("does not support counting multiple 'distinct' fields", async () => {
       const query = new Query(User);
       await expect(
         query.count({ distinct: ['id', 'age'] }),
         'to be rejected with error satisfying',
-        new Error('Cannot count multiple distinct fields')
+        { name: 'CountError' }
       );
     });
 
-    it('accepts the other Query options', async function() {
-      const query = new Query(User);
-      await expect(
-        query.count({ where: { confirmed: true } }),
-        'to be fulfilled with',
-        1
-      );
+    // this varies too much from db to db. write a raw query instead if needed
+    it("does not support counting multiple 'fields'", async () => {
+      const query = new Query(User).fields(['id', 'dateOfBirth']);
+      await expect(query.count(), 'to be rejected with error satisfying', {
+        name: 'CountError'
+      });
     });
 
-    it('rejects with a CountError if a database error occurs', async function() {
+    it('rejects with a CountError if a database error occurs', async () => {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'then')
+        .stub(Query.prototype, 'query')
         .returns(Promise.reject(new Error('count error')));
       const query = new Query(User);
       await expect(
@@ -2297,38 +2025,28 @@ describe('Query', function() {
       stub.restore();
     });
 
-    describe("with a 'where' configured", function() {
-      it('resolves with the count of rows matching the query', async function() {
+    describe("with a 'where' configured", () => {
+      it('resolves with the count of rows matching the query', async () => {
         const query = new Query(User).where({ confirmed: true });
         await expect(query.count(), 'to be fulfilled with', 1);
       });
     });
 
-    describe("with an 'innerJoin' configured", function() {
-      it('resolves with the count of rows matching the join', async function() {
+    describe("with an 'innerJoin' configured", () => {
+      it('resolves with the count of rows matching the join', async () => {
         const query = new Query(User).innerJoin(new Query(Image));
         await expect(query.count(), 'to be fulfilled with', 1);
       });
     });
 
-    describe("with 'fields' configured", function() {
-      it('does not add the fields to the query', async function() {
-        const spy = sinon.spy(QueryBuilder.prototype, 'columns');
-        const query = new Query(User).fields('dateOfBirth');
-        await expect(query.count(), 'to be fulfilled');
-        await expect(spy, 'was not called');
-        spy.restore();
-      });
-    });
-
-    describe('if no rows are counted', function() {
-      it('resolves with zero', async function() {
+    describe('if no rows are counted', () => {
+      it('resolves with zero', async () => {
         const query = new Query(User).where({ id: 3 });
         await expect(query.count(), 'to be fulfilled with value satisfying', 0);
       });
 
-      describe("with 'require' option configured", function() {
-        it('rejects with a NoRowsCountedError', async function() {
+      describe("with 'require' option configured", () => {
+        it('rejects with a NoRowsCountedError', async () => {
           const query = new Query(User).where({ id: 3 }).require();
           await expect(
             query.count(),
@@ -2340,12 +2058,12 @@ describe('Query', function() {
     });
   });
 
-  describe('Query.prototype.insert', function() {
-    afterEach(async function() {
+  describe('Query.prototype.insert', () => {
+    afterEach(async () => {
       await truncateUserTable();
     });
 
-    it('inserts a row to the database table from a model instance', async function() {
+    it('inserts a row to the database table from a model instance', async () => {
       const query = new Query(User);
       const user = new User({ id: 1, name: 'John Doe', confirmed: true });
       await expect(query.insert(user), 'to be fulfilled');
@@ -2354,7 +2072,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('inserts a row to the database table from a plain object', async function() {
+    it('inserts a row to the database table from a plain object', async () => {
       const query = new Query(User);
       const user = { id: 1, name: 'John Doe', confirmed: true };
       await expect(query.insert(user), 'to be fulfilled');
@@ -2363,7 +2081,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('populates fields with default values before insert', async function() {
+    it('populates fields with default values before insert', async () => {
       const query = new Query(User);
       const user = new User({ id: 1, name: 'John Doe' });
       await expect(query.insert(user), 'to be fulfilled');
@@ -2372,7 +2090,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('casts fields configured with pre-save cast functions before insert', async function() {
+    it('casts fields configured with pre-save cast functions before insert', async () => {
       const query = new Query(User);
       const user = new User({
         id: 1,
@@ -2381,26 +2099,11 @@ describe('Query', function() {
       });
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 1,
-          name: 'John Doe',
-          json_field: expect.it(
-            'when passed as parameter to',
-            value => {
-              if (typeof value === 'string') {
-                // TODO: remove this: postgres 9.1. (on CI) doesn't automatically JSON.parse
-                return JSON.parse(value);
-              }
-              return value;
-            },
-            'to equal',
-            ['foo', 'bar']
-          )
-        }
+        { id: 1, name: 'John Doe', json_field: ['foo', 'bar'] }
       ]);
     });
 
-    it("validates the instance's fields before saving", async function() {
+    it("validates the instance's fields before saving", async () => {
       const query = new Query(User);
       const user = new User({ id: 1, name: 1 });
       await expect(query.insert(user), 'to be rejected with error satisfying', {
@@ -2409,7 +2112,7 @@ describe('Query', function() {
       });
     });
 
-    it("validates the object's fields before saving", async function() {
+    it("validates the object's fields before saving", async () => {
       const query = new Query(User);
       await expect(
         query.insert({ id: 1, name: 1 }),
@@ -2418,7 +2121,7 @@ describe('Query', function() {
       );
     });
 
-    it('allows inserting instances without the id field set', async function() {
+    it('allows inserting instances without the id field set', async () => {
       const query = new Query(User);
       const user = new User({ name: 'John Doe' });
       await expect(query.insert(user), 'to be fulfilled');
@@ -2427,7 +2130,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('allows saving objects without the id field set', async function() {
+    it('allows saving objects without the id field set', async () => {
       const query = new Query(User);
       await expect(query.insert({ name: 'John Doe' }), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
@@ -2435,7 +2138,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('resolves with an array containing an instance of the model', async function() {
+    it('resolves with an array containing an instance of the model', async () => {
       const query = new Query(User);
       await expect(
         query.insert(new User({ name: 'John Doe' })),
@@ -2444,34 +2147,11 @@ describe('Query', function() {
       );
     });
 
-    it('resolves with the same instance that was passed', async function() {
-      const query = new Query(User);
-      const user = new User({ name: 'Johnie Doe' });
-      await expect(
-        query.insert(user),
-        'to be fulfilled with value exhaustively satisfying',
-        ([insertedUser]) => {
-          expect(insertedUser === user, 'to be true');
-        }
-      );
-    });
-
-    it("doesn't modify other instance data properties", async function() {
-      const query = new Query(User);
-      const user = new User({ name: 'John Doe' });
-      user.leaveMeIntact = 'okay';
-      await expect(
-        query.insert(user),
-        'to be fulfilled with value satisfying',
-        [{ leaveMeIntact: 'okay' }]
-      );
-    });
-
-    it('populates the instance with all the fields from the database', async function() {
+    it('populates the instance with all the fields from the database', async () => {
       const query = new Query(User);
       await expect(
         query.insert(new User({ name: 'John Doe' })),
-        'to be fulfilled with value satisfying',
+        'to be fulfilled with value exhaustively satisfying',
         [
           new User({
             id: 1,
@@ -2488,7 +2168,7 @@ describe('Query', function() {
       );
     });
 
-    it('casts fields configured with post-fetch cast functions after inserting', async function() {
+    it('casts fields configured with post-fetch cast functions after inserting', async () => {
       const query = new Query(User);
       const user = new User({ id: 1, name: 'John Doe', intToString: 10 });
       await expect(
@@ -2501,7 +2181,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('accepts options', async function() {
+    it('accepts options', async () => {
       const query = new Query(User);
       await expect(
         query.insert(new User({ name: 'John Doe' }), { returning: 'name' }),
@@ -2510,9 +2190,9 @@ describe('Query', function() {
       );
     });
 
-    it('rejects with a InsertError if the insert operation fails', async function() {
+    it('rejects with a InsertError if the insert operation fails', async () => {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'insert')
+        .stub(Query.prototype, 'query')
         .returns(Promise.reject(new Error('insert error')));
       const query = new Query(User);
       await expect(
@@ -2523,8 +2203,8 @@ describe('Query', function() {
       stub.restore();
     });
 
-    describe('with a `returning` option', function() {
-      it('returns only the fields requested', async function() {
+    describe('with a `returning` option', () => {
+      it('returns only the fields requested', async () => {
         const query = new Query(User).returning('name');
         await expect(
           query.insert(new User({ name: 'John Doe' })),
@@ -2533,7 +2213,7 @@ describe('Query', function() {
         );
       });
 
-      it('accepts an array of fields', async function() {
+      it('accepts an array of fields', async () => {
         const query = new Query(User).returning(['name', 'confirmed']);
         await expect(
           query.insert(new User({ name: 'John Doe' })),
@@ -2542,18 +2222,7 @@ describe('Query', function() {
         );
       });
 
-      it('supports multiple calls with an array', async function() {
-        const query = new Query(User)
-          .returning(['name'])
-          .returning(['confirmed']);
-        await expect(
-          query.insert(new User({ name: 'John Doe' })),
-          'to be fulfilled with value satisfying',
-          [new User({ name: 'John Doe', confirmed: false })]
-        );
-      });
-
-      it('supports multiple calls with a string', async function() {
+      it('supports multiple calls with an array', async () => {
         const query = new Query(User).returning('name').returning('confirmed');
         await expect(
           query.insert(new User({ name: 'John Doe' })),
@@ -2562,7 +2231,7 @@ describe('Query', function() {
         );
       });
 
-      it('allows using aliases for the fields returned from the database', async function() {
+      it('allows using aliases for the fields returned from the database', async () => {
         const query = new Query(User).returning({
           theName: 'name',
           theConfirmed: 'confirmed'
@@ -2575,64 +2244,54 @@ describe('Query', function() {
       });
     });
 
-    describe("with a 'transaction' configured", function() {
-      it('does the insert within the transaction', async function() {
-        const transact = async transaction => {
-          await new Query(User)
-            .transaction(transaction)
-            .insert(new User({ name: 'John Doe' }));
-
-          throw new Error('foo');
-        };
-
-        await expect(
-          knex.transaction(transact),
-          'to be rejected with error satisfying',
-          new Error('foo')
-        );
-
-        await expect(knex, 'with table', User.table, 'to be empty');
-      });
-    });
-
-    describe("with 'first' configured", function() {
-      it('returns the first inserted instance', async function() {
+    describe("with 'first' configured", () => {
+      it('returns the first inserted instance', async () => {
         const query = new Query(User).first(true);
         await expect(
           query.insert(new User({ id: 1, name: 'John Doe' })),
-          'to be fulfilled with value exhaustively satisfying',
-          new User({
-            id: 1,
-            name: 'John Doe',
-            confirmed: false,
-            description: null,
-            age: null,
-            dateOfBirth: null,
-            dbDefault: 'set-by-db',
-            jsonField: null,
-            intToString: null
-          })
+          'to be fulfilled with value satisfying',
+          new User({ id: 1, name: 'John Doe' })
         );
       });
     });
 
-    describe('if no row is inserted', function() {
-      let insertStub;
-
-      before(function() {
-        insertStub = sinon.stub(QueryBuilder.prototype, 'then');
+    describe("with 'forge' disabled", () => {
+      it('resolves with plain JS objects', async () => {
+        const query = new Query(User).forge(false);
+        await expect(
+          query.insert(new User({ id: 1, name: 'John Doe' })),
+          'to be fulfilled with value satisfying',
+          [expect.it('to be an object').and('not to be a', User)]
+        );
       });
 
-      beforeEach(function() {
+      it('does not cast fields with post-fetch cast functions', async () => {
+        const query = new Query(User).forge(false);
+        await expect(
+          query.insert(new User({ id: 1, name: 'John Doe', intToString: 10 })),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, name: 'John Doe', intToString: 10 }]
+        );
+      });
+    });
+
+    describe('if no row is inserted', () => {
+      let insertStub;
+
+      before(() => {
+        insertStub = sinon.stub(Query.prototype, 'query');
+      });
+
+      beforeEach(() => {
         insertStub.reset();
         insertStub.returns(Promise.resolve([]));
       });
 
-      after(function() {
+      after(() => {
         insertStub.restore();
       });
 
-      it('resolves with an empty array', async function() {
+      it('resolves with an empty array', async () => {
         const query = new Query(User);
         await expect(
           query.insert(new User({ name: 'John Doe' })),
@@ -2641,7 +2300,7 @@ describe('Query', function() {
         );
       });
 
-      it('resolves with `null` if the `first` option is configured', async function() {
+      it('resolves with `null` if the `first` option is configured', async () => {
         const query = new Query(User).first(true);
         await expect(
           query.insert(new User({ name: 'John Doe' })),
@@ -2650,8 +2309,8 @@ describe('Query', function() {
         );
       });
 
-      describe("with 'require' option configured", function() {
-        it('rejects with a NoRowsInsertedError', async function() {
+      describe("with 'require' option configured", () => {
+        it('rejects with a NoRowsInsertedError', async () => {
           const query = new Query(User).require();
           await expect(
             query.insert(new User({ name: 'John Doe' })),
@@ -2662,8 +2321,8 @@ describe('Query', function() {
       });
     });
 
-    describe('when passed an array', function() {
-      it('inserts rows to the database table from model instances', async function() {
+    describe('when passed an array', () => {
+      it('inserts rows to the database table from model instances', async () => {
         const query = new Query(User);
         await expect(
           query.insert([
@@ -2684,7 +2343,7 @@ describe('Query', function() {
         );
       });
 
-      it('inserts rows to the database table from plain objects', async function() {
+      it('inserts rows to the database table from plain objects', async () => {
         const query = new Query(User);
         await expect(
           query.insert([
@@ -2705,7 +2364,7 @@ describe('Query', function() {
         );
       });
 
-      it('populates fields with default values before insert', async function() {
+      it('populates fields with default values before insert', async () => {
         const query = new Query(User);
         await expect(
           query.insert([
@@ -2726,11 +2385,28 @@ describe('Query', function() {
         );
       });
 
-      it('casts fields configured with pre-save cast functions before validating them', async function() {
+      it('throws an error if instances have mismatching field counts', async () => {
         const query = new Query(User);
         await expect(
           query.insert([
             new User({ id: 1, name: 'John Doe' }),
+            new User({ id: 2, name: 'Jane Doe', jsonField: ['foo', 'bar'] })
+          ]),
+          'to be rejected with error satisfying',
+          new Query.QueryError({
+            query,
+            error: new KnormError(
+              'Query: all objects should have the same field count'
+            )
+          })
+        );
+      });
+
+      it('casts fields configured with pre-save cast functions before validating them', async () => {
+        const query = new Query(User);
+        await expect(
+          query.insert([
+            new User({ id: 1, name: 'John Doe', jsonField: null }),
             new User({ id: 2, name: 'Jane Doe', jsonField: ['foo', 'bar'] })
           ]),
           'to be fulfilled'
@@ -2741,28 +2417,13 @@ describe('Query', function() {
           User.table,
           'to have sorted rows satisfying',
           [
-            { id: 1, name: 'John Doe' },
-            {
-              id: 2,
-              name: 'Jane Doe',
-              json_field: expect.it(
-                'when passed as parameter to',
-                value => {
-                  if (typeof value === 'string') {
-                    // postgres 9.1. (on CI) doesn't automatically JSON.parse
-                    return JSON.parse(value);
-                  }
-                  return value;
-                },
-                'to equal',
-                ['foo', 'bar']
-              )
-            }
+            { id: 1, name: 'John Doe', json_field: null },
+            { id: 2, name: 'Jane Doe', json_field: ['foo', 'bar'] }
           ]
         );
       });
 
-      it("validates the instances' fields before saving", async function() {
+      it("validates the instances' fields before saving", async () => {
         const query = new Query(User);
         await expect(
           query.insert([
@@ -2774,7 +2435,7 @@ describe('Query', function() {
         );
       });
 
-      it("validates the objects' fields before saving", async function() {
+      it("validates the objects' fields before saving", async () => {
         const query = new Query(User);
         await expect(
           query.insert([
@@ -2786,7 +2447,7 @@ describe('Query', function() {
         );
       });
 
-      it('allows inserting instances without the id field set', async function() {
+      it('allows inserting instances without the id field set', async () => {
         const query = new Query(User);
         await expect(
           query.insert([
@@ -2804,7 +2465,7 @@ describe('Query', function() {
         );
       });
 
-      it('allows saving objects without the id field set', async function() {
+      it('allows saving objects without the id field set', async () => {
         const query = new Query(User);
         await expect(
           query.insert([{ name: 'John Doe' }, { name: 'Jane Doe' }]),
@@ -2819,53 +2480,26 @@ describe('Query', function() {
         );
       });
 
-      it('resolves with instances of the model', async function() {
+      it('resolves with instances of the model', async () => {
         const query = new Query(User);
         await expect(
           query.insert([
             new User({ name: 'John Doe' }),
             new User({ name: 'Jane Doe' })
           ]),
-          'to be fulfilled with value exhaustively satisfying',
+          'to be fulfilled with value satisfying',
           [expect.it('to be a', User), expect.it('to be a', User)]
         );
       });
 
-      it('resolves with the same instances that were passed', async function() {
-        const query = new Query(User);
-        const user1 = new User({ name: 'John Doe' });
-        const user2 = new User({ name: 'Jane Doe' });
-        await expect(
-          query.insert([user1, user2]),
-          'to be fulfilled with sorted rows satisfying',
-          [expect.it('to equal', user1), expect.it('to equal', user2)]
-        );
-      });
-
-      it("doesn't modify other instance data properties", async function() {
-        const query = new Query(User);
-        const user1 = new User({ name: 'John Doe' });
-        const user2 = new User({ name: 'Jane Doe' });
-        user1.leaveMeIntact = 'okay';
-        user2.alsoeLeaveMeIntact = 'okay';
-        await expect(
-          query.insert([user1, user2]),
-          'to be fulfilled with sorted rows satisfying',
-          [
-            expect.it('to satisfy', { leaveMeIntact: 'okay' }),
-            expect.it('to satisfy', { alsoeLeaveMeIntact: 'okay' })
-          ]
-        );
-      });
-
-      it('populates the instances with all the fields from the database', async function() {
+      it('populates the instances with all the fields from the database', async () => {
         const query = new Query(User);
         await expect(
           query.insert([
             new User({ name: 'John Doe' }),
             new User({ name: 'Jane Doe' })
           ]),
-          'to be fulfilled with sorted rows satisfying',
+          'to be fulfilled with sorted rows exhaustively satisfying',
           [
             new User({
               id: 1,
@@ -2893,12 +2527,12 @@ describe('Query', function() {
         );
       });
 
-      it('casts fields configured with post-fetch cast functions after inserting', async function() {
+      it('casts fields configured with post-fetch cast functions', async () => {
         const query = new Query(User);
         await expect(
           query.insert([
             new User({ id: 1, name: 'John Doe', intToString: 10 }),
-            new User({ id: 2, name: 'Jane Doe' })
+            new User({ id: 2, name: 'Jane Doe', intToString: null })
           ]),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1, intToString: '10' }, { id: 2, intToString: null }]
@@ -2910,41 +2544,39 @@ describe('Query', function() {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'John Doe', int_to_string: 10 },
-            { id: 2, name: 'Jane Doe' }
+            { id: 2, name: 'Jane Doe', int_to_string: null }
           ]
         );
       });
 
-      it('does only one insert operation with an array of data', async function() {
-        const spy = sinon.spy(QueryBuilder.prototype, 'insert');
+      it('runs a single insert query', async () => {
+        const spy = sinon.spy(Query.prototype, 'insert');
         const query = new Query(User);
         await query.insert([
           new User({ name: 'John Doe' }),
           new User({ name: 'Jane Doe' })
         ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy([{ name: 'John Doe' }, { name: 'Jane Doe' }]);
-        });
+        await expect(spy, 'was called once');
         spy.restore();
       });
 
-      describe('if no rows are inserted', function() {
+      describe('if no rows are inserted', () => {
         let insertStub;
 
-        before(function() {
-          insertStub = sinon.stub(QueryBuilder.prototype, 'insert');
+        before(() => {
+          insertStub = sinon.stub(Query.prototype, 'query');
         });
 
-        beforeEach(function() {
+        beforeEach(() => {
           insertStub.reset();
           insertStub.returns(Promise.resolve([]));
         });
 
-        after(function() {
+        after(() => {
           insertStub.restore();
         });
 
-        it('resolves with am empty array', async function() {
+        it('resolves with am empty array', async () => {
           const query = new Query(User);
           await expect(
             query.insert([new User({ name: 'John Doe' })]),
@@ -2953,8 +2585,8 @@ describe('Query', function() {
           );
         });
 
-        describe("with 'require' option configured", function() {
-          it('rejects with a NoRowsInsertedError', async function() {
+        describe("with 'require' option configured", () => {
+          it('rejects with a NoRowsInsertedError', async () => {
             const query = new Query(User).require();
             await expect(
               query.insert([new User({ name: 'John Doe' })]),
@@ -2966,8 +2598,8 @@ describe('Query', function() {
       });
 
       describe('with a `batchSize` configured', () => {
-        it('does multiple insert operations with batched arrays of data', async function() {
-          const spy = sinon.spy(QueryBuilder.prototype, 'insert');
+        it('does multiple insert operations with batched arrays of data', async () => {
+          const spy = sinon.spy(Query.prototype, 'query');
           const query = new Query(User);
           await query
             .batchSize(1)
@@ -2975,15 +2607,12 @@ describe('Query', function() {
               new User({ name: 'John Doe' }),
               new User({ name: 'Jane Doe' })
             ]);
-          await expect(spy, 'to have calls satisfying', () => {
-            spy([{ name: 'John Doe' }]);
-            spy([{ name: 'Jane Doe' }]);
-          });
+          await expect(spy, 'was called twice');
           spy.restore();
         });
 
-        it('creates the right batches', async function() {
-          const spy = sinon.spy(QueryBuilder.prototype, 'insert');
+        it('creates the right batches', async () => {
+          const spy = sinon.spy(Query.prototype, 'query');
           const users = [
             { name: 'John Doe' },
             { name: 'Jane Doe' },
@@ -2992,56 +2621,32 @@ describe('Query', function() {
           ];
 
           await new Query(User).batchSize(1).insert(users);
-          await expect(spy, 'to have calls satisfying', () => {
-            spy([{ name: 'John Doe' }]);
-            spy([{ name: 'Jane Doe' }]);
-            spy([{ name: 'John Smith' }]);
-            spy([{ name: 'Jane Smith' }]);
-          });
+          await expect(spy, 'was called times', 4);
 
           spy.reset();
           await new Query(User).batchSize(2).insert(users);
-          await expect(spy, 'to have calls satisfying', () => {
-            spy([{ name: 'John Doe' }, { name: 'Jane Doe' }]);
-            spy([{ name: 'John Smith' }, { name: 'Jane Smith' }]);
-          });
+          await expect(spy, 'was called twice');
 
           spy.reset();
           await new Query(User).batchSize(3).insert(users);
-          await expect(spy, 'to have calls satisfying', () => {
-            spy([
-              { name: 'John Doe' },
-              { name: 'Jane Doe' },
-              { name: 'John Smith' }
-            ]);
-            spy([{ name: 'Jane Smith' }]);
-          });
-
-          const allFourAtOnce = () => {
-            spy([
-              { name: 'John Doe' },
-              { name: 'Jane Doe' },
-              { name: 'John Smith' },
-              { name: 'Jane Smith' }
-            ]);
-          };
+          await expect(spy, 'was called twice');
 
           spy.reset();
           await new Query(User).batchSize(4).insert(users);
-          await expect(spy, 'to have calls satisfying', allFourAtOnce);
+          await expect(spy, 'was called once');
 
           spy.reset();
           await new Query(User).batchSize(5).insert(users);
-          await expect(spy, 'to have calls satisfying', allFourAtOnce);
+          await expect(spy, 'was called once');
 
           spy.reset();
           await new Query(User).batchSize(0).insert(users);
-          await expect(spy, 'to have calls satisfying', allFourAtOnce);
+          await expect(spy, 'was called once');
 
           spy.restore();
         });
 
-        it('returns a single array of inserted data', async function() {
+        it('returns a single array of inserted data', async () => {
           const query = new Query(User).batchSize(1);
           await expect(
             query.insert([
@@ -3057,61 +2662,24 @@ describe('Query', function() {
             ]
           );
         });
-
-        describe('if no rows are inserted', function() {
-          let insertStub;
-
-          before(function() {
-            insertStub = sinon.stub(QueryBuilder.prototype, 'insert');
-          });
-
-          beforeEach(function() {
-            insertStub.reset();
-            insertStub.returns(Promise.resolve([]));
-          });
-
-          after(function() {
-            insertStub.restore();
-          });
-
-          it('resolves with am empty array', async function() {
-            const query = new Query(User).batchSize(1);
-            await expect(
-              query.insert([new User({ name: 'John Doe' })]),
-              'to be fulfilled with value satisfying',
-              []
-            );
-          });
-
-          describe("with 'require' option configured", function() {
-            it('rejects with a NoRowsInsertedError', async function() {
-              const query = new Query(User).batchSize(1).require();
-              await expect(
-                query.insert([new User({ name: 'John Doe' })]),
-                'to be rejected with error satisfying',
-                new Query.NoRowsInsertedError({ query })
-              );
-            });
-          });
-        });
       });
     });
   });
 
-  describe('Query.prototype.update', function() {
+  describe('Query.prototype.update', () => {
     let user;
 
-    beforeEach(async function() {
+    beforeEach(async () => {
       user = await new Query(User)
         .first(true)
         .insert(new User({ id: 1, name: 'John Doe' }));
     });
 
-    afterEach(async function() {
+    afterEach(async () => {
       await truncateUserTable();
     });
 
-    it('updates rows in the database table from a model instance', async function() {
+    it('updates rows in the database table from a model instance', async () => {
       const query = new Query(User);
       user.name = 'Jane Doe';
       await expect(query.update(user), 'to be fulfilled');
@@ -3120,7 +2688,7 @@ describe('Query', function() {
       ]);
     });
 
-    it('updates rows in the database table from a plain object', async function() {
+    it('updates rows in the database table from a plain object', async () => {
       const query = new Query(User);
       const user = { id: 1, name: 'Jane Doe' };
       await expect(query.update(user), 'to be fulfilled');
@@ -3129,7 +2697,7 @@ describe('Query', function() {
       ]);
     });
 
-    it("validates the instance's fields before saving", async function() {
+    it("validates the instance's fields before saving", async () => {
       const query = new Query(User);
       user.name = 1;
       await expect(query.update(user), 'to be rejected with error satisfying', {
@@ -3138,31 +2706,16 @@ describe('Query', function() {
       });
     });
 
-    it('casts updated fields configured with pre-save cast functions before update', async function() {
+    it('casts updated fields configured with pre-save cast functions before update', async () => {
       const query = new Query(User);
       user.jsonField = ['foo', 'bar'];
       await expect(query.update(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 1,
-          name: 'John Doe',
-          json_field: expect.it(
-            'when passed as parameter to',
-            value => {
-              if (typeof value === 'string') {
-                // postgres 9.1. (on CI) doesn't automatically JSON.parse
-                return JSON.parse(value);
-              }
-              return value;
-            },
-            'to equal',
-            ['foo', 'bar']
-          )
-        }
+        { id: 1, name: 'John Doe', json_field: ['foo', 'bar'] }
       ]);
     });
 
-    it('accepts options', async function() {
+    it('accepts options', async () => {
       await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
       const query = new Query(User);
       await expect(
@@ -3178,25 +2731,22 @@ describe('Query', function() {
       );
     });
 
-    it('rejects with a UpdateError if the update operation fails', async function() {
+    it('rejects with a UpdateError if the update operation fails', async () => {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'then')
+        .stub(Query.prototype, 'query')
         .returns(Promise.reject(new Error('update error')));
       const query = new Query(User);
       user.name = 'Jane Doe';
       await expect(
         query.update(user),
         'to be rejected with error satisfying',
-        new Query.UpdateError({
-          error: new Error('update error'),
-          query
-        })
+        new Query.UpdateError({ error: new Error('update error'), query })
       );
       stub.restore();
     });
 
-    describe("with a 'where' option", function() {
-      it('updates only the rows matching the query', async function() {
+    describe("with a 'where' option", () => {
+      it('updates only the rows matching the query', async () => {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
         const query = new Query(User).where({ id: 1 });
         await expect(query.update({ name: 'Foo' }), 'to be fulfilled');
@@ -3210,8 +2760,8 @@ describe('Query', function() {
       });
     });
 
-    describe("with a 'returning' option", function() {
-      it('returns instances populated with only the requested fields', async function() {
+    describe("with a 'returning' option", () => {
+      it('returns instances populated with only the requested fields', async () => {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
         const query = new Query(User).returning(['id', 'name']);
         await expect(
@@ -3222,34 +2772,24 @@ describe('Query', function() {
       });
     });
 
-    describe("with 'first' configured", function() {
-      it('returns the first updated instance', async function() {
+    describe("with 'first' configured", () => {
+      it('returns the first updated instance', async () => {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
         const query = new Query(User).first(true);
         await expect(
           query.update({ name: 'Foo' }),
-          'to be fulfilled with value exhaustively satisfying',
-          new User({
-            id: 1,
-            name: 'Foo',
-            confirmed: false,
-            description: null,
-            age: null,
-            dateOfBirth: null,
-            dbDefault: 'set-by-db',
-            jsonField: null,
-            intToString: null
-          })
+          'to be fulfilled with value satisfying',
+          new User({ id: 1, name: 'Foo' })
         );
       });
     });
 
-    describe('with multiple rows in the table', function() {
-      beforeEach(async function() {
+    describe('with multiple rows in the table', () => {
+      beforeEach(async () => {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
       });
 
-      it('updates all rows', async function() {
+      it('updates all rows', async () => {
         await expect(
           new Query(User).update({ name: 'Johnie Doe' }),
           'to be fulfilled'
@@ -3263,21 +2803,21 @@ describe('Query', function() {
         );
       });
 
-      it('resolves with instances of the model', async function() {
+      it('resolves with instances of the model', async () => {
         const query = new Query(User);
         user.name = 'Jane Doe';
         await expect(
-          query.update({ name: 'Johnie Doe' }),
-          'to be fulfilled with value exhaustively satisfying',
+          query.update(user),
+          'to be fulfilled with value satisfying',
           [expect.it('to be a', User), expect.it('to be a', User)]
         );
       });
 
-      it('populates the instances with all the fields from the database', async function() {
+      it('populates the instances with all the fields from the database', async () => {
         const query = new Query(User);
         await expect(
           query.update({ name: 'Johnie Doe' }),
-          'to be fulfilled with value satisfying',
+          'to be fulfilled with value exhaustively satisfying',
           [
             new User({
               id: 1,
@@ -3305,11 +2845,11 @@ describe('Query', function() {
         );
       });
 
-      it('casts fields configured with post-fetch cast functions', async function() {
+      it('casts fields configured with post-fetch cast functions', async () => {
         const query = new Query(User);
         user.intToString = 10;
         await expect(
-          query.update({ intToString: 10 }),
+          query.update(user),
           'to be fulfilled with value satisfying',
           [{ id: 1, intToString: '10' }, { id: 2, intToString: '10' }]
         );
@@ -3323,8 +2863,8 @@ describe('Query', function() {
       });
     });
 
-    describe('with a `returning` option', function() {
-      it('returns the `id` field and the fields requested', async function() {
+    describe('with a `returning` option', () => {
+      it('returns the `id` field and the fields requested', async () => {
         const query = new Query(User).returning('name');
         user.name = 'Jane Doe';
         await expect(
@@ -3334,7 +2874,7 @@ describe('Query', function() {
         );
       });
 
-      it('accepts an array of fields', async function() {
+      it('accepts an array of fields', async () => {
         const query = new Query(User).returning(['name', 'confirmed']);
         user.name = 'Jane Doe';
         await expect(
@@ -3344,7 +2884,7 @@ describe('Query', function() {
         );
       });
 
-      it('allows using aliases for the returned fields', async function() {
+      it('allows using aliases for the returned fields', async () => {
         const query = new Query(User).returning({
           theName: 'name',
           theConfirmed: 'confirmed'
@@ -3358,70 +2898,40 @@ describe('Query', function() {
       });
     });
 
-    describe("with a 'transaction' configured", function() {
-      it('does the update within the transaction', async function() {
-        const transact = async transaction => {
-          user.name = 'Jane Doe';
-          await new Query(User).transaction(transaction).update(user);
-
-          throw new Error('foo');
-        };
-
+    describe("with 'forge' disabled", () => {
+      it('resolves with plain JS objects', async () => {
+        const query = new Query(User).forge(false);
         await expect(
-          knex.transaction(transact),
-          'to be rejected with error satisfying',
-          new Error('foo')
-        );
-
-        await expect(
-          knex,
-          'with table',
-          User.table,
-          'to have rows satisfying',
-          [{ id: 1, name: 'John Doe' }]
+          query.update(new User({ name: 'Jane Doe' })),
+          'to be fulfilled with value satisfying',
+          [expect.it('to be an object').and('not to be a', User)]
         );
       });
 
-      describe("via the 'within' alias", function() {
-        it('does the update within the transaction', async function() {
-          const transact = async transaction => {
-            user.name = 'Jane Doe';
-            await new Query(User).transaction(transaction).update(user);
-
-            throw new Error('foo');
-          };
-
-          await expect(
-            knex.transaction(transact),
-            'to be rejected with error satisfying',
-            new Error('foo')
-          );
-
-          await expect(
-            knex,
-            'with table',
-            User.table,
-            'to have rows satisfying',
-            [{ id: 1, name: 'John Doe' }]
-          );
-        });
+      it('does not cast fields with post-fetch cast functions', async () => {
+        const query = new Query(User).forge(false);
+        await expect(
+          query.update(new User({ name: 'Jane Doe', intToString: 10 })),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, name: 'Jane Doe', intToString: 10 }]
+        );
       });
     });
 
-    describe('if no row is updated', function() {
+    describe('if no row is updated', () => {
       let updateStub;
 
-      beforeEach(function() {
+      beforeEach(() => {
         updateStub = sinon
-          .stub(QueryBuilder.prototype, 'then')
+          .stub(Query.prototype, 'query')
           .returns(Promise.resolve([]));
       });
 
-      afterEach(function() {
+      afterEach(() => {
         updateStub.restore();
       });
 
-      it('resolves with an empty array', async function() {
+      it('resolves with an empty array', async () => {
         user.name = 'Jane Doe';
         const query = new Query(User);
         await expect(
@@ -3431,7 +2941,7 @@ describe('Query', function() {
         );
       });
 
-      it('resolves with `null` if the `first` option is configured', async function() {
+      it('resolves with `null` if the `first` option is configured', async () => {
         user.name = 'Jane Doe';
         const query = new Query(User).first(true);
         await expect(
@@ -3441,8 +2951,8 @@ describe('Query', function() {
         );
       });
 
-      describe("with 'require' option configured", function() {
-        it('rejects with a NoRowsUpdatedError', async function() {
+      describe("with 'require' option configured", () => {
+        it('rejects with a NoRowsUpdatedError', async () => {
           user.name = 'Jane Doe';
           const query = new Query(User).require();
           await expect(
@@ -3454,8 +2964,8 @@ describe('Query', function() {
       });
     });
 
-    describe("with 'where' option configured", function() {
-      it('updates only the rows that match the where definition', async function() {
+    describe("with 'where' option configured", () => {
+      it('updates only the rows that match the where definition', async () => {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
         const query = new Query(User).where({ id: 1 });
         await expect(query.update({ name: 'Johnie Doe' }), 'to be fulfilled');
@@ -3469,25 +2979,32 @@ describe('Query', function() {
       });
     });
 
-    describe('with `Model.notUpdated` fields configured', function() {
-      it('does not update those fields', async function() {
-        const updateSpy = sinon.spy(QueryBuilder.prototype, 'update');
+    describe('with `Model.notUpdated` fields configured', () => {
+      it('does not update those fields', async () => {
+        const spy = sinon.spy(Query.prototype, 'query');
         user.name = 'Jane Doe';
         await new Query(User).update(user);
-        await expect(updateSpy, 'to have calls satisfying', () => {
-          updateSpy(expect.it('not to have key', 'id'));
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              query => query.toString(),
+              'not to contain',
+              'SET id ='
+            )
+          );
         });
-        updateSpy.restore();
+        spy.restore();
       });
     });
   });
 
-  describe('Query.prototype.save', function() {
-    afterEach(async function() {
+  describe('Query.prototype.save', () => {
+    afterEach(async () => {
       await truncateUserTable();
     });
 
-    it('proxies to Query.prototype.insert if passed an array', async function() {
+    it('proxies to Query.prototype.insert if passed an array', async () => {
       const spy = sinon.spy(Query.prototype, 'insert');
       const query = new Query(User);
       const user1 = new User({ name: 'John Doe' });
@@ -3503,7 +3020,7 @@ describe('Query', function() {
       spy.restore();
     });
 
-    it('proxies options to Query.prototype.insert', async function() {
+    it('proxies options to Query.prototype.insert', async () => {
       const query = new Query(User);
       await expect(
         query.save([{ name: 'John Doe' }, { name: 'Jane Doe' }], {
@@ -3514,8 +3031,8 @@ describe('Query', function() {
       );
     });
 
-    describe('when passed an object', function() {
-      it('proxies to Query.prototype.insert if the primary field is not set on the data', async function() {
+    describe('when passed an object', () => {
+      it('proxies to Query.prototype.insert if the primary field is not set on the data', async () => {
         const spy = sinon.spy(Query.prototype, 'insert');
         const query = new Query(User);
         const user = new User({ name: 'John Doe' });
@@ -3533,7 +3050,7 @@ describe('Query', function() {
         spy.restore();
       });
 
-      it('proxies to Query.prototype.update if the primary field is set on the data', async function() {
+      it('proxies to Query.prototype.update if the primary field is set on the data', async () => {
         await new Query(User).insert(new User({ id: 1, name: 'John Doe' }));
         const spy = sinon.spy(Query.prototype, 'update');
         const query = new Query(User);
@@ -3552,7 +3069,7 @@ describe('Query', function() {
         spy.restore();
       });
 
-      it('proxies options to Query.prototype.update', async function() {
+      it('proxies options to Query.prototype.update', async () => {
         await new Query(User).insert(new User({ id: 1, name: 'John Doe' }));
         const query = new Query(User);
         await expect(
@@ -3567,8 +3084,8 @@ describe('Query', function() {
     });
   });
 
-  describe('Query.prototype.delete', function() {
-    beforeEach(async function() {
+  describe('Query.prototype.delete', () => {
+    beforeEach(async () => {
       await knex(User.table).insert([
         {
           id: 1,
@@ -3585,16 +3102,16 @@ describe('Query', function() {
       ]);
     });
 
-    afterEach(async function() {
+    afterEach(async () => {
       await truncateUserTable();
     });
 
-    it('deletes all rows from the database', async function() {
+    it('deletes all rows from the database', async () => {
       await expect(new Query(User).delete(), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to be empty');
     });
 
-    it('resolves with populated instances of the deleted models', async function() {
+    it('resolves with populated instances of the deleted models', async () => {
       const query = new Query(User);
       await expect(
         query.delete(),
@@ -3626,54 +3143,36 @@ describe('Query', function() {
       );
     });
 
-    it('casts fields configured with post-fetch cast functions after deleting', async function() {
+    it('casts fields configured with post-fetch cast functions after deleting', async () => {
       const query = new Query(User).where({ id: 1 });
       await expect(query.delete(), 'to be fulfilled with value satisfying', [
-        {
-          intToString: '10'
-        }
-      ]);
-      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 2,
-          name: 'Jane Doe',
-          confirmed: true,
-          age: null,
-          json_field: null,
-          int_to_string: null
-        }
+        new User({ intToString: '10' })
       ]);
     });
 
-    it('accepts options', async function() {
+    it('accepts options', async () => {
       const query = new Query(User);
       await expect(query.delete({ where: { id: 1 } }), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        {
-          id: 2,
-          name: 'Jane Doe'
-        }
+        { id: 2, name: 'Jane Doe' }
       ]);
     });
 
-    it('rejects with a DeleteError if the delete operation fails', async function() {
+    it('rejects with a DeleteError if the delete operation fails', async () => {
       const stub = sinon
-        .stub(QueryBuilder.prototype, 'then')
+        .stub(Query.prototype, 'query')
         .returns(Promise.reject(new Error('delete error')));
       const query = new Query(User);
       await expect(
         query.delete(),
         'to be rejected with error satisfying',
-        new Query.DeleteError({
-          error: new Error('delete error'),
-          query
-        })
+        new Query.DeleteError({ error: new Error('delete error'), query })
       );
       stub.restore();
     });
 
-    describe("with a 'where' option", function() {
-      it('deletes only the rows matching the query', async function() {
+    describe("with a 'where' option", () => {
+      it('deletes only the rows matching the query', async () => {
         const query = new Query(User).where({ id: 1 });
         await expect(query.delete(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'John Doe' })
@@ -3688,8 +3187,8 @@ describe('Query', function() {
       });
     });
 
-    describe("with a 'returning' option", function() {
-      it('resolves with the deleted models with only the fields specified', async function() {
+    describe("with a 'returning' option", () => {
+      it('resolves with the deleted models with only the fields specified', async () => {
         const query = new Query(User).returning(['id', 'name']);
         await expect(
           query.delete(),
@@ -3701,7 +3200,7 @@ describe('Query', function() {
         );
       });
 
-      it('includes the `id` even if not requested', async function() {
+      it('includes the `id` even if not requested', async () => {
         const query = new Query(User).returning('name');
         await expect(
           query.delete(),
@@ -3713,7 +3212,7 @@ describe('Query', function() {
         );
       });
 
-      it('allows using aliases for the returned fields', async function() {
+      it('allows using aliases for the returned fields', async () => {
         const query = new Query(User).returning({
           theName: 'name',
           theConfirmed: 'confirmed'
@@ -3729,93 +3228,50 @@ describe('Query', function() {
       });
     });
 
-    describe("with 'first' configured", function() {
-      it('resolves with the first deleted model', async function() {
+    describe("with 'first' configured", () => {
+      it('resolves with the first deleted model', async () => {
         const query = new Query(User).first(true);
         await expect(
           query.delete(),
-          'to be fulfilled with value exhaustively satisfying',
-          new User({
-            id: 1,
-            name: 'John Doe',
-            confirmed: true,
-            description: null,
-            age: null,
-            dateOfBirth: null,
-            dbDefault: 'set-by-db',
-            jsonField: null,
-            intToString: '10'
-          })
+          'to be fulfilled with value satisfying',
+          new User({ id: 1, name: 'John Doe' })
         );
       });
     });
 
-    describe('with forge disabled', function() {
-      it('resolves with the deleted models as plain objects', async function() {
+    describe("with 'forge' disabled", () => {
+      it('resolves with plain JS objects', async () => {
+        const query = new Query(User).forge(false);
+        await expect(query.delete(), 'to be fulfilled with value satisfying', [
+          expect.it('to be an object').and('not to be a', User),
+          expect.it('to be an object').and('not to be a', User)
+        ]);
+      });
+
+      it('does not cast fields with post-fetch cast functions', async () => {
         const query = new Query(User).forge(false);
         await expect(
           query.delete(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            {
-              id: 1,
-              name: 'John Doe',
-              confirmed: true,
-              description: null,
-              age: null,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: 10
-            },
-            {
-              id: 2,
-              name: 'Jane Doe',
-              confirmed: true,
-              description: null,
-              age: null,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            }
-          ]
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, intToString: 10 }, { id: 2, intToString: null }]
         );
       });
     });
 
-    describe("with a 'transaction' configured", function() {
-      it('does the delete within the transaction', async function() {
-        const transact = async transaction => {
-          await new Query(User).transaction(transaction).delete();
-
-          throw new Error('foo');
-        };
-
-        await expect(
-          knex.transaction(transact),
-          'to be rejected with error satisfying',
-          new Error('foo')
-        );
-
-        await expect(knex, 'with table', User.table, 'not to be empty');
-      });
-    });
-
-    describe('if no row is deleted', function() {
+    describe('if no row is deleted', () => {
       let deleteStub;
 
-      beforeEach(function() {
+      beforeEach(() => {
         deleteStub = sinon
-          .stub(QueryBuilder.prototype, 'then')
+          .stub(Query.prototype, 'query')
           .returns(Promise.resolve([]));
       });
 
-      afterEach(function() {
+      afterEach(() => {
         deleteStub.restore();
       });
 
-      it('resolves with an empty array', async function() {
+      it('resolves with an empty array', async () => {
         await expect(
           new Query(User).delete(),
           'to be fulfilled with value satisfying',
@@ -3823,7 +3279,7 @@ describe('Query', function() {
         );
       });
 
-      it('resolves with `null` if the `first` option is configured', async function() {
+      it('resolves with `null` if the `first` option is configured', async () => {
         await expect(
           new Query(User).first(true).delete(),
           'to be fulfilled with value satisfying',
@@ -3831,8 +3287,8 @@ describe('Query', function() {
         );
       });
 
-      describe("with 'require' option configured", function() {
-        it('rejects with a NoRowsDeletedError', async function() {
+      describe("with 'require' option configured", () => {
+        it('rejects with a NoRowsDeletedError', async () => {
           const query = new Query(User).require();
           await expect(
             query.delete(),

@@ -10,9 +10,9 @@
     "lint:fix": "eslint --fix .",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "ci": "npm-run-all lint coverage coveralls",
-    "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d",
-    "postgres:stop": "docker-compose stop",
-    "postgres:remove": "docker-compose down",
+    "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d postgres",
+    "postgres:stop": "docker-compose stop postgres",
+    "postgres:remove": "docker-compose rm -sf postgres",
     "todo": "grep -rn -e TODO -e FIXME lib",
     "docs": "docsify serve docs",
     "changelog": "standard-changelog",
@@ -20,9 +20,6 @@
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
-  "peerDependencies": {
-    "knex": "^0.14.0"
-  },
   "devDependencies": {
     "coveralls": "^3.0.0",
     "docsify-cli": "^4.2.0",
@@ -33,10 +30,11 @@
     "mocha": "^3.2.0",
     "npm-run-all": "^4.1.2",
     "nyc": "^11.4.1",
-    "pg": "^7.4.0",
+    "pg": "^7.4.1",
     "prettier": "^1.9.2",
     "proxyquire": "^1.7.11",
     "sinon": "^4.1.3",
+    "sql-bricks-postgres": "^0.5.0",
     "standard-changelog": "^1.0.7",
     "standard-version": "^4.2.0",
     "unexpected": "^10.36.2",
@@ -56,13 +54,15 @@
     "test": "test"
   },
   "keywords": [
-    "knex",
     "orm",
     "erm",
+    "sql",
+    "db",
     "database"
   ],
   "dependencies": {
     "lodash": "^4.17.4",
+    "sql-bricks": "^2.0.3",
     "validator": "^9.2.0"
   },
   "repository": {
