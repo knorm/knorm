@@ -560,7 +560,7 @@ describe('KnormPostgres', () => {
         { id: 2, name: 'bar' }
       ]);
       await expect(
-        new Query(User).limit('1').fetch(),
+        new Query(User).limit(1).fetch(),
         'to be fulfilled with value satisfying',
         [{ id: 1, name: 'foo' }]
       );
