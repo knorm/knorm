@@ -45,6 +45,7 @@ const expect = require('unexpected')
     }
   );
 
+const { KnormError } = knorm;
 const { KnormPostgresError } = KnormPostgres;
 const connection = {
   host: process.env.PGHOST || '127.0.0.1',
@@ -659,6 +660,27 @@ describe('KnormPostgres', () => {
         );
         await expect(spy, 'was called twice');
         spy.restore();
+      });
+
+      it('rejects with a QueryError if objects have mismatching field counts', async function() {
+        await new Query(User).insert([
+          { id: 1, name: 'foo' },
+          { id: 2, name: 'bar' }
+        ]);
+        const query = new Query(User);
+        await expect(
+          query.update([
+            new User({ id: 1, name: 'foofoo' }),
+            new User({ id: 2 })
+          ]),
+          'to be rejected with error satisfying',
+          new Query.QueryError({
+            query,
+            error: new KnormError(
+              'Query: all objects should have the same field count'
+            )
+          })
+        );
       });
     });
 
