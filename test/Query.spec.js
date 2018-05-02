@@ -90,6 +90,10 @@ User.fields = {
           return JSON.stringify(value);
         }
       }
+    },
+    schema: {
+      type: 'array',
+      maxLength: 2
     }
   },
   intToString: {
