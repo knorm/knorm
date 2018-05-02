@@ -46,11 +46,11 @@ const expect = require('unexpected')
     }
   );
 
-const { Model, Query, Field } = new Knorm({ knex, fieldToColumn });
+const { Model, Query } = new Knorm({ knex, fieldToColumn });
 
 Model.fields = {
   id: {
-    type: Field.types.integer,
+    type: 'integer',
     required: true,
     primary: true,
     updated: false
@@ -61,29 +61,29 @@ class User extends Model {}
 User.table = 'user';
 User.fields = {
   name: {
-    type: Field.types.string,
+    type: 'string',
     required: true
   },
   description: {
-    type: Field.types.string
+    type: 'string'
   },
   age: {
-    type: Field.types.integer,
+    type: 'integer',
     default: null
   },
   confirmed: {
-    type: Field.types.boolean,
+    type: 'boolean',
     required: true,
     default: false
   },
   dateOfBirth: {
-    type: Field.types.dateTime
+    type: 'dateTime'
   },
   dbDefault: {
-    type: Field.types.string
+    type: 'string'
   },
   jsonField: {
-    type: Field.types.json,
+    type: 'json',
     cast: {
       forSave(value) {
         if (value !== null) {
@@ -93,7 +93,7 @@ User.fields = {
     }
   },
   intToString: {
-    type: Field.types.integer,
+    type: 'integer',
     cast: {
       forFetch(value) {
         if (value !== null) {
@@ -124,7 +124,7 @@ class ImageCategory extends Model {}
 ImageCategory.table = 'image_category';
 ImageCategory.fields = {
   name: {
-    type: Field.types.string,
+    type: 'string',
     required: true
   }
 };
@@ -144,11 +144,11 @@ class Image extends Model {}
 Image.table = 'image';
 Image.fields = {
   userId: {
-    type: Field.types.integer,
+    type: 'integer',
     references: User.fields.id
   },
   categoryId: {
-    type: Field.types.integer,
+    type: 'integer',
     references: ImageCategory.fields.id
   }
 };
@@ -174,15 +174,15 @@ class Message extends Model {}
 Message.table = 'message';
 Message.fields = {
   text: {
-    type: Field.types.text,
+    type: 'text',
     required: true
   },
   senderId: {
-    type: Field.types.integer,
+    type: 'integer',
     references: User.fields.id
   },
   receiverId: {
-    type: Field.types.integer,
+    type: 'integer',
     references: User.fields.id
   }
 };
@@ -430,7 +430,7 @@ describe('Query', function() {
       await expect(
         query.fetch(),
         'to be rejected with error satisfying',
-        new Query.errors.FetchError({ error: new Error('fetch error'), query })
+        new Query.FetchError({ error: new Error('fetch error'), query })
       );
       stub.restore();
     });
@@ -477,7 +477,7 @@ describe('Query', function() {
           await expect(
             query.fetch(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsFetchedError({ query })
+            new Query.NoRowsFetchedError({ query })
           );
         });
       });
@@ -2734,7 +2734,7 @@ describe('Query', function() {
       await expect(
         query.count(),
         'to be rejected with error satisfying',
-        new Query.errors.CountError({ error: new Error('count error'), query })
+        new Query.CountError({ error: new Error('count error'), query })
       );
       stub.restore();
     });
@@ -2775,7 +2775,7 @@ describe('Query', function() {
           await expect(
             query.count(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsCountedError({ query })
+            new Query.NoRowsCountedError({ query })
           );
         });
       });
@@ -3007,7 +3007,7 @@ describe('Query', function() {
       await expect(
         query.insert(new User({ name: 'John Doe' })),
         'to be rejected with error satisfying',
-        new Query.errors.InsertError({
+        new Query.InsertError({
           error: new Error('insert error'),
           query
         })
@@ -3165,7 +3165,7 @@ describe('Query', function() {
           await expect(
             query.insert(new User({ name: 'John Doe' })),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsInsertedError({ query })
+            new Query.NoRowsInsertedError({ query })
           );
         });
       });
@@ -3503,7 +3503,7 @@ describe('Query', function() {
             await expect(
               query.insert([new User({ name: 'John Doe' })]),
               'to be rejected with error satisfying',
-              new Query.errors.NoRowsInsertedError({ query })
+              new Query.NoRowsInsertedError({ query })
             );
           });
         });
@@ -3633,7 +3633,7 @@ describe('Query', function() {
               await expect(
                 query.insert([new User({ name: 'John Doe' })]),
                 'to be rejected with error satisfying',
-                new Query.errors.NoRowsInsertedError({ query })
+                new Query.NoRowsInsertedError({ query })
               );
             });
           });
@@ -3759,7 +3759,7 @@ describe('Query', function() {
       await expect(
         query.update(user),
         'to be rejected with error satisfying',
-        new Query.errors.UpdateError({
+        new Query.UpdateError({
           error: new Error('update error'),
           query
         })
@@ -4051,7 +4051,7 @@ describe('Query', function() {
           await expect(
             query.update(user),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsUpdatedError({ query })
+            new Query.NoRowsUpdatedError({ query })
           );
         });
       });
@@ -4267,7 +4267,7 @@ describe('Query', function() {
       await expect(
         query.delete(),
         'to be rejected with error satisfying',
-        new Query.errors.DeleteError({
+        new Query.DeleteError({
           error: new Error('delete error'),
           query
         })
@@ -4482,7 +4482,7 @@ describe('Query', function() {
           await expect(
             query.delete(),
             'to be rejected with error satisfying',
-            new Query.errors.NoRowsDeletedError({ query })
+            new Query.NoRowsDeletedError({ query })
           );
         });
       });

@@ -1,2 +1,3 @@
 ## KnormError(options)
-## KnormError.prototype.formatMessage(options)
+
+## KnormError.prototype.formatMessage(options) : string

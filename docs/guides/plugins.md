@@ -3,24 +3,30 @@
 Plugins modify the behaviour of `Field`, `Model` and `Query` classes simply by
 overloading their methods.
 
-Adding plugins to the ORM:
+To add plugins to the ORM:
 
 ```js
 const knorm = require('knorm');
 const knormSoftDelete = require('knorm-soft-delete');
 
-const { Model, Query } = knorm({ /* knorm options */ })
-  .use(knormSoftDelete({ /* plugin options */ }));
+const { Model, Query } = knorm({
+  /* knorm options */
+}).use(
+  knormSoftDelete({
+    /* plugin options */
+  })
+);
 ```
+
 > see [knorm-soft-delete](https://www.npmjs.com/package/knorm-soft-delete) for
-this plugin's documentation
+> this plugin's documentation
 
 ## Available plugins
 
-| Plugin | Description |
-| ------ | --------------------------------------------------- |
-| [knorm-timestamps](https://www.npmjs.com/package/knorm-timestamps) | enables [timestamps](http://knexjs.org/#Schema-timestamps): adds support for `createdAt` and `updatedAt` fields |
-| [knorm-soft-delete](https://www.npmjs.com/package/knorm-soft-delete) | enables soft-deletion: adds support for `deleted` and `deletedAt` fields |
+| Plugin                                                               | Description                                                                                                     |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [knorm-timestamps](https://www.npmjs.com/package/knorm-timestamps)   | enables [timestamps](http://knexjs.org/#Schema-timestamps): adds support for `createdAt` and `updatedAt` fields |
+| [knorm-soft-delete](https://www.npmjs.com/package/knorm-soft-delete) | enables soft-deletion: adds support for `deleted` and `deletedAt` fields                                        |
 
 ## Creating custom plugins
 
@@ -34,10 +40,12 @@ const preventDelete = orm => {
     async delete() {
       throw new Error('deleting is not allowed!');
     }
-  }
+  };
 };
 
-const { Model } = knorm({ /* knorm options */ }).use(preventDelete);
+const { Model } = knorm({
+  /* knorm options */
+}).use(preventDelete);
 
 Model.delete().catch(console.log); // logs Error('deleting is not allowed!')
 ```

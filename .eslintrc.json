@@ -11,8 +11,8 @@
   "rules": {
     "curly": ["error", "all"],
     "eqeqeq": ["error", "always"],
+    "no-var": "error",
     "prefer-const": "error",
-    "prettier/prettier": ["error", { "singleQuote": true }],
-    "no-var": "error"
+    "prettier/prettier": ["error", { "singleQuote": true }]
   }
 }
