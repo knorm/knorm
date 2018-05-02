@@ -1,0 +1,58 @@
+{
+  "name": "@knorm/relations",
+  "version": "1.0.0",
+  "description": "Relations plugin for knorm",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha 'test/**/*.spec.js'",
+    "coverage": "nyc npm test",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "ci": "npm-run-all lint coverage coveralls",
+    "postgres": "docker-compose exec postgres echo 'Postgres running ...' || docker-compose up -d",
+    "postgres:stop": "docker-compose stop",
+    "postgres:remove": "docker-compose down"
+  },
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
+  "peerDependencies": {
+    "@knorm/knorm": "^1.0.0"
+  },
+  "devDependencies": {
+    "@knorm/knorm": "^1.0.0",
+    "@knorm/postgres": "^1.0.0",
+    "coveralls": "^3.0.0",
+    "eslint": "^4.13.1",
+    "eslint-config-ganintegrity": "^2.0.2",
+    "knex": "^0.13.0",
+    "lodash": "^4.17.10",
+    "mocha": "^3.2.0",
+    "npm-run-all": "^4.1.2",
+    "nyc": "^11.4.1",
+    "pg": "^7.4.0",
+    "prettier": "^1.9.2",
+    "proxyquire": "^1.7.11",
+    "unexpected": "^10.36.2",
+    "unexpected-knex": "^1.2.0"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": [
+    "knorm",
+    "plugin",
+    "relations",
+    "joins"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/knorm/relations.git"
+  },
+  "bugs": {
+    "url": "https://github.com/knorm/relations/issues"
+  },
+  "homepage": "https://github.com/knorm/relations#readme",
+  "dependencies": {}
+}
