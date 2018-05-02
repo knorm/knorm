@@ -97,7 +97,7 @@ describe('KnormPostgres', () => {
   describe('init', () => {
     it('throws if not passed a `Knorm` instance', () => {
       expect(
-        () => new KnormPostgres({ connection }).init(),
+        () => new KnormPostgres().init(),
         'to throw',
         new KnormPostgresError('no Knorm instance provided')
       );
@@ -105,7 +105,7 @@ describe('KnormPostgres', () => {
 
     it('throws if passed an invalid `Knorm` instance', () => {
       expect(
-        () => new KnormPostgres({ connection }).init({}),
+        () => new KnormPostgres().init({}),
         'to throw',
         new KnormPostgresError('invalid Knorm instance provided')
       );
@@ -385,7 +385,7 @@ describe('KnormPostgres', () => {
   });
 
   describe('PostgresField', () => {
-    const { Field, Model } = knorm().use(knormPostgres({ connection }));
+    const { Field, Model } = knorm().use(knormPostgres());
 
     it('enforces maxLength 255 on all strings', async () => {
       const field = new Field({ name: 'foo', model: Model, type: 'string' });
