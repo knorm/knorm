@@ -448,8 +448,8 @@ describe('KnormPostgres', () => {
               cast: { forSave }
             });
             const instance = { model: 'instace' };
-            field.cast({ foo: 'bar' }, instance, { forSave: true }),
-              expect(forSave, 'was called on', instance);
+            field.cast({ foo: 'bar' }, instance, { forSave: true });
+            expect(forSave, 'was called on', instance);
           });
         });
 
@@ -477,8 +477,8 @@ describe('KnormPostgres', () => {
               cast: { forSave }
             });
             const instance = { model: 'instace' };
-            field.cast('bar', instance, { forSave: true }),
-              expect(forSave, 'was called on', instance);
+            field.cast('bar', instance, { forSave: true });
+            expect(forSave, 'was called on', instance);
           });
         });
       });
