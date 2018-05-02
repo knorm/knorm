@@ -166,7 +166,7 @@ const createImageTable = table => {
   table
     .integer('category_id')
     .references('id')
-    .inTable(User.table);
+    .inTable(ImageCategory.table);
 };
 
 const truncateImageTable = async () => {
@@ -1945,119 +1945,6 @@ describe('Query', () => {
           'to be fulfilled with sorted rows exhaustively satisfying',
           []
         );
-      });
-    });
-  });
-
-  describe('Query.prototype.count', () => {
-    before(async () => {
-      await knex(User.table).insert([
-        {
-          id: 1,
-          name: 'User 1',
-          confirmed: false,
-          description: 'this is user 1',
-          age: 10,
-          date_of_birth: null
-        },
-        {
-          id: 2,
-          name: 'User 2',
-          confirmed: true,
-          description: 'this is user 2',
-          age: 10,
-          date_of_birth: null
-        }
-      ]);
-      await knex('image_category').insert([{ id: 1, name: 'User images' }]);
-      await knex(Image.table).insert([{ id: 1, user_id: 1, category_id: 1 }]);
-    });
-
-    after(async () => {
-      await truncateImageTable();
-      await truncateImageCategoryTable();
-      await truncateUserTable();
-    });
-
-    it('resolves with the count of all the rows in the table if not passed any options', async () => {
-      const query = new Query(User);
-      await expect(query.count(), 'to be fulfilled with', 2);
-    });
-
-    it("accepts a 'field' option specifying the field to count", async () => {
-      const query = new Query(User);
-      await expect(
-        query.count({ field: 'dateOfBirth' }),
-        'to be fulfilled with',
-        0 // since date_of_birth is null in both rows
-      );
-    });
-
-    it("accepts a 'distinct' option to count distinct fields", async () => {
-      const query = new Query(User);
-      await expect(query.count({ distinct: 'age' }), 'to be fulfilled with', 1);
-    });
-
-    // this varies too much from db to db. write a raw query instead if needed
-    it("does not support counting multiple 'distinct' fields", async () => {
-      const query = new Query(User);
-      await expect(
-        query.count({ distinct: ['id', 'age'] }),
-        'to be rejected with error satisfying',
-        { name: 'CountError' }
-      );
-    });
-
-    // this varies too much from db to db. write a raw query instead if needed
-    it("does not support counting multiple 'fields'", async () => {
-      const query = new Query(User).fields(['id', 'dateOfBirth']);
-      await expect(query.count(), 'to be rejected with error satisfying', {
-        name: 'CountError'
-      });
-    });
-
-    it('rejects with a CountError if a database error occurs', async () => {
-      const stub = sinon
-        .stub(Query.prototype, 'query')
-        .returns(Promise.reject(new Error('count error')));
-      const query = new Query(User);
-      await expect(
-        query.count(),
-        'to be rejected with error satisfying',
-        new Query.CountError({ error: new Error('count error'), query })
-      );
-      stub.restore();
-    });
-
-    describe("with a 'where' configured", () => {
-      it('resolves with the count of rows matching the query', async () => {
-        const query = new Query(User).where({ confirmed: true });
-        await expect(query.count(), 'to be fulfilled with', 1);
-      });
-    });
-
-    describe("with an 'innerJoin' configured", () => {
-      it('resolves with the count of rows matching the join', async () => {
-        const query = new Query(User).innerJoin(new Query(Image));
-        await expect(query.count(), 'to be fulfilled with', 1);
-      });
-    });
-
-    describe('if no rows are counted', () => {
-      it('resolves with zero', async () => {
-        const query = new Query(User).where({ id: 3 });
-        await expect(query.count(), 'to be fulfilled with value satisfying', 0);
-      });
-
-      describe("with 'require' option configured", () => {
-        it('rejects with a NoRowsCountedError', async () => {
-          const query = new Query(User).where({ id: 3 }).require();
-          await expect(
-            query.count(),
-            'to be rejected with error satisfying',
-            new Query.NoRowsCountedError({ query })
-          );
-        });
       });
     });
   });

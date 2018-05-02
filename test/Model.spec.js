@@ -2481,22 +2481,6 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.count', function() {
-      it('counts models', async function() {
-        await User.save({ name: 'John Doe' });
-        await expect(User.count(), 'to be fulfilled with value satisfying', 1);
-      });
-
-      it('passes options along', async function() {
-        await User.save({ name: 'John Doe' });
-        await expect(
-          User.count({ field: 'id' }),
-          'to be fulfilled with value satisfying',
-          1
-        );
-      });
-    });
-
     describe('Model.delete', function() {
       it('deletes models', async function() {
         await User.save({ name: 'John Doe' });
