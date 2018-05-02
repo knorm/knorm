@@ -90,6 +90,9 @@ User.fields = {
           return JSON.stringify(value);
         }
       }
+    },
+    schema: {
+      type: 'jsonArray'
     }
   },
   intToString: {
