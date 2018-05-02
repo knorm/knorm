@@ -1,7 +1,7 @@
 {
   "name": "@knorm/relations",
   "version": "1.0.0",
-  "description": "Relations plugin for knorm",
+  "description": "Relations plugin for @knorm/knorm",
   "main": "index.js",
   "scripts": {
     "test": "mocha 'test/**/*.spec.js'",
