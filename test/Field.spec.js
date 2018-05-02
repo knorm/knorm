@@ -1551,8 +1551,20 @@ describe('Field', function() {
         });
 
         describe('when passed a string value', function() {
-          it('does not run validators on the JSON.parsed value', async function() {
-            await expect(field.validate('{"foo":1}'), 'to be fulfilled');
+          it('JSON.parses the value and runs validators on the parsed value', async function() {
+            await expect(field.validate('{"foo":1}'), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+            await expect(field.validate('"foo"'), 'to be fulfilled');
+          });
+
+          it('ignores JSON.parse errors (to let the database "validate" it instead)', async function() {
+            await expect(field.validate('1'), 'to be rejected with', {
+              name: 'ValidationError',
+              type: 'TypeError'
+            });
+            await expect(field.validate('foo'), 'to be fulfilled');
           });
         });
 
