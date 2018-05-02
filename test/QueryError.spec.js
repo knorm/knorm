@@ -3,7 +3,6 @@ const QueryError = require('../lib/QueryError');
 const KnormError = require('../lib/KnormError');
 const AbstractQuery = require('../lib/Query');
 const AbstractModel = require('../lib/Model');
-const AbstractField = require('../lib/Field');
 const knex = require('./lib/knex');
 
 class Query extends AbstractQuery {}
@@ -14,7 +13,7 @@ User.Query = Query;
 User.table = 'user';
 User.fields = {
   id: {
-    type: AbstractField.types.integer,
+    type: 'integer',
     required: true,
     primary: true
   }

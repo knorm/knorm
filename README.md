@@ -12,24 +12,23 @@ A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
 
 These environments are currently supported:
 
-| Environment | Value | Description                                        |
-| ----------- | ---- | --------------------------------------------------- |
-| Node.js     | Version >= 7.6. | knorm uses `async/await` |
+| Environment | Value                        | Description                                                             |
+| ----------- | ---------------------------- | ----------------------------------------------------------------------- |
+| Node.js     | Version >= 7.6.              | knorm uses `async/await`                                                |
 | Databases   | PostgreSQL, MSSQL and Oracle | knorm uses the [RETURNING clause](http://knexjs.org/#Builder-returning) |
 
 ## Features
 
-- [Validation](https://joelmukuthu.github.io/knorm/#/guides/validation)
-- [JSON fields validation](https://joelmukuthu.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
-- [Plugin support](https://joelmukuthu.github.io/knorm/#/guides/plugins)
-enabling full and easy customization
-- [Model field-name to database column-name](https://joelmukuthu.github.io/knorm/#/api/knorm?id=options) transformations (e.g. snake-casing)
-- [Relations](https://joelmukuthu.github.io/knorm/#/guides/relations) through SQL joins
-- virtual fields (i.e. computed fields) with support for sync and async getters
-- value casting before insert and update operations and after fetch operations
-- custom error classes for database errors
-- improved syntax for transactions
-- good test coverage
+* [Validation](https://joelmukuthu.github.io/knorm/#/guides/validation)
+* [JSON fields validation](https://joelmukuthu.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
+* [Plugin support](https://joelmukuthu.github.io/knorm/#/guides/plugins)
+* [Field to column-name](https://joelmukuthu.github.io/knorm/#/api/knorm?id=options) transformations (e.g. snake-casing)
+* [Relations](https://joelmukuthu.github.io/knorm/#/guides/relations) through SQL joins
+* [Virtual fields](https://joelmukuthu.github.io/knorm/#/guides/virtuals) with support for `async` getters
+* [Value casting](https://joelmukuthu.github.io/knorm/#/guides/fields?id=value-casting) before insert and update operations and after fetch operations
+* custom error classes for database errors
+* improved syntax for transactions
+* good test coverage
 
 > NOTE: knorm does not create or run knex migrations
 

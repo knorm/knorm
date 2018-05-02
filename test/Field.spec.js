@@ -55,7 +55,7 @@ describe('Field', function() {
           new Field({
             name: 'bar',
             model: Foo,
-            type: Field.types.string,
+            type: 'string',
             validate: {
               oneOf: ['foo', 'bar']
             }
@@ -71,7 +71,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'bar',
           model: Foo,
-          type: Field.types.string,
+          type: 'string',
           column: 'the column name'
         });
         expect(field.column, 'to be', 'the column name');
@@ -83,7 +83,7 @@ describe('Field', function() {
         new Field({
           name: 'bar',
           model: Foo,
-          type: Field.types.string,
+          type: 'string',
           column: 'bar'
         });
         expect(spy, 'was not called');
@@ -100,7 +100,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'bar',
           model: Foo,
-          type: Field.types.string
+          type: 'string'
         });
         expect(stub, 'to have calls satisfying', () => {
           stub('bar');
@@ -118,7 +118,7 @@ describe('Field', function() {
             new Field({
               name: 'bar',
               model: Foo,
-              type: Field.types.string,
+              type: 'string',
               cast: {
                 forSave: 'foo'
               }
@@ -137,7 +137,7 @@ describe('Field', function() {
             new Field({
               name: 'bar',
               model: Foo,
-              type: Field.types.string,
+              type: 'string',
               cast: {
                 forFetch: 'foo'
               }
@@ -149,6 +149,122 @@ describe('Field', function() {
         );
       });
     });
+
+    describe('for `json` and `jsonb` fields with a `schema` config', function() {
+      class Foo extends Model {}
+
+      describe('with a root-level schema', function() {
+        it('throws the correct error if the schema config has no `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: Foo,
+                type: 'json',
+                schema: { required: true }
+              }),
+            'to throw',
+            new Error('Field `Foo.json` has no type configured')
+          );
+        });
+
+        it('throws the correct error if a schema config has an invalid `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: Foo,
+                type: 'json',
+                schema: { type: 'foo', required: true }
+              }),
+            'to throw',
+            new Error('Field `Foo.json` has an invalid type `foo`')
+          );
+        });
+
+        it("allows adding schema fields with the `schema: 'type'` shorthand", function() {
+          expect(
+            new Field({
+              name: 'json',
+              model: Foo,
+              type: 'array',
+              schema: 'string'
+            }),
+            'to satisfy',
+            {
+              validators: {
+                schema: expect.it(
+                  'to be field',
+                  new Field({
+                    name: 'json',
+                    path: 'json',
+                    model: Foo,
+                    type: 'string'
+                  })
+                )
+              }
+            }
+          );
+        });
+      });
+
+      describe('with a schema with nested fields', function() {
+        it('throws the correct error if a nested field has no `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: Foo,
+                type: 'json',
+                schema: { foo: { required: true } }
+              }),
+            'to throw',
+            new Error('Field `Foo.json.foo` has no type configured')
+          );
+        });
+
+        it('throws the correct error if a nested field has an invalid `type`', function() {
+          expect(
+            () =>
+              new Field({
+                name: 'json',
+                model: Foo,
+                type: 'json',
+                schema: { foo: { type: 'foo', required: true } }
+              }),
+            'to throw',
+            new Error('Field `Foo.json.foo` has an invalid type `foo`')
+          );
+        });
+
+        it("allows adding schema fields with the `schema: 'type'` shorthand", function() {
+          expect(
+            new Field({
+              name: 'json',
+              model: Foo,
+              type: 'json',
+              schema: { foo: 'string' }
+            }),
+            'to satisfy',
+            {
+              validators: {
+                schema: {
+                  foo: expect.it(
+                    'to be field',
+                    new Field({
+                      name: 'foo',
+                      path: 'json.foo',
+                      model: Foo,
+                      type: 'string'
+                    })
+                  )
+                }
+              }
+            }
+          );
+        });
+      });
+    });
   });
 
   describe('Field.prototype.getColumnName', function() {
@@ -157,7 +273,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: Foo,
-        type: Field.types.string
+        type: 'string'
       });
       expect(field.getColumnName('firstName'), 'to be', 'firstName');
     });
@@ -169,7 +285,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: Foo,
-        type: Field.types.string
+        type: 'string'
       });
       expect(() => field.throwValidationError(), 'to throw', {
         name: 'ValidationError'
@@ -185,7 +301,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: Foo,
-        type: Field.types.string
+        type: 'string'
       });
       expect(
         () => field.throwValidationError(),
@@ -204,7 +320,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string
+          type: 'string'
         });
         expect(
           field.cast('bar value', 'a model instance', { forSave: true }),
@@ -219,7 +335,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave
           }
@@ -233,7 +349,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave
           }
@@ -249,7 +365,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forFetch
           }
@@ -263,7 +379,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forFetch
           }
@@ -280,7 +396,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave,
             forFetch
@@ -297,7 +413,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave,
             forFetch
@@ -317,7 +433,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: User,
-        type: Field.types.string
+        type: 'string'
       });
       expect(field.hasDefault(), 'to be false');
     });
@@ -326,7 +442,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: User,
-        type: Field.types.string,
+        type: 'string',
         default: 'foo'
       });
       expect(field.hasDefault(), 'to be true');
@@ -336,7 +452,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: User,
-        type: Field.types.string,
+        type: 'string',
         default: () => {}
       });
       expect(field.hasDefault(), 'to be true');
@@ -346,7 +462,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: User,
-        type: Field.types.string,
+        type: 'string',
         default: false
       });
       expect(field.hasDefault(), 'to be true');
@@ -356,7 +472,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: User,
-        type: Field.types.string,
+        type: 'string',
         default: null
       });
       expect(field.hasDefault(), 'to be true');
@@ -370,7 +486,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: User,
-        type: Field.types.string,
+        type: 'string',
         default: 'foo'
       });
       expect(field.getDefault(), 'to be', 'foo');
@@ -381,7 +497,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           default: () => 'bar'
         });
         expect(field.getDefault(), 'to be', 'bar');
@@ -392,7 +508,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           default: stub
         });
         field.getDefault('a model instance');
@@ -411,7 +527,7 @@ describe('Field', function() {
       const field = new Field({
         name: 'firstName',
         model: User,
-        type: Field.types.string
+        type: 'string'
       });
       await expect(field.validate(), 'to be fulfilled');
     });
@@ -421,7 +537,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           required: true
         });
         await expect(field.validate(), 'to be rejected with', {
@@ -434,7 +550,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           required: true
         });
         await expect(field.validate(undefined), 'to be rejected with', {
@@ -447,7 +563,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           required: true
         });
         await expect(field.validate(null), 'to be rejected with', {
@@ -460,7 +576,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           required: true
         });
         await expect(field.validate('foo'), 'to be fulfilled');
@@ -472,7 +588,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.text
+          type: 'text'
         });
         await expect(field.validate({}), 'to be rejected with', {
           name: 'ValidationError',
@@ -484,7 +600,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.text
+          type: 'text'
         });
         await expect(field.validate(undefined), 'to be fulfilled');
       });
@@ -493,7 +609,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.text
+          type: 'text'
         });
         await expect(field.validate(null), 'to be fulfilled');
       });
@@ -503,7 +619,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.any
+            type: 'any'
           });
           await expect(field.validate('foo'), 'to be fulfilled');
           await expect(field.validate(1), 'to be fulfilled');
@@ -516,7 +632,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.number
+            type: 'number'
           });
           await expect(field.validate(1), 'to be fulfilled');
         });
@@ -525,7 +641,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.number
+            type: 'number'
           });
           await expect(field.validate(1.2), 'to be fulfilled');
         });
@@ -534,7 +650,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.string
+            type: 'string'
           });
           await expect(field.validate('foo'), 'to be fulfilled');
         });
@@ -543,7 +659,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.text
+            type: 'text'
           });
           await expect(field.validate('foo'), 'to be fulfilled');
         });
@@ -552,7 +668,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.integer
+            type: 'integer'
           });
           await expect(field.validate(1), 'to be fulfilled');
         });
@@ -561,7 +677,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.dateTime
+            type: 'dateTime'
           });
           await expect(field.validate(new Date()), 'to be fulfilled');
         });
@@ -570,7 +686,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.date
+            type: 'date'
           });
           await expect(field.validate(new Date()), 'to be fulfilled');
         });
@@ -579,7 +695,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.boolean
+            type: 'boolean'
           });
           await expect(field.validate(true), 'to be fulfilled');
         });
@@ -588,7 +704,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.boolean
+            type: 'boolean'
           });
           await expect(field.validate(false), 'to be fulfilled');
         });
@@ -597,7 +713,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.uuid
+            type: 'uuid'
           });
           await expect(field.validate(uuid.v4()), 'to be fulfilled');
         });
@@ -606,16 +722,16 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.uuid
+            type: 'uuid'
           });
           await expect(field.validate(uuid.v1()), 'to be fulfilled');
         });
 
-        it("uuid.v4 against the 'uuidV4' type", async function() {
+        it("uuid.v4 against the 'uuid4' type", async function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.uuidV4
+            type: 'uuid4'
           });
           await expect(field.validate(uuid.v4()), 'to be fulfilled');
         });
@@ -624,7 +740,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.decimal
+            type: 'decimal'
           });
           await expect(field.validate(10.56), 'to be fulfilled');
         });
@@ -633,7 +749,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.decimal
+            type: 'decimal'
           });
           await expect(field.validate(0.5600976), 'to be fulfilled');
         });
@@ -642,7 +758,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.decimal
+            type: 'decimal'
           });
           await expect(field.validate(30), 'to be fulfilled');
         });
@@ -651,7 +767,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.decimal
+            type: 'decimal'
           });
           await expect(field.validate(0), 'to be fulfilled');
         });
@@ -660,7 +776,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.decimal
+            type: 'decimal'
           });
           await expect(field.validate('10.00'), 'to be fulfilled');
         });
@@ -669,7 +785,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.decimal
+            type: 'decimal'
           });
           await expect(field.validate('+10.00345'), 'to be fulfilled');
         });
@@ -678,7 +794,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.decimal
+            type: 'decimal'
           });
           await expect(field.validate(-9923410.03), 'to be fulfilled');
         });
@@ -687,7 +803,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.binary
+            type: 'binary'
           });
           await expect(field.validate(Buffer.from('')), 'to be fulfilled');
         });
@@ -696,7 +812,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.email
+            type: 'email'
           });
           await expect(field.validate('foo@bar.com'), 'to be fulfilled');
         });
@@ -707,7 +823,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.number
+            type: 'number'
           });
           await expect(field.validate(true), 'to be rejected with', {
             name: 'ValidationError',
@@ -719,7 +835,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.integer
+            type: 'integer'
           });
           await expect(field.validate(1.5), 'to be rejected with', {
             name: 'ValidationError',
@@ -731,7 +847,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.integer
+            type: 'integer'
           });
           await expect(field.validate('1'), 'to be rejected with', {
             name: 'ValidationError',
@@ -743,7 +859,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.dateTime
+            type: 'dateTime'
           });
           const dateString = new Date().toString();
           await expect(field.validate(dateString), 'to be rejected with', {
@@ -756,7 +872,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.date
+            type: 'date'
           });
           const dateString = new Date().toString();
           await expect(field.validate(dateString), 'to be rejected with', {
@@ -769,7 +885,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.boolean
+            type: 'boolean'
           });
           await expect(field.validate(1), 'to be rejected with', {
             name: 'ValidationError',
@@ -781,7 +897,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.boolean
+            type: 'boolean'
           });
           await expect(field.validate(0), 'to be rejected with', {
             name: 'ValidationError',
@@ -793,7 +909,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.uuid
+            type: 'uuid'
           });
           await expect(
             field.validate('not-valid-uuid'),
@@ -802,11 +918,11 @@ describe('Field', function() {
           );
         });
 
-        it("uuid.v1 against the 'uuidV4' type", async function() {
+        it("uuid.v1 against the 'uuid4' type", async function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.uuidV4
+            type: 'uuid4'
           });
           const uuidV1 = uuid.v1();
           await expect(field.validate(uuidV1), 'to be rejected with', {
@@ -819,7 +935,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.decimal
+            type: 'decimal'
           });
           await expect(field.validate('foo'), 'to be rejected with', {
             name: 'ValidationError',
@@ -831,7 +947,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.binary
+            type: 'binary'
           });
           await expect(field.validate('bar'), 'to be rejected with', {
             name: 'ValidationError',
@@ -843,7 +959,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.binary
+            type: 'binary'
           });
           await expect(field.validate({}), 'to be rejected with', {
             name: 'ValidationError',
@@ -855,7 +971,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.email
+            type: 'email'
           });
           await expect(field.validate('foo@bar'), 'to be rejected with', {
             name: 'ValidationError',
@@ -867,7 +983,7 @@ describe('Field', function() {
           const field = new Field({
             name: 'firstName',
             model: User,
-            type: Field.types.email
+            type: 'email'
           });
           await expect(field.validate(1), 'to be rejected with', {
             name: 'ValidationError',
@@ -882,7 +998,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           minLength: 6
         });
         await expect(field.validate('a'), 'to be rejected with', {
@@ -895,7 +1011,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           minLength: 6
         });
         await expect(field.validate('123456'), 'to be fulfilled');
@@ -905,7 +1021,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           minLength: 6
         });
         await expect(field.validate('1234567'), 'to be fulfilled');
@@ -915,7 +1031,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           minLength: 6
         });
         await expect(field.validate(undefined), 'to be fulfilled');
@@ -925,7 +1041,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           minLength: 6
         });
         await expect(field.validate(null), 'to be fulfilled');
@@ -937,7 +1053,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           maxLength: 6
         });
         await expect(field.validate('1234567'), 'to be rejected with', {
@@ -950,7 +1066,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           maxLength: 0
         });
         await expect(field.validate('1'), 'to be rejected with', {
@@ -964,7 +1080,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           maxLength: 6
         });
         await expect(field.validate('123456'), 'to be fulfilled');
@@ -974,7 +1090,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           maxLength: 6
         });
         await expect(field.validate('12345'), 'to be fulfilled');
@@ -984,7 +1100,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           maxLength: 6
         });
         await expect(field.validate(undefined), 'to be fulfilled');
@@ -994,7 +1110,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           maxLength: 6
         });
         await expect(field.validate(null), 'to be fulfilled');
@@ -1006,7 +1122,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           oneOf: [1, 2]
         });
         await expect(field.validate(3), 'to be rejected with', {
@@ -1019,7 +1135,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           oneOf: [1, 2]
         });
         await expect(field.validate(1), 'to be fulfilled');
@@ -1029,7 +1145,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           oneOf: ['READ', 'UNREAD']
         });
         await expect(field.validate('read'), 'to be rejected with', {
@@ -1042,7 +1158,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           oneOf: [1, 2]
         });
         await expect(field.validate(undefined), 'to be fulfilled');
@@ -1052,7 +1168,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           oneOf: [1, 2]
         });
         await expect(field.validate(null), 'to be fulfilled');
@@ -1064,7 +1180,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           equals: 1
         });
         await expect(field.validate(3), 'to be rejected with', {
@@ -1077,7 +1193,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           equals: 0
         });
         await expect(field.validate(1), 'to be rejected with', {
@@ -1091,7 +1207,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           equals: 1
         });
         await expect(field.validate(1), 'to be fulfilled');
@@ -1101,7 +1217,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           equals: 'READ'
         });
         await expect(field.validate('read'), 'to be rejected with', {
@@ -1114,7 +1230,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           equals: 1
         });
         await expect(field.validate(undefined), 'to be fulfilled');
@@ -1124,7 +1240,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           equals: 1
         });
         await expect(field.validate(null), 'to be fulfilled');
@@ -1136,7 +1252,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           regex: /[0-2]/
         });
         await expect(field.validate(3), 'to be rejected with', {
@@ -1149,7 +1265,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           regex: /hello/
         });
         await expect(field.validate('hello world'), 'to be fulfilled');
@@ -1159,7 +1275,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           equals: 1
         });
         await expect(field.validate(undefined), 'to be fulfilled');
@@ -1169,7 +1285,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.integer,
+          type: 'integer',
           equals: 1
         });
         await expect(field.validate(null), 'to be fulfilled');
@@ -1182,7 +1298,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           validate
         });
         await field.validate('bar value');
@@ -1196,7 +1312,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           validate
         });
         await field.validate('bar value', 'a model instance');
@@ -1211,7 +1327,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           validate
         });
         await field.validate();
@@ -1223,7 +1339,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           validate
         });
         await field.validate(null);
@@ -1234,7 +1350,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           validate() {
             throw new Error('custom error');
           }
@@ -1250,7 +1366,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           validate() {
             return Promise.reject(new Error('rejection reason'));
           }
@@ -1266,7 +1382,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           validate() {
             return false;
           }
@@ -1281,7 +1397,7 @@ describe('Field', function() {
         const field = new Field({
           name: 'firstName',
           model: User,
-          type: Field.types.string,
+          type: 'string',
           validate() {}
         });
         await expect(field.validate(), 'to be fulfilled');
@@ -1293,7 +1409,7 @@ describe('Field', function() {
             const field = new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string,
+              type: 'string',
               validate() {
                 return {
                   maxLength: 2
@@ -1313,7 +1429,7 @@ describe('Field', function() {
             const field = new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string,
+              type: 'string',
               validate() {
                 return {
                   validate: secondValidateSpy
@@ -1331,7 +1447,7 @@ describe('Field', function() {
             const field = new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string,
+              type: 'string',
               validate() {
                 return {
                   validate: secondValidateSpy
@@ -1350,7 +1466,7 @@ describe('Field', function() {
             const field = new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string,
+              type: 'string',
               validate() {
                 return {
                   validate() {
@@ -1371,7 +1487,7 @@ describe('Field', function() {
             const field = new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string,
+              type: 'string',
               validate() {
                 return new Date();
               }
@@ -1391,13 +1507,13 @@ describe('Field', function() {
           json = new Field({
             name: 'json',
             model: User,
-            type: Field.types.json
+            type: 'json'
           });
 
           jsonb = new Field({
             name: 'jsonb',
             model: User,
-            type: Field.types.jsonb
+            type: 'jsonb'
           });
         });
 
@@ -1442,37 +1558,9 @@ describe('Field', function() {
           field = new Field({
             name: 'json',
             model: User,
-            type: Field.types.json,
-            schema: { type: Field.types.string, required: true }
+            type: 'json',
+            schema: { type: 'string', required: true }
           });
-        });
-
-        it('throws the correct error if the schema config has no `type`', function() {
-          expect(
-            () =>
-              new Field({
-                name: 'json',
-                model: User,
-                type: Field.types.json,
-                schema: { required: true }
-              }),
-            'to throw',
-            new Error('Field `User.json` has no type configured')
-          );
-        });
-
-        it('throws the correct error if a schema config has an invalid `type`', function() {
-          expect(
-            () =>
-              new Field({
-                name: 'json',
-                model: User,
-                type: Field.types.json,
-                schema: { required: true, type: 'foo' }
-              }),
-            'to throw',
-            new Error('Field `User.json` has an invalid type `foo`')
-          );
         });
 
         it('fulfils for valid values', async function() {
@@ -1525,7 +1613,7 @@ describe('Field', function() {
             field = new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.json,
+              type: 'json',
               schema: { type: 'string', validate }
             });
           });
@@ -1556,18 +1644,18 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonArray` field with an item `schema`', function() {
+        describe('with a root-level `array` field with an item `schema`', function() {
           let field;
 
           before(function() {
             field = new Field({
               name: 'json',
               model: User,
-              type: Field.types.json,
+              type: 'json',
               schema: {
-                type: Field.types.jsonArray,
+                type: 'array',
                 maxLength: 2,
-                schema: { type: Field.types.string, required: true }
+                schema: { type: 'string', required: true }
               }
             });
           });
@@ -1622,15 +1710,15 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonArray` field with no item `schema`', function() {
+        describe('with a root-level `array` field with no item `schema`', function() {
           let field;
 
           before(function() {
             field = new Field({
               name: 'json',
               model: User,
-              type: Field.types.json,
-              schema: { type: Field.types.jsonArray, minLength: 2 }
+              type: 'json',
+              schema: { type: 'array', minLength: 2 }
             });
           });
 
@@ -1654,19 +1742,19 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonArray` field with a nested `schema`', function() {
+        describe('with a root-level `array` field with a nested `schema`', function() {
           let field;
 
           before(function() {
             field = new Field({
               name: 'json',
               model: User,
-              type: Field.types.json,
+              type: 'json',
               schema: {
-                type: Field.types.jsonArray,
+                type: 'array',
                 schema: {
-                  type: Field.types.jsonObject,
-                  schema: { foo: { type: Field.types.string } }
+                  type: 'object',
+                  schema: { foo: { type: 'string' } }
                 }
               }
             });
@@ -1706,19 +1794,19 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonObject` field with a nested `schema`', function() {
+        describe('with a root-level `object` field with a nested `schema`', function() {
           let field;
 
           before(function() {
             field = new Field({
               name: 'json',
               model: User,
-              type: Field.types.json,
+              type: 'json',
               schema: {
-                type: Field.types.jsonObject,
+                type: 'object',
                 schema: {
-                  type: Field.types.jsonObject,
-                  schema: { foo: { type: Field.types.string } }
+                  type: 'object',
+                  schema: { foo: { type: 'string' } }
                 }
               }
             });
@@ -1774,16 +1862,16 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `jsonObject` field  with no nested `schema`', function() {
+        describe('with a root-level `object` field  with no nested `schema`', function() {
           let field;
 
           before(function() {
             field = new Field({
               name: 'json',
               model: User,
-              type: Field.types.json,
+              type: 'json',
               schema: {
-                type: Field.types.jsonObject
+                type: 'object'
               }
             });
           });
@@ -1820,37 +1908,9 @@ describe('Field', function() {
           field = new Field({
             name: 'json',
             model: User,
-            type: Field.types.json,
-            schema: { foo: { type: Field.types.string, required: true } }
+            type: 'json',
+            schema: { foo: { type: 'string', required: true } }
           });
-        });
-
-        it('throws the correct error if a nested field has no `type`', function() {
-          expect(
-            () =>
-              new Field({
-                name: 'json',
-                model: User,
-                type: Field.types.json,
-                schema: { foo: { required: true } }
-              }),
-            'to throw',
-            new Error('Field `User.json.foo` has no type configured')
-          );
-        });
-
-        it('throws the correct error if a nested field has an invalid `type`', function() {
-          expect(
-            () =>
-              new Field({
-                name: 'json',
-                model: User,
-                type: Field.types.json,
-                schema: { foo: { required: true, type: 'foo' } }
-              }),
-            'to throw',
-            new Error('Field `User.json.foo` has an invalid type `foo`')
-          );
         });
 
         it('rejects if passed an array value', async function() {
@@ -1897,7 +1957,7 @@ describe('Field', function() {
             field = new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.json,
+              type: 'json',
               schema: { foo: { type: 'string', validate } }
             });
           });
@@ -1922,19 +1982,19 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `jsonArray` field with an item `schema`', function() {
+        describe('with a nested `array` field with an item `schema`', function() {
           let field;
 
           before(function() {
             field = new Field({
               name: 'json',
               model: User,
-              type: Field.types.json,
+              type: 'json',
               schema: {
                 foo: {
-                  type: Field.types.jsonArray,
+                  type: 'array',
                   maxLength: 2,
-                  schema: { type: Field.types.string, required: true }
+                  schema: { type: 'string', required: true }
                 }
               }
             });
@@ -1987,15 +2047,15 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `jsonArray` field with no item `schema`', function() {
+        describe('with a nested `array` field with no item `schema`', function() {
           let field;
 
           before(function() {
             field = new Field({
               name: 'json',
               model: User,
-              type: Field.types.json,
-              schema: { foo: { type: Field.types.jsonArray, minLength: 2 } }
+              type: 'json',
+              schema: { foo: { type: 'array', minLength: 2 } }
             });
           });
 
@@ -2023,18 +2083,18 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `jsonObject` field', function() {
+        describe('with a nested `object` field', function() {
           let field;
 
           before(function() {
             field = new Field({
               name: 'json',
               model: User,
-              type: Field.types.json,
+              type: 'json',
               schema: {
                 foo: {
-                  type: Field.types.jsonObject,
-                  schema: { bar: { type: Field.types.integer, required: true } }
+                  type: 'object',
+                  schema: { bar: { type: 'integer', required: true } }
                 }
               }
             });

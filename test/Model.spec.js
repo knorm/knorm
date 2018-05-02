@@ -72,7 +72,7 @@ describe('Model', function() {
 
         Foo.fields = {
           id: {
-            type: Field.types.integer
+            type: 'integer'
           }
         };
 
@@ -96,7 +96,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -113,7 +113,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -126,10 +126,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -144,7 +144,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -157,7 +157,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -174,7 +174,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -189,10 +189,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -208,10 +208,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -229,10 +229,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.integer
+          type: 'integer'
         }
       };
 
@@ -253,10 +253,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.integer
+          type: 'integer'
         }
       };
 
@@ -333,7 +333,7 @@ describe('Model', function() {
       Foo.fields = {
         foo: {
           required: true,
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -349,11 +349,11 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string,
+          type: 'string',
           default: 'foo'
         },
         bar: {
-          type: Field.types.string,
+          type: 'string',
           default: 'bar'
         }
       };
@@ -372,11 +372,11 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string,
+          type: 'string',
           default: 'foo'
         },
         bar: {
-          type: Field.types.string,
+          type: 'string',
           default: 'bar'
         }
       };
@@ -395,10 +395,10 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
-          type: Field.types.integer
+          type: 'integer'
         }
       };
 
@@ -416,7 +416,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string,
+          type: 'string',
           default: 'foo'
         }
       };
@@ -435,7 +435,7 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string,
+            type: 'string',
             default: function() {
               return 'foo';
             }
@@ -454,15 +454,15 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string,
+            type: 'string',
             required: true
           },
           bar: {
-            type: Field.types.string,
+            type: 'string',
             required: true
           },
           computed: {
-            type: Field.types.string,
+            type: 'string',
             default: function() {
               return this.foo + this.bar;
             }
@@ -484,7 +484,7 @@ describe('Model', function() {
 
       Foo.fields = {
         foo: {
-          type: Field.types.string,
+          type: 'string',
           default: true
         }
       };
@@ -495,273 +495,327 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getData', function() {
-    it('resolves with an object of fields that have values', async function() {
-      class Foo extends Model {}
+  describe('Model.prototype.getFieldData', function() {
+    class Foo extends Model {}
 
-      Foo.fields = {
-        foo: {
-          type: Field.types.string
-        },
-        bar: {
-          type: Field.types.string
-        }
-      };
+    Foo.fields = { foo: 'string', bar: 'string' };
 
+    it('returns an object mapping fields to their values', function() {
       const foo = new Foo();
 
       foo.foo = 'foo';
       foo.bar = null;
 
-      await expect(foo.getData(), 'to be fulfilled with', {
+      expect(foo.getFieldData(), 'to equal', {
         foo: 'foo',
         bar: null
       });
     });
 
-    it('does not include fields whose value has not been set', async function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: Field.types.string
-        },
-        bar: {
-          type: Field.types.string
-        }
-      };
-
+    it('does not include fields whose value has not been set', function() {
       const foo = new Foo();
 
       foo.foo = 'foo';
-      await expect(foo.getData(), 'to be fulfilled with', {
+
+      expect(foo.getFieldData(), 'to equal', {
         foo: 'foo',
         bar: undefined
       });
     });
 
-    it('does not include properties set on the model that are not fields', async function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: Field.types.string
-        }
-      };
-
+    it('does not include properties set on the model that are not fields', function() {
       const foo = new Foo();
 
       foo.foo = 'foo';
       foo.quux = 'quux';
-      await expect(foo.getData(), 'to be fulfilled with', {
+
+      expect(foo.getFieldData(), 'to equal', {
         foo: 'foo',
         quux: undefined
       });
     });
 
-    describe("with a 'fields' option", function() {
-      it('only returns data for the requested fields', async function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: Field.types.string
-          },
-          bar: {
-            type: Field.types.string
-          }
-        };
-
+    describe('with a `fields` option', function() {
+      it('only returns data for the requested fields', function() {
         const foo = new Foo();
 
         foo.foo = 'foo';
         foo.bar = 'bar';
 
-        await expect(foo.getData({ fields: ['bar'] }), 'to be fulfilled with', {
-          foo: undefined,
+        expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {
           bar: 'bar'
         });
       });
 
-      it('does not include a field without a value even if it has been requested', async function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: Field.types.string
-          },
-          bar: {
-            type: Field.types.string
-          }
-        };
-
+      it('does not include a field without a value even if it has been requested', function() {
         const foo = new Foo();
 
         foo.foo = 'foo';
-        await expect(
-          foo.getData({ fields: ['bar'] }),
-          'to be fulfilled with',
-          {}
-        );
+
+        expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {});
       });
 
-      it('rejects if the list of fields contains unknown fields', async function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: Field.types.string
-          },
-          bar: {
-            type: Field.types.integer
-          }
-        };
-
+      it('throws if the list of fields contains unknown fields', function() {
         const foo = new Foo();
 
-        return expect(
+        expect(
           foo.getData({ fields: ['quux'] }),
           'to be rejected with',
           new Error("Unknown field 'Foo.quux'")
         );
       });
     });
+  });
 
-    describe("with the 'virtuals' option set to true", function() {
-      it('includes virtuals in the data', async function() {
-        class Foo extends Model {}
+  describe('Model.prototype.getVirtualData', function() {
+    it('resolves with an object with virtuals and their data', async function() {
+      class Foo extends Model {}
 
-        Foo.fields = {
-          foo: {
-            type: Field.types.string
-          }
-        };
+      Foo.virtuals = {
+        bar() {
+          return 'bar';
+        }
+      };
 
-        Foo.virtuals = {
-          bar() {
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData(),
+        'to be fulfilled with value exhaustively satisfying',
+        { bar: 'bar' }
+      );
+    });
+
+    it('resolves with data from async virtuals (that return a Promise)', async function() {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        bar() {
+          return Promise.resolve('bar');
+        }
+      };
+
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData(),
+        'to be fulfilled with value exhaustively satisfying',
+        { bar: 'bar' }
+      );
+    });
+
+    it('skips virtuals that have no getters', async function() {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        quux: {
+          set() {}
+        }
+      };
+
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData(),
+        'to be fulfilled with value exhaustively satisfying',
+        { quux: undefined }
+      );
+    });
+
+    it("calls the virtuals' getters with this set to the model instance", async function() {
+      class Foo extends Model {}
+
+      const spy = sinon.spy();
+
+      Foo.virtuals = { bar: { get: spy } };
+
+      const foo = new Foo();
+
+      await foo.getVirtualData();
+      await expect(spy, 'was called once').and('was called on', foo);
+    });
+  });
+
+  describe('with a `virtuals` option', function() {
+    it('only includes the requested virtuals', async function() {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        bar: {
+          get() {
             return 'bar';
           }
-        };
+        },
+        quux: {
+          get() {
+            return 'quux';
+          }
+        }
+      };
 
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData({ virtuals: ['bar'] }),
+        'to be fulfilled with value exhaustively satisfying',
+        { bar: 'bar' }
+      );
+    });
+
+    it('rejects with an error if a requested virtual has no getter', async function() {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        bar: {
+          set() {}
+        }
+      };
+
+      const foo = new Foo();
+
+      await expect(
+        foo.getVirtualData({ virtuals: ['bar'] }),
+        'to be rejected with',
+        new Error("Virtual 'Foo.bar' has no getter")
+      );
+    });
+  });
+
+  describe('Model.prototype.getVirtualDataSync', function() {
+    class Foo extends Model {}
+
+    Foo.virtuals = {
+      foo() {
+        return 'foo';
+      },
+      async bar() {
+        return 'bar';
+      }
+    };
+
+    it('returns virtual data without async virtuals', function() {
+      const foo = new Foo();
+      expect(foo.getVirtualDataSync(), 'to equal', { foo: 'foo' });
+    });
+
+    describe('with a `virtuals` option', function() {
+      it('does not include async virtuals even if requested', async function() {
+        const foo = new Foo();
+
+        expect(foo.getVirtualDataSync({ virtuals: ['bar'] }), 'to equal', {});
+      });
+    });
+  });
+
+  describe('Model.prototype.getData', function() {
+    class Foo extends Model {}
+
+    Foo.fields = { foo: 'string', bar: 'string' };
+    Foo.virtuals = {
+      baz() {
+        return 'baz';
+      },
+      async quux() {
+        return 'quux';
+      }
+    };
+
+    it('resolves with an object with field and virtual field data', async function() {
+      const foo = new Foo();
+
+      foo.foo = 'foo';
+      foo.bar = 'bar';
+
+      await expect(
+        foo.getData(),
+        'to be fulfilled with value exhaustively satisfying',
+        { foo: 'foo', bar: 'bar', baz: 'baz', quux: 'quux' }
+      );
+    });
+
+    describe('with a `fields` option', function() {
+      it('only includes the requested fields', async function() {
         const foo = new Foo();
 
         foo.foo = 'foo';
-        await expect(foo.getData({ virtuals: true }), 'to be fulfilled with', {
-          foo: 'foo',
-          bar: 'bar'
-        });
-      });
+        foo.bar = 'bar';
 
-      it('includes data from virtuals that return a promise', async function() {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar() {
-            return Promise.resolve('bar');
-          }
-        };
-
-        const foo = new Foo();
-
-        await expect(foo.getData({ virtuals: true }), 'to be fulfilled with', {
-          bar: 'bar'
-        });
-      });
-
-      it('skips virtuals that have no getters', async function() {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          quux: {
-            set() {}
-          }
-        };
-
-        const foo = new Foo();
-
-        await expect(foo.getData({ virtuals: true }), 'to be fulfilled with', {
-          quux: undefined
-        });
-      });
-
-      it("calls the virtuals' getters with this set to the model instance", async function() {
-        class Foo extends Model {}
-
-        const spy = sinon.spy();
-        Foo.virtuals = {
-          bar: {
-            get: spy
-          }
-        };
-
-        const foo = new Foo();
-
-        await foo.getData({ virtuals: true });
-        await expect(spy, 'was called once').and('was called on', foo);
+        await expect(
+          foo.getData({ fields: ['bar'] }),
+          'to be fulfilled with value exhaustively satisfying',
+          { bar: 'bar', baz: 'baz', quux: 'quux' }
+        );
       });
     });
 
-    describe("with the 'virtuals' set to an array", function() {
+    describe('with a `virtuals` option', function() {
       it('only includes the requested virtuals', async function() {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar: {
-            get() {
-              return 'bar';
-            }
-          },
-          quux: {
-            get() {
-              return 'quux';
-            }
-          }
-        };
-
         const foo = new Foo();
+
+        foo.foo = 'foo';
+        foo.bar = 'bar';
 
         await expect(
-          foo.getData({ virtuals: ['bar'] }),
-          'to be fulfilled with',
-          {
-            bar: 'bar',
-            quux: undefined
-          }
+          foo.getData({ virtuals: ['baz'] }),
+          'to be fulfilled with value exhaustively satisfying',
+          { foo: 'foo', bar: 'bar', baz: 'baz' }
         );
       });
+    });
+  });
 
-      it("calls the virtuals' getters with this set to the model instance", async function() {
-        class Foo extends Model {}
+  describe('Model.prototype.getDataSync', function() {
+    class Foo extends Model {}
 
-        const spy = sinon.spy();
-        Foo.virtuals = {
-          bar: {
-            get: spy
-          }
-        };
+    Foo.fields = { foo: 'string', bar: 'string' };
+    Foo.virtuals = {
+      baz() {
+        return 'baz';
+      },
+      async quux() {
+        return 'quux';
+      }
+    };
 
-        const foo = new Foo();
+    it('returns an object with field and only sync virtual field data', function() {
+      const foo = new Foo();
 
-        await foo.getData({ virtuals: ['bar'] });
-        await expect(spy, 'was called once').and('was called on', foo);
+      foo.foo = 'foo';
+      foo.bar = 'bar';
+
+      expect(foo.getDataSync(), 'to equal', {
+        foo: 'foo',
+        bar: 'bar',
+        baz: 'baz'
       });
+    });
 
-      it('rejects with an error if a requested virtual has no getter', async function() {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar: {
-            set() {}
-          }
-        };
-
+    describe('with a `fields` option', function() {
+      it('only includes the requested fields', function() {
         const foo = new Foo();
 
-        await expect(
-          foo.getData({ virtuals: ['bar'] }),
-          'to be rejected with',
-          new Error("Virtual 'Foo.bar' has no getter")
-        );
+        foo.foo = 'foo';
+        foo.bar = 'bar';
+
+        expect(foo.getDataSync({ fields: ['bar'] }), 'to equal', {
+          bar: 'bar',
+          baz: 'baz'
+        });
+      });
+    });
+
+    describe('with a `virtuals` option', function() {
+      it('only includes the requested sync virtuals', function() {
+        const foo = new Foo();
+
+        foo.foo = 'foo';
+        foo.bar = 'bar';
+
+        expect(foo.getDataSync({ virtuals: ['baz'] }), 'to equal', {
+          foo: 'foo',
+          bar: 'bar',
+          baz: 'baz'
+        });
       });
     });
   });
@@ -773,11 +827,11 @@ describe('Model', function() {
       Foo.fields = {
         foo: {
           required: true,
-          type: Field.types.string
+          type: 'string'
         },
         bar: {
           required: true,
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -805,11 +859,11 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
             required: true,
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -836,11 +890,11 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
             required: true,
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -870,10 +924,10 @@ describe('Model', function() {
 
         Foo.fields = {
           foo: {
-            type: Field.types.string
+            type: 'string'
           },
           bar: {
-            type: Field.types.integer
+            type: 'integer'
           }
         };
 
@@ -892,7 +946,7 @@ describe('Model', function() {
 
       Foo.fields = {
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -914,7 +968,7 @@ describe('Model', function() {
 
       Foo.fields = {
         bar: {
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -938,7 +992,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           default: true,
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -961,14 +1015,14 @@ describe('Model', function() {
       Foo.fields = {
         foo: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave: fooSaveCast
           }
         },
         bar: {
           required: true,
-          type: Field.types.string
+          type: 'string'
         }
       };
 
@@ -990,14 +1044,14 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave: fooSaveCast
             }
           },
           bar: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave: barSaveCast
             }
@@ -1022,14 +1076,14 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave: fooSaveCast
             }
           },
           bar: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave: barSaveCast
             }
@@ -1051,14 +1105,14 @@ describe('Model', function() {
         Foo.fields = {
           foo: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave() {}
             }
           },
           bar: {
             required: true,
-            type: Field.types.string,
+            type: 'string',
             cast: {
               forSave() {}
             }
@@ -1081,7 +1135,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {}
           }
@@ -1107,7 +1161,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {}
           }
@@ -1129,7 +1183,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {}
           }
@@ -1151,7 +1205,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {
               return 'new value';
@@ -1173,7 +1227,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {
               return;
@@ -1195,7 +1249,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           required: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {
               return null;
@@ -1217,7 +1271,7 @@ describe('Model', function() {
       Foo.fields = {
         bar: {
           default: true,
-          type: Field.types.string,
+          type: 'string',
           cast: {
             forSave() {}
           }
@@ -1238,11 +1292,11 @@ describe('Model', function() {
     Foo.table = 'foo';
     Foo.fields = {
       id: {
-        type: Field.types.integer,
+        type: 'integer',
         primary: true
       },
       name: {
-        type: Field.types.string
+        type: 'string'
       }
     };
 
@@ -1316,15 +1370,15 @@ describe('Model', function() {
       Foo.table = 'foo';
       Foo.fields = {
         id: {
-          type: Field.types.integer,
+          type: 'integer',
           primary: true
         },
         name: {
-          type: Field.types.string,
+          type: 'string',
           unique: true
         },
         number: {
-          type: Field.types.integer,
+          type: 'integer',
           unique: true
         }
       };
@@ -1401,7 +1455,7 @@ describe('Model', function() {
         class User extends Model {}
         User.fields = {
           firstName: {
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -1411,7 +1465,7 @@ describe('Model', function() {
             new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string
+              type: 'string'
             })
           )
         });
@@ -1423,7 +1477,7 @@ describe('Model', function() {
         class User extends Model {}
         User.fields = {
           firstName: {
-            type: Field.types.string
+            type: 'string'
           }
         };
 
@@ -1433,7 +1487,23 @@ describe('Model', function() {
             new Field({
               name: 'firstName',
               model: User,
-              type: Field.types.string
+              type: 'string'
+            })
+          )
+        });
+      });
+
+      it("allows adding fields via the `fieldName: 'type'` shorthand", function() {
+        class User extends Model {}
+        User.fields = { firstName: 'string' };
+
+        expect(User.fields, 'to exhaustively satisfy', {
+          firstName: expect.it(
+            'to be field',
+            new Field({
+              name: 'firstName',
+              model: User,
+              type: 'string'
             })
           )
         });
@@ -1484,7 +1554,7 @@ describe('Model', function() {
           class User extends Model {}
           User.fields = {
             id: {
-              type: Field.types.string
+              type: 'string'
             }
           };
 
@@ -1494,7 +1564,7 @@ describe('Model', function() {
               new Field({
                 name: 'id',
                 model: User,
-                type: Field.types.string
+                type: 'string'
               })
             )
           });
@@ -1502,7 +1572,7 @@ describe('Model', function() {
           class OtherUser extends User {}
           OtherUser.fields = {
             id: {
-              type: Field.types.text
+              type: 'text'
             }
           };
 
@@ -1512,7 +1582,7 @@ describe('Model', function() {
               new Field({
                 name: 'id',
                 model: OtherUser,
-                type: Field.types.text
+                type: 'text'
               })
             )
           });
@@ -1522,7 +1592,7 @@ describe('Model', function() {
           class User extends Model {}
           User.fields = {
             firstName: {
-              type: Field.types.string
+              type: 'string'
             }
           };
 
@@ -1532,7 +1602,7 @@ describe('Model', function() {
               new Field({
                 name: 'firstName',
                 model: User,
-                type: Field.types.string
+                type: 'string'
               })
             )
           });
@@ -1550,7 +1620,7 @@ describe('Model', function() {
               new Field({
                 name: 'firstName',
                 model: Student,
-                type: Field.types.string
+                type: 'string'
               })
             )
           });
@@ -1564,7 +1634,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.integer,
+              type: 'integer',
               required: true
             }
           };
@@ -1577,7 +1647,7 @@ describe('Model', function() {
                 name: 'id',
                 model: User,
                 required: true,
-                type: Field.types.integer
+                type: 'integer'
               })
             )
           });
@@ -1585,7 +1655,7 @@ describe('Model', function() {
           class OtherUser extends User {}
           OtherUser.fields = {
             firstName: {
-              type: Field.types.string
+              type: 'string'
             }
           };
 
@@ -1597,7 +1667,7 @@ describe('Model', function() {
                 name: 'id',
                 model: User,
                 required: true,
-                type: Field.types.integer
+                type: 'integer'
               })
             )
           });
@@ -1608,7 +1678,7 @@ describe('Model', function() {
                 name: 'id',
                 model: OtherUser,
                 required: true,
-                type: Field.types.integer
+                type: 'integer'
               })
             ),
             firstName: expect.it(
@@ -1616,7 +1686,7 @@ describe('Model', function() {
               new Field({
                 name: 'firstName',
                 model: OtherUser,
-                type: Field.types.string
+                type: 'string'
               })
             )
           });
@@ -1629,7 +1699,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.string,
+              type: 'string',
               primary: true,
               methods: true
             }
@@ -1645,7 +1715,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.string,
+              type: 'string',
               unique: true,
               methods: true
             }
@@ -1661,7 +1731,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.string,
+              type: 'string',
               methods: true
             }
           };
@@ -1676,7 +1746,7 @@ describe('Model', function() {
 
           User.fields = {
             someFieldName: {
-              type: Field.types.string,
+              type: 'string',
               unique: true,
               methods: true
             }
@@ -1693,7 +1763,7 @@ describe('Model', function() {
 
           User.fields = {
             id: {
-              type: Field.types.string,
+              type: 'string',
               primary: true,
               methods: true
             }
@@ -1702,6 +1772,67 @@ describe('Model', function() {
           expect(OtherUser.fetchById, 'to be a function');
           expect(OtherUser.updateById, 'to be a function');
           expect(OtherUser.deleteById, 'to be a function');
+        });
+      });
+    });
+
+    describe('with a getter function', function() {
+      class User extends Model {
+        static get fields() {
+          this.config.fields = { firstName: { type: 'string' } };
+          return this.config.fields;
+        }
+      }
+
+      it('returns fields added via the `Model.config.fields` setter', function() {
+        expect(User.fields, 'to exhaustively satisfy', {
+          firstName: expect.it(
+            'to be field',
+            new Field({
+              name: 'firstName',
+              model: User,
+              type: 'string'
+            })
+          )
+        });
+      });
+
+      it('supports field inheritance', function() {
+        class Student extends User {
+          static get fields() {
+            this.config.fields = { studentId: { type: 'integer' } };
+            return this.config.fields;
+          }
+        }
+
+        expect(User.fields, 'to exhaustively satisfy', {
+          firstName: expect.it(
+            'to be field',
+            new Field({
+              name: 'firstName',
+              model: User,
+              type: 'string'
+            })
+          )
+        });
+
+        expect(Student.fields, 'to exhaustively satisfy', {
+          firstName: expect.it(
+            'to be field',
+            new Field({
+              name: 'firstName',
+              model: Student,
+              type: 'string'
+            })
+          ),
+          studentId: expect.it(
+            'to be field',
+            new Field({
+              name: 'studentId',
+              model: Student,
+              type: 'integer'
+            })
+          )
         });
       });
     });
@@ -2068,6 +2199,21 @@ describe('Model', function() {
           expect(Foo.primary, 'to equal', 'id');
           expect(Bar.primary, 'to equal', 'uuid');
         });
+
+        it("allows unsetting the parent's primary field", function() {
+          class Foo extends Model {}
+          class Bar extends Foo {}
+
+          Foo.fields = { id: { type: 'integer', primary: true } };
+          Bar.fields = { id: { type: 'uuid', primary: false } };
+
+          expect(Foo.primary, 'to equal', 'id');
+          expect(
+            () => Bar.primary,
+            'to throw',
+            new Error('`Bar` has no primary field')
+          );
+        });
       });
     });
   });
@@ -2196,13 +2342,13 @@ describe('Model', function() {
     User.table = 'user';
     User.fields = {
       id: {
-        type: Field.types.integer,
+        type: 'integer',
         required: true,
         primary: true,
         methods: true
       },
       name: {
-        type: Field.types.string,
+        type: 'string',
         required: true
       }
     };
