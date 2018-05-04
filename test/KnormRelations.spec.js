@@ -257,7 +257,7 @@ describe('KnormRelations', () => {
                     name: 'User 1',
                     image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
                   }),
-                  new User({ name: 'User 2' })
+                  new User({ name: 'User 2', image: null })
                 ]
               )
           );
@@ -306,7 +306,7 @@ describe('KnormRelations', () => {
                 name: 'User 1',
                 image: [new Image({ id: 1 })]
               }),
-              new User({ id: 2, name: 'User 2' })
+              new User({ id: 2, name: 'User 2', image: null })
             ]
           );
         });
@@ -326,20 +326,21 @@ describe('KnormRelations', () => {
               new User({
                 id: 2,
                 name: 'User 2',
-                confirmed: true
+                confirmed: true,
+                image: null
               })
             ]
           );
         });
 
-        it('does not include the joined model if no rows were matched', async () => {
+        it('includes the joined model as `null` if no rows were matched', async () => {
           const query = new Query(User)
             .leftJoin(new Query(Image))
             .where({ id: 2 });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
-            [new User({ id: 2, name: 'User 2' })]
+            [new User({ id: 2, name: 'User 2', image: null })]
           );
         });
 
@@ -461,7 +462,7 @@ describe('KnormRelations', () => {
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
-            [{ messages: undefined }, { messages: undefined }]
+            [{ messages: null }, { messages: null }]
           );
         });
 
@@ -772,9 +773,8 @@ describe('KnormRelations', () => {
 
             await expect(
               query.fetch(),
-              // TODO: hmmmmmmm
               'to be fulfilled with sorted rows exhaustively satisfying',
-              [{ image: undefined }]
+              [{ image: null }]
             );
           });
 
