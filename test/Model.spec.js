@@ -1,11 +1,11 @@
-const QueryBuilder = require('knex/lib/query/builder');
 const Knorm = require('../lib/Knorm');
 const Model = require('../lib/Model');
 const Field = require('../lib/Field');
 const Virtual = require('../lib/Virtual');
 const Query = require('../lib/Query');
-const sinon = require('sinon');
+const postgresPlugin = require('./lib/postgresPlugin');
 const knex = require('./lib/knex');
+const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
@@ -1120,7 +1120,7 @@ describe('Model', function() {
   });
 
   describe('Model.prototype.getQuery', function() {
-    const { Model, Query } = new Knorm({ knex });
+    const { Model, Query } = new Knorm();
 
     class Foo extends Model {}
 
@@ -2102,7 +2102,7 @@ describe('Model', function() {
   });
 
   describe('db methods', function() {
-    const { Model } = new Knorm({ knex });
+    const { Model, Query } = new Knorm().use(postgresPlugin);
 
     class User extends Model {}
 
@@ -2171,7 +2171,7 @@ describe('Model', function() {
 
       it('passes options along', async function() {
         const insert = sinon
-          .stub(QueryBuilder.prototype, 'insert')
+          .stub(Query.prototype, 'query')
           .returns(Promise.resolve([]));
         const user = new User({ name: 'John Doe' });
         await expect(
@@ -2202,7 +2202,7 @@ describe('Model', function() {
 
       it('passes options along', async function() {
         const insert = sinon
-          .stub(QueryBuilder.prototype, 'insert')
+          .stub(Query.prototype, 'query')
           .returns(Promise.resolve([]));
         const user = new User({ name: 'John Doe' });
         await expect(
@@ -2211,6 +2211,20 @@ describe('Model', function() {
           null
         );
         insert.restore();
+      });
+
+      it('resolves with the same instance that was passed', async function() {
+        const user = await new User({ name: 'John Doe' });
+        user.name = 'Jane Doe';
+        user.leaveMeIntact = 'okay';
+        await expect(
+          user.insert(),
+          'to be fulfilled with value satisfying',
+          inserted => {
+            expect(user === inserted, 'to be true');
+            expect(user.leaveMeIntact, 'to be', 'okay');
+          }
+        );
       });
     });
 
