@@ -898,6 +898,20 @@ describe('Query', () => {
       });
     });
 
+    describe("with 'where' and 'having' configured", () => {
+      it('fulfils the query', async () => {
+        const query = new Query(User)
+          .fields({ maxAge: 'MAX(age)' })
+          .groupBy('id')
+          .where({ id: 2 });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [new User({ id: 2, maxAge: 10 })]
+        );
+      });
+    });
+
     describe("with 'groupBy' configured", () => {
       it('supports a single field', async () => {
         const query = new Query(User);
