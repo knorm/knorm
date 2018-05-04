@@ -92,7 +92,7 @@ User.fields = {
       }
     },
     schema: {
-      type: 'jsonArray'
+      type: 'array'
     }
   },
   intToString: {
