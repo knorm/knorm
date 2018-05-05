@@ -612,6 +612,24 @@ describe('KnormPostgres', () => {
       spy.restore();
     });
 
+    it('does not update fields that are not meant to be updated', async () => {
+      const user = await new Query(User).first().insert({ id: 1, name: 'foo' });
+      const spy = sinon.spy(Query.prototype, 'query');
+      user.name = 'bar';
+      await expect(user, 'to satisfy', { id: 1 });
+      await new Query(User).update(user);
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            query => query.toString(),
+            expect.it('to contain', '"name" =').and('not to contain', '"id" =')
+          )
+        );
+      });
+      spy.restore();
+    });
+
     describe('for multi-updates', () => {
       it('runs a single query', async () => {
         await new Query(User).insert([
