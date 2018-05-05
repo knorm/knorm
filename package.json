@@ -45,12 +45,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/joelmukuthu/knorm-postgres.git"
+    "url": "git+ssh://git@github.com/knorm/postgres.git"
   },
   "bugs": {
-    "url": "https://github.com/joelmukuthu/knorm-postgres/issues"
+    "url": "https://github.com/knorm/postgres/issues"
   },
-  "homepage": "https://github.com/joelmukuthu/knorm-postgres#readme",
+  "homepage": "https://github.com/knorm/postgres#readme",
   "dependencies": {
     "pg": "^7.4.1",
     "sql-bricks-postgres": "^0.5.0"
