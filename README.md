@@ -6,15 +6,17 @@
 [![dependency status](https://david-dm.org/knorm/postgres.svg)](https://david-dm.org/knorm/postgres)
 [![Greenkeeper badge](https://badges.greenkeeper.io/knorm/postgres.svg)](https://greenkeeper.io/)
 
-Postgres plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm) 
-that enables running queries agaisnt postgres. Also, it adds postgres-specific 
+Postgres plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
+that enables running queries agaisnt postgres. Also, it adds postgres-specific
 features such as:
 
 * [automatically JSON-stringifying](http://knexjs.org/#Schema-json) all `json`
   and `jsonb` fields before save (insert or update)
 * automatically validating all `string` fields with `maxLength: 255`
-* `limit`, `offset`, `returning` options, via [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
-* updating multiple rows using a single query with `update from`
+* `limit`, `offset`, `returning` query options and `ilike` where option,
+  via [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
+* updating multiple rows using a single query with `UPDATE FROM`, via
+  [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
 * connection pooling, via [pg](https://node-postgres.com/features/pooling)
 * transactions
 
