@@ -63,7 +63,7 @@
   "dependencies": {
     "lodash": "^4.17.5",
     "sql-bricks": "^2.0.3",
-    "validator": "^9.4.1"
+    "validator": "^10.1.0"
   },
   "repository": {
     "type": "git",
