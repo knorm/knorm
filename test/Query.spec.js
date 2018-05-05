@@ -1932,8 +1932,7 @@ describe('Query', () => {
             expect.it(
               'when passed as parameter to',
               query => query.toString(),
-              'not to contain',
-              'SET id ='
+              expect.it('to contain', 'name =').and('not to contain', ' id =')
             )
           );
         });
