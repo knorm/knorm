@@ -1,11 +1,11 @@
-const QueryBuilder = require('knex/lib/query/builder');
 const Knorm = require('../lib/Knorm');
 const Model = require('../lib/Model');
 const Field = require('../lib/Field');
 const Virtual = require('../lib/Virtual');
 const Query = require('../lib/Query');
-const sinon = require('sinon');
+const postgresPlugin = require('./lib/postgresPlugin');
 const knex = require('./lib/knex');
+const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
@@ -90,54 +90,6 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getField', function() {
-    it("throws if the field doesn't exist in `Model.fields`", function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(
-        () => foo.getField('bar'),
-        'to throw',
-        new Error("Unknown field 'Foo.bar'")
-      );
-    });
-
-    it('returns a `Field` instance', function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getField('foo'), 'to be a', Field);
-    });
-
-    it('returns the correct field', function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getField('foo'), 'to equal', Foo.fields.foo);
-    });
-  });
-
   describe('Model.prototype.getFields', function() {
     it("returns all the model's fields if called with no arguments", function() {
       class Foo extends Model {}
@@ -150,23 +102,6 @@ describe('Model', function() {
 
       const foo = new Foo();
       expect(foo.getFields(), 'to equal', [Foo.fields.foo]);
-    });
-
-    it("throws if one the fields doesn't exist in `Model.fields`", function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(
-        () => foo.getFields(['bar']),
-        'to throw',
-        new Error("Unknown field 'Foo.bar'")
-      );
     });
 
     it('returns an array of `Field` instances', function() {
@@ -248,27 +183,6 @@ describe('Model', function() {
       expect(foo.bar, 'to equal', 1);
     });
 
-    it('throws if the passed object contains unknown fields', function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'integer'
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(
-        () => foo.setData({ quux: 'quux' }),
-        'to throw',
-        new Error("Unknown field or virtual 'Foo.quux'")
-      );
-    });
-
     it('populates virtuals if provided in the object', function() {
       class Foo extends Model {}
 
@@ -307,7 +221,9 @@ describe('Model', function() {
       expect(
         () => foo.setData({ bar: 1 }),
         'to throw',
-        new Error("Virtual 'Foo.bar' has no setter")
+        new TypeError(
+          'Cannot set property bar of #<Foo> which has only a getter'
+        )
       );
     });
 
@@ -388,27 +304,6 @@ describe('Model', function() {
       foo.setDefaults({ fields: ['bar'] });
       expect(foo.foo, 'to be undefined');
       expect(foo.bar, 'to equal', 'bar');
-    });
-
-    it('throws if the list of fields contains unknown fields', function() {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'integer'
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(
-        () => foo.setDefaults({ fields: ['quux'] }),
-        'to throw',
-        new Error("Unknown field 'Foo.quux'")
-      );
     });
 
     it("doesn't overwrite values that have already been set", function() {
@@ -553,16 +448,6 @@ describe('Model', function() {
         foo.foo = 'foo';
 
         expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {});
-      });
-
-      it('throws if the list of fields contains unknown fields', function() {
-        const foo = new Foo();
-
-        expect(
-          foo.getData({ fields: ['quux'] }),
-          'to be rejected with',
-          new Error("Unknown field 'Foo.quux'")
-        );
       });
     });
   });
@@ -918,27 +803,6 @@ describe('Model', function() {
         fooValidationSpy.restore();
         barValidationSpy.restore();
       });
-
-      it('rejects if the list of fields contains unknown fields', function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: 'string'
-          },
-          bar: {
-            type: 'integer'
-          }
-        };
-
-        const foo = new Foo();
-
-        expect(
-          foo.validate({ fields: ['quux'] }),
-          'to be rejected with',
-          new Error("Unknown field 'Foo.quux'")
-        );
-      });
     });
 
     it('calls the validator with the set value and the model instance', async function() {
@@ -1098,35 +962,6 @@ describe('Model', function() {
         await expect(fooSaveCast, 'was called once');
         await expect(barSaveCast, 'was called once');
       });
-
-      it('throws if the list of fields contains unknown fields', function() {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            required: true,
-            type: 'string',
-            cast: {
-              forSave() {}
-            }
-          },
-          bar: {
-            required: true,
-            type: 'string',
-            cast: {
-              forSave() {}
-            }
-          }
-        };
-
-        const foo = new Foo();
-
-        expect(
-          () => foo.cast({ fields: ['quux'] }),
-          'to throw',
-          new Error("Unknown field 'Foo.quux'")
-        );
-      });
     });
 
     it('calls Field.prototype.cast with the set value, the model instance and options passed', function() {
@@ -1285,7 +1120,7 @@ describe('Model', function() {
   });
 
   describe('Model.prototype.getQuery', function() {
-    const { Model, Query } = new Knorm({ knex() {} });
+    const { Model, Query } = new Knorm();
 
     class Foo extends Model {}
 
@@ -2090,74 +1925,6 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.references', function() {
-    describe('as a getter', function() {
-      it("returns the model's references", function() {
-        class Foo extends Model {}
-        class Bar extends Model {}
-
-        Foo.fields = { id: { type: 'integer' } };
-        Bar.fields = { fooId: { type: 'integer', references: Foo.fields.id } };
-
-        expect(Bar.references, 'to exhaustively satisfy', {
-          fooId: Foo.fields.id
-        });
-      });
-
-      describe('when a model is subclassed', function() {
-        let Foo;
-
-        before(function() {
-          Foo = class extends Model {};
-          Foo.fields = { id: { type: 'integer' }, id2: { type: 'integer' } };
-        });
-
-        it('overwrites references defined in the parent', function() {
-          class Bar extends Model {}
-          class Quux extends Bar {}
-
-          Bar.fields = {
-            fooId: { type: 'integer', references: Foo.fields.id }
-          };
-          Quux.fields = {
-            fooId: { type: 'integer', references: Foo.fields.id2 }
-          };
-
-          expect(Model.references, 'to exhaustively satisfy', {});
-          expect(Bar.references, 'to exhaustively satisfy', {
-            fooId: Foo.fields.id
-          });
-          expect(Quux.references, 'to exhaustively satisfy', {
-            fooId: Foo.fields.id2
-          });
-        });
-
-        it("inherits but does not interfere with the parent's references", function() {
-          class Foo extends Model {}
-          class Bar extends Model {}
-          class Quux extends Bar {}
-
-          Foo.fields = { id: { type: 'integer' } };
-          Bar.fields = {
-            fooId: { type: 'integer', references: Foo.fields.id }
-          };
-          Quux.fields = {
-            fooId2: { type: 'integer', references: Foo.fields.id2 }
-          };
-
-          expect(Model.references, 'to exhaustively satisfy', {});
-          expect(Bar.references, 'to exhaustively satisfy', {
-            fooId: Foo.fields.id
-          });
-          expect(Quux.references, 'to exhaustively satisfy', {
-            fooId: Foo.fields.id,
-            fooId2: Foo.fields.id2
-          });
-        });
-      });
-    });
-  });
-
   describe('Model.primary', function() {
     describe('as a getter', function() {
       it('throws an error of the model has no primary field', function() {
@@ -2335,7 +2102,7 @@ describe('Model', function() {
   });
 
   describe('db methods', function() {
-    const { Model } = new Knorm({ knex });
+    const { Model, Query } = new Knorm().use(postgresPlugin);
 
     class User extends Model {}
 
@@ -2404,7 +2171,7 @@ describe('Model', function() {
 
       it('passes options along', async function() {
         const insert = sinon
-          .stub(QueryBuilder.prototype, 'insert')
+          .stub(Query.prototype, 'query')
           .returns(Promise.resolve([]));
         const user = new User({ name: 'John Doe' });
         await expect(
@@ -2435,7 +2202,7 @@ describe('Model', function() {
 
       it('passes options along', async function() {
         const insert = sinon
-          .stub(QueryBuilder.prototype, 'insert')
+          .stub(Query.prototype, 'query')
           .returns(Promise.resolve([]));
         const user = new User({ name: 'John Doe' });
         await expect(
@@ -2444,6 +2211,20 @@ describe('Model', function() {
           null
         );
         insert.restore();
+      });
+
+      it('resolves with the same instance that was passed', async function() {
+        const user = await new User({ name: 'John Doe' });
+        user.name = 'Jane Doe';
+        user.leaveMeIntact = 'okay';
+        await expect(
+          user.insert(),
+          'to be fulfilled with value satisfying',
+          inserted => {
+            expect(user === inserted, 'to be true');
+            expect(user.leaveMeIntact, 'to be', 'okay');
+          }
+        );
       });
     });
 
@@ -2645,22 +2426,6 @@ describe('Model', function() {
           User.fetch({ forge: false }),
           'to be fulfilled with value exhaustively satisfying',
           [{ id: 1, name: 'John Doe' }]
-        );
-      });
-    });
-
-    describe('Model.count', function() {
-      it('counts models', async function() {
-        await User.save({ name: 'John Doe' });
-        await expect(User.count(), 'to be fulfilled with value satisfying', 1);
-      });
-
-      it('passes options along', async function() {
-        await User.save({ name: 'John Doe' });
-        await expect(
-          User.count({ field: 'id' }),
-          'to be fulfilled with value satisfying',
-          1
         );
       });
     });

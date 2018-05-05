@@ -1,6 +1,6 @@
 {
-  "name": "knorm",
-  "version": "0.11.0",
+  "name": "@knorm/knorm",
+  "version": "1.0.0",
   "description": "A purely ES6 class-based ORM for Knex.js",
   "main": "index.js",
   "scripts": {
@@ -10,9 +10,9 @@
     "lint:fix": "eslint --fix .",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "ci": "npm-run-all lint coverage coveralls",
-    "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d",
-    "postgres:stop": "docker-compose stop",
-    "postgres:remove": "docker-compose down",
+    "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d postgres",
+    "postgres:stop": "docker-compose stop postgres",
+    "postgres:remove": "docker-compose rm -sf postgres",
     "todo": "grep -rn -e TODO -e FIXME lib",
     "docs": "docsify serve docs",
     "changelog": "standard-changelog",
@@ -20,9 +20,6 @@
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
-  "peerDependencies": {
-    "knex": "0.13 || 0.14"
-  },
   "devDependencies": {
     "coveralls": "^3.0.0",
     "docsify-cli": "^4.2.0",
@@ -37,6 +34,7 @@
     "prettier": "^1.12.1",
     "proxyquire": "^2.0.0",
     "sinon": "^5.0.3",
+    "sql-bricks-postgres": "^0.5.0",
     "standard-changelog": "^1.0.19",
     "standard-version": "^4.3.0",
     "unexpected": "^10.37.5",
@@ -56,13 +54,15 @@
     "test": "test"
   },
   "keywords": [
-    "knex",
     "orm",
     "erm",
+    "sql",
+    "db",
     "database"
   ],
   "dependencies": {
     "lodash": "^4.17.5",
+    "sql-bricks": "^2.0.3",
     "validator": "^9.4.1"
   },
   "repository": {

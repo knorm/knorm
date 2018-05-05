@@ -1,3 +1,14 @@
+<a name="0.11.1"></a>
+## [0.11.1](https://github.com/joelmukuthu/knorm/compare/v0.11.0...v0.11.1) (2018-05-02)
+
+
+### Bug Fixes
+
+* **Field:** JSON.parse and validate json fields ([fc338d6](https://github.com/joelmukuthu/knorm/commit/fc338d6))
+* **Query:** cast before validating on insert ([0030442](https://github.com/joelmukuthu/knorm/commit/0030442))
+
+
+
 <a name="0.11.0"></a>
 # [0.11.0](https://github.com/joelmukuthu/knorm/compare/v0.10.1...v0.11.0) (2017-12-29)
 

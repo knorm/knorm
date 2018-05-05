@@ -81,7 +81,7 @@ User.virtuals = {
     return this.names
       ? this.names
           .split(' ')
-          .map(part => part[0])
+          .map(name => name[0])
           .join('')
       : undefined;
   }
