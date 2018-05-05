@@ -1619,7 +1619,7 @@ describe('Field', function() {
           });
 
           beforeEach(function() {
-            validate.reset();
+            validate.resetHistory();
           });
 
           it('calls the validator with the passed value', async function() {
@@ -1975,7 +1975,7 @@ describe('Field', function() {
           });
 
           beforeEach(function() {
-            validate.reset();
+            validate.resetHistory();
           });
 
           it('calls the validator with the passed value', async function() {

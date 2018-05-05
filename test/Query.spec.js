@@ -1226,7 +1226,7 @@ describe('Query', () => {
       });
 
       beforeEach(() => {
-        insertStub.reset();
+        insertStub.resetHistory();
         insertStub.returns(Promise.resolve([]));
       });
 
@@ -1511,7 +1511,7 @@ describe('Query', () => {
         });
 
         beforeEach(() => {
-          insertStub.reset();
+          insertStub.resetHistory();
           insertStub.returns(Promise.resolve([]));
         });
 
@@ -1566,23 +1566,23 @@ describe('Query', () => {
           await new Query(User).batchSize(1).insert(users);
           await expect(spy, 'was called times', 4);
 
-          spy.reset();
+          spy.resetHistory();
           await new Query(User).batchSize(2).insert(users);
           await expect(spy, 'was called twice');
 
-          spy.reset();
+          spy.resetHistory();
           await new Query(User).batchSize(3).insert(users);
           await expect(spy, 'was called twice');
 
-          spy.reset();
+          spy.resetHistory();
           await new Query(User).batchSize(4).insert(users);
           await expect(spy, 'was called once');
 
-          spy.reset();
+          spy.resetHistory();
           await new Query(User).batchSize(5).insert(users);
           await expect(spy, 'was called once');
 
-          spy.reset();
+          spy.resetHistory();
           await new Query(User).batchSize(0).insert(users);
           await expect(spy, 'was called once');
 

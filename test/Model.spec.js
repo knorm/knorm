@@ -1225,7 +1225,7 @@ describe('Model', function() {
       });
 
       beforeEach(function() {
-        whereStub.reset();
+        whereStub.resetHistory();
       });
 
       after(function() {
@@ -2063,7 +2063,7 @@ describe('Model', function() {
     });
 
     beforeEach(function() {
-      User.Query.reset();
+      User.Query.resetHistory();
       User.Query.returns(sinon.createStubInstance(Query));
     });
 

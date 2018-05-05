@@ -33,7 +33,7 @@
     "pg": "^7.4.1",
     "prettier": "^1.12.1",
     "proxyquire": "^2.0.0",
-    "sinon": "^4.5.0",
+    "sinon": "^5.0.3",
     "sql-bricks-postgres": "^0.5.0",
     "standard-changelog": "^1.0.19",
     "standard-version": "^4.3.0",
