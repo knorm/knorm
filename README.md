@@ -1,10 +1,10 @@
-# knorm
+# @knorm/knorm
 
-[![npm version](https://badge.fury.io/js/knorm.svg)](http://badge.fury.io/js/knorm)
-[![build status](https://travis-ci.org/joelmukuthu/knorm.svg?branch=master)](https://travis-ci.org/joelmukuthu/knorm)
-[![coverage status](https://coveralls.io/repos/github/joelmukuthu/knorm/badge.svg?branch=master)](https://coveralls.io/github/joelmukuthu/knorm?branch=master)
-[![dependency status](https://david-dm.org/joelmukuthu/knorm.svg)](https://david-dm.org/joelmukuthu/knorm)
-[![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm.svg)](https://greenkeeper.io/)
+[![npm version](https://badge.fury.io/js/@knorm/knorm.svg)](http://badge.fury.io/js/@knorm/knorm)
+[![build status](https://travis-ci.org/knorm/knorm.svg?branch=master)](https://travis-ci.org/knorm/knorm)
+[![coverage status](https://coveralls.io/repos/github/knorm/knorm/badge.svg?branch=master)](https://coveralls.io/github/knorm/knorm?branch=master)
+[![dependency status](https://david-dm.org/knorm/knorm.svg)](https://david-dm.org/knorm/knorm)
+[![Greenkeeper badge](https://badges.greenkeeper.io/knorm/knorm.svg)](https://greenkeeper.io/)
 
 A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
 

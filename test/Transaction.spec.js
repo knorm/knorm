@@ -1,5 +1,5 @@
-const AbstractTransaction = require('../lib/Transaction');
-const knex = require('./lib/knex');
+const Transaction = require('../lib/Transaction');
+const KnormError = require('../lib/KnormError');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
@@ -8,132 +8,39 @@ const expect = require('unexpected')
 
 describe('Transaction', function() {
   describe('constructor', function() {
-    it('throws if not passed a callback', function() {
+    it('throws if not passed a transaction callback', function() {
       expect(
-        () => new AbstractTransaction(),
+        () => new Transaction(),
         'to throw',
-        new Error('Transaction requires a callback')
-      );
-    });
-
-    it('throws if Transaction.knex is not configured', function() {
-      expect(
-        () => new AbstractTransaction(() => {}),
-        'to throw',
-        new Error('Transaction.knex is not configured')
+        new KnormError('Transaction: no `transaction` function provided')
       );
     });
   });
 
   describe('Transaction.prototype.execute', function() {
-    class Transaction extends AbstractTransaction {}
-
-    before(async function() {
-      Transaction.knex = knex;
-      await knex.schema.createTable('user', table => {
-        table.increments();
-        table.string('name').notNullable();
-      });
-    });
-
-    after(async function() {
-      await knex.schema.dropTable('user');
-    });
-
-    afterEach(async function() {
-      await knex('user').truncate();
-    });
-
-    it('calls the callback with a transaction object', async function() {
+    it('rejects if not overridden', async function() {
       const spy = sinon.spy();
       const transaction = new Transaction(spy);
-      await transaction.execute();
-      await expect(spy, 'to have calls satisfying', () => {
-        spy(
-          expect.it('to satisfy', {
-            commit: expect.it('to be a function'),
-            rollback: expect.it('to be a function')
-          })
-        );
-      });
-    });
-
-    it('resolves with the result returned by the callback', async function() {
-      const transaction = new Transaction(() => 'foo');
-      await expect(transaction.execute(), 'to be fulfilled with', 'foo');
-    });
-    it('rejects with the error returned by the callback', async function() {
-      const transaction = new Transaction(() => {
-        throw new Error('foo');
-      });
       await expect(
         transaction.execute(),
-        'to be rejected with',
-        new Error('foo')
+        'to be rejected with error satisfying',
+        new KnormError(
+          'Transaction: `Transaction.prototype.execute` is not implemented'
+        )
       );
-    });
-
-    it("commits the transaction if the callback doesn't reject", async function() {
-      const transaction = new Transaction(async transaction => {
-        const result = await knex('user')
-          .transacting(transaction)
-          .returning('*')
-          .insert({ name: 'John' });
-
-        const user = result[0];
-
-        return user;
-      });
-
-      await expect(
-        transaction.execute(),
-        'to be fulfilled with value exhaustively satisfying',
-        {
-          id: 1,
-          name: 'John'
-        }
-      );
-
-      await expect(
-        knex,
-        'with table',
-        'user',
-        'to have rows exhaustively satisfying',
-        [
-          {
-            id: 1,
-            name: 'John'
-          }
-        ]
-      );
-    });
-
-    it('rolls back the transaction if the callback rejects', async function() {
-      const transaction = new Transaction(async transaction => {
-        await knex('user')
-          .transacting(transaction)
-          .returning('*')
-          .insert({ name: 'John' });
-
-        throw new Error('foo');
-      });
-
-      await expect(
-        transaction.execute(),
-        'to be rejected with',
-        new Error('foo')
-      );
-
-      await expect(knex, 'with table', 'user', 'to be empty');
     });
   });
 
   describe('Transaction.prototype.then', function() {
-    class Transaction extends AbstractTransaction {}
+    let executeStub;
 
-    Transaction.knex = knex;
+    before(() => {
+      executeStub = sinon.stub(Transaction.prototype, 'execute');
+    });
 
-    const executeStub = sinon.stub(Transaction.prototype, 'execute');
+    after(() => {
+      executeStub.restore();
+    });
 
     beforeEach(function() {
       executeStub.reset();
@@ -187,11 +94,15 @@ describe('Transaction', function() {
   });
 
   describe('Transaction.prototype.catch', function() {
-    class Transaction extends AbstractTransaction {}
+    let executeStub;
 
-    Transaction.knex = knex;
+    before(() => {
+      executeStub = sinon.stub(Transaction.prototype, 'execute');
+    });
 
-    const executeStub = sinon.stub(Transaction.prototype, 'execute');
+    after(() => {
+      executeStub.restore();
+    });
 
     beforeEach(function() {
       executeStub.reset();
