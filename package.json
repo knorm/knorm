@@ -22,8 +22,7 @@
   "devDependencies": {
     "coveralls": "^3.0.0",
     "eslint": "^4.13.1",
-    "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-prettier": "^2.4.0",
+    "eslint-config-ganintegrity": "^2.0.2",
     "knex": "^0.13.0",
     "knorm": "^0.11.0",
     "mocha": "^5.0.4",
