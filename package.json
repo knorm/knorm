@@ -20,7 +20,7 @@
     "@knorm/knorm": "^1.0.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "knorm/knorm",
+    "@knorm/knorm": "github:knorm/knorm",
     "coveralls": "^3.0.0",
     "eslint": "^4.15.0",
     "eslint-config-ganintegrity": "^2.0.2",
@@ -30,7 +30,7 @@
     "nyc": "^11.4.1",
     "prettier": "^1.10.2",
     "sinon": "^4.1.4",
-    "unexpected": "^10.36.2",
+    "unexpected": "^10.37.7",
     "unexpected-knex": "^1.2.1",
     "unexpected-sinon": "^10.8.2"
   },
@@ -52,7 +52,7 @@
   },
   "homepage": "https://github.com/knorm/postgres#readme",
   "dependencies": {
-    "pg": "^7.4.1",
+    "pg": "^7.4.2",
     "sql-bricks-postgres": "^0.5.0"
   }
 }
