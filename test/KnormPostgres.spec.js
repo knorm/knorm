@@ -708,8 +708,8 @@ describe('KnormPostgres', () => {
           expect.it(
             'when passed as parameter to',
             query => query.toString(),
-            'to begin with',
-            'UPDATE "user" SET "name" = "v"."name"'
+            'to begin with', // TODO: https://github.com/unexpectedjs/unexpected/issues/466
+            'UPDATE "user" SET "name" = "v"."name" FROM' // id field not updated
           )
         );
       });
