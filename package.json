@@ -20,7 +20,7 @@
     "@knorm/knorm": "^1.0.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "^1.0.0",
+    "@knorm/knorm": "knorm/knorm",
     "coveralls": "^3.0.0",
     "eslint": "^4.15.0",
     "eslint-config-ganintegrity": "^2.0.2",
