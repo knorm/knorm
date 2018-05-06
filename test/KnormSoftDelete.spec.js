@@ -1,5 +1,6 @@
-const knorm = require('knorm');
-const { KnormError, Query: KnormQuery } = knorm;
+const knorm = require('@knorm/knorm');
+const knormPaginate = require('@knorm/paginate');
+const knormPostgres = require('@knorm/postgres');
 const KnormSoftDelete = require('../lib/KnormSoftDelete');
 const knormSoftDelete = require('../');
 const sinon = require('sinon');
@@ -46,6 +47,8 @@ const expect = require('unexpected')
     }
   );
 
+const { KnormError, Query: KnormQuery } = knorm;
+
 describe('KnormSoftDelete', () => {
   describe('init', () => {
     it('throws if not passed a `Knorm` instance', () => {
@@ -66,8 +69,7 @@ describe('KnormSoftDelete', () => {
   });
 
   describe('updateModel', () => {
-    const updateModel = config =>
-      knorm({ knex() {} }).use(knormSoftDelete(config));
+    const updateModel = config => knorm().use(knormSoftDelete(config));
 
     it('adds a `deleted` field by default', () => {
       const { Model } = updateModel();
@@ -133,9 +135,10 @@ describe('KnormSoftDelete', () => {
   });
 
   describe('updateQuery', () => {
-    const { Query, Model } = knorm({ knex }).use(
-      knormSoftDelete({ deletedAt: true })
-    );
+    const { Query, Model } = knorm()
+      .use(knormPostgres({ connection: knex.client.config.connection }))
+      .use(knormPaginate())
+      .use(knormSoftDelete({ deletedAt: true }));
 
     class User extends Model {}
 
@@ -278,7 +281,7 @@ describe('KnormSoftDelete', () => {
         await expect(
           query.delete(),
           'to be rejected with error satisfying',
-          new Query.errors.NoRowsDeletedError({ query })
+          new Query.NoRowsDeletedError({ query })
         );
       });
 
@@ -374,7 +377,7 @@ describe('KnormSoftDelete', () => {
         await expect(
           query.restore(),
           'to be rejected with error satisfying',
-          new Query.errors.NoRowsRestoredError({ query })
+          new Query.NoRowsRestoredError({ query })
         );
       });
 
@@ -509,45 +512,78 @@ describe('KnormSoftDelete', () => {
         );
       });
 
-      it('allows fetching both non-deleted and soft-deleted rows', async () => {
+      it('allows fetching soft-deleted rows with a string field-name', async () => {
         await new Query(User).where({ id: 1 }).delete();
         await expect(
-          new Query(User).where({ deleted: [true, false] }).fetch(),
+          new Query(User).where({ deleted: true }).fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1 }]
+        );
+      });
+
+      it('allows fetching both non-deleted and soft-deleted rows', async () => {
+        await new Query(User).where({ id: 1 }).delete();
+        const where = new Query.Where();
+        await expect(
+          new Query(User).where(where.in({ deleted: [true, false] })).fetch(),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }, { id: 2 }]
         );
       });
 
-      it('allows fetching soft-deleted rows with `whereNot`', async () => {
+      it('allows fetching soft-deleted rows with `where not`', async () => {
         await new Query(User).where({ id: 1 }).delete();
+        const where = new Query.Where();
         await expect(
           new Query(User)
             .where({ id: 1 })
-            .whereNot({ deleted: false })
+            .where(where.not({ deleted: false }))
             .fetch(),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }]
         );
       });
 
-      it('allows fetching soft-deleted rows with `orWhere`', async () => {
+      it('allows fetching soft-deleted rows with `and where not`', async () => {
         await new Query(User).where({ id: 1 }).delete();
+        const where = new Query.Where();
         await expect(
           new Query(User)
-            .where({ id: 2 })
-            .orWhere({ deleted: true })
+            .where(where.and({ id: 1 }, where.not({ deleted: false })))
             .fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1 }]
+        );
+      });
+
+      it('allows fetching soft-deleted rows with `and where not` with a string field-name', async () => {
+        await new Query(User).where({ id: 1 }).delete();
+        const where = new Query.Where();
+        await expect(
+          new Query(User)
+            .where(where.and({ id: 1 }, where.not({ deleted: false })))
+            .fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1 }]
+        );
+      });
+
+      it('allows fetching soft-deleted rows with `or where`', async () => {
+        await new Query(User).where({ id: 1 }).delete();
+        const where = new Query.Where();
+        await expect(
+          new Query(User).where(where.or({ id: 2 }, { deleted: true })).fetch(),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }, { id: 2 }]
         );
       });
 
-      it('allows fetching soft-deleted rows with `orWhereNot`', async () => {
+      it('allows fetching soft-deleted rows with `or where not`', async () => {
         await new Query(User).where({ id: 1 }).delete();
+        const where = new Query.Where();
         await expect(
           new Query(User)
-            .where({ id: 2 })
-            .orWhereNot({ deleted: false })
+            .where(where.or({ id: 2 }, where.not({ deleted: false })))
             .fetch(),
           'to be fulfilled with sorted rows satisfying',
           [{ id: 1 }, { id: 2 }]
@@ -652,17 +688,24 @@ describe('KnormSoftDelete', () => {
         );
       });
 
-      it('passes options passed to Query.prototype.setOptions', async () => {
+      it('passes options along', async () => {
         const user = await new User({
           id: 1,
           name: 'one',
           deleted: true,
           deletedAt: new Date()
         }).insert();
-        const spy = sinon.spy(Query.prototype, 'setOptions');
-        await user.restore({ transaction: {} });
+        const spy = sinon.spy(Query.prototype, 'query');
+        await user.restore({ returning: 'id' });
         await expect(spy, 'to have calls satisfying', () => {
-          spy({ transaction: {} });
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              query => query.toString(),
+              'to end with',
+              'RETURNING "user"."id" as "user.id"'
+            )
+          );
         });
         spy.restore();
       });
@@ -716,10 +759,17 @@ describe('KnormSoftDelete', () => {
 
       it('passes options passed to Query.prototype.setOptions', async () => {
         const user = await new User({ id: 1, name: 'one' }).insert();
-        const spy = sinon.spy(Query.prototype, 'setOptions');
-        await user.hardDelete({ transaction: {} });
+        const spy = sinon.spy(Query.prototype, 'query');
+        await user.hardDelete({ returning: 'id' });
         await expect(spy, 'to have calls satisfying', () => {
-          spy({ transaction: {} });
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              query => query.toString(),
+              'to end with',
+              'RETURNING "user"."id" as "user.id"'
+            )
+          );
         });
         spy.restore();
       });
