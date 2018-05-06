@@ -561,15 +561,6 @@ describe('Query', () => {
         );
       });
 
-      it('supports chained `and` calls', async () => {
-        const query = new Query(User).where({ id: 2 }).and({ name: 'User 2' });
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows satisfying',
-          [new User({ id: 2, name: 'User 2' })]
-        );
-      });
-
       it('supports "where true|false"', async () => {
         const query = new Query(User).where(false);
         await expect(
