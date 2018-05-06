@@ -638,10 +638,21 @@ describe('Query', () => {
         );
       });
 
-      it.skip('supports expressions with objects', async () => {
+      it('supports expressions with objects', async () => {
         const query = new Query(User);
         const where = new Query.Where();
         query.where(where.notEqual({ id: 1 }));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
+        );
+      });
+
+      it('supports expressions with objects with multiple keyps', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.equal({ age: 10, name: 'User 2' }));
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
@@ -653,6 +664,20 @@ describe('Query', () => {
         const query = new Query(User);
         const where = new Query.Where();
         query.where(where.between('id', [1, 2]));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it.skip('supports `between` with an object with an array value', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.between({ id: [1, 2] }));
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
