@@ -1,7 +1,7 @@
 {
-  "name": "knorm-soft-delete",
-  "version": "2.1.2",
-  "description": "Soft-delete plugin for knorm",
+  "name": "@knorm/soft-delete",
+  "version": "1.0.0",
+  "description": "Soft-delete plugin for @knorm/knorm",
   "main": "index.js",
   "scripts": {
     "test": "mocha --exit 'test/**/*.spec.js'",
@@ -10,9 +10,9 @@
     "lint:fix": "eslint --fix .",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "ci": "npm-run-all lint coverage coveralls",
-    "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d",
-    "postgres:stop": "docker-compose stop",
-    "postgres:remove": "docker-compose down"
+    "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d postgres",
+    "postgres:stop": "docker-compose stop postgres",
+    "postgres:remove": "docker-compose rm -sf postgres"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -48,11 +48,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/joelmukuthu/knorm-soft-delete.git"
+    "url": "git+ssh://git@github.com/knorm/soft-delete.git"
   },
   "bugs": {
-    "url": "https://github.com/joelmukuthu/knorm-soft-delete/issues"
+    "url": "https://github.com/knorm/soft-delete/issues"
   },
-  "homepage": "https://github.com/joelmukuthu/knorm-soft-delete#readme",
+  "homepage": "https://github.com/knorm/soft-delete#readme",
   "dependencies": {}
 }

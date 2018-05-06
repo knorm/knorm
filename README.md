@@ -1,25 +1,26 @@
-# knorm-soft-delete
+# @knorm/soft-delete
 
-[![npm version](https://badge.fury.io/js/knorm-soft-delete.svg)](http://badge.fury.io/js/knorm-soft-delete)
-[![build status](https://travis-ci.org/joelmukuthu/knorm-soft-delete.svg?branch=master)](https://travis-ci.org/joelmukuthu/knorm-soft-delete)
-[![coverage status](https://coveralls.io/repos/github/joelmukuthu/knorm-soft-delete/badge.svg?branch=master)](https://coveralls.io/github/joelmukuthu/knorm-soft-delete?branch=master)
-[![dependency status](https://david-dm.org/joelmukuthu/knorm-soft-delete.svg)](https://david-dm.org/joelmukuthu/kknorm-soft-delete)
-[![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm-soft-delete.svg)](https://greenkeeper.io/)
+[![npm version](https://badge.fury.io/js/knorm/soft-delete.svg)](http://badge.fury.io/js/knorm/soft-delete)
+[![build status](https://travis-ci.org/knorm/soft-delete.svg?branch=master)](https://travis-ci.org/knorm/soft-delete)
+[![coverage status](https://coveralls.io/repos/github/knorm/soft-delete/badge.svg?branch=master)](https://coveralls.io/github/knorm/soft-delete?branch=master)
+[![dependency status](https://david-dm.org/knorm/soft-delete.svg)](https://david-dm.org/knorm/soft-delete)
+[![Greenkeeper badge](https://badges.greenkeeper.io/knorm/soft-delete.svg)](https://greenkeeper.io/)
 
 Soft-delete plugin for [knorm](https://www.npmjs.com/package/knorm).
 
 ## Installation
+
 ```bash
-npm install --save knorm knorm-soft-delete
+npm install --save @knorm/knorm @knorm/soft-delete
 ```
-> knorm-soft-delete has a peer dependency on
-[knorm](https://www.npmjs.com/package/knorm)
+
+> @knorm/soft-delete has a peer dependency on [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
 
 ## Usage
 
 ```js
-const knorm = require('knorm');
-const knormSoftDelete = require('knorm-soft-delete');
+const knorm = require('@knorm/knorm');
+const knormSoftDelete = require('@knorm/soft-delete');
 
 const orm = knorm({
   // knorm options
@@ -34,10 +35,12 @@ const orm = knorm({
 
 The `deleted` field is always added, but the field and column names can be
 configured. By default, the field has this config:
+
 - field-name: `deleted`
 - column-name: `deleted`
 
 If passed as an object, supports these config options:
+
 - `name` *string, default: deleted*: the field name to use instead of `deleted`
 - `column` *string, default: deleted*: the column name to use instead of
   `deleted`
@@ -46,10 +49,12 @@ If passed as an object, supports these config options:
 
 Can either be `true` or an object for further configuration. If `true`, it adds
 a field to the `Model` class with this config:
+
 - field-name: `deletedAt`
 - column-name: `deleted_at`
 
 If passed as an object, supports these config options:
+
 - `name` *string, default: deletedAt*: the field name to use instead of
   `deletedAt`
 - `column` *string, default: deleted_at*: the column name to use instead of
