@@ -236,6 +236,17 @@ describe('KnormRelations', () => {
             ]
           );
         });
+
+        describe('with `require` configured', () => {
+          it('rejects with a NoRowsFetchedError if no rows are matched', async () => {
+            const query = new Query(User).require(true).where({ id: 3 });
+            await expect(
+              query.fetch(),
+              'to be rejected with error satisfying',
+              new Query.NoRowsFetchedError({ query })
+            );
+          });
+        });
       });
 
       describe("with 'distinct' configured", () => {
@@ -791,6 +802,66 @@ describe('KnormRelations', () => {
             );
 
             await Image.delete({ where: { id: 2 } });
+          });
+        });
+
+        describe('with `require` configured', () => {
+          describe('on the parent query', () => {
+            it('rejects with a NoRowsFetchedError if no rows are matched', async () => {
+              const imageQuery = new Query(Image).where({ id: 2 });
+              const query = new Query(User)
+                .require(true)
+                .where({ id: 3 })
+                .leftJoin(imageQuery);
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new Query.NoRowsFetchedError({ query })
+              );
+            });
+          });
+
+          describe('on the joined query', () => {
+            it('rejects with a NoRowsFetchedError if no joined rows are matched', async () => {
+              const imageQuery = new Query(Image)
+                .where({ id: 2 })
+                .require(true);
+              const query = new Query(User).leftJoin(imageQuery);
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new Query.NoRowsFetchedError({ query: imageQuery })
+              );
+            });
+          });
+
+          describe('on both the parent and joined queries', () => {
+            it('rejects with a NoRowsFetchedError if no rows are matched', async () => {
+              const imageQuery = new Query(Image)
+                .where({ id: 2 })
+                .require(true);
+              const query = new Query(User)
+                .require(true)
+                .where({ id: 3 })
+                .leftJoin(imageQuery);
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new Query.NoRowsFetchedError({ query })
+              );
+            });
+
+            it('rejects with a NoRowsFetchedError if no joined rows are matched', async () => {
+              const imageQuery = new Query(Image)
+                .where({ id: 2 })
+                .require(true);
+              const query = new Query(User).require(true).leftJoin(imageQuery);
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new Query.NoRowsFetchedError({ query })
+              );
+            });
           });
         });
 
