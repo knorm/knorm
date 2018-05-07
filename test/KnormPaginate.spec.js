@@ -1,5 +1,6 @@
 const knorm = require('@knorm/knorm');
 const knormPostgres = require('@knorm/postgres');
+const knormRelations = require('@knorm/relations');
 const KnormPaginate = require('../lib/KnormPaginate');
 const knormPaginate = require('../');
 const sinon = require('sinon');
@@ -51,12 +52,15 @@ const { KnormPaginateError } = KnormPaginate;
 describe('KnormPaginate', () => {
   const orm = knorm()
     .use(knormPostgres({ connection: knex.client.config.connection }))
+    .use(knormRelations())
     .use(knormPaginate());
 
   const Query = orm.Query;
 
   class Model extends orm.Model {}
-  Model.fields = { id: { type: 'integer', primary: true } };
+  Model.fields = {
+    id: { type: 'integer', primary: true, updated: false }
+  };
 
   class User extends Model {}
   User.table = 'user';

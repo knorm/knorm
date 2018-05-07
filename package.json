@@ -20,8 +20,9 @@
     "@knorm/knorm": "^1.0.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "^1.0.0",
-    "@knorm/postgres": "^1.0.0",
+    "@knorm/knorm": "github:knorm/knorm",
+    "@knorm/postgres": "github:knorm/postgres",
+    "@knorm/relations": "github:knorm/relations",
     "coveralls": "^3.0.0",
     "eslint": "^4.13.1",
     "eslint-config-ganintegrity": "^2.0.2",
