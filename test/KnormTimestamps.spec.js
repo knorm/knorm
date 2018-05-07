@@ -1,5 +1,4 @@
 const knorm = require('knorm');
-const { KnormError } = knorm;
 const knex = require('./lib/knex');
 const KnormTimestamps = require('../lib/KnormTimestamps');
 const knormTimestamps = require('../');
@@ -8,13 +7,15 @@ const expect = require('unexpected')
   .clone()
   .use(require('unexpected-knex'));
 
+const { KnormTimestampsError } = KnormTimestamps;
+
 describe('KnormTimestamps', () => {
   describe('init', () => {
     it('throws if not passed a `Knorm` instance', () => {
       expect(
         () => new KnormTimestamps().init(),
         'to throw',
-        new KnormError('KnormTimestamps: no Knorm instance provided')
+        new KnormTimestampsError('no Knorm instance provided')
       );
     });
 
@@ -22,7 +23,7 @@ describe('KnormTimestamps', () => {
       expect(
         () => new KnormTimestamps().init({}),
         'to throw',
-        new KnormError('KnormTimestamps: invalid Knorm instance provided')
+        new KnormTimestampsError('invalid Knorm instance provided')
       );
     });
   });
