@@ -682,7 +682,7 @@ describe('Query', () => {
         );
       });
 
-      it.skip('supports `between` with an array', async () => {
+      it('supports `between` with an array', async () => {
         const query = new Query(User);
         const where = new Query.Where();
         query.where(where.between('id', [1, 2]));
@@ -696,7 +696,7 @@ describe('Query', () => {
         );
       });
 
-      it.skip('supports `between` with an object with an array value', async () => {
+      it('supports `between` with an object with an array value', async () => {
         const query = new Query(User);
         const where = new Query.Where();
         query.where(where.between({ id: [1, 2] }));
