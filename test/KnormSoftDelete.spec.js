@@ -47,7 +47,8 @@ const expect = require('unexpected')
     }
   );
 
-const { KnormError, Query: KnormQuery } = knorm;
+const { Query: KnormQuery } = knorm;
+const { KnormSoftDeleteError } = KnormSoftDelete;
 
 describe('KnormSoftDelete', () => {
   describe('init', () => {
@@ -55,7 +56,7 @@ describe('KnormSoftDelete', () => {
       expect(
         () => new KnormSoftDelete().init(),
         'to throw',
-        new KnormError('KnormSoftDelete: no Knorm instance provided')
+        new KnormSoftDeleteError('no Knorm instance provided')
       );
     });
 
@@ -63,7 +64,7 @@ describe('KnormSoftDelete', () => {
       expect(
         () => new KnormSoftDelete().init({}),
         'to throw',
-        new KnormError('KnormSoftDelete: invalid Knorm instance provided')
+        new KnormSoftDeleteError('invalid Knorm instance provided')
       );
     });
   });
