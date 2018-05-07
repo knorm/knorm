@@ -649,7 +649,7 @@ describe('Query', () => {
         );
       });
 
-      it('supports expressions with objects with multiple keyps', async () => {
+      it('supports expressions with objects with multiple keys', async () => {
         const query = new Query(User);
         const where = new Query.Where();
         query.where(where.equal({ age: 10, name: 'User 2' }));
@@ -657,6 +657,28 @@ describe('Query', () => {
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
           [new User({ id: 2, name: 'User 2' })]
+        );
+      });
+
+      it('supports a `where in` expression', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.in('id', [2]));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2 })]
+        );
+      });
+
+      it('supports a `where in` with an object', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.in({ id: [2] }));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2 })]
         );
       });
 
