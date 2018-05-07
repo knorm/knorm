@@ -1,9 +1,12 @@
 const knex = require('knex');
-const { config } = require('knorm-postgres');
 
-const client = knex({
+module.exports = knex({
   client: 'pg',
-  connection: config
+  connection: {
+    host: process.env.PGHOST || '127.0.0.1',
+    port: process.env.PGPORT || 5432,
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || '',
+    database: process.env.PGDATABASE || 'postgres'
+  }
 });
-
-module.exports = client;
