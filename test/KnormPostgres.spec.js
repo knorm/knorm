@@ -612,7 +612,39 @@ describe('KnormPostgres', () => {
       spy.restore();
     });
 
-    it('does not update fields that are not meant to be updated', async () => {
+    it('allows updating all rows', async () => {
+      await new Query(User).insert([
+        { id: 1, name: 'foo' },
+        { id: 2, name: 'bar' }
+      ]);
+      await expect(
+        new Query(User).update({ name: 'bar' }),
+        'to be fulfilled with sorted rows satisfying',
+        [{ id: 1, name: 'bar' }, { id: 2, name: 'bar' }]
+      );
+      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+        { id: 1, name: 'bar' },
+        { id: 2, name: 'bar' }
+      ]);
+    });
+
+    it('allows updates with a `where` clause', async () => {
+      await new Query(User).insert([
+        { id: 1, name: 'foo' },
+        { id: 2, name: 'foo' }
+      ]);
+      await expect(
+        new Query(User).update({ name: 'bar' }, { where: { id: 1 } }),
+        'to be fulfilled with sorted rows satisfying',
+        [{ id: 1, name: 'bar' }]
+      );
+      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+        { id: 1, name: 'bar' },
+        { id: 2, name: 'foo' }
+      ]);
+    });
+
+    it('does not update fields `updated: false` fields', async () => {
       const user = await new Query(User).first().insert({ id: 1, name: 'foo' });
       const spy = sinon.spy(Query.prototype, 'query');
       user.name = 'bar';
@@ -623,7 +655,8 @@ describe('KnormPostgres', () => {
           expect.it(
             'when passed as parameter to',
             query => query.toString(),
-            expect.it('to contain', '"name" =').and('not to contain', '"id" =')
+            'to begin with',
+            'UPDATE "user" SET "name" = "v"."name"'
           )
         );
       });
