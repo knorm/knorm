@@ -1,6 +1,6 @@
 version: '3'
 services:
-  db:
+  postgres:
     image: postgres:9.6
     container_name: knorm-soft-delete
     ports:
