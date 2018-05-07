@@ -1,7 +1,7 @@
 {
-  "name": "knorm-timestamps",
-  "version": "3.0.2",
-  "description": "Timestamps plugin for knorm",
+  "name": "@knorm/timestamps",
+  "version": "1.0.0",
+  "description": "Timestamps plugin for @knorm/knorm",
   "main": "index.js",
   "scripts": {
     "test": "mocha --exit 'test/**/*.spec.js'",
@@ -46,11 +46,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/joelmukuthu/knorm-timestamps.git"
+    "url": "git+ssh://git@github.com/knorm/timestamps.git"
   },
   "bugs": {
-    "url": "https://github.com/joelmukuthu/knorm-timestamps/issues"
+    "url": "https://github.com/knorm/timestamps/issues"
   },
-  "homepage": "https://github.com/joelmukuthu/knorm-timestamps#readme",
+  "homepage": "https://github.com/knorm/timestamps#readme",
   "dependencies": {}
 }
