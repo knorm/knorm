@@ -862,7 +862,7 @@ describe('Query', () => {
         it('supports a single expression', async () => {
           const query = new Query(User);
           const where = new Query.Where();
-          query.where(where.sql(`id <> ${query.config.placeholder}`, 1));
+          query.where(where.sql(`id <> $1`, 1));
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
@@ -873,9 +873,7 @@ describe('Query', () => {
         it('supports a `not` wrapper for a single expression', async () => {
           const query = new Query(User);
           const where = new Query.Where();
-          query.where(
-            where.not(where.sql(`id = ${query.config.placeholder}`, 1))
-          );
+          query.where(where.not(where.sql(`id = $1`, 1)));
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
@@ -883,31 +881,27 @@ describe('Query', () => {
           );
         });
 
-        // https://github.com/CSNW/sql-bricks/issues/103
-        it.skip('supports multiple `not` wrapper', async () => {
+        it('supports multiple `not` wrappers', async () => {
           const query = new Query(User);
           const where = new Query.Where();
           query.where(
-            where.not(where.sql(`id = ${query.config.placeholder}`, 1)),
-            where.not(
-              where.sql(`name like ${query.config.placeholder}`, 'User%')
-            )
+            where.not(where.sql(`id = $1`, 1)),
+            where.not(where.sql(`name like $1`, 'User%'))
           );
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
-            [new User({ id: 2, name: 'User 2' })]
+            []
           );
         });
 
-        // https://github.com/CSNW/sql-bricks/issues/103
-        it.skip('supports an `and` wrapper', async () => {
+        it('supports an `and` wrapper', async () => {
           const query = new Query(User);
           const where = new Query.Where();
           query.where(
             where.and(
-              where.sql(`id = ${query.config.placeholder}`, 1),
-              where.sql(`name like ${query.config.placeholder}`, 'User%')
+              where.sql(`id = $1`, 1),
+              where.sql(`name like $1`, 'User%')
             )
           );
           await expect(
@@ -917,20 +911,22 @@ describe('Query', () => {
           );
         });
 
-        // https://github.com/CSNW/sql-bricks/issues/103
-        it.skip('supports an `or` wrapper', async () => {
+        it('supports an `or` wrapper', async () => {
           const query = new Query(User);
           const where = new Query.Where();
           query.where(
             where.or(
-              where.sql(`id = ${query.config.placeholder}`, 1),
-              where.sql(`name like ${query.config.placeholder}`, 'User%')
+              where.sql(`id = $1`, 1),
+              where.sql(`name like $1`, 'User%')
             )
           );
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
-            [new User({ id: 1, name: 'User 1' })]
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
           );
         });
       });

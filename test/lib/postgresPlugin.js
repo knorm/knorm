@@ -8,7 +8,6 @@ const postgresPlugin = knorm => {
   class QueryForTests extends knorm.Query {
     constructor(model) {
       super(model);
-      this.config.placeholder = '$';
     }
 
     quote(value) {
