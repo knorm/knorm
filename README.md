@@ -6,16 +6,16 @@
 [![dependency status](https://david-dm.org/knorm/knorm.svg)](https://david-dm.org/knorm/knorm)
 [![Greenkeeper badge](https://badges.greenkeeper.io/knorm/knorm.svg)](https://greenkeeper.io/)
 
-A purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
+A purely ES6 class-based ORM for Node.js.
 
 ## Supported environments
 
 These environments are currently supported:
 
-| Environment | Value                        | Description                                                             |
-| ----------- | ---------------------------- | ----------------------------------------------------------------------- |
-| Node.js     | Version >= 7.6.              | knorm uses `async/await`                                                |
-| Databases   | PostgreSQL, MSSQL and Oracle | knorm uses the [RETURNING clause](http://knexjs.org/#Builder-returning) |
+| Environment | Value           | Description                                                          |
+| ----------- | --------------- | -------------------------------------------------------------------- |
+| Node.js     | Version >= 7.6. | Knorm uses `async/await`                                             |
+| Databases   | PostgreSQL      | via [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) |
 
 ## Features
 
@@ -30,11 +30,11 @@ These environments are currently supported:
 * improved syntax for transactions
 * good test coverage
 
-> NOTE: knorm does not create or run knex migrations
+> NOTE: Knorm does not create or run database migrations.
 
 ## Documentation
 
-View the [documentation site](https://joelmukuthu.github.io/knorm/)
+View the [documentation site](https://knorm.github.io/knorm/)
 
 ## License
 
@@ -42,5 +42,7 @@ View the [documentation site](https://joelmukuthu.github.io/knorm/)
 
 ## Credits
 
-Knorm is inspired in part by the [Mongoose JS](http://mongoosejs.com/) and
-[Bookshelf.js](http://bookshelfjs.org/) APIs.
+Knorm is inspired by the [Mongoose JS](http://mongoosejs.com/) and
+[Bookshelf.js](http://bookshelfjs.org/) APIs. It was previously a built as a
+wrapper around [Knex.js](http://knexjs.org), hence the kn-orm name i.e. knex-orm;
+but it now generates it's own queries via [SQL Bricks.js](http://csnw.github.io/sql-bricks/).

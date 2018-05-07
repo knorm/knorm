@@ -6,7 +6,7 @@ Validation is configured per field using the
 A model instance is validated before
 [insert](api/model.md#modelprototypeinsertoptions-promise-gt-model) and
 [update](api/model.md#modelprototypeupdateoptions-promise-gt-model). Before inserts,
-all fields will be validated (**_except the `id` field if it's `undefined`_**)
+all fields will be validated (**_except the primary field if it's `undefined`_**)
 whereas before updates, only the fields that have values set will be validated.
 
 You can trigger validation any time on a model instance via
@@ -63,8 +63,7 @@ User.fields = {
     type: 'string',
     required: true,
     async validate(username) {
-      // NOTE: this is just an example, it's better to do this with a UNIQUE
-      // constraint on the column
+      // NOTE: this is just an example, it's better to do this with a UNIQUE constraint
       const usernameTaken = await User.count({ where: { username } });
       if (usernameTaken) {
         throw new Error(`The username '${username}' is already taken`);
@@ -273,7 +272,7 @@ override the `string` validator to add max-length validation for every `string`
 field:
 
 ```js
-const { Field: KnormField } = require('knorm');
+const { Field: KnormField } = require('@knorm/knorm');
 
 class Field extends KnormField {
   validateIsString(value, type) {

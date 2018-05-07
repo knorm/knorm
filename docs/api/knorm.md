@@ -3,7 +3,7 @@
 The `Knorm` class initialises an ORM. Usage:
 
 ```js
-const { Knorm } = require('knorm');
+const { Knorm } = require('@knorm/knorm');
 const { Model, Query, Field } = new Knorm(options);
 
 class User extends Model {}
@@ -23,7 +23,6 @@ A Knorm instance has the following classes:
 
 These options are supported:
 
-| Option          | Type                    | Description                                                                                                   |
-| --------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `knex`          | function (**required**) | a [knex](http://knexjs.org) instance                                                                          |
-| `fieldToColumn` | function                | a function used to map field names to column names e.g. [snakeCase](https://lodash.com/docs/4.17.4#snakeCase) |
+| Option          | Type     | Description                                                                                                   |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `fieldToColumn` | function | a function used to map field names to column names e.g. [snakeCase](https://lodash.com/docs/4.17.4#snakeCase) |

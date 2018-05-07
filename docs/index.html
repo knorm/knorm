@@ -14,16 +14,18 @@
 <script>
 window.$docsify = {
   name: 'knorm',
-  repo: '//github.com/joelmukuthu/knorm',
+  repo: '//github.com/knorm/knorm',
   homepage: 'guides/getting-started.md',
   loadSidebar: 'sidebar.md',
   subMaxLevel: 2,
   auto2top: true,
   alias: {
+    '.*?/readme':
+      'https://raw.githubusercontent.com/knorm/knorm/master/README.md',
     '.*?/changelog':
-      'https://raw.githubusercontent.com/joelmukuthu/knorm/master/CHANGELOG.md',
+      'https://raw.githubusercontent.com/knorm/knorm/master/CHANGELOG.md',
     '.*?/license':
-      'https://raw.githubusercontent.com/joelmukuthu/knorm/master/LICENSE.md'
+      'https://raw.githubusercontent.com/knorm/knorm/master/LICENSE.md'
   },
   plugins: [DocsifyCopyCodePlugin.init()]
 };

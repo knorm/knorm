@@ -15,5 +15,6 @@
   * [KnormError](api/knorm-error.md#knorm-error)
   * [QueryError](api/query-error.md#query-error)
   * [ValidationError](api/validation-error.md#validation-error)
-* [Changelog](changelog.md)
-* [License](license.md)
+* [README](readme.md)
+* [LICENSE](license.md)
+* [CHANGELOG](changelog.md)

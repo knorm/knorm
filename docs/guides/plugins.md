@@ -6,7 +6,7 @@ overloading their methods.
 To add plugins to the ORM:
 
 ```js
-const knorm = require('knorm');
+const knorm = require('@knorm/knorm');
 const knormSoftDelete = require('knorm-soft-delete');
 
 const { Model, Query } = knorm({

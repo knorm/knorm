@@ -1,81 +1,114 @@
-# knorm
-
-[![npm version](https://badge.fury.io/js/knorm.svg)](http://badge.fury.io/js/knorm)
-[![build status](https://travis-ci.org/joelmukuthu/knorm.svg?branch=master)](https://travis-ci.org/joelmukuthu/knorm)
-[![coverage status](https://coveralls.io/repos/github/joelmukuthu/knorm/badge.svg?branch=master)](https://coveralls.io/github/joelmukuthu/knorm?branch=master)
-[![dependency status](https://david-dm.org/joelmukuthu/knorm.svg)](https://david-dm.org/joelmukuthu/knorm)
-[![Greenkeeper badge](https://badges.greenkeeper.io/joelmukuthu/knorm.svg)](https://greenkeeper.io/)
-
-knorm is a purely ES6 class-based ORM for [Knex.js](http://knexjs.org).
-
-## Supported environments
-
-These environments are currently supported:
-
-| Environment | Value                        | Description                                                             |
-| ----------- | ---------------------------- | ----------------------------------------------------------------------- |
-| Node.js     | Version >= 7.6.              | knorm uses `async/await`                                                |
-| Databases   | PostgreSQL, MSSQL and Oracle | knorm uses the [RETURNING clause](http://knexjs.org/#Builder-returning) |
+# Getting started
 
 ## Creating an ORM
 
-Install knorm (and [knex](http://knexjs.org) if you haven't installed it yet):
+Install Knorm:
 
 ```bash
-npm install --save knex knorm
+npm install --save @knorm/knorm
 ```
 
-Creating a new ORM:
+Then create a new ORM:
 
 ```js
-const knorm = require('knorm');
-const knex = require('knex')({
-  /* knex options */
-});
+const knorm = require('@knorm/knorm');
+const orm = knorm(/* options */);
 
-const { Model, Query, Field } = knorm({ knex });
+// orm contains `Model`, `Field`, `Query`, `Transaction` etc classes
+const { Model } = orm;
+
+// let's create a User model
+class User extends Model {}
 ```
 
-> see the [Knorm docs](api/knorm.md#knorm) for more info on Knorm options
+> see the [Knorm docs](api/knorm.md#knorm) for info on Knorm options
+
+## Enabling database access
+
+At this point our ORM cannot connect to the database yet. To enable that, we need
+to install and load an approprite [plugin](guides/plugins.md#available-plugins).
+
+This is needed in most cases but if you only want to use Knorm's classes with no
+database access (e.g. only for data validation) you can skip this step.
+
+For example, for postgres, install
+[@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres):
+
+```bash
+npm install --save @knorm/postgres
+```
+
+Then load it into the ORM:
+
+```js
+const knormPostgres = require('@knorm/postgres');
+const orm = knorm().use(knormPostgres(/* @knorm/postgres options */));
+```
+
+> see the [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) docs
+> for info on @knorm/postgres options e.g. database connection options
+
+Now we can use our `User` model to manipulate data, we just need to configure
+its table-name and fields:
+
+```js
+const { Model } = orm;
+
+class User extends Model {}
+
+User.table = 'user';
+User.fields = { id: 'integer', names: 'string' };
+
+const doStuff = async () => {
+  const user = await new User({ id: 1, names: 'Foo Bar' }).insert();
+  console.log(user); // => { id: 1, names: 'Foo Bar' }
+
+  const users = await User.fetch();
+  console.log(users); // => [ { id: 1, names: 'Foo Bar' } ]
+}
+
+doStuff();
+```
 
 ## Adding common fields
 
-If you have fields that are common to all your models, add them to the base
-`Model` class. Since knorm requires models to have a primary field, `Model` is a
-good place to add it:
+In most cases, you'll have fields that are common to all your models. To avoid
+having to add the same fields to each model you create, you can create a base
+`Model` class, add the common fields there and then have your models extend that
+class.
+
+For example, to if all your models have an "id" field that is the primary field:
 
 ```js
-const { Model: BaseModel } = new Knorm({ knex });
+const orm = knorm().use(knormPostgres());
 
-class Model extends BaseModel {}
+class Model extends orm.Model {}
 
+// add the common "id" field:
 Model.fields = {
   id: { type: 'integer', primary: true, updated: false, methods: true }
 };
+
+class User extends Model {}
+
+// add only the fields specific to User:
+User.fields = { names: 'string' };
 ```
 
 > See [the fields guide](guides/fields.md#fields) for more info on fields
 
-## Adding models
+A child model inherits all fields (and virtuals) added to its parent, so `User`
+will also have the `id` field. However, fields added to the child model will not
+be added to the parent.
 
-Create new models by extending the `Model` class:
+> See [the Model docs](api/model.md) for more info on
+> [field inheritance](api/model.md#modelfields) and [virtuals inheritance](api/model.md#modelvirtuals).
+
+## Adding virtual fields
+
+To add virtual or computed fields on a model:
 
 ```js
-class User extends Model {
-  async confirm() {
-    this.confirmed = true;
-    return this.save();
-  }
-}
-
-User.table = 'user';
-User.fields = {
-  names: 'string',
-  confirmed: {
-    type: 'boolean',
-    default: false
-  }
-};
 User.virtuals = {
   initials() {
     return this.names
@@ -86,38 +119,10 @@ User.virtuals = {
       : undefined;
   }
 };
+
+const user  = new User({ names: 'Foo Bar' });
+
+console.log(user.initials); // => 'FB'
 ```
 
 > See [the virtuals guide](guides/virtuals.md#virtuals) for more info on virtuals
-
-A child model inherits all fields (and virtuals) added to its parent, so `User`
-will also have the `id` field. However, fields added to the child model will not
-be added to the parent.
-
-See [the Model docs](api/model.md) for more info on
-[field inheritance](api/model.md#modelfields) and
-[virtuals inheritance](api/model.md#modelvirtuals).
-
-## Example
-
-```js
-async function example() {
-  const userCount = await User.count();
-  const confirmedUsers = await User.fetch({ where: { confirmed: true } });
-  const updatedUsers = await new Transaction(async transaction => {
-    const unconfirmedUserCount = await User.query
-      .transaction(transaction)
-      .where({ confirmed: false })
-      .count();
-
-    if (!unconfirmedUserCount) {
-      return;
-    }
-
-    return User.query
-      .transaction(transaction)
-      .where({ confirmed: false })
-      .update({ confirmed: true });
-  });
-}
-```
