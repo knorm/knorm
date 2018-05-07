@@ -1,4 +1,5 @@
-const knorm = require('knorm');
+const knorm = require('@knorm/knorm');
+const knormPostgres = require('@knorm/postgres');
 const knex = require('./lib/knex');
 const KnormTimestamps = require('../lib/KnormTimestamps');
 const knormTimestamps = require('../');
@@ -29,8 +30,7 @@ describe('KnormTimestamps', () => {
   });
 
   describe('updateModel', () => {
-    const updateModel = config =>
-      knorm({ knex() {} }).use(knormTimestamps(config));
+    const updateModel = config => knorm().use(knormTimestamps(config));
 
     describe('with a `createdAt` config', () => {
       it('allows configuring the `createdAt` field-name', () => {
@@ -68,7 +68,9 @@ describe('KnormTimestamps', () => {
   });
 
   describe('updateQuery', () => {
-    const { Model } = knorm({ knex }).use(knormTimestamps());
+    const { Model } = knorm()
+      .use(knormPostgres({ connection: knex.client.config.connection }))
+      .use(knormTimestamps());
 
     class User extends Model {}
 
