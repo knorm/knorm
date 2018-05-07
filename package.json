@@ -4,7 +4,7 @@
   "description": "Pagination plugin for knorm",
   "main": "index.js",
   "scripts": {
-    "test": "mocha 'test/**/*.spec.js'",
+    "test": "mocha --exit 'test/**/*.spec.js'",
     "coverage": "nyc npm test",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
