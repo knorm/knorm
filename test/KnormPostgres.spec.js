@@ -65,6 +65,8 @@ describe('KnormPostgres', () => {
     knex.schema.createTable('user', table => {
       table.increments().primary();
       table.string('name');
+      table.date('date');
+      table.dateTime('dateTime');
     })
   );
 
@@ -498,7 +500,9 @@ describe('KnormPostgres', () => {
       User.table = 'user';
       User.fields = {
         id: { type: 'integer', primary: true, updated: false },
-        name: 'string'
+        name: 'string',
+        date: 'date',
+        dateTime: 'dateTime'
       };
     });
 
@@ -622,10 +626,13 @@ describe('KnormPostgres', () => {
         'to be fulfilled with sorted rows satisfying',
         [{ id: 1, name: 'bar' }, { id: 2, name: 'bar' }]
       );
-      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'bar' },
-        { id: 2, name: 'bar' }
-      ]);
+      await expect(
+        knex,
+        'with table',
+        User.table,
+        'to have sorted rows satisfying',
+        [{ id: 1, name: 'bar' }, { id: 2, name: 'bar' }]
+      );
     });
 
     it('allows updates with a `where` clause', async () => {
@@ -638,10 +645,56 @@ describe('KnormPostgres', () => {
         'to be fulfilled with sorted rows satisfying',
         [{ id: 1, name: 'bar' }]
       );
-      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'bar' },
-        { id: 2, name: 'foo' }
-      ]);
+      await expect(
+        knex,
+        'with table',
+        User.table,
+        'to have sorted rows satisfying',
+        [{ id: 1, name: 'bar' }, { id: 2, name: 'foo' }]
+      );
+    });
+
+    it('allows updating `date` fields', async () => {
+      await new Query(User).insert({
+        id: 1,
+        name: 'foo',
+        date: new Date('Tue May 07 2018 00:00:00 GMT+0200 (CEST)')
+      });
+      await expect(
+        new Query(User).update({
+          id: 1,
+          date: new Date('Tue May 08 2018 00:00:00 GMT+0200 (CEST)')
+        }),
+        'to be fulfilled with sorted rows satisfying',
+        [{ id: 1, date: new Date('Tue May 08 2018 00:00:00 GMT+0200 (CEST)') }]
+      );
+      await expect(
+        knex,
+        'with table',
+        User.table,
+        'to have sorted rows satisfying',
+        [{ id: 1, date: new Date('Tue May 08 2018 00:00:00 GMT+0200 (CEST)') }]
+      );
+    });
+
+    it('allows updating `dateTime` fields', async () => {
+      await new Query(User).insert({
+        id: 1,
+        name: 'foo',
+        dateTime: new Date(1000)
+      });
+      await expect(
+        new Query(User).update({ id: 1, dateTime: new Date(2000) }),
+        'to be fulfilled with sorted rows satisfying',
+        [{ id: 1, dateTime: new Date(2000) }]
+      );
+      await expect(
+        knex,
+        'with table',
+        User.table,
+        'to have sorted rows satisfying',
+        [{ id: 1, dateTime: new Date(2000) }]
+      );
     });
 
     it('does not update fields `updated: false` fields', async () => {
