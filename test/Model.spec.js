@@ -2101,6 +2101,14 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.where', function() {
+    class User extends Model {}
+
+    it('returns a `Query.Where` instance', function() {
+      expect(User.where, 'to be a', Query.Where);
+    });
+  });
+
   describe('db methods', function() {
     const { Model, Query } = new Knorm().use(postgresPlugin);
 
