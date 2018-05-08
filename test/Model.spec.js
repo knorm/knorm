@@ -2089,16 +2089,6 @@ describe('Model', function() {
         });
       });
     });
-
-    describe('as a setter', function() {
-      it('throws an error', function() {
-        expect(
-          () => (User.query = 'foo'),
-          'to throw',
-          new Error('User.query cannot be overwriten')
-        );
-      });
-    });
   });
 
   describe('Model.where', function() {
