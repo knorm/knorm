@@ -722,25 +722,34 @@ describe('KnormPostgres', () => {
     });
 
     it('allows updating `date` fields', async () => {
+      const toUtc = date =>
+        new Date(
+          date.getUTCFullYear(),
+          date.getUTCMonth(),
+          date.getUTCDate(),
+          date.getUTCHours(),
+          date.getUTCMinutes(),
+          date.getUTCSeconds()
+        );
       await new Query(User).insert({
         id: 1,
         name: 'foo',
-        date: new Date('Tue May 07 2018 00:00:00 GMT+0200 (CEST)')
+        date: new Date('2018-08-07')
       });
       await expect(
         new Query(User).update({
           id: 1,
-          date: new Date('Tue May 08 2018 00:00:00 GMT+0200 (CEST)')
+          date: new Date('2018-05-08')
         }),
         'to be fulfilled with sorted rows satisfying',
-        [{ id: 1, date: new Date('Tue May 08 2018 00:00:00 GMT+0200 (CEST)') }]
+        [{ id: 1, date: toUtc(new Date('2018-05-08')) }]
       );
       await expect(
         knex,
         'with table',
         User.table,
         'to have sorted rows satisfying',
-        [{ id: 1, date: new Date('Tue May 08 2018 00:00:00 GMT+0200 (CEST)') }]
+        [{ id: 1, date: toUtc(new Date('2018-05-08')) }]
       );
     });
 
