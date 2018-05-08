@@ -631,7 +631,7 @@ describe('KnormPostgres', () => {
         { id: 2, name: 'foo' }
       ]);
       await expect(
-        new Query(User).where(new Query.Where().ilike('name', 'fo%')).fetch(),
+        new Query(User).where(new Query.Where().ilike('name', 'Fo%')).fetch(),
         'to be fulfilled with value satisfying',
         [{ id: 1, name: 'Foo' }, { id: 2, name: 'foo' }]
       );
