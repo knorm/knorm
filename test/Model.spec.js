@@ -1925,13 +1925,13 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.primary', function() {
+  describe('Model.config.primary', function() {
     describe('as a getter', function() {
       it('throws an error of the model has no primary field', function() {
         class Foo extends Model {}
 
         expect(
-          () => Foo.primary,
+          () => Foo.config.primary,
           'to throw',
           new Error('`Foo` has no primary field')
         );
@@ -1942,7 +1942,7 @@ describe('Model', function() {
 
         Foo.fields = { id: { type: 'integer', primary: true } };
 
-        expect(Foo.primary, 'to equal', 'id');
+        expect(Foo.config.primary, 'to equal', 'id');
       });
 
       describe('when a model is subclassed', function() {
@@ -1952,8 +1952,8 @@ describe('Model', function() {
 
           Foo.fields = { id: { type: 'integer', primary: true } };
 
-          expect(Foo.primary, 'to equal', 'id');
-          expect(Bar.primary, 'to equal', 'id');
+          expect(Foo.config.primary, 'to equal', 'id');
+          expect(Bar.config.primary, 'to equal', 'id');
         });
 
         it("allows overwriting the parent's primary field", function() {
@@ -1963,8 +1963,8 @@ describe('Model', function() {
           Foo.fields = { id: { type: 'integer', primary: true } };
           Bar.fields = { uuid: { type: 'uuid', primary: true } };
 
-          expect(Foo.primary, 'to equal', 'id');
-          expect(Bar.primary, 'to equal', 'uuid');
+          expect(Foo.config.primary, 'to equal', 'id');
+          expect(Bar.config.primary, 'to equal', 'uuid');
         });
 
         it("allows unsetting the parent's primary field", function() {
@@ -1974,9 +1974,9 @@ describe('Model', function() {
           Foo.fields = { id: { type: 'integer', primary: true } };
           Bar.fields = { id: { type: 'uuid', primary: false } };
 
-          expect(Foo.primary, 'to equal', 'id');
+          expect(Foo.config.primary, 'to equal', 'id');
           expect(
-            () => Bar.primary,
+            () => Bar.config.primary,
             'to throw',
             new Error('`Bar` has no primary field')
           );
@@ -1985,14 +1985,14 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.notUpdated', function() {
+  describe('Model.config.notUpdated', function() {
     describe('as a getter', function() {
       it('returns field-names that should not be updated', function() {
         class Foo extends Model {}
 
         Foo.fields = { id: { type: 'integer', updated: false } };
 
-        expect(Foo.notUpdated, 'to equal', ['id']);
+        expect(Foo.config.notUpdated, 'to equal', ['id']);
       });
 
       describe('when a model is subclassed', function() {
@@ -2002,8 +2002,8 @@ describe('Model', function() {
 
           Foo.fields = { id: { type: 'integer', updated: false } };
 
-          expect(Foo.notUpdated, 'to equal', ['id']);
-          expect(Bar.notUpdated, 'to equal', ['id']);
+          expect(Foo.config.notUpdated, 'to equal', ['id']);
+          expect(Bar.config.notUpdated, 'to equal', ['id']);
         });
 
         it("allows overwriting the parent's notUpdated fields", function() {
@@ -2013,21 +2013,21 @@ describe('Model', function() {
           Foo.fields = { id: { type: 'integer', updated: false } };
           Bar.fields = { id: { type: 'integer', updated: true } };
 
-          expect(Foo.notUpdated, 'to equal', ['id']);
-          expect(Bar.notUpdated, 'to equal', []);
+          expect(Foo.config.notUpdated, 'to equal', ['id']);
+          expect(Bar.config.notUpdated, 'to equal', []);
         });
       });
     });
   });
 
-  describe('Model.unique', function() {
+  describe('Model.config.unique', function() {
     describe('as a getter', function() {
       it('returns field-names of unique fields', function() {
         class Foo extends Model {}
 
         Foo.fields = { id: { type: 'integer', unique: true } };
 
-        expect(Foo.unique, 'to equal', ['id']);
+        expect(Foo.config.unique, 'to equal', ['id']);
       });
 
       describe('when a model is subclassed', function() {
@@ -2037,8 +2037,8 @@ describe('Model', function() {
 
           Foo.fields = { id: { type: 'integer', unique: true } };
 
-          expect(Foo.unique, 'to equal', ['id']);
-          expect(Bar.unique, 'to equal', ['id']);
+          expect(Foo.config.unique, 'to equal', ['id']);
+          expect(Bar.config.unique, 'to equal', ['id']);
         });
 
         it("allows overwriting the parent's unique fields", function() {
@@ -2048,8 +2048,8 @@ describe('Model', function() {
           Foo.fields = { id: { type: 'integer', unique: true } };
           Bar.fields = { id: { type: 'integer', unique: false } };
 
-          expect(Foo.unique, 'to equal', ['id']);
-          expect(Bar.unique, 'to equal', []);
+          expect(Foo.config.unique, 'to equal', ['id']);
+          expect(Bar.config.unique, 'to equal', []);
         });
       });
     });
