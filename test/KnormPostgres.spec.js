@@ -865,40 +865,75 @@ describe('KnormPostgres', () => {
     });
 
     describe('save', () => {
-      it('supports both `insert` and `update`', async () => {
-        await new Query(User).insert([{ name: 'foo' }]);
-        const insert = sinon.spy(Query.prototype, 'insert');
-        const update = sinon.spy(Query.prototype, 'update');
+      describe('with an array', () => {
+        it('supports both `insert` and `update`', async () => {
+          await new Query(User).insert([{ name: 'foo' }]);
+          const insert = sinon.spy(Query.prototype, 'insert');
+          const update = sinon.spy(Query.prototype, 'update');
+          await expect(
+            new Query(User).save([{ id: 1, name: 'foofoo' }, { name: 'bar' }]),
+            'to be fulfilled with sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          );
+          await expect(insert, 'to have calls satisfying', () => {
+            insert([{ name: 'bar' }], undefined); // options are undefined
+          });
+          await expect(update, 'to have calls satisfying', () => {
+            update([{ id: 1, name: 'foofoo' }], undefined); // options are undefined
+          });
+          insert.restore();
+          update.restore();
+        });
+
+        it('passes options to both `insert` and `update`', async () => {
+          await new Query(User).insert([{ name: 'foo' }]);
+          await expect(
+            new Query(User)
+              .returning('id')
+              .save([{ id: 1, name: 'foofoo' }, { name: 'bar' }]),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [{ id: 1 }, { id: 2 }]
+          );
+        });
+      });
+    });
+
+    describe('with a single object', () => {
+      it('supports `insert`', async () => {
         await expect(
-          new Query(User).save([{ id: 1, name: 'foofoo' }, { name: 'bar' }]),
+          new Query(User).save({ name: 'foo' }),
           'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          [{ id: 1, name: 'foo' }]
         );
         await expect(
           knex,
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          [{ id: 1, name: 'foo' }]
         );
-        await expect(insert, 'to have calls satisfying', () => {
-          insert([{ name: 'bar' }], undefined); // options are undefined
-        });
-        await expect(update, 'to have calls satisfying', () => {
-          update([{ id: 1, name: 'foofoo' }], undefined); // options are undefined
-        });
-        insert.restore();
-        update.restore();
       });
 
-      it('passes options to both `insert` and `update`', async () => {
-        await new Query(User).insert([{ name: 'foo' }]);
+      it('supports `update`', async () => {
+        await new Query(User).insert([{ id: 1, name: 'foo' }]);
         await expect(
-          new Query(User)
-            .returning('id')
-            .save([{ id: 1, name: 'foofoo' }, { name: 'bar' }]),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [{ id: 1 }, { id: 2 }]
+          new Query(User).save({ id: 1, name: 'foofoo' }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, name: 'foofoo' }]
+        );
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foofoo' }]
         );
       });
     });
