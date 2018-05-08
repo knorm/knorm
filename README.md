@@ -45,10 +45,8 @@ const orm = knorm({
 
 ## Options
 
-| Option          | Type             | Description                                                                                                                                                                                                                                           |
-| --------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `connection`    | object or string | if set, this option is passed directly to [pg](https://node-postgres.com/features/connecting#programmatic). However, connections can also be configured via [environment variables](https://www.postgresql.org/docs/current/static/libpq-envars.html) |
-| `initClient`    | (async) function | a function called when a new client is acquired from the pool. useful for configuring the connection e.g. setting session variables. it's called with the client as the only argument                                                                 |
-| `restoreClient` | (async) function | a function called before a client is released back into the pool. useful for restoring a client e.g. unsetting session variables. it's called with the client as the only argument                                                                    |
+| Option       | Type             | Description                                                                                                                                                                                                                                            |
+| ------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `connection` | object or string | if set, this option is passed directly to [pg](https://node-postgres.com/features/connecting#programmatic). alternatively, connections can be configured via [environment variables](https://www.postgresql.org/docs/current/static/libpq-envars.html) |
 
 NOTE that all options are optional.
