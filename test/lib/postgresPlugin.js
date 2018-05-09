@@ -10,10 +10,6 @@ const postgresPlugin = knorm => {
       return `"${value}"`;
     }
 
-    returning(...fields) {
-      return this.addFields('returning', fields);
-    }
-
     async prepareQuery(query, options) {
       const { forInsert, forUpdate, forDelete, forFetch } = options;
 
