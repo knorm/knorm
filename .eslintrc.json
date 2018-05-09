@@ -1,18 +1,5 @@
 {
-  "env": {
-    "node": true,
-    "es6": true
-  },
-  "plugins": ["prettier"],
-  "extends": ["eslint:recommended", "prettier"],
-  "parserOptions": {
-    "ecmaVersion": 2017
-  },
-  "rules": {
-    "curly": ["error", "all"],
-    "eqeqeq": ["error", "always"],
-    "no-var": "error",
-    "prefer-const": "error",
-    "prettier/prettier": ["error", { "singleQuote": true }]
-  }
+  "extends": [
+    "ganintegrity"
+  ]
 }

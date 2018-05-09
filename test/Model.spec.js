@@ -77,7 +77,8 @@ describe('Model', function() {
         };
 
         const spy = sinon.spy(Foo.prototype, 'setData');
-        new Foo({ id: 1 });
+        // eslint-disable-next-line no-unused-vars
+        const field = new Foo({ id: 1 });
 
         expect(spy, 'to have calls satisfying', () => {
           spy({
@@ -1064,9 +1065,7 @@ describe('Model', function() {
           required: true,
           type: 'string',
           cast: {
-            forSave() {
-              return;
-            }
+            forSave() {}
           }
         }
       };
@@ -2073,19 +2072,10 @@ describe('Model', function() {
       });
 
       it('configures the Query instance with the model', function() {
-        User.query;
+        // eslint-disable-next-line no-unused-vars
+        const query = User.query;
         expect(User.Query, 'to have calls satisfying', () => {
-          new User.Query(expect.it('to be model class', User));
-        });
-      });
-
-      it("returns a new Query every time it's accessed", function() {
-        User.query;
-        User.query;
-
-        expect(User.Query, 'to have calls satisfying', () => {
-          new User.Query(expect.it('not to be undefined'));
-          new User.Query(expect.it('not to be undefined'));
+          User.Query(expect.it('to be model class', User));
         });
       });
     });

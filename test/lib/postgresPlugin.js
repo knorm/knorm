@@ -6,10 +6,6 @@ const pool = new Pool(knex.client.config.connection);
 
 const postgresPlugin = knorm => {
   class QueryForTests extends knorm.Query {
-    constructor(model) {
-      super(model);
-    }
-
     quote(value) {
       return `"${value}"`;
     }

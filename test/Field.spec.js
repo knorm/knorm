@@ -80,7 +80,8 @@ describe('Field', function() {
       it('does not call getColumnName', function() {
         class Foo extends Model {}
         const spy = sinon.spy(Field.prototype, 'getColumnName');
-        new Field({
+        // eslint-disable-next-line no-unused-vars
+        const field = new Field({
           name: 'bar',
           model: Foo,
           type: 'string',
