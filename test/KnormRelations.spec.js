@@ -219,6 +219,34 @@ describe('KnormRelations', () => {
           });
         });
       });
+
+      describe('when a field is removed', () => {
+        it('removes the field', () => {
+          class Foo extends Model {}
+
+          Foo.fields = { id: 'integer', foo: 'string' };
+          Foo.removeField(Foo.fields.foo);
+
+          expect(Foo.config.fields, 'to exhaustively satisfy', {
+            id: expect.it('to be defined')
+          });
+        });
+
+        it("removes the field's references", () => {
+          class Foo extends Model {}
+          class Bar extends Model {}
+
+          Foo.fields = { id: { type: 'integer' } };
+          Bar.fields = {
+            id: 'integer',
+            fooId: { type: 'integer', references: Foo.fields.id }
+          };
+
+          Bar.removeField(Bar.fields.fooId);
+
+          expect(Bar.config.references, 'to exhaustively satisfy', { Foo: {} });
+        });
+      });
     });
   });
 
