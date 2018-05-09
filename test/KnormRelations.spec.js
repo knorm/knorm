@@ -227,9 +227,7 @@ describe('KnormRelations', () => {
           Foo.fields = { id: 'integer', foo: 'string' };
           Foo.removeField(Foo.fields.foo);
 
-          expect(Foo.config.fields, 'to exhaustively satisfy', {
-            id: expect.it('to be defined')
-          });
+          expect(Foo.config.fields, 'to have keys', ['id']);
         });
 
         it("removes the field's references", () => {
@@ -239,12 +237,17 @@ describe('KnormRelations', () => {
           Foo.fields = { id: { type: 'integer' } };
           Bar.fields = {
             id: 'integer',
-            fooId: { type: 'integer', references: Foo.fields.id }
+            fooId: { type: 'integer', references: Foo.fields.id },
+            barId: { type: 'integer', references: Foo.fields.id }
           };
 
           Bar.removeField(Bar.fields.fooId);
+          expect(Bar.config.references, 'to exhaustively satisfy', {
+            Foo: expect.it('to have keys', ['barId'])
+          });
 
-          expect(Bar.config.references, 'to exhaustively satisfy', { Foo: {} });
+          Bar.removeField(Bar.fields.barId);
+          expect(Bar.config.references, 'to be empty');
         });
       });
     });
