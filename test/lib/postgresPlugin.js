@@ -17,8 +17,8 @@ const postgresPlugin = knorm => {
     async prepareQuery(query, options) {
       const { forInsert, forUpdate, forDelete, forFetch } = options;
 
-      if ((forInsert || forUpdate || forDelete) && this.options.returning) {
-        query.returning(this.getColumns(this.options.returning));
+      if ((forInsert || forUpdate || forDelete) && this.options.fields) {
+        query.returning(this.getColumns(this.options.fields));
       }
 
       if (forFetch && this.options.first) {
