@@ -2054,6 +2054,78 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.removeField', function() {
+    it('removes a field', function() {
+      class Foo extends Model {}
+
+      Foo.fields = { id: 'integer' };
+      expect(Foo.config.fields, 'to have key', 'id');
+
+      Foo.removeField(Foo.fields.id);
+      expect(Foo.config.fields, 'to equal', {});
+    });
+
+    it("removes a field's field-column mappings", function() {
+      class Foo extends Model {}
+
+      Foo.fields = { id: 'integer' };
+      expect(Foo.config.fieldsToColumns, 'to have key', 'id');
+
+      Foo.removeField(Foo.fields.id);
+      expect(Foo.config.fieldsToColumns, 'to equal', {});
+    });
+
+    it("removes a field's column-field mappings", function() {
+      class Foo extends Model {}
+
+      Foo.fields = { id: 'integer' };
+      expect(Foo.config.columnsToFields, 'to have key', 'id');
+
+      Foo.removeField(Foo.fields.id);
+      expect(Foo.config.columnsToFields, 'to equal', {});
+    });
+
+    it("removes the field from the model's not-updated fields", function() {
+      class Foo extends Model {}
+
+      Foo.fields = { id: { type: 'integer', updated: false } };
+      expect(Foo.config.notUpdated, 'to contain', 'id');
+
+      Foo.removeField(Foo.fields.id);
+      expect(Foo.config.notUpdated, 'to equal', []);
+    });
+
+    it("removes the field from the model's unique fields", function() {
+      class Foo extends Model {}
+
+      Foo.fields = { id: { type: 'integer', unique: true } };
+      expect(Foo.config.unique, 'to contain', 'id');
+
+      Foo.removeField(Foo.fields.id);
+      expect(Foo.config.unique, 'to equal', []);
+    });
+
+    it("removes the field from the model's primary field", function() {
+      class Foo extends Model {}
+
+      Foo.fields = { id: { type: 'integer', primary: true } };
+      expect(Foo.config.primary, 'to be', 'id');
+
+      Foo.removeField(Foo.fields.id);
+      expect(() => Foo.config.primary, 'to throw');
+    });
+
+    it('removes *ByField methods from the model', function() {
+      class Foo extends Model {}
+
+      Foo.fields = { id: { type: 'integer', primary: true, methods: true } };
+      expect(Foo.updateById, 'to be a function');
+
+      Foo.removeField(Foo.fields.id);
+      expect(Foo.updateById, 'to be undefined');
+    });
+  });
+
   describe('Model.query', function() {
     class User extends Model {}
 
