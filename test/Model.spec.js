@@ -2075,7 +2075,8 @@ describe('Model', function() {
         // eslint-disable-next-line no-unused-vars
         const query = User.query;
         expect(User.Query, 'to have calls satisfying', () => {
-          User.Query(expect.it('to be model class', User));
+          // eslint-disable-next-line no-new
+          new User.Query(expect.it('to be model class', User));
         });
       });
     });
