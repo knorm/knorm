@@ -284,7 +284,7 @@ describe('KnormRelations', () => {
         it('supports `leftJoin`', async () => {
           await expect(
             new Query(User)
-              .distinct(['name'])
+              .distinct(['id', 'name'])
               .leftJoin(Image)
               .fetch(),
             'to be fulfilled with value satisfying',
@@ -296,10 +296,11 @@ describe('KnormRelations', () => {
                 'to exhaustively satisfy',
                 [
                   new User({
+                    id: 1,
                     name: 'User 1',
                     image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
                   }),
-                  new User({ name: 'User 2', image: null })
+                  new User({ id: 2, name: 'User 2', image: null })
                 ]
               )
           );
@@ -460,6 +461,57 @@ describe('KnormRelations', () => {
                 })
               ]
             );
+          });
+
+          describe('with no primary field selected', () => {
+            it('parses rows correctly by unique fields', async () => {
+              class OtherUser extends User {}
+              OtherUser.fields = { name: { type: 'string', unique: true } };
+
+              class OtherImage extends Image {}
+              OtherImage.fields = {
+                userId: { type: 'integer', references: OtherUser.fields.id }
+              };
+
+              const query = new Query(OtherUser)
+                .fields(['name'])
+                .leftJoin(new Query(OtherImage).fields('id'));
+
+              await expect(
+                query.fetch(),
+                'to be fulfilled with value satisfying',
+                rows =>
+                  expect(
+                    rows,
+                    'when sorted by',
+                    (a, b) => (a.name > b.name ? 1 : -1),
+                    'to exhaustively satisfy',
+                    [
+                      new OtherUser({
+                        name: 'User 1',
+                        otherImage: [new OtherImage({ id: 1 })]
+                      }),
+                      new OtherUser({
+                        name: 'User 2',
+                        otherImage: null
+                      })
+                    ]
+                  )
+              );
+            });
+
+            it('rejects if no unique fields are selected either', async () => {
+              const query = new Query(User)
+                .fields(['name'])
+                .leftJoin(new Query(Image).fields('id'));
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new KnormRelationsError(
+                  `User: cannot join Image with no primary or unique fields selected`
+                )
+              );
+            });
           });
         });
 
@@ -1015,6 +1067,19 @@ describe('KnormRelations', () => {
               ]
             );
           });
+
+          it('rejects if no primary or unique fields are selected in the nested join', async () => {
+            const query = new Query(User).leftJoin(
+              new Query(Image).fields('userId').join(new Query(User))
+            );
+            await expect(
+              query.fetch(),
+              'to be rejected with error satisfying',
+              new KnormRelationsError(
+                `Image: cannot join User with no primary or unique fields selected`
+              )
+            );
+          });
         });
 
         describe("with a circular 'leftJoin' query", () => {
@@ -1065,7 +1130,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 2,
                   name: 'User 2',
-                  confirmed: true
+                  confirmed: true,
+                  image: null
                 })
               ]
             );
