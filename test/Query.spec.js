@@ -404,38 +404,11 @@ describe('Query', () => {
 
     describe("with 'fields' configured", () => {
       it('resolves with instances containing only the requested fields', async () => {
-        const query = new Query(User).fields(['id', 'name']);
+        const query = new Query(User).fields(['name']);
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
-          ]
-        );
-      });
-
-      it('always includes the `id` field even if not requested', async () => {
-        const query = new Query(User).fields('name');
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
-          ]
-        );
-      });
-
-      it('resolves with instances containing only the requested fields', async () => {
-        const query = new Query(User).fields(['name', 'confirmed']);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({ id: 1, name: 'User 1', confirmed: false }),
-            new User({ id: 2, name: 'User 2', confirmed: true })
-          ]
+          [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
         );
       });
 
@@ -444,10 +417,7 @@ describe('Query', () => {
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({ id: 1, intToString: '10' }),
-            new User({ id: 2, intToString: null })
-          ]
+          [new User({ intToString: '10' }), new User({ intToString: null })]
         );
       });
 
@@ -457,7 +427,7 @@ describe('Query', () => {
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
-            [new User({ id: 1, ages: 10 }), new User({ id: 2, ages: 10 })]
+            [new User({ ages: 10 }), new User({ ages: 10 })]
           );
         });
 
@@ -467,8 +437,8 @@ describe('Query', () => {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              new User({ id: 1, now: expect.it('to be a', Date) }),
-              new User({ id: 2, now: expect.it('to be a', Date) })
+              new User({ now: expect.it('to be a', Date) }),
+              new User({ now: expect.it('to be a', Date) })
             ]
           );
         });
@@ -941,7 +911,7 @@ describe('Query', () => {
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
-          [new User({ id: 2, maxAge: 10 })]
+          [new User({ maxAge: 10 })]
         );
       });
     });
@@ -1185,7 +1155,7 @@ describe('Query', () => {
         const query = new Query(User).returning('name');
         await expect(
           query.insert(new User({ name: 'John Doe' })),
-          'to be fulfilled with value satisfying',
+          'to be fulfilled with value exhaustively satisfying',
           [new User({ name: 'John Doe' })]
         );
       });
@@ -1737,18 +1707,6 @@ describe('Query', () => {
       });
     });
 
-    describe("with a 'returning' option", () => {
-      it('returns instances populated with only the requested fields', async () => {
-        await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
-        const query = new Query(User).returning(['id', 'name']);
-        await expect(
-          query.update({ name: 'Foo' }),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [new User({ id: 1, name: 'Foo' }), new User({ id: 2, name: 'Foo' })]
-        );
-      });
-    });
-
     describe("with 'first' configured", () => {
       it('returns the first updated instance', async () => {
         await new Query(User).insert(new User({ id: 2, name: 'Jane Doe' }));
@@ -1841,13 +1799,13 @@ describe('Query', () => {
     });
 
     describe('with a `returning` option', () => {
-      it('returns the `id` field and the fields requested', async () => {
+      it('returns only the requested fields', async () => {
         const query = new Query(User).returning('name');
         user.name = 'Jane Doe';
         await expect(
           query.update(user),
           'to be fulfilled with value exhaustively satisfying',
-          [new User({ id: 1, name: 'Jane Doe' })]
+          [new User({ name: 'Jane Doe' })]
         );
       });
 
@@ -1857,7 +1815,7 @@ describe('Query', () => {
         await expect(
           query.update(user),
           'to be fulfilled with value exhaustively satisfying',
-          [new User({ id: 1, name: 'Jane Doe', confirmed: false })]
+          [new User({ name: 'Jane Doe', confirmed: false })]
         );
       });
 
@@ -1870,7 +1828,7 @@ describe('Query', () => {
         await expect(
           query.update(user),
           'to be fulfilled with value exhaustively satisfying',
-          [new User({ id: 1, theName: 'Jane Doe', theConfirmed: false })]
+          [new User({ theName: 'Jane Doe', theConfirmed: false })]
         );
       });
     });
@@ -2165,26 +2123,11 @@ describe('Query', () => {
 
     describe("with a 'returning' option", () => {
       it('resolves with the deleted models with only the fields specified', async () => {
-        const query = new Query(User).returning(['id', 'name']);
+        const query = new Query(User).returning(['name']);
         await expect(
           query.delete(),
           'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({ id: 1, name: 'John Doe' }),
-            new User({ id: 2, name: 'Jane Doe' })
-          ]
-        );
-      });
-
-      it('includes the `id` even if not requested', async () => {
-        const query = new Query(User).returning('name');
-        await expect(
-          query.delete(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({ id: 1, name: 'John Doe' }),
-            new User({ id: 2, name: 'Jane Doe' })
-          ]
+          [new User({ name: 'John Doe' }), new User({ name: 'Jane Doe' })]
         );
       });
 
@@ -2197,8 +2140,8 @@ describe('Query', () => {
           query.delete(),
           'to be fulfilled with value exhaustively satisfying',
           [
-            new User({ id: 1, theName: 'John Doe', theConfirmed: true }),
-            new User({ id: 2, theName: 'Jane Doe', theConfirmed: true })
+            new User({ theName: 'John Doe', theConfirmed: true }),
+            new User({ theName: 'Jane Doe', theConfirmed: true })
           ]
         );
       });
