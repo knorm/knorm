@@ -2218,4 +2218,10 @@ describe('Query', () => {
       });
     });
   });
+
+  describe('Query.where', function() {
+    it('returns a `Query.Where` instance', function() {
+      expect(Query.where, 'to be a', Query.Where);
+    });
+  });
 });
