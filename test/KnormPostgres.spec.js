@@ -273,12 +273,12 @@ describe('KnormPostgres', () => {
     });
 
     it('releases the client after runnning queries', async () => {
-      const restoreClient = sinon.spy().named('restoreClient');
       const transaction = async () => {
         const mockQuery = { initClient() {}, restoreClient() {} };
         await knormPostgres.query(mockQuery, 'select now()');
         await knormPostgres.query(mockQuery, 'select now()');
       };
+      const restoreClient = sinon.spy().named('restoreClient');
       const mockTarget = { initClient() {}, restoreClient, transaction };
       const knormPostgres = new KnormPostgres({ connection });
       await knormPostgres.transact(mockTarget);
@@ -449,6 +449,52 @@ describe('KnormPostgres', () => {
       await knormPostgres.transact(mockTransaction);
       await expect(mockTransaction.restoreClient, 'was called once');
       await expect(mockQuery.restoreClient, 'was not called');
+    });
+
+    it('releases the client and ends the transaction if `initClient` rejects', async () => {
+      let client;
+      const initClient = async theClient => {
+        client = theClient;
+        throw new Error('foo');
+      };
+      const mockTarget = { initClient, restoreClient() {}, transaction() {} };
+      const knormPostgres = new KnormPostgres({ connection });
+      await expect(
+        knormPostgres.transact(mockTarget),
+        'to be rejected with error satisfying',
+        new Error('foo')
+      );
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
+      await expect(knormPostgres.transacting, 'to be falsy');
+    });
+
+    it('releases the client and ends the transaction if `restoreClient` rejects', async () => {
+      let client;
+      const restoreClient = async theClient => {
+        client = theClient;
+        throw new Error('foo');
+      };
+      const mockTarget = { initClient() {}, restoreClient, transaction() {} };
+      const knormPostgres = new KnormPostgres({ connection });
+      await expect(
+        knormPostgres.transact(mockTarget),
+        'to be rejected with error satisfying',
+        new Error('foo')
+      );
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
+      await expect(knormPostgres.transacting, 'to be false');
     });
   });
 
