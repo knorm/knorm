@@ -127,6 +127,22 @@ describe('KnormTimestamps', () => {
         );
       });
 
+      it('allows updating multiple records', async () => {
+        const users = await User.insert([{ id: 1 }, { id: 2 }]);
+        clock.tick(2000);
+        await expect(User.update(users), 'to be fulfilled');
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have rows satisfying',
+          [
+            { id: 1, created_at: new Date(0), updated_at: new Date(2000) },
+            { id: 2, created_at: new Date(0), updated_at: new Date(2000) }
+          ]
+        );
+      });
+
       it('does not save `createdAt` if it is set', async () => {
         const user = await new User({ id: 1 }).insert();
         await expect(
