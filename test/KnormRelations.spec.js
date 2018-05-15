@@ -1063,7 +1063,12 @@ describe('KnormRelations', () => {
                     })
                   ]
                 }),
-                new User({ id: 2, name: 'User 2', confirmed: true })
+                new User({
+                  id: 2,
+                  name: 'User 2',
+                  confirmed: true,
+                  image: null
+                })
               ]
             );
           });
