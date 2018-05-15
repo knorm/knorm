@@ -1,10 +1,6 @@
 version: '3'
 services:
-<<<<<<< 38e99be723cd9c3af3c6ba5bacc67ddde0110d9f
-  db:
-=======
   postgres:
->>>>>>> chore: switch to docker-compose
     image: postgres:9.6
     container_name: knorm-timestamps
     ports:
