@@ -2,6 +2,6 @@ version: '3'
 services:
   postgres:
     image: postgres:9.6
-    container_name: knorm-paginate
+    container_name: knorm-relations
     ports:
       - "5432:5432"
