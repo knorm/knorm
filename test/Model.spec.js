@@ -91,6 +91,21 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.prototype.getField', function() {
+    it('returns the field requested', function() {
+      class Foo extends Model {}
+
+      Foo.fields = {
+        foo: {
+          type: 'string'
+        }
+      };
+
+      const foo = new Foo();
+      expect(foo.getField('foo'), 'to equal', Foo.fields.foo);
+    });
+  });
+
   describe('Model.prototype.getFields', function() {
     it("returns all the model's fields if called with no arguments", function() {
       class Foo extends Model {}
