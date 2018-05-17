@@ -912,6 +912,58 @@ describe('KnormPostgres', () => {
 
     describe('save', () => {
       describe('with an array', () => {
+        it('supports `insert`', async () => {
+          const insert = sinon.spy(Query.prototype, 'insert');
+          await expect(
+            new Query(User).save([{ name: 'foo' }, { name: 'bar' }]),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'foo' }), new User({ id: 2, name: 'bar' })]
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+          );
+          await expect(insert, 'to have calls satisfying', () => {
+            // options are undefined
+            insert([{ name: 'foo' }, { name: 'bar' }], undefined);
+          });
+          insert.restore();
+        });
+
+        it('supports `update`', async () => {
+          await new Query(User).insert([
+            { id: 1, name: 'foo' },
+            { id: 2, name: 'bar' }
+          ]);
+          const update = sinon.spy(Query.prototype, 'update');
+          await expect(
+            new Query(User).save([
+              { id: 1, name: 'foofoo' },
+              { id: 2, name: 'barbar' }
+            ]),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'foofoo' }),
+              new User({ id: 2, name: 'barbar' })
+            ]
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+          );
+          await expect(update, 'to have calls satisfying', () => {
+            // options are undefined
+            update([{ name: 'foofoo' }, { name: 'barbar' }], undefined);
+          });
+          update.restore();
+        });
+
         it('supports both `insert` and `update`', async () => {
           await new Query(User).insert([{ name: 'foo' }]);
           const insert = sinon.spy(Query.prototype, 'insert');
@@ -929,10 +981,12 @@ describe('KnormPostgres', () => {
             [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
           );
           await expect(insert, 'to have calls satisfying', () => {
-            insert([{ name: 'bar' }], undefined); // options are undefined
+            // options are undefined
+            insert([{ name: 'bar' }], undefined);
           });
           await expect(update, 'to have calls satisfying', () => {
-            update([{ id: 1, name: 'foofoo' }], undefined); // options are undefined
+            // options are undefined
+            update([{ id: 1, name: 'foofoo' }], undefined);
           });
           insert.restore();
           update.restore();
