@@ -40,6 +40,10 @@ const orm = knorm({
 
 ## Options
 
+### name
+
+The name of the plugin, defaults to `'timestamps'`.
+
 ### createdAt
 
 > type: object, default: `{ name: 'createdAt', column: 'created_at' }`
