@@ -19,6 +19,7 @@ describe('Knorm', () => {
     it('creates scoped Model, Query classes when instantiated', () => {
       const knorm = new Knorm({ knex });
       expect(knorm.Query, 'not to be', Query);
+      expect(knorm.Query.prototype instanceof Query, 'to be true');
     });
 
     it('creates new classes per instance', () => {
