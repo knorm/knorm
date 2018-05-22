@@ -29,6 +29,10 @@ const orm = knorm({
 
 ## Options
 
+### name
+
+The name of the plugin, defaults to `'paginate'`.
+
 ## API
 
 ### Query.prototype.count / Model.count
