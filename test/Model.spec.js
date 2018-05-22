@@ -1293,6 +1293,37 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.table', function() {
+    it("sets the model's table", function() {
+      class Foo extends Model {}
+      Foo.table = 'foo';
+      expect(Foo.table, 'to be', 'foo');
+    });
+
+    describe('when a model is subclassed', function() {
+      it("inherits the parent's table", function() {
+        class Foo extends Model {}
+        class Bar extends Foo {}
+
+        Foo.table = 'foo';
+
+        expect(Foo.table, 'to be', 'foo');
+        expect(Bar.table, 'to be', 'foo');
+      });
+
+      it("allows overwriting the parent's table", function() {
+        class Foo extends Model {}
+        class Bar extends Foo {}
+
+        Foo.table = 'foo';
+        Bar.table = 'bar';
+
+        expect(Foo.table, 'to be', 'foo');
+        expect(Bar.table, 'to be', 'bar');
+      });
+    });
+  });
+
   describe('Model.fields', function() {
     describe('as a getter', function() {
       it('returns no fields by default', function() {
