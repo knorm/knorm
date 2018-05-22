@@ -1326,11 +1326,6 @@ describe('Model', function() {
 
   describe('Model.fields', function() {
     describe('as a getter', function() {
-      it('returns no fields by default', function() {
-        class User extends Model {}
-        expect(User.fields, 'to be empty');
-      });
-
       it('returns added fields', function() {
         class User extends Model {}
         User.fields = {
@@ -1509,9 +1504,6 @@ describe('Model', function() {
         it("doesn't interfere with the parent's fields", function() {
           class User extends Model {}
 
-          expect(Model.fields, 'to be empty');
-          expect(User.fields, 'to be empty');
-
           User.fields = {
             id: {
               type: 'integer',
@@ -1519,7 +1511,6 @@ describe('Model', function() {
             }
           };
 
-          expect(Model.fields, 'to be empty');
           expect(User.fields, 'to exhaustively satisfy', {
             id: expect.it(
               'to be field',
@@ -1539,7 +1530,6 @@ describe('Model', function() {
             }
           };
 
-          expect(Model.fields, 'to be empty');
           expect(User.fields, 'to exhaustively satisfy', {
             id: expect.it(
               'to be field',
@@ -1659,12 +1649,12 @@ describe('Model', function() {
     describe('with a getter function', function() {
       class User extends Model {
         static get fields() {
-          this.config.fields = { firstName: { type: 'string' } };
+          this.config = { fields: { firstName: { type: 'string' } } };
           return this.config.fields;
         }
       }
 
-      it('returns fields added via the `Model.config.fields` setter', function() {
+      it('returns fields added via the `Model.config` setter', function() {
         expect(User.fields, 'to exhaustively satisfy', {
           firstName: expect.it(
             'to be field',
@@ -1680,7 +1670,7 @@ describe('Model', function() {
       it('supports field inheritance', function() {
         class Student extends User {
           static get fields() {
-            this.config.fields = { studentId: { type: 'integer' } };
+            this.config = { fields: { studentId: { type: 'integer' } } };
             return this.config.fields;
           }
         }
@@ -1874,9 +1864,6 @@ describe('Model', function() {
         it("doesn't interfere with the parent's virtuals", function() {
           class User extends Model {}
 
-          expect(Model.virtuals, 'to be empty');
-          expect(User.virtuals, 'to be empty');
-
           User.virtuals = {
             firstName: {
               get() {
@@ -1885,7 +1872,6 @@ describe('Model', function() {
             }
           };
 
-          expect(Model.virtuals, 'to be empty');
           expect(User.virtuals, 'to exhaustively satisfy', {
             firstName: new Virtual({
               name: 'firstName',
@@ -1907,7 +1893,6 @@ describe('Model', function() {
             }
           };
 
-          expect(Model.virtuals, 'to be empty');
           expect(User.virtuals, 'to exhaustively satisfy', {
             firstName: new Virtual({
               name: 'firstName',
@@ -1974,6 +1959,8 @@ describe('Model', function() {
     describe('as a getter', function() {
       it('throws an error of the model has no primary field', function() {
         class Foo extends Model {}
+
+        Foo.fields = { foo: 'string' };
 
         expect(
           () => Foo.config.primary,

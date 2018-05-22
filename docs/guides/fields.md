@@ -15,13 +15,13 @@ the fields to the model's config to ensure they are linked to the model and that
 ```js
 class User extends Model {
   static get fields {
-    this.config.fields = { fieldName: fieldConfig };
+    this.config = { fields: { fieldName: fieldConfig } };
     return this.config.fields;
   }
 }
 ```
 
-!> field names should be unique, also the `Model.fields` setter will throw if
+!> field names should be unique. also, the `Model.fields` setter will throw if
 the field name is already a `Model.prototype` property or is already added as a
 [virtual](guides/virtuals.md#virtuals).
 
