@@ -1293,11 +1293,51 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.config', function() {
+    describe('as a setter', function() {
+      it("adds the model to the Knorm instances' models", function() {
+        const knorm = new Knorm();
+        class Foo extends knorm.Model {}
+
+        expect(knorm.Foo, 'to be undefined');
+        expect(knorm.models.Foo, 'to be undefined');
+
+        Foo.config = {};
+
+        expect(knorm.Foo, 'to be', Foo);
+        expect(knorm.models.Foo, 'to be', Foo);
+      });
+    });
+
+    describe('when a model is subclassed', function() {
+      it("adds the subclassed model to the Knorm instances' models", function() {
+        const knorm = new Knorm();
+        class Foo extends knorm.Model {}
+
+        Foo.config = {};
+
+        expect(knorm.Foo, 'to be', Foo);
+        expect(knorm.models.Foo, 'to be', Foo);
+
+        class Bar extends Foo {}
+
+        Bar.config = {};
+
+        expect(knorm.Foo, 'to be', Foo);
+        expect(knorm.models.Foo, 'to be', Foo);
+        expect(knorm.Bar, 'to be', Bar);
+        expect(knorm.models.Bar, 'to be', Bar);
+      });
+    });
+  });
+
   describe('Model.table', function() {
-    it("sets the model's table", function() {
-      class Foo extends Model {}
-      Foo.table = 'foo';
-      expect(Foo.table, 'to be', 'foo');
+    describe('as a setter', function() {
+      it("sets the model's table", function() {
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        expect(Foo.config.table, 'to be', 'foo');
+      });
     });
 
     describe('when a model is subclassed', function() {
