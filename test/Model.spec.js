@@ -2090,14 +2090,14 @@ describe('Model', function() {
       expect(Foo.config.fieldsToColumns, 'to equal', {});
     });
 
-    it("removes a field's column-field mappings", function() {
+    it("removes the field from the model's field names", function() {
       class Foo extends Model {}
 
-      Foo.fields = { id: 'integer' };
-      expect(Foo.config.columnsToFields, 'to have key', 'id');
+      Foo.fields = { id: { type: 'integer' } };
+      expect(Foo.config.fieldNames, 'to contain', 'id');
 
       Foo.removeField(Foo.fields.id);
-      expect(Foo.config.columnsToFields, 'to equal', {});
+      expect(Foo.config.fieldNames, 'to equal', []);
     });
 
     it("removes the field from the model's not-updated fields", function() {
