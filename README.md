@@ -31,6 +31,10 @@ const orm = knorm({
 
 ## Options
 
+### name
+
+The name of the plugin, defaults to `'soft-delete'`.
+
 ### deleted
 
 The `deleted` field is always added, but the field and column names can be
