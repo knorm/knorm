@@ -76,11 +76,36 @@ describe('Knorm', () => {
       );
     });
 
+    it('throws an error if the plugin has no name', () => {
+      expect(
+        () => knorm.use({ init() {} }),
+        'to throw',
+        new KnormError('Knorm: plugin missing a `name`')
+      );
+    });
+
+    it('throws an error if a plugin by the same name is already added', () => {
+      expect(
+        () =>
+          knorm.use({ name: 'foo', init() {} }).use({ name: 'foo', init() {} }),
+        'to throw',
+        new KnormError(
+          'Knorm: a plugin by the name `foo` has already been added'
+        )
+      );
+    });
+
     describe('when called with a function', function() {
       it('passes itself to the function', () => {
         const plugin = sinon.spy().named('plugin');
         knorm.use(plugin);
         expect(plugin, 'to have calls satisfying', () => plugin(knorm));
+      });
+
+      it("registers the plugin by the function's name", () => {
+        const foo = () => {};
+        knorm.use(foo);
+        expect(knorm.plugins.foo, 'to be', foo);
       });
 
       it('allows chaining', () => {
@@ -91,12 +116,12 @@ describe('Knorm', () => {
     describe('when called with an object with an `init` function', function() {
       it('passes itself to the `init` function', () => {
         const init = sinon.spy().named('init');
-        knorm.use({ init });
+        knorm.use({ name: 'foo', init });
         expect(init, 'to have calls satisfying', () => init(knorm));
       });
 
       it('allows chaining', () => {
-        expect(knorm.use({ init() {} }), 'to equal', knorm);
+        expect(knorm.use({ name: 'foo', init() {} }), 'to equal', knorm);
       });
     });
   });
