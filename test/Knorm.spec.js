@@ -5,6 +5,7 @@ const expect = require('unexpected')
 const Knorm = require('../lib/Knorm');
 const KnormError = require('../lib/KnormError');
 const Query = require('../lib/Query');
+const Model = require('../lib/Model');
 const QueryError = require('../lib/QueryError');
 const knex = require('./lib/knex');
 
@@ -64,7 +65,7 @@ describe('Knorm', () => {
       expect(
         () => knorm.use(),
         'to throw',
-        new KnormError('Knorm: no plugin provided')
+        new KnormError('no plugin provided')
       );
     });
 
@@ -72,7 +73,7 @@ describe('Knorm', () => {
       expect(
         () => knorm.use('foo'),
         'to throw',
-        new KnormError('Knorm: invalid plugin provided')
+        new KnormError('invalid plugin provided')
       );
     });
 
@@ -80,7 +81,7 @@ describe('Knorm', () => {
       expect(
         () => knorm.use({ init() {} }),
         'to throw',
-        new KnormError('Knorm: plugin missing a `name`')
+        new KnormError('plugins should have a `name`')
       );
     });
 
@@ -89,9 +90,7 @@ describe('Knorm', () => {
         () =>
           knorm.use({ name: 'foo', init() {} }).use({ name: 'foo', init() {} }),
         'to throw',
-        new KnormError(
-          'Knorm: a plugin by the name `foo` has already been added'
-        )
+        new KnormError('plugin `foo` has already been added')
       );
     });
 
@@ -109,7 +108,7 @@ describe('Knorm', () => {
       });
 
       it('allows chaining', () => {
-        expect(knorm.use(() => {}), 'to equal', knorm);
+        expect(knorm.use(function foo() {}), 'to equal', knorm);
       });
     });
 
@@ -123,6 +122,76 @@ describe('Knorm', () => {
       it('allows chaining', () => {
         expect(knorm.use({ name: 'foo', init() {} }), 'to equal', knorm);
       });
+    });
+  });
+
+  describe('addModel', () => {
+    let knorm;
+
+    beforeEach(() => {
+      knorm = new Knorm({ knex });
+    });
+
+    it('throws if not provided a model', () => {
+      expect(
+        () => knorm.addModel(),
+        'to throw',
+        new KnormError('model should be a subclass of `knorm.Model`')
+      );
+    });
+
+    it('throws if the model is not a subclass of Model', () => {
+      expect(
+        () => knorm.addModel(class Foo {}),
+        'to throw',
+        new KnormError('model should be a subclass of `knorm.Model`')
+      );
+    });
+
+    it('throws if the model extends a model from a different Knorm instance', () => {
+      const knorm1 = new Knorm();
+      const knorm2 = new Knorm();
+      expect(
+        () => knorm1.addModel(class Foo extends knorm2.Model {}),
+        'to throw',
+        new KnormError('model should be a subclass of `knorm.Model`')
+      );
+    });
+
+    it('throws if the model extends `Model` directly', () => {
+      expect(
+        () => knorm.addModel(class Foo extends Model {}),
+        'to throw',
+        new KnormError('model should be a subclass of `knorm.Model`')
+      );
+    });
+
+    it('throws if a model by the same name is already added', () => {
+      knorm.addModel(class Foo extends knorm.Model {});
+      expect(
+        () => knorm.addModel(class Foo extends knorm.Model {}),
+        'to throw',
+        new KnormError('model `Foo` has already been added')
+      );
+    });
+
+    it('adds the model to the Knorm instance', () => {
+      class Foo extends knorm.Model {}
+
+      knorm.addModel(Foo);
+
+      expect(knorm.Foo, 'to be', Foo);
+      expect(knorm.models.Foo, 'to be', Foo);
+    });
+
+    it('adds the model that extends another model', () => {
+      class Foo extends knorm.Model {}
+      class Bar extends Foo {}
+
+      knorm.addModel(Bar);
+
+      expect(knorm.Bar, 'to be', Bar);
+      expect(knorm.models.Bar, 'to be', Bar);
     });
   });
 });
