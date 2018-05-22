@@ -29,6 +29,10 @@ const orm = knorm({
 
 ## Options
 
+### name
+
+The name of the plugin, defaults to `'relations'`.
+
 ## API
 
 ### Query.prototype.join / Query.prototype.innerJoin / Query.prototype.join
