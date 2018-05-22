@@ -77,9 +77,8 @@ describe('KnormPostgres', () => {
     const knormPostgres = new KnormPostgres({
       connection: 'postgres://postgres@127.0.0.1:5432/postgres'
     });
-    const mockTarget = { initClient() {}, restoreClient() {} };
-    await expect(knormPostgres.acquireClient(mockTarget), 'to be fulfilled');
-    await expect(knormPostgres.releaseClient(mockTarget), 'to be fulfilled');
+    await expect(knormPostgres.acquireClient(), 'to be fulfilled');
+    await expect(knormPostgres.releaseClient(), 'to be fulfilled');
   });
 
   it('uses postgres environment variables if no `connection` config is provided', async () => {
@@ -89,9 +88,8 @@ describe('KnormPostgres', () => {
     process.env.PGPASSWORD = '';
     process.env.PGDATABASE = 'postgres';
     const knormPostgres = new KnormPostgres();
-    const mockTarget = { initClient() {}, restoreClient() {} };
-    await expect(knormPostgres.acquireClient(mockTarget), 'to be fulfilled');
-    await expect(knormPostgres.releaseClient(mockTarget), 'to be fulfilled');
+    await expect(knormPostgres.acquireClient(), 'to be fulfilled');
+    await expect(knormPostgres.releaseClient(), 'to be fulfilled');
     process.env.PGHOST = undefined;
     process.env.PGPORT = undefined;
     process.env.PGUSER = undefined;
@@ -118,37 +116,34 @@ describe('KnormPostgres', () => {
   });
 
   describe('acquireClient', () => {
-    it("calls the target's `initClient`", async () => {
-      const knormPostgres = new KnormPostgres({ connection });
+    it('calls the user-provided `initClient`', async () => {
       const initClient = sinon.spy().named('initClient');
-      const mockTarget = { initClient, restoreClient() {} };
-      await knormPostgres.acquireClient(mockTarget);
+      const knormPostgres = new KnormPostgres({ connection, initClient });
+      await knormPostgres.acquireClient();
       await expect(initClient, 'to have calls satisfying', () => {
         initClient(knormPostgres.client);
       });
-      await knormPostgres.releaseClient(mockTarget);
+      await knormPostgres.releaseClient();
     });
 
     it('does not acquire another client if one is already acquired', async () => {
       const initClient = sinon.spy().named('initClient');
-      const mockTarget = { initClient, restoreClient() {} };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      await knormPostgres.acquireClient(mockTarget);
+      const knormPostgres = new KnormPostgres({ connection, initClient });
+      await knormPostgres.acquireClient();
+      await knormPostgres.acquireClient();
       await expect(initClient, 'was called once');
-      await knormPostgres.releaseClient(mockTarget);
+      await knormPostgres.releaseClient();
     });
 
-    it("releases the client if the target's `initClient` rejects", async () => {
+    it('releases the client if the user-provided `initClient` rejects', async () => {
       let client;
       const initClient = async theClient => {
         client = theClient;
         throw new Error('foo');
       };
-      const mockTarget = { initClient, restoreClient() {} };
-      const knormPostgres = new KnormPostgres({ connection });
+      const knormPostgres = new KnormPostgres({ connection, initClient });
       await expect(
-        knormPostgres.acquireClient(mockTarget),
+        knormPostgres.acquireClient(),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -163,13 +158,12 @@ describe('KnormPostgres', () => {
   });
 
   describe('releaseClient', () => {
-    it("calls the target's `restoreClient`", async () => {
+    it('calls the user-provided `restoreClient`', async () => {
       const restoreClient = sinon.spy().named('restoreClient');
-      const mockTarget = { initClient() {}, restoreClient };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
+      const knormPostgres = new KnormPostgres({ connection, restoreClient });
+      await knormPostgres.acquireClient();
       const client = knormPostgres.client;
-      await knormPostgres.releaseClient(mockTarget);
+      await knormPostgres.releaseClient();
       await expect(restoreClient, 'to have calls satisfying', () => {
         restoreClient(client);
       });
@@ -177,24 +171,23 @@ describe('KnormPostgres', () => {
 
     it('does not try to release the client if it is already released', async () => {
       const restoreClient = sinon.spy().named('restoreClient');
-      const mockTarget = { initClient() {}, restoreClient };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      await knormPostgres.releaseClient(mockTarget);
-      await knormPostgres.releaseClient(mockTarget);
+      const knormPostgres = new KnormPostgres({ connection, restoreClient });
+      await knormPostgres.acquireClient();
+      await knormPostgres.releaseClient();
+      await knormPostgres.releaseClient();
       await expect(restoreClient, 'was called once');
     });
 
-    it("releases the client even if the target's `restoreClient` rejects", async () => {
-      const restoreClient = () => {
+    it('releases the client even if the user-provided `restoreClient` rejects', async () => {
+      let client;
+      const restoreClient = async theClient => {
+        client = theClient;
         throw new Error('foo');
       };
-      const mockTarget = { initClient() {}, restoreClient };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
+      const knormPostgres = new KnormPostgres({ connection, restoreClient });
+      await knormPostgres.acquireClient();
       await expect(
-        knormPostgres.releaseClient(mockTarget),
+        knormPostgres.releaseClient(),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -212,7 +205,6 @@ describe('KnormPostgres', () => {
     let acquireClient;
     let releaseClient;
     let knormPostgres;
-    const mockTarget = { initClient() {}, restoreClient() {} };
 
     before(() => {
       acquireClient = sinon.spy(KnormPostgres.prototype, 'acquireClient');
@@ -231,76 +223,59 @@ describe('KnormPostgres', () => {
     });
 
     it('acquires a client via `acquireClient`', async () => {
-      await knormPostgres.query(mockTarget, 'select now()');
+      await knormPostgres.query('select now()');
       await expect(acquireClient, 'was called once');
     });
 
     it('releases the client after running the query', async () => {
-      await knormPostgres.query(mockTarget, 'select now()');
+      await knormPostgres.query('select now()');
       await expect(releaseClient, 'was called once');
     });
 
     it('acquires and releases a client per run', async () => {
-      await knormPostgres.query(mockTarget, 'select now()');
-      await knormPostgres.query(mockTarget, 'select now()');
+      await knormPostgres.query('select now()');
+      await knormPostgres.query('select now()');
       await expect(acquireClient, 'was called twice');
       await expect(releaseClient, 'was called twice');
     });
   });
 
   describe('transact', () => {
-    it('passes the client to the transaction callback', async () => {
-      const transaction = sinon.spy().named('transaction');
-      const mockTarget = { initClient() {}, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTarget);
-      await expect(transaction, 'to have calls satisfying', () => {
-        transaction(expect.it('to be a', Client));
-      });
-    });
-
     it('runs queries with one client', async () => {
       const initClient = sinon.spy().named('initClient');
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
-        await knormPostgres.query(mockQuery, 'select now()');
-      };
-      const mockTarget = { initClient, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTarget);
-      await expect(initClient, 'was called once');
+      const knormPostgres = new KnormPostgres({ connection, initClient });
+      await knormPostgres.transact(async () => {
+        await knormPostgres.query('select now()');
+        await knormPostgres.query('select now()');
+      });
+      expect(initClient, 'was called once');
     });
 
     it('releases the client after runnning queries', async () => {
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
-        await knormPostgres.query(mockQuery, 'select now()');
-      };
       const restoreClient = sinon.spy().named('restoreClient');
-      const mockTarget = { initClient() {}, restoreClient, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTarget);
-      await expect(restoreClient, 'was called once');
+      const knormPostgres = new KnormPostgres({ connection, restoreClient });
+      await knormPostgres.transact(async () => {
+        await knormPostgres.query('select now()');
+        await knormPostgres.query('select now()');
+      });
+      expect(restoreClient, 'was called once');
     });
 
     it('releases the client if `BEGIN` fails', async () => {
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
+      let client;
+      const initClient = theClient => {
+        client = theClient;
       };
-      const mockTarget = { initClient() {}, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
-      const query = sinon.stub(client, 'query').callsFake(async query => {
+      const knormPostgres = new KnormPostgres({ connection, initClient });
+      const stub = sinon.stub(knormPostgres, 'query').callsFake(async query => {
         if (query === 'BEGIN') {
           throw new Error('foo');
         }
       });
       await expect(
-        knormPostgres.transact(mockTarget),
+        knormPostgres.transact(async () => {
+          await knormPostgres.query('select now()');
+        }),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -311,7 +286,7 @@ describe('KnormPostgres', () => {
           'Release called on client which has already been released to the pool.'
         )
       );
-      await expect(query, 'was called once');
+      await expect(stub, 'was called once');
       await expect(knormPostgres.transacting, 'to be false');
     });
 
@@ -320,13 +295,11 @@ describe('KnormPostgres', () => {
       const initClient = theClient => {
         client = theClient;
       };
-      const transaction = async () => {
-        throw new Error('foo');
-      };
-      const mockTarget = { initClient, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
+      const knormPostgres = new KnormPostgres({ connection, initClient });
       await expect(
-        knormPostgres.transact(mockTarget),
+        knormPostgres.transact(async () => {
+          throw new Error('foo');
+        }),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -341,21 +314,20 @@ describe('KnormPostgres', () => {
     });
 
     it('releases the client if `COMMIT` fails', async () => {
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
+      let client;
+      const initClient = theClient => {
+        client = theClient;
       };
-      const mockTarget = { initClient() {}, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
-      const query = sinon.stub(client, 'query').callsFake(async query => {
+      const knormPostgres = new KnormPostgres({ connection, initClient });
+      const stub = sinon.stub(knormPostgres, 'query').callsFake(async query => {
         if (query === 'COMMIT') {
           throw new Error('foo');
         }
       });
       await expect(
-        knormPostgres.transact(mockTarget),
+        knormPostgres.transact(async () => {
+          await knormPostgres.query('select now()');
+        }),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -366,32 +338,31 @@ describe('KnormPostgres', () => {
           'Release called on client which has already been released to the pool.'
         )
       );
-      await expect(query, 'to have calls satisfying', () => {
-        query('BEGIN');
-        query('select now()');
-        query('COMMIT');
-        query('ROLLBACK');
+      await expect(stub, 'to have calls satisfying', () => {
+        stub('BEGIN');
+        stub('select now()');
+        stub('COMMIT');
+        stub('ROLLBACK');
       });
       await expect(knormPostgres.transacting, 'to be false');
     });
 
     it('releases the client if `ROLLBACK` fails', async () => {
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
-        throw new Error('foo');
+      let client;
+      const initClient = theClient => {
+        client = theClient;
       };
-      const mockTarget = { initClient() {}, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
-      const query = sinon.stub(client, 'query').callsFake(async query => {
+      const knormPostgres = new KnormPostgres({ connection, initClient });
+      const stub = sinon.stub(knormPostgres, 'query').callsFake(async query => {
         if (query === 'ROLLBACK') {
           throw new Error('rollback error');
         }
       });
       await expect(
-        knormPostgres.transact(mockTarget),
+        knormPostgres.transact(async () => {
+          await knormPostgres.query('select now()');
+          throw new Error('foo');
+        }),
         'to be rejected with error satisfying',
         {
           name: 'KnormPostgresError',
@@ -407,48 +378,12 @@ describe('KnormPostgres', () => {
           'Release called on client which has already been released to the pool.'
         )
       );
-      await expect(query, 'to have calls satisfying', () => {
-        query('BEGIN');
-        query('select now()');
-        query('ROLLBACK');
+      await expect(stub, 'to have calls satisfying', () => {
+        stub('BEGIN');
+        stub('select now()');
+        stub('ROLLBACK');
       });
       await expect(knormPostgres.transacting, 'to be false');
-    });
-
-    it('calls `initClient` on the transaction and not the query target', async () => {
-      const mockQuery = {
-        initClient: sinon.spy().named('queryInitClient'),
-        restoreClient() {}
-      };
-      const mockTransaction = {
-        initClient: sinon.spy().named('transactionInitClient'),
-        restoreClient() {},
-        async transaction() {
-          await knormPostgres.query(mockQuery, 'select now()');
-        }
-      };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTransaction);
-      await expect(mockTransaction.initClient, 'was called once');
-      await expect(mockQuery.initClient, 'was not called');
-    });
-
-    it('calls `restoreClient` on the transaction and not the query target', async () => {
-      const mockQuery = {
-        initClient() {},
-        restoreClient: sinon.spy().named('queryRestoreClient')
-      };
-      const mockTransaction = {
-        initClient() {},
-        restoreClient: sinon.spy().named('transactionRestoreClient'),
-        async transaction() {
-          await knormPostgres.query(mockQuery, 'select now()');
-        }
-      };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTransaction);
-      await expect(mockTransaction.restoreClient, 'was called once');
-      await expect(mockQuery.restoreClient, 'was not called');
     });
 
     it('releases the client and ends the transaction if `initClient` rejects', async () => {
@@ -457,10 +392,9 @@ describe('KnormPostgres', () => {
         client = theClient;
         throw new Error('foo');
       };
-      const mockTarget = { initClient, restoreClient() {}, transaction() {} };
-      const knormPostgres = new KnormPostgres({ connection });
+      const knormPostgres = new KnormPostgres({ connection, initClient });
       await expect(
-        knormPostgres.transact(mockTarget),
+        knormPostgres.transact(() => {}),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -480,10 +414,9 @@ describe('KnormPostgres', () => {
         client = theClient;
         throw new Error('foo');
       };
-      const mockTarget = { initClient() {}, restoreClient, transaction() {} };
-      const knormPostgres = new KnormPostgres({ connection });
+      const knormPostgres = new KnormPostgres({ connection, restoreClient });
       await expect(
-        knormPostgres.transact(mockTarget),
+        knormPostgres.transact(() => {}),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -717,7 +650,6 @@ describe('KnormPostgres', () => {
       );
       await expect(spy, 'to have calls satisfying', () => {
         spy(
-          expect.it('to be a', Query),
           expect.it(
             'when passed as parameter to',
             query => query.toString(),
@@ -830,8 +762,8 @@ describe('KnormPostgres', () => {
           expect.it(
             'when passed as parameter to',
             query => query.toString(),
-            'to begin with',
-            'UPDATE "user" SET "name" = "v"."name", "date" = "v"."date", "dateTime" = "v"."dateTime" FROM'
+            'to begin with', // TODO: https://github.com/unexpectedjs/unexpected/issues/466
+            'UPDATE "user" SET "name" = "v"."name" FROM' // id field not updated
           )
         );
       });
