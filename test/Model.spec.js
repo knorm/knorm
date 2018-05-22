@@ -2302,6 +2302,25 @@ describe('Model', function() {
           }
         );
       });
+
+      it('casts fields with `forFetch` cast functions', async function() {
+        class OtherUser extends User {}
+        OtherUser.fields = {
+          name: {
+            type: 'string',
+            cast: {
+              forFetch() {
+                return 'cast name';
+              }
+            }
+          }
+        };
+        await expect(
+          new OtherUser({ name: 'John Doe' }).insert(),
+          'to be fulfilled with value satisfying',
+          new OtherUser({ name: 'cast name' })
+        );
+      });
     });
 
     describe('Model.prototype.update', function() {
@@ -2345,6 +2364,27 @@ describe('Model', function() {
           }
         );
       });
+
+      it('casts fields with `forFetch` cast functions', async function() {
+        class OtherUser extends User {}
+        OtherUser.fields = {
+          name: {
+            type: 'string',
+            cast: {
+              forFetch() {
+                return 'cast name';
+              }
+            }
+          }
+        };
+        const user = await new OtherUser({ name: 'John Doe' }).insert();
+        user.name = 'Jane Doe';
+        await expect(
+          user.update(),
+          'to be fulfilled with value satisfying',
+          new OtherUser({ name: 'cast name' })
+        );
+      });
     });
 
     describe('Model.prototype.fetch', function() {
@@ -2367,6 +2407,26 @@ describe('Model', function() {
           null
         );
       });
+
+      it('casts fields with `forFetch` cast functions', async function() {
+        class OtherUser extends User {}
+        OtherUser.fields = {
+          name: {
+            type: 'string',
+            cast: {
+              forFetch() {
+                return 'cast name';
+              }
+            }
+          }
+        };
+        const user = await new OtherUser({ name: 'John Doe' }).insert();
+        await expect(
+          user.fetch(),
+          'to be fulfilled with value satisfying',
+          new OtherUser({ name: 'cast name' })
+        );
+      });
     });
 
     describe('Model.prototype.delete', function() {
@@ -2383,11 +2443,30 @@ describe('Model', function() {
 
       it('passes options along', async function() {
         const user = await new User({ name: 'John Doe' }).insert();
-        user.name = 'Jane Doe';
         await expect(
           user.delete({ require: false, where: { name: 'foo' } }),
           'to be fulfilled with value exhaustively satisfying',
           null
+        );
+      });
+
+      it('casts fields with `forFetch` cast functions', async function() {
+        class OtherUser extends User {}
+        OtherUser.fields = {
+          name: {
+            type: 'string',
+            cast: {
+              forFetch() {
+                return 'cast name';
+              }
+            }
+          }
+        };
+        const user = await new OtherUser({ name: 'John Doe' }).insert();
+        await expect(
+          user.delete(),
+          'to be fulfilled with value satisfying',
+          new OtherUser({ name: 'cast name' })
         );
       });
     });
