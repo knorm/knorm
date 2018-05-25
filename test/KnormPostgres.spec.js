@@ -77,9 +77,8 @@ describe('KnormPostgres', () => {
     const knormPostgres = new KnormPostgres({
       connection: 'postgres://postgres@127.0.0.1:5432/postgres'
     });
-    const mockTarget = { initClient() {}, restoreClient() {} };
-    await expect(knormPostgres.acquireClient(mockTarget), 'to be fulfilled');
-    await expect(knormPostgres.releaseClient(mockTarget), 'to be fulfilled');
+    const client = await knormPostgres.acquireClient();
+    await knormPostgres.releaseClient(client);
   });
 
   it('uses postgres environment variables if no `connection` config is provided', async () => {
@@ -89,9 +88,8 @@ describe('KnormPostgres', () => {
     process.env.PGPASSWORD = '';
     process.env.PGDATABASE = 'postgres';
     const knormPostgres = new KnormPostgres();
-    const mockTarget = { initClient() {}, restoreClient() {} };
-    await expect(knormPostgres.acquireClient(mockTarget), 'to be fulfilled');
-    await expect(knormPostgres.releaseClient(mockTarget), 'to be fulfilled');
+    const client = await knormPostgres.acquireClient();
+    await knormPostgres.releaseClient(client);
     process.env.PGHOST = undefined;
     process.env.PGPORT = undefined;
     process.env.PGUSER = undefined;
@@ -118,37 +116,25 @@ describe('KnormPostgres', () => {
   });
 
   describe('acquireClient', () => {
-    it("calls the target's `initClient`", async () => {
-      const knormPostgres = new KnormPostgres({ connection });
+    it('calls the user-provided `initClient`', async () => {
       const initClient = sinon.spy().named('initClient');
-      const mockTarget = { initClient, restoreClient() {} };
-      await knormPostgres.acquireClient(mockTarget);
+      const knormPostgres = new KnormPostgres({ connection, initClient });
+      const client = await knormPostgres.acquireClient();
       await expect(initClient, 'to have calls satisfying', () => {
-        initClient(knormPostgres.client);
+        initClient(client);
       });
-      await knormPostgres.releaseClient(mockTarget);
+      await knormPostgres.releaseClient(client);
     });
 
-    it('does not acquire another client if one is already acquired', async () => {
-      const initClient = sinon.spy().named('initClient');
-      const mockTarget = { initClient, restoreClient() {} };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      await knormPostgres.acquireClient(mockTarget);
-      await expect(initClient, 'was called once');
-      await knormPostgres.releaseClient(mockTarget);
-    });
-
-    it("releases the client if the target's `initClient` rejects", async () => {
+    it('releases the client if the user-provided `initClient` rejects', async () => {
       let client;
       const initClient = async theClient => {
         client = theClient;
         throw new Error('foo');
       };
-      const mockTarget = { initClient, restoreClient() {} };
-      const knormPostgres = new KnormPostgres({ connection });
+      const knormPostgres = new KnormPostgres({ connection, initClient });
       await expect(
-        knormPostgres.acquireClient(mockTarget),
+        knormPostgres.acquireClient(),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -163,38 +149,37 @@ describe('KnormPostgres', () => {
   });
 
   describe('releaseClient', () => {
-    it("calls the target's `restoreClient`", async () => {
+    it('calls the user-provided `restoreClient`', async () => {
       const restoreClient = sinon.spy().named('restoreClient');
-      const mockTarget = { initClient() {}, restoreClient };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
-      await knormPostgres.releaseClient(mockTarget);
+      const knormPostgres = new KnormPostgres({ connection, restoreClient });
+      const client = await knormPostgres.acquireClient();
+      await knormPostgres.releaseClient(client);
       await expect(restoreClient, 'to have calls satisfying', () => {
         restoreClient(client);
       });
     });
 
-    it('does not try to release the client if it is already released', async () => {
-      const restoreClient = sinon.spy().named('restoreClient');
-      const mockTarget = { initClient() {}, restoreClient };
+    it('releases the client if there is no user-provided `restoreClient`', async () => {
       const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      await knormPostgres.releaseClient(mockTarget);
-      await knormPostgres.releaseClient(mockTarget);
-      await expect(restoreClient, 'was called once');
+      const client = await knormPostgres.acquireClient();
+      await knormPostgres.releaseClient(client);
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
     });
 
-    it("releases the client even if the target's `restoreClient` rejects", async () => {
-      const restoreClient = () => {
+    it('releases the client even if the user-provided `restoreClient` rejects', async () => {
+      const restoreClient = async () => {
         throw new Error('foo');
       };
-      const mockTarget = { initClient() {}, restoreClient };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
+      const knormPostgres = new KnormPostgres({ connection, restoreClient });
+      const client = await knormPostgres.acquireClient();
       await expect(
-        knormPostgres.releaseClient(mockTarget),
+        knormPostgres.releaseClient(client),
         'to be rejected with error satisfying',
         new Error('foo')
       );
@@ -205,250 +190,6 @@ describe('KnormPostgres', () => {
           'Release called on client which has already been released to the pool.'
         )
       );
-    });
-  });
-
-  describe('query', () => {
-    let acquireClient;
-    let releaseClient;
-    let knormPostgres;
-    const mockTarget = { initClient() {}, restoreClient() {} };
-
-    before(() => {
-      acquireClient = sinon.spy(KnormPostgres.prototype, 'acquireClient');
-      releaseClient = sinon.spy(KnormPostgres.prototype, 'releaseClient');
-      knormPostgres = new KnormPostgres({ connection });
-    });
-
-    after(() => {
-      acquireClient.restore();
-      releaseClient.restore();
-    });
-
-    afterEach(() => {
-      acquireClient.resetHistory();
-      releaseClient.resetHistory();
-    });
-
-    it('acquires a client via `acquireClient`', async () => {
-      await knormPostgres.query(mockTarget, 'select now()');
-      await expect(acquireClient, 'was called once');
-    });
-
-    it('releases the client after running the query', async () => {
-      await knormPostgres.query(mockTarget, 'select now()');
-      await expect(releaseClient, 'was called once');
-    });
-
-    it('acquires and releases a client per run', async () => {
-      await knormPostgres.query(mockTarget, 'select now()');
-      await knormPostgres.query(mockTarget, 'select now()');
-      await expect(acquireClient, 'was called twice');
-      await expect(releaseClient, 'was called twice');
-    });
-  });
-
-  describe('transact', () => {
-    it('passes the client to the transaction callback', async () => {
-      const transaction = sinon.spy().named('transaction');
-      const mockTarget = { initClient() {}, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTarget);
-      await expect(transaction, 'to have calls satisfying', () => {
-        transaction(expect.it('to be a', Client));
-      });
-    });
-
-    it('runs queries with one client', async () => {
-      const initClient = sinon.spy().named('initClient');
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
-        await knormPostgres.query(mockQuery, 'select now()');
-      };
-      const mockTarget = { initClient, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTarget);
-      await expect(initClient, 'was called once');
-    });
-
-    it('releases the client after runnning queries', async () => {
-      const restoreClient = sinon.spy().named('restoreClient');
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
-        await knormPostgres.query(mockQuery, 'select now()');
-      };
-      const mockTarget = { initClient() {}, restoreClient, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTarget);
-      await expect(restoreClient, 'was called once');
-    });
-
-    it('releases the client if `BEGIN` fails', async () => {
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
-      };
-      const mockTarget = { initClient() {}, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
-      const query = sinon.stub(client, 'query').callsFake(async query => {
-        if (query === 'BEGIN') {
-          throw new Error('foo');
-        }
-      });
-      await expect(
-        knormPostgres.transact(mockTarget),
-        'to be rejected with error satisfying',
-        new Error('foo')
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-      await expect(query, 'was called once');
-      await expect(knormPostgres.transacting, 'to be false');
-    });
-
-    it('releases the client if the transaction fails', async () => {
-      let client;
-      const initClient = theClient => {
-        client = theClient;
-      };
-      const transaction = async () => {
-        throw new Error('foo');
-      };
-      const mockTarget = { initClient, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await expect(
-        knormPostgres.transact(mockTarget),
-        'to be rejected with error satisfying',
-        new Error('foo')
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-      await expect(knormPostgres.transacting, 'to be false');
-    });
-
-    it('releases the client if `COMMIT` fails', async () => {
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
-      };
-      const mockTarget = { initClient() {}, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
-      const query = sinon.stub(client, 'query').callsFake(async query => {
-        if (query === 'COMMIT') {
-          throw new Error('foo');
-        }
-      });
-      await expect(
-        knormPostgres.transact(mockTarget),
-        'to be rejected with error satisfying',
-        new Error('foo')
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-      await expect(query, 'to have calls satisfying', () => {
-        query('BEGIN');
-        query('select now()');
-        query('COMMIT');
-        query('ROLLBACK');
-      });
-      await expect(knormPostgres.transacting, 'to be false');
-    });
-
-    it('releases the client if `ROLLBACK` fails', async () => {
-      const transaction = async () => {
-        const mockQuery = { initClient() {}, restoreClient() {} };
-        await knormPostgres.query(mockQuery, 'select now()');
-        throw new Error('foo');
-      };
-      const mockTarget = { initClient() {}, restoreClient() {}, transaction };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.acquireClient(mockTarget);
-      const client = knormPostgres.client;
-      const query = sinon.stub(client, 'query').callsFake(async query => {
-        if (query === 'ROLLBACK') {
-          throw new Error('rollback error');
-        }
-      });
-      await expect(
-        knormPostgres.transact(mockTarget),
-        'to be rejected with error satisfying',
-        {
-          name: 'KnormPostgresError',
-          message: 'unable to roll back after a failed transaction',
-          transactionError: new Error('foo'),
-          rollbackError: new Error('rollback error')
-        }
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-      await expect(query, 'to have calls satisfying', () => {
-        query('BEGIN');
-        query('select now()');
-        query('ROLLBACK');
-      });
-      await expect(knormPostgres.transacting, 'to be false');
-    });
-
-    it('calls `initClient` on the transaction and not the query target', async () => {
-      const mockQuery = {
-        initClient: sinon.spy().named('queryInitClient'),
-        restoreClient() {}
-      };
-      const mockTransaction = {
-        initClient: sinon.spy().named('transactionInitClient'),
-        restoreClient() {},
-        async transaction() {
-          await knormPostgres.query(mockQuery, 'select now()');
-        }
-      };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTransaction);
-      await expect(mockTransaction.initClient, 'was called once');
-      await expect(mockQuery.initClient, 'was not called');
-    });
-
-    it('calls `restoreClient` on the transaction and not the query target', async () => {
-      const mockQuery = {
-        initClient() {},
-        restoreClient: sinon.spy().named('queryRestoreClient')
-      };
-      const mockTransaction = {
-        initClient() {},
-        restoreClient: sinon.spy().named('transactionRestoreClient'),
-        async transaction() {
-          await knormPostgres.query(mockQuery, 'select now()');
-        }
-      };
-      const knormPostgres = new KnormPostgres({ connection });
-      await knormPostgres.transact(mockTransaction);
-      await expect(mockTransaction.restoreClient, 'was called once');
-      await expect(mockQuery.restoreClient, 'was not called');
     });
   });
 
@@ -616,6 +357,14 @@ describe('KnormPostgres', () => {
       await expect(knex, 'with table', User.table, 'to be empty');
     });
 
+    it('allows running raw queries', async () => {
+      await expect(
+        new Query(User).query('select now() as now'),
+        'to be fulfilled with value satisfying',
+        [{ now: expect.it('to be a date') }]
+      );
+    });
+
     it('enables `returning`', async () => {
       await new Query(User).insert({ id: 1, name: 'foo' });
       await expect(
@@ -663,7 +412,7 @@ describe('KnormPostgres', () => {
 
     it('adds `limit` for `fetch` when `first` is true', async () => {
       await new Query(User).insert({ id: 1, name: 'foo' });
-      const spy = sinon.spy(KnormPostgres.prototype, 'query');
+      const spy = sinon.spy(Query.prototype, 'query');
       await expect(
         new Query(User).first().fetch(),
         'to be fulfilled with value satisfying',
@@ -671,7 +420,6 @@ describe('KnormPostgres', () => {
       );
       await expect(spy, 'to have calls satisfying', () => {
         spy(
-          expect.it('to be a', Query),
           expect.it(
             'when passed as parameter to',
             query => query.toString(),
@@ -798,7 +546,7 @@ describe('KnormPostgres', () => {
           { id: 1, name: 'foo' },
           { id: 2, name: 'bar' }
         ]);
-        const spy = sinon.spy(KnormPostgres.prototype, 'query');
+        const spy = sinon.spy(Query.prototype, 'query');
         await expect(
           new Query(User).update([
             { id: 1, name: 'foofoo' },
@@ -823,7 +571,7 @@ describe('KnormPostgres', () => {
           { id: 1, name: 'foo' },
           { id: 2, name: 'bar' }
         ]);
-        const spy = sinon.spy(KnormPostgres.prototype, 'query');
+        const spy = sinon.spy(Query.prototype, 'query');
         await expect(
           new Query(User)
             .batchSize(1)
@@ -866,6 +614,58 @@ describe('KnormPostgres', () => {
 
     describe('save', () => {
       describe('with an array', () => {
+        it('supports `insert`', async () => {
+          const insert = sinon.spy(Query.prototype, 'insert');
+          await expect(
+            new Query(User).save([{ name: 'foo' }, { name: 'bar' }]),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'foo' }), new User({ id: 2, name: 'bar' })]
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+          );
+          await expect(insert, 'to have calls satisfying', () => {
+            // options are undefined
+            insert([{ name: 'foo' }, { name: 'bar' }], undefined);
+          });
+          insert.restore();
+        });
+
+        it('supports `update`', async () => {
+          await new Query(User).insert([
+            { id: 1, name: 'foo' },
+            { id: 2, name: 'bar' }
+          ]);
+          const update = sinon.spy(Query.prototype, 'update');
+          await expect(
+            new Query(User).save([
+              { id: 1, name: 'foofoo' },
+              { id: 2, name: 'barbar' }
+            ]),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'foofoo' }),
+              new User({ id: 2, name: 'barbar' })
+            ]
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+          );
+          await expect(update, 'to have calls satisfying', () => {
+            // options are undefined
+            update([{ name: 'foofoo' }, { name: 'barbar' }], undefined);
+          });
+          update.restore();
+        });
+
         it('supports both `insert` and `update`', async () => {
           await new Query(User).insert([{ name: 'foo' }]);
           const insert = sinon.spy(Query.prototype, 'insert');
@@ -883,10 +683,12 @@ describe('KnormPostgres', () => {
             [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
           );
           await expect(insert, 'to have calls satisfying', () => {
-            insert([{ name: 'bar' }], undefined); // options are undefined
+            // options are undefined
+            insert([{ name: 'bar' }], undefined);
           });
           await expect(update, 'to have calls satisfying', () => {
-            update([{ id: 1, name: 'foofoo' }], undefined); // options are undefined
+            // options are undefined
+            update([{ id: 1, name: 'foofoo' }], undefined);
           });
           insert.restore();
           update.restore();
@@ -941,19 +743,16 @@ describe('KnormPostgres', () => {
 
   describe('PostgresTransaction', () => {
     let User;
+    let Query;
     let Transaction;
-    let initClient;
-    let restoreClient;
+    let plugin;
 
     before(async () => {
-      initClient = sinon.spy().named('initClient');
-      restoreClient = sinon.spy().named('restoreClient');
+      const orm = knorm().use(knormPostgres({ connection }));
 
-      const orm = knorm().use(
-        knormPostgres({ connection, initClient, restoreClient })
-      );
-
+      Query = orm.Query;
       Transaction = orm.Transaction;
+      plugin = orm.plugins.postgres;
 
       User = class extends orm.Model {};
       User.table = 'user';
@@ -963,17 +762,51 @@ describe('KnormPostgres', () => {
       };
     });
 
-    afterEach(async () => {
-      await knex(User.table).truncate();
-      initClient.resetHistory();
-      restoreClient.resetHistory();
+    afterEach(async () => knex(User.table).truncate());
+
+    it('enables scoped model operations', async () => {
+      await new Transaction(async function() {
+        await this.User.insert([{ id: 1, name: 'foo' }]);
+        await expect(this.User, 'not to be', User);
+      });
+      await expect(
+        knex,
+        'with table',
+        User.table,
+        'to have sorted rows satisfying',
+        [{ id: 1, name: 'foo' }]
+      );
     });
 
-    it('commits the transaction', async () => {
-      await new Transaction(async () => {
-        await User.insert([{ id: 1, name: 'foo' }]);
-        await User.insert([{ id: 2, name: 'bar' }]);
-        await User.update([{ id: 1, name: 'foofoo' }]);
+    it('enables scoped query operations', async () => {
+      await new Transaction(async function() {
+        await new this.Query(this.User).insert([{ id: 1, name: 'foo' }]);
+        await expect(this.Query, 'not to be', Query);
+      });
+      await expect(
+        knex,
+        'with table',
+        User.table,
+        'to have sorted rows satisfying',
+        [{ id: 1, name: 'foo' }]
+      );
+    });
+
+    it('enables running raw scoped queries', async () => {
+      await expect(
+        new Transaction(async function() {
+          return new this.Query(this.User).query('select now() as now');
+        }),
+        'to be fulfilled with value satisfying',
+        [{ now: expect.it('to be a date') }]
+      );
+    });
+
+    it('enables running multiple queries in a transaction', async () => {
+      await new Transaction(async function() {
+        await this.User.insert([{ id: 1, name: 'foo' }]);
+        await this.User.insert([{ id: 2, name: 'bar' }]);
+        await this.User.update([{ id: 1, name: 'foofoo' }]);
       });
       await expect(
         knex,
@@ -984,11 +817,11 @@ describe('KnormPostgres', () => {
       );
     });
 
-    it('rolls back the transaction on failure', async () => {
+    it('rolls back a transaction on failure', async () => {
       await expect(
-        new Transaction(async () => {
-          await User.insert([{ id: 1, name: 'foo' }]);
-          await User.insert([{ id: 1, name: 'bar' }]); // primary key error
+        new Transaction(async function() {
+          await this.User.insert([{ id: 1, name: 'foo' }]);
+          await this.User.insert([{ id: 1, name: 'bar' }]); // primary key error
         }),
         'to be rejected'
       );
@@ -1011,6 +844,144 @@ describe('KnormPostgres', () => {
         'to be rejected with error satisfying',
         new Error('foo')
       );
+    });
+
+    it('runs queries with one client', async () => {
+      sinon.spy(plugin, 'acquireClient');
+      await new Transaction(async function() {
+        await this.User.insert([{ id: 1, name: 'foo' }]);
+        await this.User.insert([{ id: 2, name: 'bar' }]);
+      });
+      expect(plugin.acquireClient, 'was called once');
+    });
+
+    it('releases the client after runnning queries', async () => {
+      sinon.spy(plugin, 'releaseClient');
+      await new Transaction(async function() {
+        await this.User.insert([{ id: 1, name: 'foo' }]);
+        await this.User.insert([{ id: 2, name: 'bar' }]);
+      });
+      expect(plugin.releaseClient, 'was called once');
+    });
+
+    it('passes the client to the transaction callback', async () => {
+      const spy = sinon.spy().named('transaction');
+      await new Transaction(spy);
+      expect(spy, 'to have calls satisfying', () =>
+        spy(expect.it('to be a', Client))
+      );
+    });
+
+    it('releases the client if `BEGIN` fails', async () => {
+      let client;
+      const transaction = new Transaction(() => {});
+      transaction.query = function(sql) {
+        client = this.client;
+        if (sql === 'BEGIN') {
+          throw new Error('begin error');
+        }
+      };
+      const spy = sinon.spy(transaction, 'query');
+      await expect(
+        transaction,
+        'to be rejected with error satisfying',
+        new Error('begin error')
+      );
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
+      await expect(spy, 'was called once');
+    });
+
+    it('releases the client if the transaction fails', async () => {
+      let client;
+      const transaction = new Transaction(() => {
+        throw new Error('foo');
+      });
+      transaction.query = function() {
+        client = this.client;
+      };
+      await expect(
+        transaction,
+        'to be rejected with error satisfying',
+        new Error('foo')
+      );
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
+    });
+
+    it('releases the client if `COMMIT` fails', async () => {
+      let client;
+      const transaction = new Transaction(async function() {
+        await new this.Query(this.User).query('select now()');
+      });
+      transaction.query = function(sql) {
+        client = this.client;
+        if (sql === 'COMMIT') {
+          throw new Error('commit error');
+        }
+      };
+      const spy = sinon.spy(transaction, 'query');
+      await expect(
+        transaction,
+        'to be rejected with error satisfying',
+        new Error('commit error')
+      );
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy('BEGIN');
+        spy('select now()');
+        spy('COMMIT');
+        spy('ROLLBACK');
+      });
+    });
+
+    it('releases the client if `ROLLBACK` fails', async () => {
+      let client;
+      const transaction = new Transaction(async function() {
+        await new this.Query(this.User).query('select now()');
+        throw new Error('foo');
+      });
+      transaction.query = function(sql) {
+        client = this.client;
+        if (sql === 'ROLLBACK') {
+          throw new Error('rollback error');
+        }
+      };
+      const spy = sinon.spy(transaction, 'query');
+      await expect(transaction, 'to be rejected with error satisfying', {
+        name: 'KnormPostgresError',
+        message: 'unable to roll back after a failed transaction',
+        transactionError: new Error('foo'),
+        rollbackError: new Error('rollback error')
+      });
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy('BEGIN');
+        spy('select now()');
+        spy('ROLLBACK');
+      });
     });
   });
 });
