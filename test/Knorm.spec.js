@@ -95,6 +95,20 @@ describe('Knorm', () => {
       );
     });
 
+    it('allows plugins to access themselves by name', function() {
+      let ran = false;
+      const plugin = {
+        name: 'foo',
+        init(knorm) {
+          expect(knorm.plugins.foo, 'to be', plugin);
+          ran = true;
+        }
+      };
+      expect(ran, 'to be false');
+      knorm.use(plugin);
+      expect(ran, 'to be true');
+    });
+
     describe('when called with a function', function() {
       it('passes itself to the function', () => {
         const plugin = sinon.spy().named('plugin');
