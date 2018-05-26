@@ -190,6 +190,19 @@ describe('Knorm', () => {
       );
     });
 
+    it('throws if the model-name is a reserved Knorm property', () => {
+      expect(
+        () => knorm.addModel(class Field extends knorm.Model {}),
+        'to throw',
+        new KnormError('cannot use `Field` as a model name (reserved property)')
+      );
+      expect(
+        () => knorm.addModel(class use extends knorm.Model {}),
+        'to throw',
+        new KnormError('cannot use `use` as a model name (reserved property)')
+      );
+    });
+
     it('adds the model to the Knorm instance', () => {
       class Foo extends knorm.Model {}
 
