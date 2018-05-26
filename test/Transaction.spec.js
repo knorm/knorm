@@ -1,10 +1,14 @@
-const Transaction = require('../lib/Transaction');
-const KnormError = require('../lib/KnormError');
+const Knorm = require('../lib/Knorm');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
   .use(require('unexpected-knex'));
+
+const { Field, Transaction, Model, KnormError, Query } = new Knorm();
+
+class User extends Model {}
+User.fields = { name: 'string' }; // to auto-add the model to the knorm instance
 
 describe('Transaction', function() {
   describe('constructor', function() {
@@ -15,12 +19,34 @@ describe('Transaction', function() {
         new KnormError('Transaction: no `transaction` function provided')
       );
     });
+
+    it('adds accessors to scoped Field, Model, Query and user models', function() {
+      expect(new Transaction(() => {}), 'to satisfy', transaction => {
+        expect(transaction.Field, 'to be', Field);
+        expect(transaction.Query.prototype, 'to be a', Query);
+        expect(transaction.Model.prototype, 'to be a', Model);
+        expect(transaction.Model.Query.prototype, 'to be a', Query);
+        expect(transaction.User.prototype, 'to be a', User);
+      });
+    });
+  });
+
+  describe('Transaction.prototype.query', function() {
+    it('rejects if not overridden', async function() {
+      const transaction = new Transaction(() => {});
+      await expect(
+        transaction.query(),
+        'to be rejected with error satisfying',
+        new KnormError(
+          'Transaction: `Transaction.prototype.query` is not implemented'
+        )
+      );
+    });
   });
 
   describe('Transaction.prototype.execute', function() {
     it('rejects if not overridden', async function() {
-      const spy = sinon.spy();
-      const transaction = new Transaction(spy);
+      const transaction = new Transaction(() => {});
       await expect(
         transaction.execute(),
         'to be rejected with error satisfying',
