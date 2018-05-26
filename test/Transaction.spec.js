@@ -8,7 +8,8 @@ const expect = require('unexpected')
 const { Field, Transaction, Model, KnormError, Query } = new Knorm();
 
 class User extends Model {}
-User.fields = { name: 'string' }; // to auto-add the model to the knorm instance
+User.table = 'user';
+User.fields = { name: { type: 'string', primary: true } };
 
 describe('Transaction', function() {
   describe('constructor', function() {
@@ -40,6 +41,39 @@ describe('Transaction', function() {
         new KnormError(
           'Transaction: `Transaction.prototype.query` is not implemented'
         )
+      );
+    });
+
+    it('rejects on the scoped Query classes', async function() {
+      class FooTransaction extends Transaction {
+        async execute() {
+          // eslint-disable-next-line no-useless-call
+          return this.callback.call(this);
+        }
+      }
+
+      await expect(
+        new FooTransaction(async function() {
+          return new this.Query(this.User).insert({ name: 'foo' });
+        }),
+        'to be rejected with error satisfying',
+        {
+          originalError: new KnormError(
+            'Transaction: `Transaction.prototype.query` is not implemented'
+          )
+        }
+      );
+
+      await expect(
+        new FooTransaction(async function() {
+          return this.User.insert({ name: 'foo' });
+        }),
+        'to be rejected with error satisfying',
+        {
+          originalError: new KnormError(
+            'Transaction: `Transaction.prototype.query` is not implemented'
+          )
+        }
       );
     });
   });
