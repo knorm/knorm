@@ -7,7 +7,6 @@ const KnormError = require('../lib/KnormError');
 const Query = require('../lib/Query');
 const Model = require('../lib/Model');
 const QueryError = require('../lib/QueryError');
-const knex = require('./lib/knex');
 
 describe('Knorm', () => {
   it('exposes abstract classes as statics', () => {
@@ -17,21 +16,20 @@ describe('Knorm', () => {
 
   describe('constructor', () => {
     it('creates scoped Model, Query classes when instantiated', () => {
-      const knorm = new Knorm({ knex });
+      const knorm = new Knorm();
       expect(knorm.Query, 'not to be', Query);
       expect(knorm.Query.prototype instanceof Query, 'to be true');
     });
 
     it('creates new classes per instance', () => {
-      const firstOrm = new Knorm({ knex });
-      const secondOrm = new Knorm({ knex });
+      const firstOrm = new Knorm();
+      const secondOrm = new Knorm();
       expect(firstOrm.Query, 'not to be', secondOrm.Query);
     });
 
     describe('with the `fieldToColumn` option provided', () => {
       it('configures it as the field-to-column-name mapping function', () => {
         const { Model } = new Knorm({
-          knex,
           fieldToColumn(field) {
             return field.toLowerCase();
           }
@@ -43,7 +41,6 @@ describe('Knorm', () => {
       it('calls it with `this` set to the field instance', () => {
         let wasCalled;
         const { Model } = new Knorm({
-          knex,
           fieldToColumn() {
             wasCalled = true;
             expect(this.constructor.name, 'to be', 'Field');
@@ -59,7 +56,7 @@ describe('Knorm', () => {
     let knorm;
 
     beforeEach(() => {
-      knorm = new Knorm({ knex });
+      knorm = new Knorm();
     });
 
     it('throws if not provided a plugin', () => {
@@ -144,7 +141,7 @@ describe('Knorm', () => {
     let knorm;
 
     beforeEach(() => {
-      knorm = new Knorm({ knex });
+      knorm = new Knorm();
     });
 
     it('throws if not provided a model', () => {
@@ -225,6 +222,69 @@ describe('Knorm', () => {
     it('allows plugins to update knorm.Model', () => {
       knorm.Model = class Foo extends knorm.Model {};
       knorm.addModel(knorm.Model);
+    });
+  });
+
+  describe('clone', () => {
+    let knorm;
+
+    beforeEach(() => {
+      knorm = new Knorm();
+    });
+
+    it('returns a Knorm instance', () => {
+      expect(knorm.clone(), 'to be a', Knorm);
+    });
+
+    it('returns a different instance', () => {
+      expect(knorm.clone(), 'not to be', knorm);
+    });
+
+    it('adds models on the original instance to the clone', () => {
+      class Foo extends knorm.Model {}
+      knorm.addModel(Foo);
+      const clone = knorm.clone();
+      expect(clone.Foo, 'to be', Foo);
+      expect(clone.models.Foo, 'to be', Foo);
+    });
+
+    it('adds plugins on the original instance to the clone', () => {
+      function foo(knorm) {
+        knorm.Model = class Foo extends knorm.Model {};
+      }
+      knorm.use(foo);
+      const clone = knorm.clone();
+      expect(clone.plugins.foo, 'to be', foo);
+      expect(clone.Model.name, 'to be', 'Foo');
+    });
+
+    it('allows adding new models to the clone only', () => {
+      const clone = knorm.clone();
+
+      class Bar extends clone.Model {}
+      clone.addModel(Bar);
+
+      expect(clone.Bar, 'to be', Bar);
+      expect(clone.models.Bar, 'to be', Bar);
+
+      expect(knorm.Bar, 'to be undefined');
+      expect(knorm.models.Bar, 'to be undefined');
+    });
+
+    it('allows adding new plugins to the clone only', () => {
+      const clone = knorm.clone();
+
+      function foo(knorm) {
+        knorm.Model = class Foo extends knorm.Model {};
+      }
+
+      clone.use(foo);
+
+      expect(clone.plugins.foo, 'to be', foo);
+      expect(clone.Model.name, 'to be', 'Foo');
+
+      expect(knorm.plugins, 'to be empty');
+      expect(knorm.Model.name, 'to be', 'Model');
     });
   });
 });
