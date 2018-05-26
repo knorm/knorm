@@ -151,7 +151,7 @@ describe('Knorm', () => {
       expect(
         () => knorm.addModel(),
         'to throw',
-        new KnormError('model should be a subclass of `knorm.Model`')
+        new KnormError('no model provided')
       );
     });
 
@@ -207,6 +207,11 @@ describe('Knorm', () => {
 
       expect(knorm.Bar, 'to be', Bar);
       expect(knorm.models.Bar, 'to be', Bar);
+    });
+
+    it('allows plugins to update knorm.Model', () => {
+      knorm.Model = class Foo extends knorm.Model {};
+      knorm.addModel(knorm.Model);
     });
   });
 });
