@@ -589,27 +589,6 @@ describe('KnormPostgres', () => {
         await expect(spy, 'was called twice');
         spy.restore();
       });
-
-      it('rejects with a QueryError if objects have mismatching field counts', async function() {
-        await new Query(User).insert([
-          { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
-        ]);
-        const query = new Query(User);
-        await expect(
-          query.update([
-            new User({ id: 1, name: 'foofoo' }),
-            new User({ id: 2 })
-          ]),
-          'to be rejected with error satisfying',
-          new Query.QueryError({
-            query,
-            error: new KnormError(
-              'Query: all objects should have the same field count'
-            )
-          })
-        );
-      });
     });
 
     describe('save', () => {
@@ -965,7 +944,7 @@ describe('KnormPostgres', () => {
       };
       const spy = sinon.spy(transaction, 'query');
       await expect(transaction, 'to be rejected with error satisfying', {
-        name: 'KnormPostgresError',
+        name: 'TransactionError',
         message: 'unable to roll back after a failed transaction',
         transactionError: new Error('foo'),
         rollbackError: new Error('rollback error')
