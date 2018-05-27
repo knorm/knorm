@@ -46,7 +46,6 @@ const expect = require('unexpected')
     }
   );
 
-const { KnormError } = knorm;
 const { KnormPostgresError } = KnormPostgres;
 const connection = {
   host: process.env.PGHOST || '127.0.0.1',
