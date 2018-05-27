@@ -1542,13 +1542,54 @@ describe('Field', function() {
           await expect(jsonb.validate(true), 'to be fulfilled');
         });
 
-        it('fulfils for valid jsons', async function() {
+        it('fulfils for valid json strings', async function() {
           await expect(json.validate('[{ "foo": "foo" }]'), 'to be fulfilled');
         });
 
         it('fulfils for invalid json strings', async function() {
           // i.e it doesn't validate the json string
           await expect(jsonb.validate('{not: "valid"}'), 'to be fulfilled');
+        });
+      });
+
+      describe('when passed a string value', function() {
+        let field;
+
+        before(function() {
+          field = new Field({
+            name: 'json',
+            model: User,
+            type: 'json',
+            schema: { foo: { type: 'string' } }
+          });
+        });
+
+        it('JSON.parses the value and runs validators on the parsed value', async function() {
+          await expect(field.validate('{"foo":1}'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+          await expect(field.validate('{"foo":"1"}'), 'to be fulfilled');
+        });
+
+        it('converts JSON.parse errors to `type` errors', async function() {
+          await expect(field.validate('{foo:"foo"}'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'TypeError'
+          });
+          await expect(field.validate('{"foo":"foo"}'), 'to be fulfilled');
+        });
+
+        describe('with a root-level `string` schema', function() {
+          it('does not JSON.parse the value', async function() {
+            const field = new Field({
+              name: 'json',
+              model: User,
+              type: 'json',
+              schema: 'string'
+            });
+            await expect(field.validate('foo'), 'to be fulfilled');
+          });
         });
       });
 
@@ -1636,24 +1677,6 @@ describe('Field', function() {
               'was called on',
               'a model instance'
             );
-          });
-        });
-
-        describe('when passed a string value', function() {
-          it('JSON.parses the value and runs validators on the parsed value', async function() {
-            await expect(field.validate('{"foo":1}'), 'to be rejected with', {
-              name: 'ValidationError',
-              type: 'TypeError'
-            });
-            await expect(field.validate('"foo"'), 'to be fulfilled');
-          });
-
-          it('ignores JSON.parse errors (to let the database "validate" it instead)', async function() {
-            await expect(field.validate('1'), 'to be rejected with', {
-              name: 'ValidationError',
-              type: 'TypeError'
-            });
-            await expect(field.validate('foo'), 'to be fulfilled');
           });
         });
 
