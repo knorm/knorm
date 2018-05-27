@@ -323,18 +323,18 @@ describe('KnormRelations', () => {
       });
 
       describe("with a 'leftJoin' configured", () => {
-        it('throws an error if the models do not reference each other', () => {
+        it('throws if the models do not reference each other', () => {
           class Foo extends Model {}
           Foo.table = 'foo';
           expect(
             () => new Query(User).leftJoin(new Query(Foo)),
             'to throw',
-            new Error("'User' has no references to 'Foo'")
+            new Query.QueryError('User: there are no references to `Foo`')
           );
           expect(
             () => new Query(Foo).leftJoin(new Query(User)),
             'to throw',
-            new Error("'Foo' has no references to 'User'")
+            new Query.QueryError('Foo: there are no references to `User`')
           );
         });
 
@@ -507,8 +507,8 @@ describe('KnormRelations', () => {
               await expect(
                 query.fetch(),
                 'to be rejected with error satisfying',
-                new KnormRelationsError(
-                  `User: cannot join Image with no primary or unique fields selected`
+                new Query.QueryError(
+                  'User: cannot join `Image` with no primary or unique fields selected'
                 )
               );
             });
@@ -1080,8 +1080,8 @@ describe('KnormRelations', () => {
             await expect(
               query.fetch(),
               'to be rejected with error satisfying',
-              new KnormRelationsError(
-                `Image: cannot join User with no primary or unique fields selected`
+              new Query.QueryError(
+                'Image: cannot join `User` with no primary or unique fields selected'
               )
             );
           });
