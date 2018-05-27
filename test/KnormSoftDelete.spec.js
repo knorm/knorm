@@ -47,7 +47,9 @@ const expect = require('unexpected')
     }
   );
 
-const { Query: KnormQuery } = knorm;
+const {
+  Knorm: { Query: KnormQuery }
+} = knorm;
 const { KnormSoftDeleteError } = KnormSoftDelete;
 
 describe('KnormSoftDelete', () => {
