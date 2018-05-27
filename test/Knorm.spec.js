@@ -6,12 +6,11 @@ const Knorm = require('../lib/Knorm');
 const KnormError = require('../lib/KnormError');
 const Query = require('../lib/Query');
 const Model = require('../lib/Model');
-const QueryError = require('../lib/QueryError');
 
 describe('Knorm', () => {
   it('exposes abstract classes as statics', () => {
     expect(Knorm.Query, 'to be', Query);
-    expect(Knorm.QueryError, 'to be', QueryError);
+    expect(Knorm.Model, 'to be', Model);
   });
 
   describe('constructor', () => {

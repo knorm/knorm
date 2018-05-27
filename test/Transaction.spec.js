@@ -5,7 +5,7 @@ const expect = require('unexpected')
   .use(require('unexpected-sinon'))
   .use(require('unexpected-knex'));
 
-const { Field, Transaction, Model, KnormError, Query } = new Knorm();
+const { Field, Transaction, Model, Query } = new Knorm();
 
 class User extends Model {}
 User.table = 'user';
@@ -17,7 +17,7 @@ describe('Transaction', function() {
       expect(
         () => new Transaction(),
         'to throw',
-        new KnormError('Transaction: no `transaction` function provided')
+        new Knorm.KnormError('Transaction: no `transaction` function provided')
       );
     });
 
@@ -38,7 +38,7 @@ describe('Transaction', function() {
       await expect(
         transaction.query(),
         'to be rejected with error satisfying',
-        new KnormError(
+        new Knorm.KnormError(
           'Transaction: `Transaction.prototype.query` is not implemented'
         )
       );
@@ -58,7 +58,7 @@ describe('Transaction', function() {
         }),
         'to be rejected with error satisfying',
         {
-          originalError: new KnormError(
+          originalError: new Knorm.KnormError(
             'Transaction: `Transaction.prototype.query` is not implemented'
           )
         }
@@ -70,7 +70,7 @@ describe('Transaction', function() {
         }),
         'to be rejected with error satisfying',
         {
-          originalError: new KnormError(
+          originalError: new Knorm.KnormError(
             'Transaction: `Transaction.prototype.query` is not implemented'
           )
         }
@@ -84,7 +84,7 @@ describe('Transaction', function() {
       await expect(
         transaction.execute(),
         'to be rejected with error satisfying',
-        new KnormError(
+        new Knorm.KnormError(
           'Transaction: `Transaction.prototype.execute` is not implemented'
         )
       );

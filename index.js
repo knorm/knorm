@@ -1,9 +1,6 @@
-const makeKnorm = options => new Knorm(options);
-
-module.exports = makeKnorm;
-
-// avoid circular deps
 const Knorm = require('./lib/Knorm');
-const addExports = require('./lib/addExports');
+const knorm = config => new Knorm(config);
 
-addExports(makeKnorm);
+knorm.Knorm = Knorm;
+
+module.exports = knorm;
