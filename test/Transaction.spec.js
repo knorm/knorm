@@ -6,6 +6,7 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'));
 
 const { Field, Transaction, Model, Query } = new Knorm();
+const { TransactionError } = Transaction;
 
 class User extends Model {}
 User.table = 'user';
@@ -17,7 +18,7 @@ describe('Transaction', function() {
       expect(
         () => new Transaction(),
         'to throw',
-        new Knorm.KnormError('Transaction: no `transaction` function provided')
+        new TransactionError('no `transaction` function provided')
       );
     });
 
@@ -38,9 +39,7 @@ describe('Transaction', function() {
       await expect(
         transaction.query(),
         'to be rejected with error satisfying',
-        new Knorm.KnormError(
-          'Transaction: `Transaction.prototype.query` is not implemented'
-        )
+        new TransactionError('`Transaction.prototype.query` is not implemented')
       );
     });
 
@@ -48,7 +47,7 @@ describe('Transaction', function() {
       class FooTransaction extends Transaction {
         async execute() {
           // eslint-disable-next-line no-useless-call
-          return this.callback.call(this);
+          return this.transaction.call(this);
         }
       }
 
@@ -58,8 +57,8 @@ describe('Transaction', function() {
         }),
         'to be rejected with error satisfying',
         {
-          originalError: new Knorm.KnormError(
-            'Transaction: `Transaction.prototype.query` is not implemented'
+          originalError: new TransactionError(
+            '`Transaction.prototype.query` is not implemented'
           )
         }
       );
@@ -70,8 +69,8 @@ describe('Transaction', function() {
         }),
         'to be rejected with error satisfying',
         {
-          originalError: new Knorm.KnormError(
-            'Transaction: `Transaction.prototype.query` is not implemented'
+          originalError: new TransactionError(
+            '`Transaction.prototype.query` is not implemented'
           )
         }
       );
@@ -84,8 +83,8 @@ describe('Transaction', function() {
       await expect(
         transaction.execute(),
         'to be rejected with error satisfying',
-        new Knorm.KnormError(
-          'Transaction: `Transaction.prototype.execute` is not implemented'
+        new TransactionError(
+          '`Transaction.prototype.execute` is not implemented'
         )
       );
     });
