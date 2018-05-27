@@ -1,6 +1,5 @@
 const { snakeCase: fieldToColumn } = require('lodash');
 const Knorm = require('../lib/Knorm');
-const KnormError = require('../lib/KnormError');
 const knex = require('./lib/knex');
 const postgresPlugin = require('./lib/postgresPlugin');
 const sinon = require('sinon');
@@ -47,6 +46,7 @@ const expect = require('unexpected')
   );
 
 const { Model, Query } = new Knorm({ fieldToColumn }).use(postgresPlugin);
+const { QueryError } = Query;
 
 Model.fields = {
   id: {
@@ -138,7 +138,7 @@ describe('Query', () => {
       expect(
         () => new Query(),
         'to throw',
-        new KnormError('Query: no model provided')
+        new QueryError('no model provided')
       );
     });
 
@@ -147,7 +147,7 @@ describe('Query', () => {
       expect(
         () => new Query(Foo),
         'to throw',
-        new KnormError('Query: model should be a subclass of `Model`')
+        new QueryError('model should be a subclass of `Model`')
       );
     });
 
@@ -156,7 +156,7 @@ describe('Query', () => {
       expect(
         () => new Query(Foo),
         'to throw',
-        new KnormError('Query: `Foo.table` is not set')
+        new QueryError('`Foo.table` is not set')
       );
     });
   });
@@ -166,7 +166,7 @@ describe('Query', () => {
       expect(
         () => new Query(User).setOptions({ foo: 'bar' }),
         'to throw',
-        new KnormError("Unknown option 'foo'")
+        new QueryError('unknown option `foo`')
       );
     });
 
@@ -1340,12 +1340,7 @@ describe('Query', () => {
             new User({ id: 2, name: 'Jane Doe', jsonField: ['foo', 'bar'] })
           ]),
           'to be rejected with error satisfying',
-          new Query.QueryError({
-            query,
-            error: new KnormError(
-              'Query: all objects should have the same field count'
-            )
-          })
+          new QueryError('all objects should have the same field count')
         );
       });
 

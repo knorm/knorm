@@ -15,17 +15,13 @@ describe('QueryError', () => {
 
   describe('when passed a database error', () => {
     it('extracts the database error message from knex QueryBuilder errors', () => {
-      const queryBuilderError = new Error(
+      const error = new Error(
         'insert into "user" ("foo") values ($1) - column "foo" of relation "user" does not exist'
       );
-      expect(
-        new QueryError({ error: queryBuilderError, query: new Query(User) }),
-        'to satisfy',
-        {
-          message:
-            'User: insert into "user" ("foo") values ($1) - column "foo" of relation "user" does not exist'
-        }
-      );
+      expect(new QueryError({ error, query: new Query(User) }), 'to satisfy', {
+        message:
+          'User: insert into "user" ("foo") values ($1) - column "foo" of relation "user" does not exist'
+      });
     });
 
     it('stores the passed error as `originalError`', () => {
