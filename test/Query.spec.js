@@ -1137,6 +1137,21 @@ describe('Query', () => {
       );
     });
 
+    it('quotes column names', async () => {
+      const spy = sinon.spy(Query.prototype, 'query');
+      await new Query(User).insert(new User({ name: 'John Doe' }));
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            query => query.toString(),
+            expect.it('to contain', '"name"')
+          )
+        );
+      });
+      spy.restore();
+    });
+
     it('rejects with a InsertError if the insert operation fails', async () => {
       const stub = sinon
         .stub(Query.prototype, 'query')
@@ -1673,6 +1688,22 @@ describe('Query', () => {
       );
     });
 
+    it('quotes column names', async () => {
+      const spy = sinon.spy(Query.prototype, 'query');
+      user.name = 'Jane Doe';
+      await new Query(User).update(user);
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            query => query.toString(),
+            expect.it('to contain', '"name" =')
+          )
+        );
+      });
+      spy.restore();
+    });
+
     it('rejects with a UpdateError if the update operation fails', async () => {
       const stub = sinon
         .stub(Query.prototype, 'query')
@@ -1919,7 +1950,9 @@ describe('Query', () => {
             expect.it(
               'when passed as parameter to',
               query => query.toString(),
-              expect.it('to contain', 'name =').and('not to contain', 'id =')
+              expect
+                .it('to contain', '"name" =')
+                .and('not to contain', '"id" =')
             )
           );
         });
