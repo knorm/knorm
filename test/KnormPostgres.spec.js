@@ -65,8 +65,6 @@ describe('KnormPostgres', () => {
     knex.schema.createTable('user', table => {
       table.increments().primary();
       table.string('name');
-      table.date('date');
-      table.dateTime('dateTime');
     })
   );
 
@@ -306,9 +304,7 @@ describe('KnormPostgres', () => {
       User.table = 'user';
       User.fields = {
         id: { type: 'integer', primary: true, updated: false },
-        name: 'string',
-        date: 'date',
-        dateTime: 'dateTime'
+        name: 'string'
       };
     });
 
@@ -468,58 +464,6 @@ describe('KnormPostgres', () => {
       );
     });
 
-    it('allows updating `date` fields', async () => {
-      const toUtc = date =>
-        new Date(
-          date.getUTCFullYear(),
-          date.getUTCMonth(),
-          date.getUTCDate(),
-          date.getUTCHours(),
-          date.getUTCMinutes(),
-          date.getUTCSeconds()
-        );
-      await new Query(User).insert({
-        id: 1,
-        name: 'foo',
-        date: new Date('2018-08-07')
-      });
-      await expect(
-        new Query(User).update({
-          id: 1,
-          date: new Date('2018-05-08')
-        }),
-        'to be fulfilled with sorted rows satisfying',
-        [{ id: 1, date: toUtc(new Date('2018-05-08')) }]
-      );
-      await expect(
-        knex,
-        'with table',
-        User.table,
-        'to have sorted rows satisfying',
-        [{ id: 1, date: toUtc(new Date('2018-05-08')) }]
-      );
-    });
-
-    it('allows updating `dateTime` fields', async () => {
-      await new Query(User).insert({
-        id: 1,
-        name: 'foo',
-        dateTime: new Date(1000)
-      });
-      await expect(
-        new Query(User).update({ id: 1, dateTime: new Date(2000) }),
-        'to be fulfilled with sorted rows satisfying',
-        [{ id: 1, dateTime: new Date(2000) }]
-      );
-      await expect(
-        knex,
-        'with table',
-        User.table,
-        'to have sorted rows satisfying',
-        [{ id: 1, dateTime: new Date(2000) }]
-      );
-    });
-
     it('does not update fields `updated: false` fields', async () => {
       const user = await new Query(User).first().insert({ id: 1, name: 'foo' });
       const spy = sinon.spy(Query.prototype, 'query');
@@ -532,11 +476,263 @@ describe('KnormPostgres', () => {
             'when passed as parameter to',
             query => query.toString(),
             'to begin with',
-            'UPDATE "user" SET "name" = "v"."name", "date" = "v"."date", "dateTime" = "v"."dateTime" FROM'
+            'UPDATE "user" SET "name" = "v"."name" FROM'
           )
         );
       });
       spy.restore();
+    });
+
+    describe('for field updates', () => {
+      let Model;
+      let Query;
+
+      const createTable = addFields =>
+        knex.schema.createTable('foo', table => {
+          table.increments().primary();
+          addFields(table);
+        });
+
+      before(async () => {
+        const orm = knorm().use(knormPostgres({ connection }));
+        Query = orm.Query;
+        Model = orm.Model;
+        Model.fields = {
+          id: { type: 'integer', primary: true, updated: false }
+        };
+      });
+
+      afterEach(async () => knex.schema.dropTable('foo'));
+
+      it('allows updating `date` fields', async () => {
+        const toUtc = date =>
+          new Date(
+            date.getUTCFullYear(),
+            date.getUTCMonth(),
+            date.getUTCDate(),
+            date.getUTCHours(),
+            date.getUTCMinutes(),
+            date.getUTCSeconds()
+          );
+
+        await createTable(table => {
+          table.date('date');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { date: 'date' };
+
+        await new Query(Foo).insert({ id: 1, date: new Date('2018-08-07') });
+        await expect(
+          new Query(Foo).update({ id: 1, date: new Date('2018-05-08') }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, date: toUtc(new Date('2018-05-08')) }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, date: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, date: null }]
+        );
+      });
+
+      it('allows updating `dateTime` fields', async () => {
+        await createTable(table => {
+          table.dateTime('dateTime');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { dateTime: 'dateTime' };
+
+        await new Query(Foo).insert({ id: 1, dateTime: new Date(1000) });
+        await expect(
+          new Query(Foo).update({ id: 1, dateTime: new Date(2000) }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, dateTime: new Date(2000) }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, dateTime: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, dateTime: null }]
+        );
+      });
+
+      it('allows updating `integer` fields', async () => {
+        await createTable(table => {
+          table.integer('integer');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { integer: 'integer' };
+
+        await new Query(Foo).insert({ id: 1, integer: 10 });
+        await expect(
+          new Query(Foo).update({ id: 1, integer: 20 }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, integer: 20 }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, integer: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, integer: null }]
+        );
+      });
+
+      it('allows updating `json` fields', async () => {
+        await createTable(table => {
+          table.json('json');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { json: 'json' };
+
+        await new Query(Foo).insert({ id: 1, json: '"foo"' });
+        await expect(
+          new Query(Foo).update({ id: 1, json: '"bar"' }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, json: '"bar"' }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, json: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, json: null }]
+        );
+      });
+
+      it('allows updating `jsonb` fields', async () => {
+        await createTable(table => {
+          table.jsonb('jsonb');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { jsonb: 'jsonb' };
+
+        await new Query(Foo).insert({ id: 1, jsonb: { foo: 'foo' } });
+        await expect(
+          new Query(Foo).update({ id: 1, jsonb: { foo: 'bar' } }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, jsonb: { foo: 'bar' } }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, jsonb: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, jsonb: null }]
+        );
+      });
+
+      it('allows updating `text` fields', async () => {
+        await createTable(table => {
+          table.text('text');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { text: 'text' };
+
+        await new Query(Foo).insert({ id: 1, text: 'foo' });
+        await expect(
+          new Query(Foo).update({ id: 1, text: 'bar' }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, text: 'bar' }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, text: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, text: null }]
+        );
+      });
+
+      it('allows updating `string` fields', async () => {
+        await createTable(table => {
+          table.string('string');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { string: 'string' };
+
+        await new Query(Foo).insert({ id: 1, string: 'foo' });
+        await expect(
+          new Query(Foo).update({ id: 1, string: 'bar' }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, string: 'bar' }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, string: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, string: null }]
+        );
+      });
+
+      it('allows updating `binary` fields', async () => {
+        await createTable(table => {
+          table.binary('binary');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { binary: 'binary' };
+
+        await new Query(Foo).insert({ id: 1, binary: Buffer.from('foo') });
+        await expect(
+          new Query(Foo).update({ id: 1, binary: Buffer.from('bar') }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, binary: Buffer.from('bar') }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, binary: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, binary: null }]
+        );
+      });
+
+      it('allows updating `decimal` fields', async () => {
+        await createTable(table => {
+          table.decimal('decimal');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { decimal: 'decimal' };
+
+        await new Query(Foo).insert({ id: 1, decimal: 1.2 });
+        await expect(
+          new Query(Foo).update([{ id: 1, decimal: 1.2 }]),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, decimal: '1.20' }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, decimal: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, decimal: null }]
+        );
+      });
+
+      it('allows updating `boolean` fields', async () => {
+        await createTable(table => {
+          table.boolean('boolean');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { boolean: 'boolean' };
+
+        await new Query(Foo).insert({ id: 1, boolean: false });
+        await expect(
+          new Query(Foo).update({ id: 1, boolean: true }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, boolean: true }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, boolean: null }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, boolean: null }]
+        );
+      });
     });
 
     describe('for multi-updates', () => {
