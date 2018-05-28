@@ -879,38 +879,38 @@ describe('KnormPostgres', () => {
           );
         });
       });
-    });
 
-    describe('with a single object', () => {
-      it('supports `insert`', async () => {
-        await expect(
-          new Query(User).save({ name: 'foo' }),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'foo' }]
-        );
-        await expect(
-          knex,
-          'with table',
-          User.table,
-          'to have sorted rows satisfying',
-          [{ id: 1, name: 'foo' }]
-        );
-      });
+      describe('with a single object', () => {
+        it('supports `insert`', async () => {
+          await expect(
+            new Query(User).save({ name: 'foo' }),
+            'to be fulfilled with sorted rows satisfying',
+            [{ id: 1, name: 'foo' }]
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foo' }]
+          );
+        });
 
-      it('supports `update`', async () => {
-        await new Query(User).insert([{ id: 1, name: 'foo' }]);
-        await expect(
-          new Query(User).save({ id: 1, name: 'foofoo' }),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }]
-        );
-        await expect(
-          knex,
-          'with table',
-          User.table,
-          'to have sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }]
-        );
+        it('supports `update`', async () => {
+          await new Query(User).insert([{ id: 1, name: 'foo' }]);
+          await expect(
+            new Query(User).save({ id: 1, name: 'foofoo' }),
+            'to be fulfilled with sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }]
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }]
+          );
+        });
       });
     });
   });
