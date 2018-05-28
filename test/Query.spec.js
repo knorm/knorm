@@ -1766,9 +1766,8 @@ describe('Query', () => {
 
       it('resolves with instances of the model', async () => {
         const query = new Query(User);
-        user.name = 'Jane Doe';
         await expect(
-          query.update(user),
+          query.update({ name: 'Jane Doe' }),
           'to be fulfilled with value satisfying',
           [expect.it('to be a', User), expect.it('to be a', User)]
         );
@@ -1808,9 +1807,8 @@ describe('Query', () => {
 
       it('casts fields configured with post-fetch cast functions', async () => {
         const query = new Query(User);
-        user.intToString = 10;
         await expect(
-          query.update(user),
+          query.update({ intToString: 10 }),
           'to be fulfilled with value satisfying',
           [{ id: 1, intToString: '10' }, { id: 2, intToString: '10' }]
         );
@@ -1820,6 +1818,20 @@ describe('Query', () => {
           User.table,
           'to have rows satisfying',
           [{ id: 1, int_to_string: 10 }, { id: 2, int_to_string: 10 }]
+        );
+      });
+
+      it('updates only the matching row if the primary field is set', async () => {
+        await expect(
+          new Query(User).update({ id: 1, name: 'foo' }),
+          'to be fulfilled'
+        );
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foo' }, { id: 2, name: 'Jane Doe' }]
         );
       });
     });
@@ -1942,19 +1954,13 @@ describe('Query', () => {
 
     describe('with `Model.notUpdated` fields configured', () => {
       it('does not update those fields', async () => {
-        const spy = sinon.spy(Query.prototype, 'query');
+        const spy = sinon.spy(Query.prototype, 'prepareUpdateBatch');
         user.name = 'Jane Doe';
         await new Query(User).update(user);
         await expect(spy, 'to have calls satisfying', () => {
-          spy(
-            expect.it(
-              'when passed as parameter to',
-              query => query.toString(),
-              expect
-                .it('to contain', '"name" =')
-                .and('not to contain', '"id" =')
-            )
-          );
+          spy([
+            expect.it('to have key', '"name"').and('not to have key', '"id"')
+          ]);
         });
         spy.restore();
       });
