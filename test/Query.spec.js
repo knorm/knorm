@@ -979,6 +979,14 @@ describe('Query', () => {
         ]);
       });
 
+      it("defaults to 'asc' for { field: 'unkown stuff' }", async () => {
+        const query = new Query(User).orderBy({ id: 'foo' });
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+      });
+
       it('supports a single field', async () => {
         const query = new Query(User).orderBy('id');
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
