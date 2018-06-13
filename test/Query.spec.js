@@ -652,6 +652,17 @@ describe('Query', () => {
         );
       });
 
+      it('ignores a `where in` expression with an empty array', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(where.in('id', []));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 1 }), new User({ id: 2 })]
+        );
+      });
+
       it('supports `between` with an array', async () => {
         const query = new Query(User);
         const where = new Query.Where();
