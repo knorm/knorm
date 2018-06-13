@@ -917,16 +917,12 @@ describe('KnormPostgres', () => {
 
   describe('PostgresTransaction', () => {
     let User;
-    let Query;
     let Transaction;
-    let plugin;
 
     before(async () => {
       const orm = knorm().use(knormPostgres({ connection }));
 
-      Query = orm.Query;
       Transaction = orm.Transaction;
-      plugin = orm.plugins.postgres;
 
       User = class extends orm.Model {};
       User.table = 'user';
@@ -938,223 +934,578 @@ describe('KnormPostgres', () => {
 
     afterEach(async () => knex(User.table).truncate());
 
-    it('enables scoped model operations', async () => {
-      await new Transaction(async function() {
-        await this.User.insert([{ id: 1, name: 'foo' }]);
-        await expect(this.User, 'not to be', User);
+    describe('with a callback function', () => {
+      it('rejects if `execute` is called without a callback', async () => {
+        await expect(
+          new Transaction().execute(),
+          'to be rejected with error satisfying',
+          new Transaction.TransactionError('no callback provided')
+        );
+        await expect(
+          new Transaction(),
+          'to be rejected with error satisfying',
+          new Transaction.TransactionError('no callback provided')
+        );
       });
-      await expect(
-        knex,
-        'with table',
-        User.table,
-        'to have sorted rows satisfying',
-        [{ id: 1, name: 'foo' }]
-      );
-    });
 
-    it('enables scoped query operations', async () => {
-      await new Transaction(async function() {
-        await new this.Query(this.User).insert([{ id: 1, name: 'foo' }]);
-        await expect(this.Query, 'not to be', Query);
+      it('enables scoped model operations', async () => {
+        await new Transaction(async function() {
+          await this.models.User.insert([{ id: 1, name: 'foo' }]);
+        });
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foo' }]
+        );
       });
-      await expect(
-        knex,
-        'with table',
-        User.table,
-        'to have sorted rows satisfying',
-        [{ id: 1, name: 'foo' }]
-      );
-    });
 
-    it('enables running raw scoped queries', async () => {
-      await expect(
-        new Transaction(async function() {
-          return new this.Query(this.User).query('select now() as now');
-        }),
-        'to be fulfilled with value satisfying',
-        [{ now: expect.it('to be a date') }]
-      );
-    });
-
-    it('enables running multiple queries in a transaction', async () => {
-      await new Transaction(async function() {
-        await this.User.insert([{ id: 1, name: 'foo' }]);
-        await this.User.insert([{ id: 2, name: 'bar' }]);
-        await this.User.update([{ id: 1, name: 'foofoo' }]);
+      it('enables scoped query operations', async () => {
+        await new Transaction(async function() {
+          await new this.Query(this.models.User).insert([
+            { id: 1, name: 'foo' }
+          ]);
+        });
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foo' }]
+        );
       });
-      await expect(
-        knex,
-        'with table',
-        User.table,
-        'to have sorted rows satisfying',
-        [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
-      );
-    });
 
-    it('rolls back a transaction on failure', async () => {
-      await expect(
-        new Transaction(async function() {
-          await this.User.insert([{ id: 1, name: 'foo' }]);
-          await this.User.insert([{ id: 1, name: 'bar' }]); // primary key error
-        }),
-        'to be rejected'
-      );
-      await expect(knex, 'with table', User.table, 'to be empty');
-    });
+      it('enables running raw scoped queries', async () => {
+        await expect(
+          new Transaction(async function() {
+            return new this.Query(this.models.User).query(
+              'select now() as now'
+            );
+          }),
+          'to be fulfilled with value satisfying',
+          [{ now: expect.it('to be a date') }]
+        );
+      });
 
-    it('resolves the transaction with the results from the callback', async () => {
-      await expect(
-        new Transaction(async () => ({ foo: 'bar' })),
-        'to be fulfilled with value satisfying',
-        { foo: 'bar' }
-      );
-    });
+      it('enables running multiple queries in a transaction', async () => {
+        await new Transaction(async function() {
+          await this.models.User.insert([{ id: 1, name: 'foo' }]);
+          await this.models.User.insert([{ id: 2, name: 'bar' }]);
+          await this.models.User.update([{ id: 1, name: 'foofoo' }]);
+        });
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+        );
+      });
 
-    it('rejects the transaction with the error from the callback', async () => {
-      await expect(
-        new Transaction(async () => {
+      it('rolls back a transaction on failure', async () => {
+        await expect(
+          new Transaction(async function() {
+            await this.models.User.insert([{ id: 1, name: 'foo' }]);
+            await this.models.User.insert([{ id: 1, name: 'bar' }]); // primary key error
+          }),
+          'to be rejected'
+        );
+        await expect(knex, 'with table', User.table, 'to be empty');
+      });
+
+      it('resolves the transaction with the results from the callback', async () => {
+        await expect(
+          new Transaction(async () => ({ foo: 'bar' })),
+          'to be fulfilled with value satisfying',
+          { foo: 'bar' }
+        );
+      });
+
+      it('rejects the transaction with the error from the callback', async () => {
+        await expect(
+          new Transaction(async () => {
+            throw new Error('foo');
+          }),
+          'to be rejected with error satisfying',
+          new Error('foo')
+        );
+      });
+
+      it('runs queries with one client', async () => {
+        const spy = sinon.spy(Transaction.prototype, 'acquireClient');
+        await new Transaction(async function() {
+          await this.models.User.insert([{ id: 1, name: 'foo' }]);
+          await this.models.User.insert([{ id: 2, name: 'bar' }]);
+        });
+        await expect(spy, 'was called once');
+        spy.restore();
+      });
+
+      it('runs queries with one client even with nested models', async () => {
+        const spy = sinon.spy(Transaction.prototype, 'acquireClient');
+        await new Transaction(async function() {
+          class FooUser extends this.models.User {
+            async foo() {
+              await this.models.User.insert([{ id: 1, name: 'foo' }]);
+              await this.models.User.insert([{ id: 2, name: 'bar' }]);
+            }
+          }
+          await new FooUser().foo();
+          await this.models.User.update([{ id: 1, name: 'foofoo' }]);
+        });
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+        );
+        await expect(spy, 'was called once');
+        spy.restore();
+      });
+
+      it('releases the client after runnning queries', async () => {
+        const spy = sinon.spy(Transaction.prototype, 'releaseClient');
+        await new Transaction(async function() {
+          await this.models.User.insert([{ id: 1, name: 'foo' }]);
+          await this.models.User.insert([{ id: 2, name: 'bar' }]);
+        });
+        await expect(spy, 'was called once');
+        spy.restore();
+      });
+
+      it('passes the client to the transaction callback', async () => {
+        const spy = sinon.spy().named('transaction');
+        await new Transaction(spy);
+        await expect(spy, 'to have calls satisfying', () =>
+          spy(expect.it('to be a', Client))
+        );
+      });
+
+      it('releases the client if `BEGIN` fails', async () => {
+        let client;
+        const transaction = new Transaction(() => {});
+        transaction._query = function(sql) {
+          client = this.client;
+          if (sql === 'BEGIN') {
+            throw new Error('begin error');
+          }
+        };
+        const spy = sinon.spy(transaction, '_query');
+        await expect(
+          transaction,
+          'to be rejected with error satisfying',
+          new Transaction.TransactionBeginError(new Error('begin error'))
+        );
+        await expect(
+          () => client.release(),
+          'to throw',
+          new Error(
+            'Release called on client which has already been released to the pool.'
+          )
+        );
+        await expect(spy, 'to have calls satisfying', () => {
+          spy('BEGIN');
+          spy('ROLLBACK');
+        });
+      });
+
+      it('releases the client if the transaction fails', async () => {
+        let client;
+        const transaction = new Transaction(() => {
           throw new Error('foo');
-        }),
-        'to be rejected with error satisfying',
-        new Error('foo')
-      );
-    });
-
-    it('runs queries with one client', async () => {
-      sinon.spy(plugin, 'acquireClient');
-      await new Transaction(async function() {
-        await this.User.insert([{ id: 1, name: 'foo' }]);
-        await this.User.insert([{ id: 2, name: 'bar' }]);
+        });
+        transaction._query = function() {
+          client = this.client;
+        };
+        await expect(
+          transaction,
+          'to be rejected with error satisfying',
+          new Error('foo')
+        );
+        await expect(
+          () => client.release(),
+          'to throw',
+          new Error(
+            'Release called on client which has already been released to the pool.'
+          )
+        );
       });
-      expect(plugin.acquireClient, 'was called once');
-    });
 
-    it('releases the client after runnning queries', async () => {
-      sinon.spy(plugin, 'releaseClient');
-      await new Transaction(async function() {
-        await this.User.insert([{ id: 1, name: 'foo' }]);
-        await this.User.insert([{ id: 2, name: 'bar' }]);
+      it('releases the client if `COMMIT` fails', async () => {
+        let client;
+        const transaction = new Transaction(async function() {
+          await new this.Query(this.models.User).query('select now()');
+        });
+        transaction._query = function(sql) {
+          client = this.client;
+          if (sql === 'COMMIT') {
+            throw new Error('commit error');
+          }
+        };
+        const spy = sinon.spy(transaction, '_query');
+        await expect(
+          transaction,
+          'to be rejected with error satisfying',
+          new Transaction.TransactionCommitError(new Error('commit error'))
+        );
+        await expect(
+          () => client.release(),
+          'to throw',
+          new Error(
+            'Release called on client which has already been released to the pool.'
+          )
+        );
+        await expect(spy, 'to have calls satisfying', () => {
+          spy('BEGIN');
+          spy('select now()');
+          spy('COMMIT');
+          spy('ROLLBACK');
+        });
       });
-      expect(plugin.releaseClient, 'was called once');
+
+      it('releases the client if `ROLLBACK` fails', async () => {
+        let client;
+        const transaction = new Transaction(async function() {
+          await new this.Query(this.models.User).query('select now()');
+          throw new Error('foo');
+        });
+        transaction._query = function(sql) {
+          client = this.client;
+          if (sql === 'ROLLBACK') {
+            throw new Error('rollback error');
+          }
+        };
+        const spy = sinon.spy(transaction, '_query');
+        await expect(
+          transaction,
+          'to be rejected with error satisfying',
+          new Transaction.TransactionRollbackError(new Error('rollback error'))
+        );
+        await expect(
+          () => client.release(),
+          'to throw',
+          new Error(
+            'Release called on client which has already been released to the pool.'
+          )
+        );
+        await expect(spy, 'to have calls satisfying', () => {
+          spy('BEGIN');
+          spy('select now()');
+          spy('ROLLBACK');
+        });
+      });
     });
 
-    it('passes the client to the transaction callback', async () => {
-      const spy = sinon.spy().named('transaction');
-      await new Transaction(spy);
-      expect(spy, 'to have calls satisfying', () =>
-        spy(expect.it('to be a', Client))
-      );
-    });
+    describe('without a callback function', () => {
+      it('enables scoped model operations', async () => {
+        const transaction = new Transaction();
+        await transaction.models.User.insert([{ id: 1, name: 'foo' }]);
+        await transaction.commit();
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foo' }]
+        );
+      });
 
-    it('releases the client if `BEGIN` fails', async () => {
-      let client;
-      const transaction = new Transaction(() => {});
-      transaction.query = function(sql) {
-        client = this.client;
-        if (sql === 'BEGIN') {
-          throw new Error('begin error');
+      it('enables scoped query operations', async () => {
+        const transaction = new Transaction();
+        await new transaction.Query(transaction.models.User).insert([
+          { id: 1, name: 'foo' }
+        ]);
+        await transaction.commit();
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foo' }]
+        );
+      });
+
+      it('enables running raw scoped queries', async () => {
+        const transaction = new Transaction();
+        await expect(
+          new transaction.Query(transaction.models.User).query(
+            'select now() as now'
+          ),
+          'to be fulfilled with value satisfying',
+          [{ now: expect.it('to be a date') }]
+        );
+        await transaction.commit();
+      });
+
+      it('enables running multiple queries in a transaction', async () => {
+        const transaction = new Transaction();
+        await transaction.models.User.insert([{ id: 1, name: 'foo' }]);
+        await transaction.models.User.insert([{ id: 2, name: 'bar' }]);
+        await transaction.models.User.update([{ id: 1, name: 'foofoo' }]);
+        await transaction.commit();
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+        );
+      });
+
+      it('rolls back a transaction on query failure', async () => {
+        await expect(async () => {
+          const transaction = new Transaction();
+          await transaction.models.User.insert([{ id: 1, name: 'foo' }]);
+          await transaction.models.User.insert([{ id: 1, name: 'bar' }]); // primary key error
+          await transaction.commit();
+        }, 'to be rejected');
+        await expect(knex, 'with table', User.table, 'to be empty');
+      });
+
+      it('runs queries with one client', async () => {
+        const transaction = new Transaction();
+        const spy = sinon.spy(transaction, 'acquireClient');
+        await transaction.models.User.insert([{ id: 1, name: 'foo' }]);
+        await transaction.models.User.insert([{ id: 2, name: 'bar' }]);
+        await transaction.commit();
+        await expect(spy, 'was called once');
+      });
+
+      it('runs queries with one client even with nested models', async () => {
+        const transaction = new Transaction();
+        const spy = sinon.spy(transaction, 'acquireClient');
+        class FooUser extends transaction.models.User {
+          async foo() {
+            await this.models.User.insert([{ id: 1, name: 'foo' }]);
+            await this.models.User.insert([{ id: 2, name: 'bar' }]);
+          }
         }
-      };
-      const spy = sinon.spy(transaction, 'query');
-      await expect(
-        transaction,
-        'to be rejected with error satisfying',
-        new Error('begin error')
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-      await expect(spy, 'was called once');
-    });
+        await new FooUser().foo();
+        await transaction.models.User.update([{ id: 1, name: 'foofoo' }]);
+        await transaction.commit();
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+        );
+        await expect(spy, 'was called once');
+      });
 
-    it('releases the client if the transaction fails', async () => {
-      let client;
-      const transaction = new Transaction(() => {
-        throw new Error('foo');
+      it('releases the client after runnning queries', async () => {
+        const transaction = new Transaction();
+        const spy = sinon.spy(transaction, 'releaseClient');
+        await transaction.models.User.insert([{ id: 1, name: 'foo' }]);
+        await transaction.models.User.insert([{ id: 2, name: 'bar' }]);
+        await transaction.commit();
+        await expect(spy, 'was called once');
+        spy.restore();
       });
-      transaction.query = function() {
-        client = this.client;
-      };
-      await expect(
-        transaction,
-        'to be rejected with error satisfying',
-        new Error('foo')
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-    });
 
-    it('releases the client if `COMMIT` fails', async () => {
-      let client;
-      const transaction = new Transaction(async function() {
-        await new this.Query(this.User).query('select now()');
-      });
-      transaction.query = function(sql) {
-        client = this.client;
-        if (sql === 'COMMIT') {
-          throw new Error('commit error');
-        }
-      };
-      const spy = sinon.spy(transaction, 'query');
-      await expect(
-        transaction,
-        'to be rejected with error satisfying',
-        new Error('commit error')
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-      await expect(spy, 'to have calls satisfying', () => {
-        spy('BEGIN');
-        spy('select now()');
-        spy('COMMIT');
-        spy('ROLLBACK');
-      });
-    });
+      describe('begin', () => {
+        it('acquires a client', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, 'acquireClient');
+          await transaction.begin();
+          await transaction.rollback();
+          await expect(spy, 'was called once');
+        });
 
-    it('releases the client if `ROLLBACK` fails', async () => {
-      let client;
-      const transaction = new Transaction(async function() {
-        await new this.Query(this.User).query('select now()');
-        throw new Error('foo');
+        it('rolls back the transaction on failure', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, '_rollback');
+          transaction._begin = function() {
+            throw new Error('begin error');
+          };
+          await expect(
+            transaction.begin(),
+            'to be rejected with error satisfying',
+            new Error('begin error')
+          );
+          await expect(spy, 'was called once');
+        });
+
+        it('releases the client on failure', async () => {
+          let client;
+          const transaction = new Transaction();
+          transaction._begin = function() {
+            client = this.client;
+            throw new Error('begin error');
+          };
+          await expect(
+            transaction.begin(),
+            'to be rejected with error satisfying',
+            new Error('begin error')
+          );
+          await expect(
+            () => client.release(),
+            'to throw',
+            new Error(
+              'Release called on client which has already been released to the pool.'
+            )
+          );
+        });
       });
-      transaction.query = function(sql) {
-        client = this.client;
-        if (sql === 'ROLLBACK') {
-          throw new Error('rollback error');
-        }
-      };
-      const spy = sinon.spy(transaction, 'query');
-      await expect(transaction, 'to be rejected with error satisfying', {
-        name: 'TransactionError',
-        message: 'unable to roll back after a failed transaction',
-        transactionError: new Error('foo'),
-        rollbackError: new Error('rollback error')
+
+      describe('query', () => {
+        it('acquires a client', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, 'acquireClient');
+          await transaction.query('select now()');
+          await transaction.query('select now()');
+          await transaction.rollback();
+          await expect(spy, 'was called once');
+        });
+
+        it('begins the transaction', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, 'begin');
+          await transaction.query('select now()');
+          await transaction.query('select now()');
+          await transaction.rollback();
+          await expect(spy, 'was called once');
+        });
+
+        it('rolls back the transaction on failure', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, 'rollback');
+          transaction._query = function(sql) {
+            if (sql === 'select now()') {
+              throw new Error('query error');
+            }
+          };
+          await expect(
+            transaction.query('select now()'),
+            'to be rejected with error satisfying',
+            new Error('query error')
+          );
+          await expect(spy, 'was called once');
+        });
+
+        it('releases the client on failure', async () => {
+          let client;
+          const transaction = new Transaction();
+          transaction._query = function(sql) {
+            client = this.client;
+            if (sql === 'select now()') {
+              throw new Error('query error');
+            }
+          };
+          await expect(
+            transaction.query('select now()'),
+            'to be rejected with error satisfying',
+            new Error('query error')
+          );
+          await expect(
+            () => client.release(),
+            'to throw',
+            new Error(
+              'Release called on client which has already been released to the pool.'
+            )
+          );
+        });
       });
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-      await expect(spy, 'to have calls satisfying', () => {
-        spy('BEGIN');
-        spy('select now()');
-        spy('ROLLBACK');
+
+      describe('commit', () => {
+        it('rolls back the transaction on failure', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, '_rollback');
+          transaction._commit = function() {
+            throw new Error('commit error');
+          };
+          await transaction.begin();
+          await expect(
+            transaction.commit(),
+            'to be rejected with error satisfying',
+            new Error('commit error')
+          );
+          await expect(spy, 'was called once');
+        });
+
+        it('releases the client on failure', async () => {
+          let client;
+          const transaction = new Transaction();
+          transaction._commit = function() {
+            client = this.client;
+            throw new Error('commit error');
+          };
+          await transaction.begin();
+          await expect(
+            transaction.commit(),
+            'to be rejected with error satisfying',
+            new Error('commit error')
+          );
+          await expect(
+            () => client.release(),
+            'to throw',
+            new Error(
+              'Release called on client which has already been released to the pool.'
+            )
+          );
+        });
+
+        it('releases the client on success', async () => {
+          let client;
+          const transaction = new Transaction();
+          transaction._commit = function() {
+            client = this.client;
+            return this.client.query('COMMIT');
+          };
+          await transaction.begin();
+          await expect(transaction.commit(), 'to be fulfilled');
+          await expect(
+            () => client.release(),
+            'to throw',
+            new Error(
+              'Release called on client which has already been released to the pool.'
+            )
+          );
+        });
+      });
+
+      describe('rollback', () => {
+        it('releases the client on failure', async () => {
+          let client;
+          const transaction = new Transaction();
+          transaction._rollback = function() {
+            client = this.client;
+            throw new Error('rollback error');
+          };
+          await transaction.begin();
+          await expect(
+            transaction.rollback(),
+            'to be rejected with error satisfying',
+            new Error('rollback error')
+          );
+          await expect(
+            () => client.release(),
+            'to throw',
+            new Error(
+              'Release called on client which has already been released to the pool.'
+            )
+          );
+        });
+
+        it('releases the client on success', async () => {
+          let client;
+          const transaction = new Transaction();
+          transaction._rollback = function() {
+            client = this.client;
+            return this.client.query('ROLLBACK');
+          };
+          await transaction.begin();
+          await expect(transaction.rollback(), 'to be fulfilled');
+          await expect(
+            () => client.release(),
+            'to throw',
+            new Error(
+              'Release called on client which has already been released to the pool.'
+            )
+          );
+        });
       });
     });
   });
