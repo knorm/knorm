@@ -1184,6 +1184,43 @@ describe('Query', () => {
       stub.restore();
     });
 
+    describe('when data is empty', () => {
+      it('does not send a db query', async () => {
+        const spy = sinon.stub(Query.prototype, 'query');
+        const query = new Query(User);
+        await expect(
+          query.insert([]),
+          'to be fulfilled with value satisfying',
+          []
+        );
+        await expect(
+          query.insert({}),
+          'to be fulfilled with value satisfying',
+          []
+        );
+        await expect(spy, 'was not called');
+        spy.restore();
+      });
+
+      it('resolves with `null` if `first` is configured', async () => {
+        const query = new Query(User).first();
+        await expect(
+          query.insert([]),
+          'to be fulfilled with value satisfying',
+          null
+        );
+      });
+
+      it('rejects with a NoRowsInsertedError if `require` is configured', async () => {
+        const query = new Query(User).require();
+        await expect(
+          query.insert({}),
+          'to be rejected with error satisfying',
+          new Query.NoRowsInsertedError({ query })
+        );
+      });
+    });
+
     describe('with a `returning` option', () => {
       it('returns only the fields requested', async () => {
         const query = new Query(User).returning('name');
@@ -1721,6 +1758,45 @@ describe('Query', () => {
         );
       });
       spy.restore();
+    });
+
+    describe('when data is empty', () => {
+      it('does not send a db query', async () => {
+        const spy = sinon.stub(Query.prototype, 'query');
+        const query = new Query(User);
+        await expect(
+          query.update([]),
+          'to be fulfilled with value satisfying',
+          []
+        );
+        await expect(
+          query.update({}),
+          'to be fulfilled with value satisfying',
+          []
+        );
+        await expect(spy, 'was not called');
+        spy.restore();
+      });
+
+      it('resolves with `null` if `first` is configured', async () => {
+        user.name = 'Jane Doe';
+        const query = new Query(User).first();
+        await expect(
+          query.update({}),
+          'to be fulfilled with value satisfying',
+          null
+        );
+      });
+
+      it('rejects with a NoRowsUpdatedError if `require` is configured', async () => {
+        user.name = 'Jane Doe';
+        const query = new Query(User).require();
+        await expect(
+          query.update({}),
+          'to be rejected with error satisfying',
+          new Query.NoRowsUpdatedError({ query })
+        );
+      });
     });
 
     it('rejects with a UpdateError if the update operation fails', async () => {
