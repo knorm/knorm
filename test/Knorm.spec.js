@@ -186,25 +186,11 @@ describe('Knorm', () => {
       );
     });
 
-    it('throws if the model-name is a reserved Knorm property', () => {
-      expect(
-        () => knorm.addModel(class Field extends knorm.Model {}),
-        'to throw',
-        new KnormError('cannot use `Field` as a model name (reserved property)')
-      );
-      expect(
-        () => knorm.addModel(class use extends knorm.Model {}),
-        'to throw',
-        new KnormError('cannot use `use` as a model name (reserved property)')
-      );
-    });
-
     it('adds the model to the Knorm instance', () => {
       class Foo extends knorm.Model {}
 
       knorm.addModel(Foo);
 
-      expect(knorm.Foo, 'to be', Foo);
       expect(knorm.models.Foo, 'to be', Foo);
     });
 
@@ -214,7 +200,6 @@ describe('Knorm', () => {
 
       knorm.addModel(Bar);
 
-      expect(knorm.Bar, 'to be', Bar);
       expect(knorm.models.Bar, 'to be', Bar);
     });
 
@@ -243,7 +228,6 @@ describe('Knorm', () => {
       class Foo extends knorm.Model {}
       knorm.addModel(Foo);
       const clone = knorm.clone();
-      expect(clone.Foo, 'to be', Foo);
       expect(clone.models.Foo, 'to be', Foo);
     });
 
@@ -251,8 +235,10 @@ describe('Knorm', () => {
       function foo(knorm) {
         knorm.Model = class Foo extends knorm.Model {};
       }
+
       knorm.use(foo);
       const clone = knorm.clone();
+
       expect(clone.plugins.foo, 'to be', foo);
       expect(clone.Model.name, 'to be', 'Foo');
     });
@@ -263,10 +249,7 @@ describe('Knorm', () => {
       class Bar extends clone.Model {}
       clone.addModel(Bar);
 
-      expect(clone.Bar, 'to be', Bar);
       expect(clone.models.Bar, 'to be', Bar);
-
-      expect(knorm.Bar, 'to be undefined');
       expect(knorm.models.Bar, 'to be undefined');
     });
 

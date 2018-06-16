@@ -1299,12 +1299,10 @@ describe('Model', function() {
         const knorm = new Knorm();
         class Foo extends knorm.Model {}
 
-        expect(knorm.Foo, 'to be undefined');
         expect(knorm.models.Foo, 'to be undefined');
 
         Foo.config = {};
 
-        expect(knorm.Foo, 'to be', Foo);
         expect(knorm.models.Foo, 'to be', Foo);
       });
     });
@@ -1316,16 +1314,13 @@ describe('Model', function() {
 
         Foo.config = {};
 
-        expect(knorm.Foo, 'to be', Foo);
         expect(knorm.models.Foo, 'to be', Foo);
 
         class Bar extends Foo {}
 
         Bar.config = {};
 
-        expect(knorm.Foo, 'to be', Foo);
         expect(knorm.models.Foo, 'to be', Foo);
-        expect(knorm.Bar, 'to be', Bar);
         expect(knorm.models.Bar, 'to be', Bar);
       });
     });
