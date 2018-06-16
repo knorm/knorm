@@ -22,13 +22,31 @@ describe('Transaction', function() {
       );
     });
 
-    it('adds accessors to scoped Field, Model, Query and user models', function() {
+    it('adds accessors to scoped Field, Model, Query', function() {
       expect(new Transaction(() => {}), 'to satisfy', transaction => {
         expect(transaction.Field, 'to be', Field);
         expect(transaction.Query.prototype, 'to be a', Query);
         expect(transaction.Model.prototype, 'to be a', Model);
         expect(transaction.Model.Query.prototype, 'to be a', Query);
-        expect(transaction.User.prototype, 'to be a', User);
+      });
+    });
+
+    it('adds accessors to scoped user models', function() {
+      expect(new Transaction(() => {}), 'to satisfy', transaction => {
+        const TransactionUser = transaction.models.User;
+        expect(TransactionUser.prototype, 'to be a', User);
+        expect(TransactionUser.prototype.models.User, 'to be', TransactionUser);
+        expect(
+          TransactionUser.prototype.models.User.prototype,
+          'to be a',
+          User
+        );
+        expect(TransactionUser.Query.prototype, 'to be a', Query);
+        expect(
+          TransactionUser.Query.prototype.models.User.prototype,
+          'to be a',
+          User
+        );
       });
     });
   });
@@ -53,7 +71,7 @@ describe('Transaction', function() {
 
       await expect(
         new FooTransaction(async function() {
-          return new this.Query(this.User).insert({ name: 'foo' });
+          return new this.Query(this.models.User).insert({ name: 'foo' });
         }),
         'to be rejected with error satisfying',
         {
@@ -65,7 +83,7 @@ describe('Transaction', function() {
 
       await expect(
         new FooTransaction(async function() {
-          return this.User.insert({ name: 'foo' });
+          return this.models.User.insert({ name: 'foo' });
         }),
         'to be rejected with error satisfying',
         {
