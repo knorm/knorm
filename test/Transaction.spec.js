@@ -14,16 +14,8 @@ User.fields = { name: { type: 'string', primary: true } };
 
 describe('Transaction', function() {
   describe('constructor', function() {
-    it('throws if not passed a transaction callback', function() {
-      expect(
-        () => new Transaction(),
-        'to throw',
-        new TransactionError('no `transaction` function provided')
-      );
-    });
-
     it('adds accessors to scoped Field, Model, Query', function() {
-      expect(new Transaction(() => {}), 'to satisfy', transaction => {
+      expect(new Transaction(), 'to satisfy', transaction => {
         expect(transaction.Field, 'to be', Field);
         expect(transaction.Query.prototype, 'to be a', Query);
         expect(transaction.Model.prototype, 'to be a', Model);
@@ -32,7 +24,7 @@ describe('Transaction', function() {
     });
 
     it('adds accessors to scoped user models', function() {
-      expect(new Transaction(() => {}), 'to satisfy', transaction => {
+      expect(new Transaction(), 'to satisfy', transaction => {
         const TransactionUser = transaction.models.User;
         expect(TransactionUser.prototype, 'to be a', User);
         expect(TransactionUser.prototype.models.User, 'to be', TransactionUser);
@@ -53,7 +45,7 @@ describe('Transaction', function() {
 
   describe('Transaction.prototype.query', function() {
     it('rejects if not overridden', async function() {
-      const transaction = new Transaction(() => {});
+      const transaction = new Transaction();
       await expect(
         transaction.query(),
         'to be rejected with error satisfying',
@@ -65,7 +57,7 @@ describe('Transaction', function() {
       class FooTransaction extends Transaction {
         async execute() {
           // eslint-disable-next-line no-useless-call
-          return this.transaction.call(this);
+          return this.callback.call(this);
         }
       }
 
@@ -97,7 +89,7 @@ describe('Transaction', function() {
 
   describe('Transaction.prototype.execute', function() {
     it('rejects if not overridden', async function() {
-      const transaction = new Transaction(() => {});
+      const transaction = new Transaction();
       await expect(
         transaction.execute(),
         'to be rejected with error satisfying',
@@ -125,7 +117,7 @@ describe('Transaction', function() {
     });
 
     it('calls Transaction.prototype.execute', async function() {
-      const transaction = new Transaction(() => {});
+      const transaction = new Transaction();
       await transaction.then();
       await expect(executeStub, 'to have calls satisfying', () => {
         executeStub();
@@ -133,7 +125,7 @@ describe('Transaction', function() {
     });
 
     it('calls the callback', async function() {
-      const transaction = new Transaction(() => {});
+      const transaction = new Transaction();
       const spy = sinon.spy();
       await transaction.then(spy);
       await expect(spy, 'to have calls satisfying', () => {
@@ -143,7 +135,7 @@ describe('Transaction', function() {
 
     it("calls the callback with Transaction.prototype.execute's fulfillment value", async function() {
       executeStub.returns(Promise.resolve('foo'));
-      const transaction = new Transaction(() => {});
+      const transaction = new Transaction();
       const spy = sinon.spy();
       await transaction.then(spy);
       await expect(spy, 'to have calls satisfying', () => {
@@ -154,13 +146,13 @@ describe('Transaction', function() {
     describe('when called without a callback', function() {
       it("resolves with Transaction.prototype.execute's fulfillment value", async function() {
         executeStub.returns(Promise.resolve('foo'));
-        const transaction = new Transaction(() => {});
+        const transaction = new Transaction();
         await expect(transaction.then(), 'to be fulfilled with', 'foo');
       });
 
       it('rejects if Transaction.prototype.execute rejects', async function() {
         executeStub.returns(Promise.reject(new Error('foo')));
-        const transaction = new Transaction(() => {});
+        const transaction = new Transaction();
         await expect(
           transaction.then(),
           'to be rejected with',
@@ -187,7 +179,7 @@ describe('Transaction', function() {
     });
 
     it('calls Transaction.prototype.execute', async function() {
-      const transaction = new Transaction(() => {});
+      const transaction = new Transaction();
       await transaction.catch();
       await expect(executeStub, 'to have calls satisfying', () => {
         executeStub();
@@ -197,7 +189,7 @@ describe('Transaction', function() {
     it('does not call the callback if Transaction.prototype.execute fulfils', async function() {
       executeStub.reset();
       executeStub.returns(Promise.resolve());
-      const transaction = new Transaction(() => {});
+      const transaction = new Transaction();
       const spy = sinon.spy();
       await transaction.catch(spy);
       await expect(spy, 'was not called');
@@ -205,7 +197,7 @@ describe('Transaction', function() {
 
     it('calls the callback if Transaction.prototype.execute rejects', async function() {
       executeStub.returns(Promise.reject(new Error('foo')));
-      const transaction = new Transaction(() => {});
+      const transaction = new Transaction();
       const spy = sinon.spy();
       await transaction.catch(spy);
       await expect(spy, 'to have calls satisfying', () => {
@@ -216,7 +208,7 @@ describe('Transaction', function() {
     describe('when called without a callback', function() {
       it("rejects with Transaction.prototype.execute's rejection reason", async function() {
         executeStub.returns(Promise.reject(new Error('foo')));
-        const transaction = new Transaction(() => {});
+        const transaction = new Transaction();
         await expect(
           transaction.catch(),
           'to be rejected with',
@@ -227,7 +219,7 @@ describe('Transaction', function() {
       it('fulfils if Transaction.prototype.execute fulfils', async function() {
         executeStub.reset();
         executeStub.returns(Promise.resolve());
-        const transaction = new Transaction(() => {});
+        const transaction = new Transaction();
         await expect(transaction.catch(), 'to be fulfilled');
       });
     });
