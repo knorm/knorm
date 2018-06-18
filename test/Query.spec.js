@@ -1022,6 +1022,76 @@ describe('Query', () => {
         ]);
       });
     });
+
+    describe('with `debug` configured', () => {
+      it('improves the FetchError stack trace', async () => {
+        const stub = sinon
+          .stub(Query.prototype, 'query')
+          .returns(Promise.reject(new Error('fetch error')));
+        await expect(
+          new Query(User).fetch(),
+          'to be rejected with error satisfying',
+          e => expect(e.stack, 'not to contain', 'test/Query.spec.js')
+        );
+        await expect(
+          new Query(User).debug(true).fetch(),
+          'to be rejected with error satisfying',
+          e => expect(e.stack, 'to contain', 'test/Query.spec.js')
+        );
+        stub.restore();
+      });
+
+      it('improves the InsertError stack trace', async () => {
+        const stub = sinon
+          .stub(Query.prototype, 'query')
+          .returns(Promise.reject(new Error('insert error')));
+        await expect(
+          new Query(User).insert({ name: 'foo' }),
+          'to be rejected with error satisfying',
+          e => expect(e.stack, 'not to contain', 'test/Query.spec.js')
+        );
+        await expect(
+          new Query(User).debug(true).insert({ name: 'foo' }),
+          'to be rejected with error satisfying',
+          e => expect(e.stack, 'to contain', 'test/Query.spec.js')
+        );
+        stub.restore();
+      });
+
+      it('improves the UpdateError stack trace', async () => {
+        const stub = sinon
+          .stub(Query.prototype, 'query')
+          .returns(Promise.reject(new Error('update error')));
+        await expect(
+          new Query(User).update({ name: 'foo' }),
+          'to be rejected with error satisfying',
+          e => expect(e.stack, 'not to contain', 'test/Query.spec.js')
+        );
+        await expect(
+          new Query(User).debug(true).update({ name: 'foo' }),
+          'to be rejected with error satisfying',
+          e => expect(e.stack, 'to contain', 'test/Query.spec.js')
+        );
+        stub.restore();
+      });
+
+      it('improves the DeleteError stack trace', async () => {
+        const stub = sinon
+          .stub(Query.prototype, 'query')
+          .returns(Promise.reject(new Error('delete error')));
+        await expect(
+          new Query(User).delete(),
+          'to be rejected with error satisfying',
+          e => expect(e.stack, 'not to contain', 'test/Query.spec.js')
+        );
+        await expect(
+          new Query(User).debug(true).delete(),
+          'to be rejected with error satisfying',
+          e => expect(e.stack, 'to contain', 'test/Query.spec.js')
+        );
+        stub.restore();
+      });
+    });
   });
 
   describe('Query.prototype.insert', () => {
