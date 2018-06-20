@@ -575,6 +575,50 @@ describe('Query', () => {
         });
       });
 
+      describe('with non-fields', () => {
+        it('supports var-args', async () => {
+          const query = new Query(User);
+          query.where('(id)', 2);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        it('supports objects', async () => {
+          const query = new Query(User);
+          query.where({ '(id)': 2 });
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        it('supports where expressions with var-args', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.like('(id || name)', '%2'));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        it('supports where expressions with an object', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.like({ '(id || name)': '%2' }));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+      });
+
       it('supports expressions', async () => {
         const query = new Query(User);
         const where = new Query.Where();
