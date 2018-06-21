@@ -211,23 +211,23 @@ describe('KnormPostgres', () => {
     });
 
     describe('for `json` and `jsonb` fields', () => {
-      it('stringifies values before save', () => {
-        const field = new Field({ name: 'foo', model: Model, type: 'json' });
-        expect(
-          field.cast({ foo: 'bar' }, null, { forSave: true }),
-          'to be',
-          JSON.stringify({ foo: 'bar' })
-        );
-      });
+      describe('forSave', () => {
+        it('stringifies values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(
+            field.cast({ foo: 'bar' }, null, { forSave: true }),
+            'to equal',
+            JSON.stringify({ foo: 'bar' })
+          );
+        });
 
-      it('does not stringify `null` values', () => {
-        const field = new Field({ name: 'foo', model: Model, type: 'json' });
-        expect(field.cast(null, { forSave: true }), 'to be undefined');
-      });
+        it('does not stringify `null` values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(field.cast(null, { forSave: true }), 'to be undefined');
+        });
 
-      describe('with a forSave cast function configured', () => {
-        describe('for `json` and `jsonb` fields', () => {
-          it('uses the configred function for json fields', () => {
+        describe('with a forSave cast function configured', () => {
+          it('uses the configred function', () => {
             const field = new Field({
               name: 'foo',
               model: Model,
@@ -258,35 +258,100 @@ describe('KnormPostgres', () => {
             expect(forSave, 'was called on', instance);
           });
         });
+      });
 
-        describe('for other field types', () => {
-          it('uses the configred function for other field types', () => {
+      describe('forFetch', () => {
+        it('parses values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(
+            field.cast(JSON.stringify({ foo: 'bar' }), null, {
+              forFetch: true
+            }),
+            'to equal',
+            { foo: 'bar' }
+          );
+        });
+
+        it('does not parse `null` values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(field.cast(null, { forFetch: true }), 'to be undefined');
+        });
+
+        it('does nothing for already parsed values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(
+            field.cast({ foo: 'bar' }, null, { forFetch: true }),
+            'to be undefined'
+          );
+        });
+
+        it('parses json string values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(field.cast('"bar"', null, { forFetch: true }), 'to be', 'bar');
+        });
+
+        describe('with a forFetch cast function configured', () => {
+          it('uses the configred function', () => {
             const field = new Field({
               name: 'foo',
               model: Model,
-              type: 'text',
+              type: 'jsonb',
               cast: {
-                forSave() {
+                forFetch() {
                   return 'foo';
                 }
               }
             });
-            expect(field.cast('bar', null, { forSave: true }), 'to be', 'foo');
+            expect(
+              field.cast({ foo: 'bar' }, null, { forFetch: true }),
+              'to be',
+              'foo'
+            );
           });
 
           it('calls the function with `this` set to the model instance', () => {
-            const forSave = sinon.spy();
+            const forFetch = sinon.spy();
             const field = new Field({
               name: 'foo',
               model: Model,
-              type: 'string',
-              cast: { forSave }
+              type: 'json',
+              cast: { forFetch }
             });
             const instance = { model: 'instace' };
-            field.cast('bar', instance, { forSave: true });
-            expect(forSave, 'was called on', instance);
+            field.cast({ foo: 'bar' }, instance, { forFetch: true });
+            expect(forFetch, 'was called on', instance);
           });
         });
+      });
+    });
+
+    // regression tests
+    describe('with a forSave cast function configured for non-json fields', () => {
+      it('uses the configred function for other field types', () => {
+        const field = new Field({
+          name: 'foo',
+          model: Model,
+          type: 'text',
+          cast: {
+            forSave() {
+              return 'foo';
+            }
+          }
+        });
+        expect(field.cast('bar', null, { forSave: true }), 'to be', 'foo');
+      });
+
+      it('calls the function with `this` set to the model instance', () => {
+        const forSave = sinon.spy();
+        const field = new Field({
+          name: 'foo',
+          model: Model,
+          type: 'string',
+          cast: { forSave }
+        });
+        const instance = { model: 'instace' };
+        field.cast('bar', instance, { forSave: true });
+        expect(forSave, 'was called on', instance);
       });
     });
   });
@@ -593,7 +658,7 @@ describe('KnormPostgres', () => {
         await expect(
           new Query(Foo).update({ id: 1, json: '"bar"' }),
           'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, json: '"bar"' }]
+          [{ id: 1, json: 'bar' }]
         );
         await expect(
           new Query(Foo).update({ id: 1, json: null }),
