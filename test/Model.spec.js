@@ -1599,13 +1599,12 @@ describe('Model', function() {
       });
 
       describe('with `methods` configured on a field', function() {
-        it('adds `ByField` methods if `primary` is configured', function() {
+        it('adds `ByField` methods', function() {
           class User extends Model {}
 
           User.fields = {
             id: {
               type: 'string',
-              primary: true,
               methods: true
             }
           };
@@ -1613,37 +1612,6 @@ describe('Model', function() {
           expect(User.fetchById, 'to be a function');
           expect(User.updateById, 'to be a function');
           expect(User.deleteById, 'to be a function');
-        });
-
-        it('adds `ByField` methods if `unique` is configured', function() {
-          class User extends Model {}
-
-          User.fields = {
-            id: {
-              type: 'string',
-              unique: true,
-              methods: true
-            }
-          };
-
-          expect(User.fetchById, 'to be a function');
-          expect(User.updateById, 'to be a function');
-          expect(User.deleteById, 'to be a function');
-        });
-
-        it('does not add `ByField` methods if `unique` nor `primary` are configured', function() {
-          class User extends Model {}
-
-          User.fields = {
-            id: {
-              type: 'string',
-              methods: true
-            }
-          };
-
-          expect(User.fetchById, 'to be undefined');
-          expect(User.updateById, 'to be undefined');
-          expect(User.deleteById, 'to be undefined');
         });
 
         it('adds the correct names for camelCased field names', function() {
@@ -2658,10 +2626,11 @@ describe('Model', function() {
       });
     });
 
-    describe('with `methods` configured for `unique` or `primary` fields', function() {
+    describe('with `methods` configured', function() {
+      beforeEach(async () => new User({ id: 1, name: 'John Doe' }).insert());
+
       describe('Model.fetchByField', function() {
         it('fetches a model using the field', async function() {
-          await new User({ id: 1, name: 'John Doe' }).insert();
           await expect(
             User.fetchById(1),
             'to be fulfilled with value satisfying',
@@ -2670,7 +2639,6 @@ describe('Model', function() {
         });
 
         it('passes options along', async function() {
-          await new User({ id: 1, name: 'John Doe' }).insert();
           await expect(
             User.fetchById(1, { where: { name: 'foo' } }),
             'to be rejected with error satisfying',
@@ -2681,7 +2649,6 @@ describe('Model', function() {
 
       describe('Model.deleteByField', function() {
         it('deletes a model using its primary field value', async function() {
-          await new User({ id: 1, name: 'John Doe' }).insert();
           await expect(
             User.deleteById(1),
             'to be fulfilled with value satisfying',
@@ -2691,7 +2658,6 @@ describe('Model', function() {
         });
 
         it('passes options along', async function() {
-          await new User({ id: 1, name: 'John Doe' }).insert();
           await expect(
             User.deleteById(1, { where: { name: 'foo' } }),
             'to be rejected with error satisfying',
@@ -2702,7 +2668,6 @@ describe('Model', function() {
 
       describe('Model.updateByField', function() {
         it('updates a model using its primary field value', async function() {
-          await new User({ id: 1, name: 'John Doe' }).insert();
           await expect(
             User.updateById(1, { name: 'Jane Doe' }),
             'to be fulfilled with value satisfying',
@@ -2718,7 +2683,6 @@ describe('Model', function() {
         });
 
         it('passes options along', async function() {
-          await new User({ id: 1, name: 'John Doe' }).insert();
           await expect(
             User.updateById(
               1,
