@@ -269,6 +269,25 @@ describe('Query', () => {
       );
     });
 
+    it('casts only fields returned in the fetched data', async () => {
+      const spy = sinon.spy(User.prototype, 'cast');
+      const query = new Query(User).fields(['id', 'name']);
+      await expect(
+        query.fetch(),
+        'to be fulfilled with sorted rows exhaustively satisfying',
+        [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        // once per row
+        spy({ fields: ['id', 'name'], forFetch: true });
+        spy({ fields: ['id', 'name'], forFetch: true });
+      });
+      spy.restore();
+    });
+
     it('rejects with a FetchError if a database error occurs', async () => {
       const stub = sinon
         .stub(Query.prototype, 'query')
@@ -1254,11 +1273,27 @@ describe('Query', () => {
       await expect(
         query.insert(user),
         'to be fulfilled with value satisfying',
-        [{ intToString: '10' }]
+        [new User({ intToString: '10' })]
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
         { id: 1, name: 'John Doe', int_to_string: 10 }
       ]);
+    });
+
+    it('casts only fields returned in the inserted data', async () => {
+      const spy = sinon.spy(User.prototype, 'cast');
+      const query = new Query(User).returning(['name']);
+      const user = new User({ id: 1, name: 'John Doe', intToString: 10 });
+      await expect(
+        query.insert(user),
+        'to be fulfilled with sorted rows exhaustively satisfying',
+        [new User({ name: 'John Doe' })]
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy({ fields: expect.it('to be an array'), forSave: true }); // for the insert
+        spy({ fields: ['name'], forFetch: true });
+      });
+      spy.restore();
     });
 
     it('accepts options', async () => {
@@ -1840,6 +1875,22 @@ describe('Query', () => {
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
         { id: 1, name: 'John Doe', json_field: ['foo', 'bar'] }
       ]);
+    });
+
+    it('casts only fields returned in the updated data', async () => {
+      const spy = sinon.spy(User.prototype, 'cast');
+      const query = new Query(User).returning(['name']);
+      user.jsonField = ['foo', 'bar'];
+      await expect(
+        query.update(user),
+        'to be fulfilled with sorted rows exhaustively satisfying',
+        [new User({ name: 'John Doe' })]
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy({ fields: expect.it('to be an array'), forSave: true }); // for the update
+        spy({ fields: ['name'], forFetch: true });
+      });
+      spy.restore();
     });
 
     it('accepts options', async () => {
