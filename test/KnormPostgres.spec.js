@@ -285,6 +285,14 @@ describe('KnormPostgres', () => {
           );
         });
 
+        it('does nothing for already parsed string values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(
+            field.cast('bar', null, { forFetch: true }),
+            'to be undefined'
+          );
+        });
+
         it('parses json string values', () => {
           const field = new Field({ name: 'foo', model: Model, type: 'json' });
           expect(field.cast('"bar"', null, { forFetch: true }), 'to be', 'bar');
