@@ -1148,12 +1148,11 @@ describe('KnormPostgres', () => {
         spy.restore();
       });
 
-      it('passes the client to the transaction callback', async () => {
+      it('passes the transaction to the callback', async () => {
         const spy = sinon.spy().named('transaction');
-        await new Transaction(spy);
-        await expect(spy, 'to have calls satisfying', () =>
-          spy(expect.it('to be a', Client))
-        );
+        const transaction = new Transaction(spy);
+        await transaction;
+        await expect(spy, 'to have calls satisfying', () => spy(transaction));
       });
 
       it('releases the client if `BEGIN` fails', async () => {
