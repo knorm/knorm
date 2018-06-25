@@ -56,8 +56,7 @@ describe('Transaction', function() {
     it('rejects on the scoped Query classes', async function() {
       class FooTransaction extends Transaction {
         async execute() {
-          // eslint-disable-next-line no-useless-call
-          return this.callback.call(this);
+          return this.callback(this);
         }
       }
 
