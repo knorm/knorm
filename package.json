@@ -1,13 +1,13 @@
 {
   "name": "@knorm/knorm",
-  "version": "1.0.0",
+  "version": "1.0.0-next",
   "description": "A purely ES6 class-based ORM for Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --exit 'test/**/*.spec.js'",
-    "coverage": "nyc npm test",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
+    "test": "mocha --exit 'test/**/*.spec.js'",
+    "coverage": "nyc npm test",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d postgres",
     "postgres:stop": "docker-compose stop postgres",

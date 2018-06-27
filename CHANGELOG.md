@@ -1,3 +1,197 @@
+<a name="1.0.0-next"></a>
+# [1.0.0-next](https://github.com/knorm/knorm/compare/v0.11.1...v1.0.0-next) (2018-06-27)
+
+
+### Bug Fixes
+
+* **Field:** JSON.parse and validate json fields ([44ec983](https://github.com/knorm/knorm/commit/44ec983))
+* **Field:** throw validation errors for invalid JSON strings ([aa82671](https://github.com/knorm/knorm/commit/aa82671))
+* **Knorm:** allow plugins to update base Model class ([bd8f182](https://github.com/knorm/knorm/commit/bd8f182))
+* **Knorm:** enable plugins to access themselves ([b6a1f7b](https://github.com/knorm/knorm/commit/b6a1f7b))
+* **Knorm:** no need for a new Transation per instance ([0ba58aa](https://github.com/knorm/knorm/commit/0ba58aa))
+* **Knorm:** show correct errors for reserved property names ([d89981a](https://github.com/knorm/knorm/commit/d89981a))
+* **Model:** allow adding methods for non-unique fields ([191e202](https://github.com/knorm/knorm/commit/191e202))
+* **Model:** allow unsetting primary field in a child model ([24e84dc](https://github.com/knorm/knorm/commit/24e84dc))
+* **Model:** cast data after instance db operatons ([c8784d9](https://github.com/knorm/knorm/commit/c8784d9))
+* **Model:** do not rely on Query returning the same instance ([ae89fda](https://github.com/knorm/knorm/commit/ae89fda))
+* **Model:** remove unncessary function binding for virtuals ([3a2f79b](https://github.com/knorm/knorm/commit/3a2f79b))
+* **package:** update knex peerDep versions ([dd5de39](https://github.com/knorm/knorm/commit/dd5de39))
+* **package:** update validator to version 10.1.0 ([471e8b4](https://github.com/knorm/knorm/commit/471e8b4)), closes [#73](https://github.com/knorm/knorm/issues/73)
+* **Query:** cast before validate ([dc6a851](https://github.com/knorm/knorm/commit/dc6a851)), closes [#fb394f3](https://github.com/knorm/knorm/issues/fb394f3)
+* **Query:** cast values *after* validating ([d222922](https://github.com/knorm/knorm/commit/d222922))
+* **Query:** change default placeholder to `$` ([414fda0](https://github.com/knorm/knorm/commit/414fda0))
+* **Query:** do not consider primary field for array updates ([b12be78](https://github.com/knorm/knorm/commit/b12be78))
+* **Query:** do not include primary fields if not requested ([7c24a16](https://github.com/knorm/knorm/commit/7c24a16))
+* **Query:** negate "where in []" queries ([88c006f](https://github.com/knorm/knorm/commit/88c006f))
+* set `knorm` and `models` defaults ([6dfa402](https://github.com/knorm/knorm/commit/6dfa402))
+* **Query:** fix handling of where expressions with array values ([25a4968](https://github.com/knorm/knorm/commit/25a4968))
+* **Query:** getData -> getFieldData ([174561a](https://github.com/knorm/knorm/commit/174561a))
+* **Query:** handle a "no `fields` option" edge case ([35d4d1d](https://github.com/knorm/knorm/commit/35d4d1d))
+* **Query:** handle unknown directions in orderBy ([4b9cbbb](https://github.com/knorm/knorm/commit/4b9cbbb))
+* **Query:** handle update/insert with empty data ([355e49b](https://github.com/knorm/knorm/commit/355e49b))
+* **Query:** quote columns for insert and update ([1921975](https://github.com/knorm/knorm/commit/1921975))
+* **Query:** support non-fields in where/having clauses ([b249aa8](https://github.com/knorm/knorm/commit/b249aa8))
+* **Query:** update single row when primary field is set ([9d88237](https://github.com/knorm/knorm/commit/9d88237))
+* **Where:** ensure aliases are not overwritten ([5071e7d](https://github.com/knorm/knorm/commit/5071e7d))
+* **WithKnex:** throw KnormError instances ([13603b0](https://github.com/knorm/knorm/commit/13603b0))
+
+
+### Code Refactoring
+
+* **Field:** drop 'json' from jsonObject and jsonArray ([cccaab0](https://github.com/knorm/knorm/commit/cccaab0))
+* **Field:** Field.types.uuidV4 => Field.types.uuid4 ([cdeb2aa](https://github.com/knorm/knorm/commit/cdeb2aa))
+* **Model:** refactor configs into Model.config ([6cd3d4e](https://github.com/knorm/knorm/commit/6cd3d4e))
+* **Model:** remove debug-specific checks ([4510e94](https://github.com/knorm/knorm/commit/4510e94))
+* **Model:** remove unnecessary static getters ([81d433c](https://github.com/knorm/knorm/commit/81d433c))
+* **Query:** add query errors as statics ([6623e90](https://github.com/knorm/knorm/commit/6623e90))
+* **Query:** complete rewrite ([28f461c](https://github.com/knorm/knorm/commit/28f461c))
+* remove base classes from exports ([9b7fb87](https://github.com/knorm/knorm/commit/9b7fb87))
+* **Query:** remove Query.prototype.count ([fd4d131](https://github.com/knorm/knorm/commit/fd4d131))
+* **Query:** remove relations-related code ([3fe4408](https://github.com/knorm/knorm/commit/3fe4408))
+* **Query:** swap knex with sql-bricks ([53ffe28](https://github.com/knorm/knorm/commit/53ffe28))
+* **Virtual:** remove `hasGetter` and `hasSetter` ([734c734](https://github.com/knorm/knorm/commit/734c734))
+
+
+### Features
+
+* **Field:** support the `fieldName: fieldType` config shorthand ([cba1504](https://github.com/knorm/knorm/commit/cba1504))
+* **Knorm:** add `addModel` ([97b66d1](https://github.com/knorm/knorm/commit/97b66d1))
+* **Knorm:** add `clone` ([b894409](https://github.com/knorm/knorm/commit/b894409))
+* **Knorm:** add accessors to models ([7ea0938](https://github.com/knorm/knorm/commit/7ea0938))
+* **Knorm:** link scoped classes to the Knorm instance ([29ff34d](https://github.com/knorm/knorm/commit/29ff34d))
+* **Knorm:** store plugins added by name ([e7f2a1d](https://github.com/knorm/knorm/commit/e7f2a1d))
+* **Model:** add `getField` ([5e4d5b0](https://github.com/knorm/knorm/commit/5e4d5b0))
+* **Model:** add `getVirtualData` ([9b23c6f](https://github.com/knorm/knorm/commit/9b23c6f))
+* **Model:** add `getVirtualDataSync` and `getDataSync` ([5da6c6f](https://github.com/knorm/knorm/commit/5da6c6f))
+* **Model:** add `Model.removeField` ([ee10c65](https://github.com/knorm/knorm/commit/ee10c65))
+* **Model:** add `Model.where` ([8f3dbcb](https://github.com/knorm/knorm/commit/8f3dbcb))
+* **Model:** add models to the knorm instance ([52c9b57](https://github.com/knorm/knorm/commit/52c9b57))
+* **Model:** expose `getFieldData` ([a8e0ec1](https://github.com/knorm/knorm/commit/a8e0ec1))
+* **Query:** add `Query.where` getter ([0d6595f](https://github.com/knorm/knorm/commit/0d6595f))
+* **Query:** add debug mode with better stack traces ([3fdf2e5](https://github.com/knorm/knorm/commit/3fdf2e5))
+* **Query:** support `between` expressions with an array value ([0f5f403](https://github.com/knorm/knorm/commit/0f5f403))
+* **Query:** support `in` queries with an empty array ([4982fdc](https://github.com/knorm/knorm/commit/4982fdc))
+* **Query:** support objects for where expressions ([b1b826d](https://github.com/knorm/knorm/commit/b1b826d))
+* **Transaction:** add transaction-scoped classes ([173e283](https://github.com/knorm/knorm/commit/173e283))
+* **Transaction:** add TransactionError ([224033a](https://github.com/knorm/knorm/commit/224033a))
+
+
+### Performance Improvements
+
+* **KnormError:** do not format formatted messages ([59e2796](https://github.com/knorm/knorm/commit/59e2796))
+* **Model:** inherit model configs when setting configs ([7bb98b9](https://github.com/knorm/knorm/commit/7bb98b9))
+* **Query:** concat insert/update batches async ([6139b8f](https://github.com/knorm/knorm/commit/6139b8f))
+* **Query:** only cast data returned from the database ([2be52e3](https://github.com/knorm/knorm/commit/2be52e3))
+
+
+### BREAKING CHANGES
+
+**Knorm:**
+
+* no more `knex` option. not needed since knorm now delegates
+  db connection-handling to plugins
+* `const { Model } = require('@knorm/knorm')` does not work anymore. base 
+  classes can be accessed via a Knorm instance or as Knorm statics
+* plugins are now required to have a `name` property
+
+**Model:** 
+
+* refactored:
+
+  * `Model.setFields` => `Model.config.fields` / `Model.fields` setter
+  * `Model.getFields` => `Model.config.fields` / `Model.fields` getter
+  * `Model.setVirtuals` => `Model.config.virtuals` / `Model.virtuals` setter
+  * `Model.getVirtuals` => `Model.config.virtuals` / `Model.virtuals` getter
+  * `Model.setVirtuals` => `Model.config.virtuals` / `Model.virtuals` setter
+  * `Model.getPrimary` => `Model.config.primary` / `Model.primary` getter
+  * `Model.getUnique` => `Model.config.unique` / `Model.unique` setter
+  * `Model.getReferences` => `Model.config.references` / `Model.references`  getter
+  * `Model.getNotUpdated` => `Model.config.notUpdated` / `Model.notUpdated` getter
+
+* refactored:
+
+  * `Model.primary` => `Model.config.primary`
+  * `Model.notUpdated` => `Model.config.notUpdated`
+  * `Model.unique` => `Model.config.unique`
+
+* removed checks:
+
+  * Removed check for unknown keys in `setData`
+  * Removed check for unknown fields for all methods that accept a `fields` option
+    e.g. `validate`, `getData`, `getDataSync`, `getFieldData`, `getVirtualData`,
+    `getVirtualDataSync`, `cast` and `setDefaults`
+  * Removed check for virtuals having a setter in `setData`. Now a JS `TypeError`
+    is thrown instead
+
+**Field:** 
+
+* renamed field types:
+
+  * `jsonObject` => `object`
+  * `jsonArray` => `array`
+  * `uuidV4` => `uuid4`
+
+**Virtual:** 
+
+* removed `hasGetter` and `hasSetter` instead, use `!!virtual.get` or `!!virtual.set`
+
+**Query:** 
+
+* swap knex with sql-bricks. this change means that knorm only
+  generates SQL and leaves query-running (connections, pooling,
+  transations) to db-specific plugins
+* removed support for Oracle and MSSQL which was not properly
+  tested anyway
+* support for relations moved to @knorm/relations: 
+  https://github.com/knorm/relations
+* removed Query.prototype.count, moved to @knorm/paginate:
+  https://github.com/knorm/paginate
+* fixed the `lean` (or `forge: false` option) option to not cast values. This
+  option now works as it should, completely bypassing creation of Model
+  instances (which includes casting values)
+* inverted specifying of field aliases for `fields` and `.returning` to match
+  knex's query builder: `.fields({ field: 'alias' })`
+  to `.fields({ alias: 'field' })`  
+* removed `Query.errors` and added them directly to `Query`
+* all `where*` e.g. `whereIn` are removed and replaced with
+  expressions e.g. `where(where.in(field, values))`
+* `insert` does not resolve with the same instances that were
+  passed. we cannot guarantee that all instances passed in
+  will be returned from the insert
+* `update` does not resolve with the same instances that were
+  passed
+* fix: joined models are always returned as an array unless
+  `first` is configured on the joined query
+* removed checks:
+
+  * removed `Query.errors`. Errors are now exported directly as `Query` statics
+    e.g. `Query.QueryError`, `Query.FetchError`
+  * removed support for `fields` with Field instances:
+    `.fetch({ fields: Model.fields })`, `.fields(Model.fields)`
+  * removed support for `returning` with Field instances:
+    `.insert({ foo: 'bar' }, { returning: Model.fields })`,
+    `.returning(Model.fields)`
+  * removed validation of fields for all Query methods:
+    `.fetch({ where: { unknownField: 'foo' } })` will throw
+  * removed casting of aliased fields: if a field has a post-fetch cast function
+    it won't be cast of the field is aliased in a fetch
+  * removed support for `.where({ field: [] })` to mean "where field in array".
+    `where` is now just a proxy to knex's query builder's `where`
+  * removed support for `having` with object values i.e. `.having({ id: 1 })`.
+    `having` is now just a proxy to knex's query builder's `having`
+  * removed the `within` alias for `transaction`
+  * removed the check against doing a fetch on a joined query
+  * removed support for the `on` option with Field instances:
+    `.on(Model.fields.id)`
+  * removed support for the `field` option with Field instances:
+    `.field(Model.fields.id)`
+  * removed support for `distinct` with field instances:
+    `.distinct(Model.fields.id)`
+  * removed check against `insert` and `update` with non-object values
+  * removed check against `insert` and `update` with instances of a different
+    model
+
+
 <a name="0.11.1"></a>
 ## [0.11.1](https://github.com/joelmukuthu/knorm/compare/v0.11.0...v0.11.1) (2018-05-02)
 
