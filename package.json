@@ -4,10 +4,10 @@
   "description": "Postgres plugin for knorm",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --exit 'test/**/*.spec.js'",
-    "coverage": "nyc npm test",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
+    "test": "mocha --exit 'test/**/*.spec.js'",
+    "coverage": "nyc npm test",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d postgres",
     "postgres:stop": "docker-compose stop postgres",
@@ -19,7 +19,7 @@
     "@knorm/knorm": "^1.0.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "github:knorm/knorm",
+    "@knorm/knorm": "^1.0.0",
     "coveralls": "^3.0.0",
     "eslint": "^4.15.0",
     "eslint-config-ganintegrity": "^2.0.2",
