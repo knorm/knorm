@@ -218,7 +218,6 @@ describe('KnormRelations', () => {
             Foo: { fooId: Quux.fields.fooId, fooId2: Quux.fields.fooId2 }
           });
         });
-      });
 
       describe('when a field is removed', () => {
         it('removes the field', () => {
@@ -248,6 +247,26 @@ describe('KnormRelations', () => {
 
           Bar.removeField(Bar.fields.barId);
           expect(Bar.config.references, 'to be empty');
+        });
+
+        it("removes the field's reference function", () => {
+          class Foo extends Model {}
+          class Bar extends Model {}
+
+          Foo.fields = { id: { type: 'integer' } };
+          Bar.fields = {
+            id: 'integer',
+            fooId: {
+              type: 'integer',
+              references() {
+                return Foo.fields.id;
+              }
+            }
+          };
+
+          expect(Bar.config.referenceFunctions, 'to have key', 'fooId');
+          Bar.removeField(Bar.fields.fooId);
+          expect(Bar.config.referenceFunctions, 'to be empty');
         });
       });
     });
