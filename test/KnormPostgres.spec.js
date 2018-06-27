@@ -1,4 +1,3 @@
-const { Client } = require('pg');
 const knorm = require('@knorm/knorm');
 const KnormPostgres = require('../lib/KnormPostgres');
 const knormPostgres = require('../');
