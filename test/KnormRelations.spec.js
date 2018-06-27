@@ -199,6 +199,44 @@ describe('KnormRelations', () => {
           });
         });
 
+        it('overwrites reference functions defined in the parent', function() {
+          class Bar extends Model {}
+          class Quux extends Bar {}
+
+          Bar.fields = {
+            fooId: {
+              type: 'integer',
+              references() {
+                return Foo.fields.id;
+              }
+            }
+          };
+          Quux.fields = {
+            fooId: {
+              type: 'integer',
+              references() {
+                return Foo.fields.id2;
+              }
+            }
+          };
+
+          expect(
+            Model.config.referenceFunctions,
+            'to exhaustively satisfy',
+            {}
+          );
+          expect(Bar.config.referenceFunctions, 'to exhaustively satisfy', {
+            fooId() {
+              return Foo.fields.id;
+            }
+          });
+          expect(Quux.config.referenceFunctions, 'to exhaustively satisfy', {
+            fooId() {
+              return Foo.fields.id2;
+            }
+          });
+        });
+
         it("inherits but does not interfere with the parent's references", function() {
           class Bar extends Model {}
           class Quux extends Bar {}
@@ -218,6 +256,48 @@ describe('KnormRelations', () => {
             Foo: { fooId: Quux.fields.fooId, fooId2: Quux.fields.fooId2 }
           });
         });
+
+        it("inherits but does not interfere with the parent's reference functions", function() {
+          class Bar extends Model {}
+          class Quux extends Bar {}
+
+          Bar.fields = {
+            fooId: {
+              type: 'integer',
+              references() {
+                return Foo.fields.id;
+              }
+            }
+          };
+          Quux.fields = {
+            fooId2: {
+              type: 'integer',
+              references() {
+                return Foo.fields.id2;
+              }
+            }
+          };
+
+          expect(
+            Model.config.referenceFunctions,
+            'to exhaustively satisfy',
+            {}
+          );
+          expect(Bar.config.referenceFunctions, 'to exhaustively satisfy', {
+            fooId() {
+              return Foo.fields.id;
+            }
+          });
+          expect(Quux.config.referenceFunctions, 'to exhaustively satisfy', {
+            fooId() {
+              return Foo.fields.id;
+            },
+            fooId2() {
+              return Quux.fields.fooId2;
+            }
+          });
+        });
+      });
 
       describe('when a field is removed', () => {
         it('removes the field', () => {
