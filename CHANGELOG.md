@@ -1,3 +1,8 @@
+<a name="1.0.0"></a>
+# [1.0.0](https://github.com/knorm/knorm/compare/v1.0.0-next...v1.0.0) (2018-06-27)
+
+
+
 <a name="1.0.0-next"></a>
 # [1.0.0-next](https://github.com/knorm/knorm/compare/v0.11.1...v1.0.0-next) (2018-06-27)
 
