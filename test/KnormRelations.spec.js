@@ -1189,6 +1189,170 @@ describe('KnormRelations', () => {
           );
         });
       });
+
+      describe('with references configured with a function', () => {
+        class OtherImage extends Model {}
+        OtherImage.table = 'image';
+        OtherImage.fields = {
+          userId: {
+            type: 'integer',
+            references() {
+              return User.fields.id;
+            }
+          },
+          categoryId: {
+            type: 'integer',
+            references() {
+              return ImageCategory.fields.id;
+            }
+          }
+        };
+
+        class OtherMessage extends Model {}
+        OtherMessage.table = 'message';
+        OtherMessage.fields = {
+          text: { type: 'text', required: true },
+          senderId: {
+            type: 'integer',
+            references() {
+              return User.fields.id;
+            }
+          },
+          receiverId: {
+            type: 'integer',
+            references() {
+              return User.fields.id;
+            }
+          }
+        };
+
+        it('throws if the models do not reference each other', () => {
+          class Foo extends Model {}
+          Foo.table = 'foo';
+          Foo.fields = {
+            foo: {
+              type: 'integer',
+              references() {
+                return Message.fields.id;
+              }
+            }
+          };
+          expect(
+            () => new Query(User).leftJoin(new Query(Foo)),
+            'to throw',
+            new Query.QueryError('User: there are no references to `Foo`')
+          );
+          expect(
+            () => new Query(Foo).leftJoin(new Query(User)),
+            'to throw',
+            new Query.QueryError('Foo: there are no references to `User`')
+          );
+        });
+
+        it('supports `leftJoin`', async () => {
+          const query = new Query(User).leftJoin(new Query(OtherImage));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, otherImage: [new OtherImage({ id: 1 })] }),
+              new User({ id: 2, otherImage: null })
+            ]
+          );
+        });
+
+        it('supports `on`', async () => {
+          const query = new Query(User).leftJoin([
+            new Query(OtherMessage).on('senderId').as('sentMessages'),
+            new Query(OtherMessage).on('receiverId').as('receivedMessages')
+          ]);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({
+                id: 1,
+                sentMessages: [new OtherMessage({ id: 1 })],
+                receivedMessages: [new OtherMessage({ id: 2 })]
+              }),
+              new User({
+                id: 2,
+                sentMessages: [new OtherMessage({ id: 2 })],
+                receivedMessages: [new OtherMessage({ id: 1 })]
+              })
+            ]
+          );
+        });
+
+        it('supports reverse joins', async () => {
+          const query = new Query(OtherImage).leftJoin(new Query(User));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new OtherImage({ id: 1, user: [new User({ id: 1 })] })]
+          );
+        });
+
+        it('supports `on` on a reverse join', async () => {
+          const query = new Query(OtherMessage).leftJoin(
+            new Query(User).on('id')
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new OtherMessage({ id: 1, user: [new User({ id: 2 })] }),
+              new OtherMessage({ id: 2, user: [new User({ id: 1 })] })
+            ]
+          );
+        });
+
+        it('supports `join`', async () => {
+          const query = new Query(User).join(new Query(OtherImage));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, otherImage: [new OtherImage({ id: 1 })] })]
+          );
+        });
+
+        it('supports `innerJoin`', async () => {
+          const query = new Query(User).innerJoin(new Query(OtherImage));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, otherImage: [new OtherImage({ id: 1 })] })]
+          );
+        });
+
+        it('merges references returned into non-function references', async () => {
+          class AnotherMessage extends Model {}
+          AnotherMessage.table = 'message';
+          AnotherMessage.fields = {
+            text: { type: 'text', required: true },
+            senderId: {
+              type: 'integer',
+              references: User.fields.id
+            },
+            receiverId: {
+              type: 'integer',
+              references() {
+                return User.fields.id;
+              }
+            }
+          };
+          const query = new Query(User).leftJoin(
+            new Query(AnotherMessage).as('messages')
+          );
+          // this query doesn't match any messages since it joins
+          // ON user.id = message.sender_id AND user.id = message.receiver_id
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [{ messages: null }, { messages: null }]
+          );
+        });
+      });
     });
   });
 });
