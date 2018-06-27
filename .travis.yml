@@ -7,4 +7,8 @@ addons:
   postgresql: "9.6"
 
 script:
-  - npm run ci
+  - npm run lint
+  - npm run coverage
+
+after_success:
+  - npm run coveralls
