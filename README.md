@@ -1,6 +1,6 @@
 # @knorm/knorm
 
-[![npm version](https://badge.fury.io/js/@knorm/knorm.svg)](http://badge.fury.io/js/@knorm/knorm)
+[![npm version](https://badge.fury.io/js/%40knorm%2Fknorm.svg)](https://badge.fury.io/js/%40knorm%2Fknorm)
 [![build status](https://travis-ci.org/knorm/knorm.svg?branch=master)](https://travis-ci.org/knorm/knorm)
 [![coverage status](https://coveralls.io/repos/github/knorm/knorm/badge.svg?branch=master)](https://coveralls.io/github/knorm/knorm?branch=master)
 [![dependency status](https://david-dm.org/knorm/knorm.svg)](https://david-dm.org/knorm/knorm)
