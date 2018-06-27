@@ -1,6 +1,6 @@
 # @knorm/postgres
 
-[![npm version](https://badge.fury.io/js/@knorm/postgres.svg)](http://badge.fury.io/js/@knorm/postgres)
+[![npm version](https://badge.fury.io/js/%40knorm%2Fpostgres.svg)](https://badge.fury.io/js/%40knorm%2Fpostgres)
 [![build status](https://travis-ci.org/knorm/postgres.svg?branch=master)](https://travis-ci.org/knorm/postgres)
 [![coverage status](https://coveralls.io/repos/github/knorm/postgres/badge.svg?branch=master)](https://coveralls.io/github/knorm/postgres?branch=master)
 [![dependency status](https://david-dm.org/knorm/postgres.svg)](https://david-dm.org/knorm/postgres)
