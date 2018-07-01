@@ -23,7 +23,7 @@
     "coveralls": "^3.0.0",
     "eslint": "^4.15.0",
     "eslint-config-ganintegrity": "^2.0.2",
-    "knex": "^0.14.6",
+    "knex": "^0.15.0",
     "mocha": "^5.1.1",
     "npm-run-all": "^4.1.2",
     "nyc": "^11.4.1",
