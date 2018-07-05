@@ -1,3 +1,13 @@
+<a name="1.0.1"></a>
+## [1.0.1](https://github.com/knorm/knorm/compare/v1.0.0...v1.0.1) (2018-07-05)
+
+
+### Bug Fixes
+
+* **Query:** add validation for undefined `where` values ([de888d8](https://github.com/knorm/knorm/commit/de888d8))
+
+
+
 <a name="1.0.0"></a>
 # [1.0.0](https://github.com/knorm/knorm/compare/v1.0.0-next...v1.0.0) (2018-06-27)
 
