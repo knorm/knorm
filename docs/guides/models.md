@@ -1,20 +1,20 @@
 # Models
 
 Models are synonymous to database tables. They provide the core functionality
-for setting, validating, saving, updating and deleting data. All models should
-inherit the base [Model](api/model.md#model) class.
+for setting, validating, saving, updating and deleting data. All models inherit
+the base [Model](api/model.md#model) class.
 
 ## Model config
 
-Models are configured via static properties:
+Models are configured through these static properties:
 
-| Property         | Type                        | Default                     | Description                                                                                                                                                                           |
-| ---------------- | --------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Model.table`    | string (**required**)       | none                        | Configures the model's table-name. **NOTE:** even though this is required, you can still have models that don't have a `table` property if they don't perform any database operations |
-| `Model.fields`   | object                      | none                        | Configures the model's fields. See the [fields guide](guides/fields.md#fields) for more info                                                                                          |
-| `Model.virtuals` | object                      | none                        | Configures the model's virtual fields. See the [virtuals guide](guides/virtuals.md#virtuals) for more info                                                                            |
-| `Model.Query`    | [Query](api/query.md#query) | [Query](api/query.md#query) | The `Query` class that the model uses to perform database operations. This allows [customizing queries](#customizing-queries) per model.                                              |
-| `Model.Field`    | [Field](api/field.md#field) | [Field](api/field.md#field) | The `Field` class that the model uses to create field instances. Also allows customizing fields per model.                                                                            |
+| Property         | Type                        | Default                     | Description                                                                                                                                                                   |
+| ---------------- | --------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Model.table`    | string (**required**)       | none                        | Configures the model's table-name. **NOTE:** this config can be omitted if the model is not used for performing any database operations (i.e. fetching, saving, deleting etc) |
+| `Model.fields`   | object                      | none                        | Configures the model's fields. See the [fields guide](guides/fields.md#fields) for more info                                                                                  |
+| `Model.virtuals` | object                      | none                        | Configures the model's virtual fields. See the [virtuals guide](guides/virtuals.md#virtuals) for more info                                                                    |
+| `Model.Query`    | [Query](api/query.md#query) | [Query](api/query.md#query) | The `Query` class that the model uses to perform database operations. This allows [customizing queries](#customizing-queries) per model.                                      |
+| `Model.Field`    | [Field](api/field.md#field) | [Field](api/field.md#field) | The `Field` class that the model uses to create field instances. Also allows customizing fields per model.                                                                    |
 
 > See the [Model](api/model.md#model) docs for Model API documentation
 
@@ -26,7 +26,6 @@ Assuming this model:
 class User extends Model {}
 
 User.fields = { firstName: { type: 'string' }, lastName: { type: 'string' } };
-
 User.virtuals = {
   names: {
     get() {
@@ -97,7 +96,7 @@ user.getData(); // Promise => { firstName: 'Foo', lastName: 'Bar', names: 'Foo B
 get virtual field data always return a `Promise`. However, you can stil use the
 sync variants to ignore async virtual data.
 
-## Manipulating database data
+## Saving, fetching and deleting data
 
 For all [Model](api/model.md#model) instances, you can save, retrieve or delete
 data in the database with these methods:
@@ -119,11 +118,13 @@ user.delete(options);
 
 > All the methods return a `Promise`
 
+> `options` are optional in all methods
+
 > See the [Query](api/query.md#query) docs for supported options
 
 All the methods update the instance with the latest data from the database, so
-after an update you do not need to re-fetch for example (this can be disabled
-with the `returning` option though).
+after an update you do not need to re-fetch the row (this can be disabled with
+the `returning` option though).
 
 The [update](api/model.md#modelprototypeupdateoptions-promise-gt-model),
 [fetch](api/model.md#modelprototypefetchoptions-promise-gt-model) and
@@ -133,7 +134,7 @@ row in the database. See the
 [primary and unique fields guide](guides/field.md#primary-and-unique-fields) for
 more info.
 
-All the methods also have static variants that instead enable manipulating
+All the methods also have static variants that instead enable working with
 multiple records:
 
 ```js
@@ -153,12 +154,16 @@ User.delete(options);
 
 > All the methods return a `Promise`
 
-!> A significant difference between the instance and static methods is that the
-instance methods will throw an error if the record is not found in the database
-(for fetch, delete and update operations).
+> `options` are optional in all methods
 
-In addition, you can configure various "ByField" methods for primary and unique
-fields with the `methods` [field config option](guides/fields.md#field-config):
+!> Static methods work on multiple rows while the instance methods only work on
+a single row!
+
+!> Instance methods will throw automatically an error if the record is not found
+in the database (for fetch, delete and update operations).
+
+In addition, you can configure various "ByField" methods with the `methods`
+[field config option](guides/fields.md#field-config):
 
 ```js
 User.fields = { email: { type: 'email', unique: true, methods: true } };
@@ -187,7 +192,7 @@ User.fields = {
 User.Query = class UserQuery extends User.Query {
   constructor(...args) {
     super(...args);
-    this.whereNot({ type: 'system' });
+    this.where({ type: 'system' });
   }
 };
 

@@ -12,16 +12,16 @@ Then create a new ORM:
 
 ```js
 const knorm = require('@knorm/knorm');
-const orm = knorm(/* options */);
+const { Model } = knorm(/* options */);
 
-// orm contains `Model`, `Field`, `Query`, `Transaction` etc classes
-const { Model } = orm;
-
-// let's create a User model
 class User extends Model {}
 ```
 
 > see the [Knorm docs](api/knorm.md#knorm) for info on Knorm options
+
+> the `knorm` factory returns an ORM instance with [Model](api/model.md#model),
+[Field](api/field.md#field), [Query](api/query.md#query) and
+[Transaction](api/transaction.md#transaction)
 
 ## Enabling database access
 
@@ -58,16 +58,16 @@ class User extends Model {}
 
 User.table = 'user';
 User.fields = { id: 'integer', names: 'string' };
+```
 
-const doStuff = async () => {
-  const user = await new User({ id: 1, names: 'Foo Bar' }).insert();
-  console.log(user); // => { id: 1, names: 'Foo Bar' }
+With this setup you can now manipulate data:
 
-  const users = await User.fetch();
-  console.log(users); // => [ { id: 1, names: 'Foo Bar' } ]
-}
+```js
+const user = await new User({ id: 1, names: 'Foo Bar' }).insert();
+console.log(user); // => User({ id: 1, names: 'Foo Bar' })
 
-doStuff();
+const users = await User.fetch();
+console.log(users); // => [ User({ id: 1, names: 'Foo Bar' }) ]
 ```
 
 ## Adding common fields
