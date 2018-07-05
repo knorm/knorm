@@ -693,43 +693,9 @@ describe('Query', () => {
         );
       });
 
-      it('supports a `where in` expression', async () => {
+      it('does nothing if no arguments are passed', async () => {
         const query = new Query(User);
-        const where = new Query.Where();
-        query.where(where.in('id', [2]));
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows satisfying',
-          [new User({ id: 2 })]
-        );
-      });
-
-      it('supports a `where in` with an object', async () => {
-        const query = new Query(User);
-        const where = new Query.Where();
-        query.where(where.in({ id: [2] }));
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows satisfying',
-          [new User({ id: 2 })]
-        );
-      });
-
-      it('turns a `where in` expression with an empty array to a "where false"', async () => {
-        const query = new Query(User);
-        const where = new Query.Where();
-        query.where(where.in('id', []));
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows satisfying',
-          []
-        );
-      });
-
-      it('supports `between` with an array', async () => {
-        const query = new Query(User);
-        const where = new Query.Where();
-        query.where(where.between('id', [1, 2]));
+        query.where();
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
@@ -740,10 +706,9 @@ describe('Query', () => {
         );
       });
 
-      it('supports `between` with an object with an array value', async () => {
+      it('does nothing for an empty object', async () => {
         const query = new Query(User);
-        const where = new Query.Where();
-        query.where(where.between({ id: [1, 2] }));
+        query.where({});
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
@@ -752,6 +717,136 @@ describe('Query', () => {
             new User({ id: 2, name: 'User 2' })
           ]
         );
+      });
+
+      describe('for `undefined` values', () => {
+        it('rejects for "field, value"', async () => {
+          const query = new Query(User);
+          query.where('id');
+          await expect(
+            query.fetch(),
+            'to be rejected with error satisfying',
+            new QueryError(
+              'User: undefined "where" value passed for field `id`'
+            )
+          );
+        });
+
+        it('rejects for objects', async () => {
+          const query = new Query(User);
+          query.where({ id: undefined });
+          await expect(
+            query.fetch(),
+            'to be rejected with error satisfying',
+            new QueryError(
+              'User: undefined "where" value passed for field `id`'
+            )
+          );
+        });
+
+        it('rejects for expressions with "field, value"', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.in('id'));
+          await expect(
+            query.fetch(),
+            'to be rejected with error satisfying',
+            new QueryError(
+              'User: undefined "where" value passed for field `id`'
+            )
+          );
+        });
+
+        it('rejects for expressions with objects', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.in({ id: undefined }));
+          await expect(
+            query.fetch(),
+            'to be rejected with error satisfying',
+            new QueryError(
+              'User: undefined "where" value passed for field `id`'
+            )
+          );
+        });
+      });
+
+      describe('for `where in`', () => {
+        it('supports expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.in('id', [2]));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2 })]
+          );
+        });
+
+        it('supports object expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.in({ id: [2] }));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2 })]
+          );
+        });
+
+        it('turns an empty array value expression to a "where false"', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.in('id', []));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            []
+          );
+        });
+      });
+
+      describe('for `between`', () => {
+        it('supports an array', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.between('id', [1, 2]));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('supports an object with an array value', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.between({ id: [1, 2] }));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('rejects if the array is empty', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.between({ id: [] }));
+          await expect(
+            query.fetch(),
+            'to be rejected with error satisfying',
+            new QueryError(
+              'User: empty array passed for "between" for field `id`'
+            )
+          );
+        });
       });
 
       describe('with an `or` grouping', () => {
@@ -1560,7 +1655,9 @@ describe('Query', () => {
             new User({ id: 2, name: 'Jane Doe', jsonField: ['foo', 'bar'] })
           ]),
           'to be rejected with error satisfying',
-          new QueryError('all objects should have the same field count')
+          new QueryError(
+            'User: all objects for insert should have the same number of fields'
+          )
         );
       });
 
