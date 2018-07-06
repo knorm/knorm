@@ -1,4 +1,5 @@
 const knorm = require('@knorm/knorm');
+const knormRelations = require('@knorm/relations');
 const KnormPostgres = require('../lib/KnormPostgres');
 const knormPostgres = require('../');
 const makeKnex = require('knex');
@@ -365,10 +366,13 @@ describe('KnormPostgres', () => {
 
   describe('PostgresQuery', () => {
     let User;
+    let Image;
     let Query;
 
     before(async () => {
-      const orm = knorm().use(knormPostgres({ connection }));
+      const orm = knorm()
+        .use(knormPostgres({ connection }))
+        .use(knormRelations());
 
       Query = orm.Query;
 
@@ -378,9 +382,29 @@ describe('KnormPostgres', () => {
         id: { type: 'integer', primary: true, updated: false },
         name: 'string'
       };
+
+      Image = class extends orm.Model {};
+      Image.table = 'image';
+      Image.fields = {
+        id: { type: 'integer', primary: true, updated: false },
+        userId: { type: 'integer', references: User.fields.id }
+      };
+
+      await knex.schema.createTable('image', table => {
+        table.increments().primary();
+        table
+          .integer('userId')
+          .references('id')
+          .inTable('user');
+      });
     });
 
-    afterEach(async () => knex(User.table).truncate());
+    afterEach(async () => {
+      await knex.truncate('image');
+      await knex.raw('TRUNCATE TABLE "user" RESTART IDENTITY CASCADE');
+    });
+
+    after(async () => knex.schema.dropTable('image'));
 
     it('enables `insert`', async () => {
       await expect(
@@ -983,6 +1007,65 @@ describe('KnormPostgres', () => {
             [{ id: 1, name: 'foofoo' }]
           );
         });
+      });
+    });
+
+    describe('for joined queries (via @knorm/relations)', () => {
+      it('does not add `limit` if `first` is configured on the join', async () => {
+        await new Query(User).insert([
+          { id: 1, name: 'foo' },
+          { id: 2, name: 'bar' }
+        ]);
+        await new Query(Image).insert([
+          { id: 1, userId: 1 },
+          { id: 2, userId: 1 }
+        ]);
+        await expect(
+          new Query(User).leftJoin(new Query(Image).first()).fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            { id: 1, name: 'foo', image: { id: 1 } },
+            { id: 2, name: 'bar', image: null }
+          ]
+        );
+      });
+
+      it('ignores `limit` on the join', async () => {
+        await new Query(User).insert([
+          { id: 1, name: 'foo' },
+          { id: 2, name: 'bar' }
+        ]);
+        await new Query(Image).insert([
+          { id: 1, userId: 1 },
+          { id: 2, userId: 1 }
+        ]);
+        await expect(
+          new Query(User).leftJoin(new Query(Image).limit(1)).fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            { id: 1, name: 'foo', image: [{ id: 1 }, { id: 2 }] },
+            { id: 2, name: 'bar', image: null }
+          ]
+        );
+      });
+
+      it('ignores `offset` on the join', async () => {
+        await new Query(User).insert([
+          { id: 1, name: 'foo' },
+          { id: 2, name: 'bar' }
+        ]);
+        await new Query(Image).insert([
+          { id: 1, userId: 1 },
+          { id: 2, userId: 1 }
+        ]);
+        await expect(
+          new Query(User).leftJoin(new Query(Image).offset(1)).fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            { id: 1, name: 'foo', image: [{ id: 1 }, { id: 2 }] },
+            { id: 2, name: 'bar', image: null }
+          ]
+        );
       });
     });
   });
