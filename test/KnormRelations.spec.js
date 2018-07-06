@@ -645,8 +645,7 @@ describe('KnormRelations', () => {
             );
           });
 
-          // TODO: requires fixes in @knorm/postgres
-          it.skip('includes other joined models as `null` if no rows were matched', async () => {
+          it('includes other joined models as `null` if no rows were matched', async () => {
             const query = new Query(User).leftJoin(new Query(Image).first());
             await expect(
               query.fetch(),
