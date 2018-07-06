@@ -644,6 +644,23 @@ describe('KnormRelations', () => {
               [new User({ id: 1, name: 'User 1', image: new Image({ id: 1 }) })]
             );
           });
+
+          // TODO: requires fixes in @knorm/postgres
+          it.skip('includes other joined models as `null` if no rows were matched', async () => {
+            const query = new Query(User).leftJoin(new Query(Image).first());
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new User({
+                  id: 1,
+                  name: 'User 1',
+                  image: new Image({ id: 1 })
+                }),
+                new User({ id: 2, name: 'User 2', image: null })
+              ]
+            );
+          });
         });
 
         it('creates a left join to the model on all fields wih references', async () => {
