@@ -1072,10 +1072,12 @@ describe('KnormPostgres', () => {
 
   describe('PostgresTransaction', () => {
     let User;
+    let plugin;
     let Transaction;
 
     before(async () => {
-      const orm = knorm().use(knormPostgres({ connection }));
+      plugin = knormPostgres({ connection });
+      const orm = knorm().use(plugin);
 
       Transaction = orm.Transaction;
 
@@ -1188,7 +1190,7 @@ describe('KnormPostgres', () => {
       });
 
       it('runs queries with one client', async () => {
-        const spy = sinon.spy(Transaction.prototype, 'acquireClient');
+        const spy = sinon.spy(plugin, 'acquireClient');
         await new Transaction(async function() {
           await this.models.User.insert([{ id: 1, name: 'foo' }]);
           await this.models.User.insert([{ id: 2, name: 'bar' }]);
@@ -1198,7 +1200,7 @@ describe('KnormPostgres', () => {
       });
 
       it('runs queries with one client even with nested models', async () => {
-        const spy = sinon.spy(Transaction.prototype, 'acquireClient');
+        const spy = sinon.spy(plugin, 'acquireClient');
         await new Transaction(async function() {
           class FooUser extends this.models.User {
             async foo() {
@@ -1420,16 +1422,17 @@ describe('KnormPostgres', () => {
 
       it('runs queries with one client', async () => {
         const transaction = new Transaction();
-        const spy = sinon.spy(transaction, 'acquireClient');
+        const spy = sinon.spy(plugin, 'acquireClient');
         await transaction.models.User.insert([{ id: 1, name: 'foo' }]);
         await transaction.models.User.insert([{ id: 2, name: 'bar' }]);
         await transaction.commit();
         await expect(spy, 'was called once');
+        spy.restore();
       });
 
       it('runs queries with one client even with nested models', async () => {
         const transaction = new Transaction();
-        const spy = sinon.spy(transaction, 'acquireClient');
+        const spy = sinon.spy(plugin, 'acquireClient');
         class FooUser extends transaction.models.User {
           async foo() {
             await this.models.User.insert([{ id: 1, name: 'foo' }]);
@@ -1447,6 +1450,7 @@ describe('KnormPostgres', () => {
           [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
         );
         await expect(spy, 'was called once');
+        spy.restore();
       });
 
       it('releases the client after runnning queries', async () => {
