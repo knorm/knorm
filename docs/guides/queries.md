@@ -24,6 +24,7 @@ const knorm = require('knorm');
 const { Model, Query } = knorm();
 
 class User extends Model {}
+User.table = 'user';
 User.fields = { id: { type: 'integer', primary: true }, names: 'string' };
 ```
 

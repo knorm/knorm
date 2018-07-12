@@ -1,9 +1,9 @@
-## Transaction.knex
-
-## Transaction(callback)
+## Transaction([callback])
 
 ## Transaction.prototype.execute() : Promise
 
-## Transaction.prototype.then() : Promise
+## Transaction.prototype.begin() : Promise
 
-## Transaction.prototype.catch() : Promise
+## Transaction.prototype.commit() : Promise
+
+## Transaction.prototype.rollback() : Promise

@@ -4,6 +4,7 @@
   * [Fields](guides/fields.md#fields)
   * [Virtuals](guides/virtuals.md#virtuals)
   * [Queries](guides/queries.md#queries)
+  * [Transactions](guides/transactions.md#transactions)
   * [Validation](guides/validation.md#validation)
   * [Relations](guides/relations.md#relations)
   * [Plugins](guides/plugins.md#plugins)
