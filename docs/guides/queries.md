@@ -85,17 +85,20 @@ Raw queries can be run by directly invoking the
 const rows = await User.query.query('select now()');
 ```
 
-To use prepared statements with parameter binding, use
+To run prepared statements with parameter binding, use
 [sql](api/query.md#queryprototypesql), which by default is an
 [sql-bricks](https://csnw.github.io/sql-bricks/) instance:
 
 ```js
-const sql = User.query.sql(
-  'select * from user where id = $1 and names = $2',
-  [1, 'foo']
+const sqlBricks = User.query.sql;
+const sql = sqlBricks.select(
+  sqlBricks.sql('select * from "user" where id = $1 and names = $2', [1, 'foo'])
 );
 const rows = await User.query.query(sql);
 ```
+
+> with the @knorm/postgres loaded, then `Query.prototype.sql` is overridden with
+> [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
 
 ## Setting options
 
