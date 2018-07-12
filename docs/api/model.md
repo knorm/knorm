@@ -37,6 +37,10 @@ user.firstName = 'fooo';
 In this case the field names will not be validated against the list of
 configured field or virtual field names.
 
+## Model.prototype.knorm
+
+## Model.prototype.models
+
 ## Model.prototype.getFieldData([options]) : Object
 
 ## Model.prototype.getVirtualData([options]) : Promise => Object
@@ -62,6 +66,10 @@ configured field or virtual field names.
 ## Model.prototype.update([options]) : Promise => Model
 
 ## Model.prototype.delete([options]) : Promise => Model
+
+## Model.knorm
+
+## Model.models
 
 ## Model.count([options]) : Promise => Number
 

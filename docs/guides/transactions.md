@@ -113,3 +113,34 @@ try {
 }
 ```
 
+## Nested queries in instance or class methods
+
+If you have instance methods that run nested queries using other models, access 
+those models via [models](api/model.md#modelprototypemodels) (or [the static equivalent](api/model.md#models)) to ensure that those queries are run within
+transactions. This is as opposed to `require`ing the model directly.
+
+Assuming:
+
+```js
+User.fields = { groupId: 'integer' };
+
+class Group extends Model {
+  async getUsers() {
+    const { User } = this.models;
+    return User.fetch({ where: { groupId: this.id }});
+  }
+}
+Group.table = 'group';
+Group.fields = { id: { type: 'integer', primary: true }, name: 'string' };
+```
+
+Then if groups are first fetched within a transaction, the users will also be 
+fetched within the same transaction:
+
+```js
+const group1Users = await new Transaction(async transaction => {
+  const { Group } = transaction.models;
+  const group = await Group.fetch({ where: { id: 1 }, first: true });
+  return group.getUsers();
+});
+```
