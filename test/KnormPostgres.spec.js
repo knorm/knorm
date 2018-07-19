@@ -78,6 +78,18 @@ describe('KnormPostgres', () => {
     await knormPostgres.releaseClient(client);
   });
 
+  it('supports options in the connection string', async () => {
+    const knormPostgres = new KnormPostgres({
+      connection:
+        'postgres://postgres@127.0.0.1:5432/postgres?max=5&idleTimeoutMillis=1000'
+    });
+
+    // TODO: pg-connection-string should parseInt on the `max` option
+    await expect(knormPostgres.pool.options.max, 'to be', '5');
+    const client = await knormPostgres.acquireClient();
+    await knormPostgres.releaseClient(client);
+  });
+
   it('uses postgres environment variables if no `connection` config is provided', async () => {
     process.env.PGHOST = '127.0.0.1';
     process.env.PGPORT = 5432;
