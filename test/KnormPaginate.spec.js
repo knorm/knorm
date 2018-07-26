@@ -163,17 +163,41 @@ describe('KnormPaginate', () => {
         });
       });
 
-      it('rejects with a CountError if a database error occurs', async () => {
-        const stub = sinon
-          .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('count error')));
-        const query = new Query(User);
-        await expect(
-          query.count(),
-          'to be rejected with error satisfying',
-          new Query.CountError({ error: new Error('count error'), query })
-        );
-        stub.restore();
+      describe('if a fetch error occurs', () => {
+        let queryStub;
+
+        beforeEach(() => {
+          queryStub = sinon
+            .stub(Query.prototype, 'query')
+            .returns(Promise.reject(new Error('count error')));
+        });
+
+        afterEach(() => {
+          queryStub.restore();
+        });
+
+        it('rejects with a CountError', async () => {
+          const query = new Query(User);
+          await expect(
+            query.count(),
+            'to be rejected with error satisfying',
+            new Query.CountError({ error: new Error('count error'), query })
+          );
+        });
+
+        it('attaches a parameterized sql string to the error', async () => {
+          const query = new Query(User).where({ id: 1 });
+          await expect(query.count(), 'to be rejected with error satisfying', {
+            sql: 'SELECT COUNT(*) as "count" FROM "user" WHERE "user"."id" = $1'
+          });
+        });
+
+        it('attaches a full sql string with values in `debug` mode', async () => {
+          const query = new Query(User).where({ id: 1 }).debug(true);
+          await expect(query.count(), 'to be rejected with error satisfying', {
+            sql: 'SELECT COUNT(*) as "count" FROM "user" WHERE "user"."id" = 1'
+          });
+        });
       });
 
       describe("with a 'where' configured", () => {
