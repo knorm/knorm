@@ -242,6 +242,25 @@ describe('KnormPaginate', () => {
           });
         });
       });
+
+      describe('with `debug` configured', () => {
+        it('improves the CountError stack trace', async () => {
+          const stub = sinon
+            .stub(Query.prototype, 'query')
+            .returns(Promise.reject(new Error('count error')));
+          await expect(
+            new Query(User).count(),
+            'to be rejected with error satisfying',
+            e => expect(e.stack, 'not to contain', 'test/KnormPaginate.spec.js')
+          );
+          await expect(
+            new Query(User).debug(true).count(),
+            'to be rejected with error satisfying',
+            e => expect(e.stack, 'to contain', 'test/KnormPaginate.spec.js')
+          );
+          stub.restore();
+        });
+      });
     });
   });
 
