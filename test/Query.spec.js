@@ -288,17 +288,46 @@ describe('Query', () => {
       spy.restore();
     });
 
-    it('rejects with a FetchError if a database error occurs', async () => {
-      const stub = sinon
-        .stub(Query.prototype, 'query')
-        .returns(Promise.reject(new Error('fetch error')));
-      const query = new Query(User);
-      await expect(
-        query.fetch(),
-        'to be rejected with error satisfying',
-        new Query.FetchError({ error: new Error('fetch error'), query })
-      );
-      stub.restore();
+    describe('if a fetch error occurs', () => {
+      let queryStub;
+
+      beforeEach(() => {
+        queryStub = sinon
+          .stub(Query.prototype, 'query')
+          .returns(Promise.reject(new Error('fetch error')));
+      });
+
+      afterEach(() => {
+        queryStub.restore();
+      });
+
+      it('rejects with a FetchError', async () => {
+        const query = new Query(User);
+        await expect(
+          query.fetch(),
+          'to be rejected with error satisfying',
+          new Query.FetchError({ error: new Error('fetch error'), query })
+        );
+      });
+
+      it('attaches a parameterized sql string to the error', async () => {
+        const query = new Query(User).field('id').where({ id: 1 });
+        await expect(query.fetch(), 'to be rejected with error satisfying', {
+          sql:
+            'SELECT "user"."id" as "user.id" FROM "user" WHERE "user"."id" = $1'
+        });
+      });
+
+      it('attaches a full sql string with values in `debug` mode', async () => {
+        const query = new Query(User)
+          .field('id')
+          .where({ id: 1 })
+          .debug(true);
+        await expect(query.fetch(), 'to be rejected with error satisfying', {
+          sql:
+            'SELECT "user"."id" as "user.id" FROM "user" WHERE "user"."id" = 1'
+        });
+      });
     });
 
     describe('if no rows are fetched', () => {
@@ -1415,17 +1444,50 @@ describe('Query', () => {
       spy.restore();
     });
 
-    it('rejects with a InsertError if the insert operation fails', async () => {
-      const stub = sinon
-        .stub(Query.prototype, 'query')
-        .returns(Promise.reject(new Error('insert error')));
-      const query = new Query(User);
-      await expect(
-        query.insert(new User({ name: 'John Doe' })),
-        'to be rejected with error satisfying',
-        new Query.InsertError({ error: new Error('insert error'), query })
-      );
-      stub.restore();
+    describe('if an insert error occurs', () => {
+      let queryStub;
+
+      beforeEach(() => {
+        queryStub = sinon
+          .stub(Query.prototype, 'query')
+          .returns(Promise.reject(new Error('insert error')));
+      });
+
+      afterEach(() => {
+        queryStub.restore();
+      });
+
+      it('rejects with a InsertError', async () => {
+        const query = new Query(User);
+        await expect(
+          query.insert(new User({ name: 'John Doe' })),
+          'to be rejected with error satisfying',
+          new Query.InsertError({ error: new Error('insert error'), query })
+        );
+      });
+
+      it('attaches a parameterized sql string to the error', async () => {
+        const query = new Query(User).returning('id');
+        await expect(
+          query.insert(new User({ name: 'John Doe' })),
+          'to be rejected with error satisfying',
+          {
+            sql:
+              'INSERT INTO "user" ("name", "age", "confirmed") VALUES ($1, $2, $3) RETURNING "user"."id" as "user.id"'
+          }
+        );
+      });
+
+      it('attaches a full sql string with values in `debug` mode', async () => {
+        const query = new Query(User).returning('id').debug(true);
+        await expect(
+          query.insert(new User({ name: 'John Doe' })),
+          'to be rejected with error satisfying',
+          {
+            sql: `INSERT INTO "user" ("name", "age", "confirmed") VALUES ('John Doe', null, FALSE) RETURNING "user"."id" as "user.id"`
+          }
+        );
+      });
     });
 
     describe('when data is empty', () => {
@@ -2061,18 +2123,51 @@ describe('Query', () => {
       });
     });
 
-    it('rejects with a UpdateError if the update operation fails', async () => {
-      const stub = sinon
-        .stub(Query.prototype, 'query')
-        .returns(Promise.reject(new Error('update error')));
-      const query = new Query(User);
-      user.name = 'Jane Doe';
-      await expect(
-        query.update(user),
-        'to be rejected with error satisfying',
-        new Query.UpdateError({ error: new Error('update error'), query })
-      );
-      stub.restore();
+    describe('if an update error occurs', () => {
+      let queryStub;
+
+      beforeEach(() => {
+        queryStub = sinon
+          .stub(Query.prototype, 'query')
+          .returns(Promise.reject(new Error('update error')));
+      });
+
+      afterEach(() => {
+        queryStub.restore();
+      });
+
+      it('rejects with an UpdateError', async () => {
+        const query = new Query(User);
+        user.name = 'Jane Doe';
+        await expect(
+          query.update(user),
+          'to be rejected with error satisfying',
+          new Query.UpdateError({ error: new Error('update error'), query })
+        );
+      });
+
+      it('attaches a parameterized sql string to the error', async () => {
+        const query = new Query(User).returning('id');
+        await expect(
+          query.update({ name: 'Jane Doe' }),
+          'to be rejected with error satisfying',
+          {
+            sql:
+              'UPDATE "user" SET "name" = $1 RETURNING "user"."id" as "user.id"'
+          }
+        );
+      });
+
+      it('attaches a full sql string with values in `debug` mode', async () => {
+        const query = new Query(User).returning('id').debug(true);
+        await expect(
+          query.update({ name: 'Jane Doe' }),
+          'to be rejected with error satisfying',
+          {
+            sql: `UPDATE "user" SET "name" = 'Jane Doe' RETURNING "user"."id" as "user.id"`
+          }
+        );
+      });
     });
 
     describe("with a 'where' option", () => {
@@ -2483,17 +2578,45 @@ describe('Query', () => {
       ]);
     });
 
-    it('rejects with a DeleteError if the delete operation fails', async () => {
-      const stub = sinon
-        .stub(Query.prototype, 'query')
-        .returns(Promise.reject(new Error('delete error')));
-      const query = new Query(User);
-      await expect(
-        query.delete(),
-        'to be rejected with error satisfying',
-        new Query.DeleteError({ error: new Error('delete error'), query })
-      );
-      stub.restore();
+    describe('if a delete error occurs', () => {
+      let queryStub;
+
+      beforeEach(() => {
+        queryStub = sinon
+          .stub(Query.prototype, 'query')
+          .returns(Promise.reject(new Error('delete error')));
+      });
+
+      afterEach(() => {
+        queryStub.restore();
+      });
+
+      it('rejects with a DeleteError if the delete operation fails', async () => {
+        const query = new Query(User);
+        await expect(
+          query.delete(),
+          'to be rejected with error satisfying',
+          new Query.DeleteError({ error: new Error('delete error'), query })
+        );
+      });
+
+      it('attaches a parameterized sql string to the error', async () => {
+        const query = new Query(User).returning('id').where({ id: 1 });
+        await expect(query.delete(), 'to be rejected with error satisfying', {
+          sql:
+            'DELETE FROM "user" WHERE "user"."id" = $1 RETURNING "user"."id" as "user.id"'
+        });
+      });
+
+      it('attaches a full sql string with values in `debug` mode', async () => {
+        const query = new Query(User)
+          .returning('id')
+          .where({ id: 1 })
+          .debug(true);
+        await expect(query.delete(), 'to be rejected with error satisfying', {
+          sql: `DELETE FROM "user" WHERE "user"."id" = 1 RETURNING "user"."id" as "user.id"`
+        });
+      });
     });
 
     describe("with a 'where' option", () => {
