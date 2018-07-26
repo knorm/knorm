@@ -1,3 +1,13 @@
+<a name="1.1.0"></a>
+# [1.1.0](https://github.com/knorm/knorm/compare/v1.0.1...v1.1.0) (2018-07-26)
+
+
+### Features
+
+* **Query:** add the failing sql to query errors ([ad8c9da](https://github.com/knorm/knorm/commit/ad8c9da))
+
+
+
 <a name="1.0.1"></a>
 ## [1.0.1](https://github.com/knorm/knorm/compare/v1.0.0...v1.0.1) (2018-07-05)
 
