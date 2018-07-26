@@ -16,10 +16,10 @@
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@knorm/knorm": "^1.0.0"
+    "@knorm/knorm": "^1.1.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "^1.0.0",
+    "@knorm/knorm": "^1.1.0",
     "@knorm/postgres": "^1.0.0",
     "@knorm/relations": "^1.0.0",
     "coveralls": "^3.0.0",
