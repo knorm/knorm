@@ -1,0 +1,47 @@
+{
+  "name": "@knorm/to-json",
+  "version": "1.0.0",
+  "description": "toJSON plugin for @knorm/knorm",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --exit 'test/**/*.spec.js'",
+    "coverage": "nyc npm test",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+  },
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
+  "peerDependencies": {
+    "@knorm/knorm": "^1.0.0"
+  },
+  "devDependencies": {
+    "@knorm/knorm": "^1.1.0",
+    "coveralls": "^3.0.2",
+    "eslint": "^4.10.0",
+    "eslint-config-ganintegrity": "^2.0.2",
+    "mocha": "^5.2.0",
+    "nyc": "^11.9.0",
+    "prettier": "^1.13.7",
+    "unexpected": "^10.38.0"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": [
+    "knorm",
+    "plugin",
+    "to-json",
+    "toJSON"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/knorm/to-json.git"
+  },
+  "bugs": {
+    "url": "https://github.com/knorm/to-json/issues"
+  },
+  "homepage": "https://github.com/knorm/to-json#readme",
+  "dependencies": {}
+}
