@@ -25,6 +25,24 @@ describe('KnormToJSON', () => {
   });
 
   describe('updateModel', () => {
+    it('adds a toJSON method that returns all data on the model', () => {
+      const { Model } = knorm().use(knormToJSON());
+      class Foo extends Model {}
+      Foo.fields = { id: 'integer', name: 'string', email: 'email' };
+      const foo = new Foo({
+        id: 1,
+        name: 'Foo Foo',
+        email: 'foo@foo.com',
+        foo: 'foo'
+      });
+      expect(foo.toJSON(), 'to exhaustively satisfy', {
+        id: 1,
+        name: 'Foo Foo',
+        email: 'foo@foo.com',
+        foo: 'foo'
+      });
+    });
+
     describe('with fields to exclude', () => {
       it('supports a single field', () => {
         const { Model } = knorm().use(knormToJSON({ exclude: 'id' }));
@@ -84,23 +102,21 @@ describe('KnormToJSON', () => {
         });
       });
 
-      describe('when a model is stringified', () => {
-        it('works when a model is JSON.stringified', () => {
-          const { Model } = knorm().use(knormToJSON({ exclude: ['email'] }));
-          class Foo extends Model {}
-          Foo.fields = { id: 'integer', name: 'string', email: 'email' };
-          const foo = new Foo({
-            id: 1,
-            name: 'Foo Foo',
-            email: 'foo@foo.com',
-            extra: 'bar'
-          });
-          expect(
-            JSON.stringify(foo),
-            'to exhaustively satisfy',
-            '{"id":1,"name":"Foo Foo","extra":"bar"}'
-          );
+      it('works when a model is JSON.stringified', () => {
+        const { Model } = knorm().use(knormToJSON({ exclude: ['email'] }));
+        class Foo extends Model {}
+        Foo.fields = { id: 'integer', name: 'string', email: 'email' };
+        const foo = new Foo({
+          id: 1,
+          name: 'Foo Foo',
+          email: 'foo@foo.com',
+          extra: 'bar'
         });
+        expect(
+          JSON.stringify(foo),
+          'to exhaustively satisfy',
+          '{"id":1,"name":"Foo Foo","extra":"bar"}'
+        );
       });
     });
 
