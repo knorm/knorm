@@ -137,7 +137,24 @@ User.query
 
 > The object notation only works for options that take one argument (majority)
 
-!> Setting the same option twice overwrites the previously set value
+For most query options, calling the same option does not overwrite the previous
+value but instead appends to it. However, for boolean-value options, setting the
+same option overwrites the previous value:
+
+```js
+User.query
+  .where({ id: 1 })
+  .fields(['id'])
+  .require(false)
+  .setOptions({
+    where: { names: 'foo' }, // `where` is now `{ id: 1, names: 'foo' }`
+    fields: ['name'], // `fields` are now `[ 'id', 'name' ]`
+    require: true  // `require` is now `true`
+  })
+  .fetch({
+    require: false  // `require` will eventually be `false`
+  });
+```
 
 ## Where expressions
 
