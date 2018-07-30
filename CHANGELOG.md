@@ -1,3 +1,14 @@
+<a name="1.2.0"></a>
+# [1.2.0](https://github.com/knorm/knorm/compare/v1.1.0...v1.2.0) (2018-07-30)
+
+
+### Features
+
+* **Model:** allow setting query and plugin options ([83f8dba](https://github.com/knorm/knorm/commit/83f8dba))
+* **Model:** set default query options ([37dffbe](https://github.com/knorm/knorm/commit/37dffbe))
+
+
+
 <a name="1.1.0"></a>
 # [1.1.0](https://github.com/knorm/knorm/compare/v1.0.1...v1.1.0) (2018-07-26)
 
