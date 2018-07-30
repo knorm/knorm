@@ -1,8 +1,5 @@
 const Knorm = require('../lib/Knorm');
-const Model = require('../lib/Model');
-const Field = require('../lib/Field');
 const Virtual = require('../lib/Virtual');
-const Query = require('../lib/Query');
 const postgresPlugin = require('./lib/postgresPlugin');
 const knex = require('./lib/knex');
 const sinon = require('sinon');
@@ -11,6 +8,8 @@ const expect = require('unexpected')
   .use(require('unexpected-sinon'))
   .use(require('unexpected-knex'))
   .use(require('./lib/unexpected-workaround'));
+
+const { Model, Query, Field } = new Knorm();
 
 describe('Model', function() {
   describe('constructor', function() {
@@ -2279,14 +2278,9 @@ describe('Model', function() {
   describe('Model.query', function() {
     class User extends Model {}
 
-    before(function() {
-      User.Query = sinon.stub().named('Query');
-    });
-
-    beforeEach(function() {
-      User.Query.resetHistory();
-      User.Query.returns(sinon.createStubInstance(Query));
-    });
+    User.table = 'foo';
+    User.fields = { id: { type: 'integer', primary: true } };
+    User.options = { query: { fields: ['id'], where: { id: 1 } } };
 
     describe('as a getter', function() {
       it('returns a Query instance', function() {
@@ -2294,11 +2288,19 @@ describe('Model', function() {
       });
 
       it('configures the Query instance with the model', function() {
-        // eslint-disable-next-line no-unused-vars
-        const query = User.query;
+        const spy = sinon.spy(User, 'Query');
+        // eslint-disable-next-line no-unused-expressions
+        User.query;
         expect(User.Query, 'to have calls satisfying', () => {
           // eslint-disable-next-line no-new
           new User.Query(expect.it('to be model class', User));
+        });
+        spy.restore();
+      });
+
+      it('sets configured default query options on the instance', () => {
+        expect(User.query, 'to satisfy', {
+          options: { fields: { id: 'id' }, where: [[{ id: 1 }]] }
         });
       });
     });
