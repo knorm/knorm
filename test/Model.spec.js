@@ -1958,6 +1958,120 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.options', function() {
+    describe('as a getter', function() {
+      it('returns added options', function() {
+        class User extends Model {}
+        User.options = {
+          query: { where: { id: 1 } },
+          plugins: { toJSON: { exclude: 'id' } }
+        };
+
+        expect(User.options, 'to exhaustively satisfy', {
+          query: { where: { id: 1 } },
+          plugins: { toJSON: { exclude: 'id' } }
+        });
+      });
+    });
+
+    describe('as a setter', function() {
+      it("adds the passed options to the model's options", function() {
+        class User extends Model {}
+        User.options = {
+          query: { where: { id: 1 } },
+          plugins: { toJSON: { exclude: 'id' } }
+        };
+
+        expect(User.options, 'to exhaustively satisfy', {
+          query: { where: { id: 1 } },
+          plugins: { toJSON: { exclude: 'id' } }
+        });
+      });
+
+      describe('when a model is subclassed', function() {
+        it("merges the child's options into the parent's options", function() {
+          class User extends Model {}
+          User.options = {
+            query: { where: { id: 1 } },
+            plugins: { toJSON: { exclude: 'id' } }
+          };
+
+          expect(User.options, 'to exhaustively satisfy', {
+            query: { where: { id: 1 } },
+            plugins: { toJSON: { exclude: 'id' } }
+          });
+
+          class OtherUser extends User {}
+          OtherUser.options = {
+            query: { fields: ['id'] },
+            plugins: { timestamps: { createdAt: true } }
+          };
+
+          expect(OtherUser.options, 'to exhaustively satisfy', {
+            query: { where: { id: 1 }, fields: ['id'] },
+            plugins: {
+              toJSON: { exclude: 'id' },
+              timestamps: { createdAt: true }
+            }
+          });
+        });
+
+        it('allows overwriting options defined in the parent', function() {
+          class User extends Model {}
+          User.options = {
+            query: { where: { id: 1 } },
+            plugins: { toJSON: { exclude: ['id'] } }
+          };
+
+          expect(User.options, 'to exhaustively satisfy', {
+            query: { where: { id: 1 } },
+            plugins: { toJSON: { exclude: ['id'] } }
+          });
+
+          class OtherUser extends User {}
+          OtherUser.options = {
+            query: { where: { id: 2 } },
+            plugins: { toJSON: { exclude: ['name'] } }
+          };
+
+          expect(OtherUser.options, 'to exhaustively satisfy', {
+            query: { where: { id: 2 } },
+            plugins: { toJSON: { exclude: ['name'] } }
+          });
+        });
+
+        it("doesn't interfere with the parent's options", function() {
+          class User extends Model {}
+          User.options = {
+            query: { where: { id: 1 } },
+            plugins: { toJSON: { exclude: ['id'] } }
+          };
+
+          expect(User.options, 'to exhaustively satisfy', {
+            query: { where: { id: 1 } },
+            plugins: { toJSON: { exclude: ['id'] } }
+          });
+
+          class OtherUser extends User {}
+          OtherUser.options = {
+            query: { where: { id: 2 } },
+            plugins: { toJSON: { exclude: 'name' } }
+          };
+
+          expect(User.options, 'to exhaustively satisfy', {
+            query: { where: { id: 1 } },
+            plugins: { toJSON: { exclude: ['id'] } }
+          });
+
+          expect(OtherUser.options, 'to exhaustively satisfy', {
+            query: { where: { id: 2 } },
+            plugins: { toJSON: { exclude: 'name' } }
+          });
+        });
+      });
+    });
+  });
+
   describe('Model.config.primary', function() {
     describe('as a getter', function() {
       it('throws an error of the model has no primary field', function() {
