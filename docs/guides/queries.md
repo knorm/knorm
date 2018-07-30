@@ -156,6 +156,16 @@ User.query
   });
 ```
 
+You can set default query options per model via the `Model.options` setter:
+
+```js
+User.options = {
+  query: { fields: ['id'] }
+};
+
+User.fetch(); // instances returned will only contain the `id` field
+```
+
 ## Where expressions
 
 To create more complicated `where` queries, use where expressions:

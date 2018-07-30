@@ -13,7 +13,8 @@ Models are configured through these static properties:
 | `Model.table`    | string (**required**)       | none                        | Configures the model's table-name. **NOTE:** this config can be omitted if the model is not used for performing any database operations (i.e. fetching, saving, deleting etc) |
 | `Model.fields`   | object                      | none                        | Configures the model's fields. See the [fields guide](guides/fields.md#fields) for more info                                                                                  |
 | `Model.virtuals` | object                      | none                        | Configures the model's virtual fields. See the [virtuals guide](guides/virtuals.md#virtuals) for more info                                                                    |
-| `Model.Query`    | [Query](api/query.md#query) | [Query](api/query.md#query) | The `Query` class that the model uses to perform database operations. This allows [customizing queries](#customizing-queries) per model.                                      |
+| `Model.options`  | object                      | none                        | Configures the model's default query and plugin options (for some plugins). See [customizing queries per model](#customizing-queries-per-model) for more info                 |
+| `Model.Query`    | [Query](api/query.md#query) | [Query](api/query.md#query) | The `Query` class that the model uses to perform database operations. This allows [customizing queries per model](#customizing-queries-per-model).                            |
 | `Model.Field`    | [Field](api/field.md#field) | [Field](api/field.md#field) | The `Field` class that the model uses to create field instances. Also allows customizing fields per model.                                                                    |
 
 > See the [Model](api/model.md#model) docs for Model API documentation
@@ -176,10 +177,12 @@ User.deleteByEmail('foo@bar.com', options);
 !> These methods also throw an error if the record is not found in the database
 since they are intended to work with single records.
 
-## Customizing queries
+## Customizing queries per model
+
+You can set default query options per model via the `Model.options` setter.
 
 For example, if your users table has some system users that should not be
-fetched/updated/deleted, you can override `User.Query` and add default filters:
+fetched/updated/deleted, you can add a default `where` option:
 
 ```js
 class User extends Model {}
@@ -189,12 +192,31 @@ User.fields = {
   type: { type: 'string', default: 'user', oneOf: ['system', 'user'] }
 };
 
-User.Query = class UserQuery extends User.Query {
-  constructor(...args) {
-    super(...args);
-    this.where({ type: 'system' });
-  }
+User.options: {
+  query: { where: { type: 'system' } }
 };
 
 User.fetch().then(console.log); // will not contain system users
 ```
+
+> These options will also be inherited when the model is inherited. <br />
+> Read more on [setting query options](guides/queries.md#setting-options)
+
+For more fine-grained control, you can also override the `Query` class:
+
+```js
+class User extends Model {}
+
+User.Query = class UserQuery extends User.Query {
+  // add an `onlySystemUsers` query option only for the `User` model
+  onlySystemUsers() {
+    return this.where({ type: 'system });
+  }
+};
+
+User.fetch({
+  onlySystemUsers: true
+}).then(console.log); // will not contain system users
+```
+
+Note that this is not a good example
