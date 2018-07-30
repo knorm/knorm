@@ -46,3 +46,26 @@ The name of the plugin, defaults to `'toJSON'`.
 > type: array|string, default: none
 
 A string or array of strings of properties to exclude from `toJSON` output.
+
+## Configuring exclusion fields per model
+
+You can configure fields to exclude via Model options:
+
+```js
+const { Model } = knorm().use(
+  knormToJSON({
+    exlude: 'id' // exclude `id` by default for all models
+  })
+);
+
+Model.fields = { id: 'integer' };
+
+class User extends Model {}
+
+User.fields = { username: 'string', password: 'string' };
+User.options = {
+  plugins: {
+    toJSON: { exclude: 'password' } // also exclude `password` for the `User` model
+  }
+};
+```
