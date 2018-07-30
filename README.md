@@ -43,7 +43,7 @@ The name of the plugin, defaults to `'toJSON'`.
 
 ### exclude
 
-> type: array|string, default: none
+> type: array|string, default: []
 
 A string or array of strings of properties to exclude from `toJSON` output.
 
