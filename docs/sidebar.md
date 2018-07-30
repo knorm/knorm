@@ -19,6 +19,7 @@
   * [ValidationError](api/validation-error.md#validation-error)
 * Plugins
   * [@knorm/postgres](knorm-postgres.md)
+  * [@knorm/to-json](knorm-to-json.md)
   * [@knorm/relations](knorm-relations.md)
   * [@knorm/soft-delete](knorm-soft-delete.md)
   * [@knorm/paginate](knorm-paginate.md)
