@@ -728,6 +728,45 @@ describe('KnormRelations', () => {
               ]
             );
           });
+
+          it('supports passing a field instance', async () => {
+            const query = new Query(User).leftJoin([
+              new Query(Message).on(Message.fields.senderId).as('sentMessages'),
+              new Query(Message)
+                .on(Message.fields.receiverId)
+                .as('receivedMessages')
+            ]);
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new User({
+                  id: 1,
+                  sentMessages: [new Message({ id: 1 })],
+                  receivedMessages: [new Message({ id: 2 })]
+                }),
+                new User({
+                  id: 2,
+                  sentMessages: [new Message({ id: 2 })],
+                  receivedMessages: [new Message({ id: 1 })]
+                })
+              ]
+            );
+          });
+
+          it('supports passing a field instance from the other model', async () => {
+            const query = new Query(User).leftJoin([
+              new Query(Image).on(User.fields.id).as('images')
+            ]);
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new User({ id: 1, images: [new Image({ id: 1 })] }),
+                new User({ id: 2, images: null })
+              ]
+            );
+          });
         });
 
         describe("with 'where' configured on the joined query", () => {
@@ -1115,42 +1154,80 @@ describe('KnormRelations', () => {
             );
           });
 
-          it("supports the 'on' option as a string", async () => {
-            const query = new Query(Image).leftJoin(new Query(User).on('id'));
-            await expect(
-              query.fetch(),
-              'to be fulfilled with sorted rows exhaustively satisfying',
-              [
-                new Image({
-                  id: 1,
-                  user: [new User({ id: 1, name: 'User 1' })]
-                })
-              ]
-            );
+          describe("with the 'on' option configured", () => {
+            it('supports as a string', async () => {
+              const query = new Query(Image).leftJoin(new Query(User).on('id'));
+              await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows exhaustively satisfying',
+                [
+                  new Image({
+                    id: 1,
+                    user: [new User({ id: 1, name: 'User 1' })]
+                  })
+                ]
+              );
+            });
+
+            it('supports a field instance', async () => {
+              const query = new Query(Image).leftJoin(
+                new Query(User).on(User.fields.id)
+              );
+              await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows exhaustively satisfying',
+                [
+                  new Image({
+                    id: 1,
+                    user: [new User({ id: 1, name: 'User 1' })]
+                  })
+                ]
+              );
+            });
+
+            it('supports a field instance from the other model', async () => {
+              const query = new Query(Image).leftJoin(
+                new Query(User).on(Image.fields.userId)
+              );
+              await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows exhaustively satisfying',
+                [
+                  new Image({
+                    id: 1,
+                    user: [new User({ id: 1, name: 'User 1' })]
+                  })
+                ]
+              );
+            });
           });
 
-          it('resolves with the correct data when a field is referenced by multiple fields', async () => {
-            const query = new Query(Message).leftJoin(new Query(User).on('id'));
-            await expect(
-              query.fetch(),
-              'to be fulfilled with sorted rows exhaustively satisfying',
-              [
-                new Message({
-                  id: 1,
-                  senderId: 1,
-                  receiverId: 2,
-                  text: 'Hi User 2',
-                  user: [new User({ id: 2, name: 'User 2' })]
-                }),
-                new Message({
-                  id: 2,
-                  senderId: 2,
-                  receiverId: 1,
-                  text: 'Hi User 1',
-                  user: [new User({ id: 1, name: 'User 1' })]
-                })
-              ]
-            );
+          describe('when a field is referenced by multiple fields', () => {
+            it('resolves with the correct data', async () => {
+              const query = new Query(Message).leftJoin(
+                new Query(User).on('id')
+              );
+              await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows exhaustively satisfying',
+                [
+                  new Message({
+                    id: 1,
+                    senderId: 1,
+                    receiverId: 2,
+                    text: 'Hi User 2',
+                    user: [new User({ id: 2, name: 'User 2' })]
+                  }),
+                  new Message({
+                    id: 2,
+                    senderId: 2,
+                    receiverId: 1,
+                    text: 'Hi User 1',
+                    user: [new User({ id: 1, name: 'User 1' })]
+                  })
+                ]
+              );
+            });
           });
         });
 
@@ -1376,27 +1453,70 @@ describe('KnormRelations', () => {
           );
         });
 
-        it('supports `on`', async () => {
-          const query = new Query(User).leftJoin([
-            new Query(OtherMessage).on('senderId').as('sentMessages'),
-            new Query(OtherMessage).on('receiverId').as('receivedMessages')
-          ]);
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows satisfying',
-            [
-              new User({
-                id: 1,
-                sentMessages: [new OtherMessage({ id: 1 })],
-                receivedMessages: [new OtherMessage({ id: 2 })]
-              }),
-              new User({
-                id: 2,
-                sentMessages: [new OtherMessage({ id: 2 })],
-                receivedMessages: [new OtherMessage({ id: 1 })]
-              })
-            ]
-          );
+        describe('supports `on`', () => {
+          it('as a string', async () => {
+            const query = new Query(User).leftJoin([
+              new Query(OtherMessage).on('senderId').as('sentMessages'),
+              new Query(OtherMessage).on('receiverId').as('receivedMessages')
+            ]);
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new User({
+                  id: 1,
+                  sentMessages: [new OtherMessage({ id: 1 })],
+                  receivedMessages: [new OtherMessage({ id: 2 })]
+                }),
+                new User({
+                  id: 2,
+                  sentMessages: [new OtherMessage({ id: 2 })],
+                  receivedMessages: [new OtherMessage({ id: 1 })]
+                })
+              ]
+            );
+          });
+
+          it('as a field instance', async () => {
+            const query = new Query(User).leftJoin([
+              new Query(OtherMessage)
+                .on(Message.fields.senderId)
+                .as('sentMessages'),
+              new Query(OtherMessage)
+                .on(Message.fields.receiverId)
+                .as('receivedMessages')
+            ]);
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new User({
+                  id: 1,
+                  sentMessages: [new OtherMessage({ id: 1 })],
+                  receivedMessages: [new OtherMessage({ id: 2 })]
+                }),
+                new User({
+                  id: 2,
+                  sentMessages: [new OtherMessage({ id: 2 })],
+                  receivedMessages: [new OtherMessage({ id: 1 })]
+                })
+              ]
+            );
+          });
+
+          it('as a field instance from the other model', async () => {
+            const query = new Query(User).leftJoin([
+              new Query(OtherImage).on(User.fields.id).as('images')
+            ]);
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new User({ id: 1, images: [new OtherImage({ id: 1 })] }),
+                new User({ id: 2, images: null })
+              ]
+            );
+          });
         });
 
         it('supports reverse joins', async () => {
@@ -1408,18 +1528,45 @@ describe('KnormRelations', () => {
           );
         });
 
-        it('supports `on` on a reverse join', async () => {
-          const query = new Query(OtherMessage).leftJoin(
-            new Query(User).on('id')
-          );
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows satisfying',
-            [
-              new OtherMessage({ id: 1, user: [new User({ id: 2 })] }),
-              new OtherMessage({ id: 2, user: [new User({ id: 1 })] })
-            ]
-          );
+        describe('supports `on` on a reverse join', () => {
+          it('as a string', async () => {
+            const query = new Query(OtherMessage).leftJoin(
+              new Query(User).on('id')
+            );
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new OtherMessage({ id: 1, user: [new User({ id: 2 })] }),
+                new OtherMessage({ id: 2, user: [new User({ id: 1 })] })
+              ]
+            );
+          });
+
+          it('as a field instance ', async () => {
+            const query = new Query(OtherMessage).leftJoin(
+              new Query(User).on(User.fields.id)
+            );
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new OtherMessage({ id: 1, user: [new User({ id: 2 })] }),
+                new OtherMessage({ id: 2, user: [new User({ id: 1 })] })
+              ]
+            );
+          });
+
+          it('as a field instance from the other model ', async () => {
+            const query = new Query(OtherImage).leftJoin(
+              new Query(User).on(OtherImage.fields.userId)
+            );
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [new OtherImage({ id: 1, user: [new User({ id: 1 })] })]
+            );
+          });
         });
 
         it('supports `join`', async () => {
