@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="assets/favicon.ico">
   <title>knorm</title>
   <meta name="description" content="A purely class-based ORM for Knex.js">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <style>
+    .app-name-link img { width: 50%; }
+  </style>
 </head>
 <body>
   <div id="app">Loading...</div>
@@ -19,6 +23,7 @@ window.$docsify = {
   loadSidebar: 'sidebar.md',
   subMaxLevel: 2,
   auto2top: true,
+  logo: 'assets/knorm-logo.svg',
   alias: {
     '.*?/readme':
       'https://raw.githubusercontent.com/knorm/knorm/master/README.md',
