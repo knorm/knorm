@@ -219,4 +219,112 @@ User.fetch({
 }).then(console.log); // will not contain system users
 ```
 
-Note that this is not a good example
+## Model registry
+
+Knorm keeps an internal registry of models that is automatically updated when
+models are created and configured. In any of Knorm's classes, the model registry
+can be accessed via the `models` object:
+
+```js
+const knorm = require('@knorm/knorm');
+const orm = knorm();
+
+class User extends orm.Model {
+  doStuff() {
+    console.log(this.models); // => { User: [Function: User] }
+  }
+}
+
+User.table = 'user';
+
+console.log(User.models) // => { User: [Function: User] }
+console.log(orm.models) // => { User: [Function: User] }
+```
+
+When accessing other models from within instance and class methods, it's
+recommended to use the `models` instance or class property, rather than
+accessing them via Node's `require` function. This allows [runnning queries
+within transactions](guides/transactions.md#nested-queries-in-instance-or-class-methods)
+without having to make any further code changes.
+
+Note that for models to be automatically added to the registry, they must be
+loaded (i.e. `require`d) and [configured](#model-config). If a model is not
+configured, you can add it to the registry via
+[addModel](api/knorm.md#knormprototypeaddmodel):
+
+```js
+const knorm = require('@knorm/knorm');
+const orm = knorm();
+
+class User extends orm.Model {}
+class Admin extends User {}
+
+User.table = 'user'; // User is configured, added automatically
+
+orm.addModel(Admin); // Admin is not configured, must be added manually
+```
+
+Since models are only automatically added when they are `require`d, it's
+recommended to load all the models syncronously when starting up a node server.
+For example:
+
+```js
+// app.js:
+const express = require('express');
+const loadModels = require('./models');
+const app = express();
+
+loadModels();
+
+app.get('/', (req, res) => res.send('Hello World!'));
+app.listen(3000, () => console.log('Example app listening on port 3000!'));
+```
+
+```js
+// models/index.js:
+const orm = require('./orm');
+const { readdirSync } = require('fs');
+const { resolve, basename } = require('path');
+
+const modelsDir = resolve(__dirname);
+const loadModels = () => {
+  readdirSync(modelsDir).forEach(filename => {
+    const modelName = basename(filename, '.js');
+    // require the model, automatically loads it into the orm:
+    const model = require(resolve(modelsDir, filename));
+    // if the model is not configured, manually add it to the orm:
+    if (!orm.models[modelName]) {
+      orm.addModel(model);
+    }
+  });
+};
+
+module.exports = loadModels;
+```
+
+```js
+// models/orm.js:
+const knorm = require('@knorm/knorm');
+const orm = knorm();
+
+module.exports = orm;
+```
+
+```js
+// models/User.js:
+const orm = require('./orm');
+
+class User extends orm.Model {}
+User.table = 'user';
+
+module.exports = User;
+```
+
+```js
+// models/Admin.js:
+const User = require('./User');
+
+class Admin extends User {}
+
+module.exports = Admin;
+```
