@@ -83,9 +83,11 @@ console.log(user.firstName); // => 'Foo'
 console.log(user.lastName); // => 'Bar'
 console.log(user.names); // => 'Foo Bar'
 
-// or:
+// to get only field data:
 user.getFieldData(); // { firstName: 'Foo', lastName: 'Bar' }
+// to get virtual data syncronously:
 user.getVirtualDataSync(); // { names: 'Foo Bar' }
+// to get both field and virtual data syncronously:
 user.getDataSync(); // { firstName: 'Foo', lastName: 'Bar', names: 'Foo Bar' }
 
 // with async virtuals:
