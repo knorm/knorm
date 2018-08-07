@@ -1691,7 +1691,7 @@ describe('Field', function() {
               schema: {
                 type: 'array',
                 maxLength: 2,
-                schema: { type: 'string', required: true }
+                schema: { type: 'string' }
               }
             });
           });
@@ -1722,7 +1722,28 @@ describe('Field', function() {
             });
           });
 
+          it('fulfils if called with no array value', async function() {
+            await expect(field.validate(), 'to be fulfilled');
+          });
+
+          it('fulfils if called with an empty array', async function() {
+            await expect(field.validate([]), 'to be fulfilled');
+          });
+
           describe('with the item schema `required`', function() {
+            before(function() {
+              field = new Field({
+                name: 'json',
+                model: User,
+                type: 'json',
+                schema: {
+                  type: 'array',
+                  maxLength: 2,
+                  schema: { type: 'string', required: true }
+                }
+              });
+            });
+
             it('rejects if an array value is `undefined`', async function() {
               await expect(field.validate([undefined]), 'to be rejected with', {
                 name: 'ValidationError',
