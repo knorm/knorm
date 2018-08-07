@@ -1,15 +1,5 @@
 # Getting started
 
-Knorm is a collection of ES6 classes that allow creating
-[ORMs](https://en.wikipedia.org/wiki/Object-relational_mapping) in JavaScript to
-make it easier to work with relational databases.
-
-Knorm does not create or run any database migrations (creating or altering
-tables, columns, indexes etc) and can be used on any existing database without
-requiring any changes to the database layer.
-
-You may also use it to create ORMs on the browser.
-
 ## Installation
 
 ```bash
@@ -31,7 +21,8 @@ const orm = new Knorm(/* options */);
 
 > see the [Knorm docs](api/knorm.md#knorm) for more info on Knorm options
 
-The ORM instance created contains [Model](api/model.md#model), [Field](api/field.md#field), [Query](api/query.md#query) and [Transaction](api/transaction.md#transaction)
+The ORM instance created contains [Model](api/model.md#model), [Field](api/field.md#field),
+[Query](api/query.md#query) and [Transaction](api/transaction.md#transaction)
 classes and [Knorm](api/knorm.md#knorm)'s internal configs that are kept separate
 from other ORM instances. You can therefore create multiple ORMs in a single
 application if needed.

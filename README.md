@@ -6,31 +6,39 @@
 [![dependency status](https://david-dm.org/knorm/knorm.svg)](https://david-dm.org/knorm/knorm)
 [![Greenkeeper badge](https://badges.greenkeeper.io/knorm/knorm.svg)](https://greenkeeper.io/)
 
-A purely ES6 class-based ORM for Node.js.
+> A purely ES6 class-based ORM for Node.js.
+
+Knorm is a collection of classes that allow creating JavaScript
+[ORMs](https://en.wikipedia.org/wiki/Object-relational_mapping) to make it easier
+to work with relational databases.
+
+Knorm can be used on any existing database without requiring any changes to the
+database layer. Also, knorm does not create or run any database migrations
+(creating or altering tables, columns, indexes etc).
+
+You may also use it to create ORMs on the browser (e.g. for data validation).
+
+## Features
+
+* [validation](https://knorm.github.io/knorm/#/guides/validation), including
+  [validation for JSON fields](https://knorm.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
+* [relations](https://knorm.github.io/knorm/#/guides/relations) through SQL joins
+* [transactions](https://knorm.github.io/knorm/#/guides/transactions)
+* [plugin support](https://knorm.github.io/knorm/#/guides/plugins)
+* [field-name to column-name](https://knorm.github.io/knorm/#/api/knorm?id=knormoptions) mapping (e.g. snake-casing)
+* [virtual fields](https://knorm.github.io/knorm/#/guides/virtuals) with support for `async` getters
+* [value casting](https://knorm.github.io/knorm/#/guides/fields?id=value-casting) before save and after fetch
+* custom error classes for database errors
+* extensive test coverage
 
 ## Supported environments
 
 These environments are currently supported:
 
-| Environment | Value           | Description                                                          |
-| ----------- | --------------- | -------------------------------------------------------------------- |
-| Node.js     | Version >= 7.6. | Knorm uses `async/await`                                             |
-| Databases   | PostgreSQL      | via [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) |
-
-## Features
-
-* [Validation](https://joelmukuthu.github.io/knorm/#/guides/validation)
-* [JSON fields validation](https://joelmukuthu.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
-* [Plugin support](https://joelmukuthu.github.io/knorm/#/guides/plugins)
-* [Field to column-name](https://joelmukuthu.github.io/knorm/#/api/knorm?id=options) transformations (e.g. snake-casing)
-* [Relations](https://joelmukuthu.github.io/knorm/#/guides/relations) through SQL joins
-* [Virtual fields](https://joelmukuthu.github.io/knorm/#/guides/virtuals) with support for `async` getters
-* [Value casting](https://joelmukuthu.github.io/knorm/#/guides/fields?id=value-casting) before insert and update operations and after fetch operations
-* custom error classes for database errors
-* improved syntax for transactions
-* good test coverage
-
-> NOTE: Knorm does not create or run database migrations.
+| Environment | Value           | Description                                                                 |
+| ----------- | --------------- | --------------------------------------------------------------------------- |
+| Node.js     | Version >= 7.6. | Knorm uses `async/await`                                                    |
+| Databases   | PostgreSQL      | via [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) plugin |
 
 ## Documentation
 
@@ -38,13 +46,14 @@ View the [documentation site](https://knorm.github.io/knorm/)
 
 ## License
 
-[MIT License](./LICENSE.md)
+[MIT License](https://knorm.github.io/knorm/#/license)
 
 ## Credits
 
 Knorm is inspired by the [Mongoose JS](http://mongoosejs.com/) and
 [Bookshelf.js](http://bookshelfjs.org/) APIs. It was previously a built as a
 wrapper around [Knex.js](http://knexjs.org), hence the kn-orm name i.e. knex-orm;
-but it now generates it's own queries via [SQL Bricks.js](http://csnw.github.io/sql-bricks/).
+but it now builds it's own SQL via [SQL Bricks.js](http://csnw.github.io/sql-bricks/).
 
-Thank you [Ramsés Cabello](https://twitter.com/ramsescabello) for making the logo.
+Thank you [Ramsés Cabello](https://twitter.com/ramsescabello) for designing the
+logo.
