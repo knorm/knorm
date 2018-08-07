@@ -1,3 +1,13 @@
+<a name="1.2.1"></a>
+## [1.2.1](https://github.com/knorm/knorm/compare/v1.2.0...v1.2.1) (2018-08-07)
+
+
+### Bug Fixes
+
+* **Field:** handle `undefined` in array json schemas ([bd0367f](https://github.com/knorm/knorm/commit/bd0367f))
+
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/knorm/knorm/compare/v1.1.0...v1.2.0) (2018-07-30)
 
