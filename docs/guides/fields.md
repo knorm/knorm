@@ -42,27 +42,27 @@ User.fields = { firstName: 'string' };
 
 For object configs, these options are supported:
 
-| Option       | Type                        | Default        | Description                                                                                                                                                                                                                         |
-| ------------ | --------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`       | string (**required**)       | none           | See [field types](#field-types).                                                                                                                                                                                                    |
-| `default`    | any / function              | none           | A default value to use during insert operations if the field has no value. If configured as a function, it will be called with `this` set to the model instance.                                                                    |
-| `column`     | string                      | the field name | The column name to use for this field during database operations. **NOTE:** this takes precedence over the value returned by the `fieldToColumn` mapping function.                                                                  |
-| `primary`    | boolean                     | `false`        | Whether or not the field is the primary field. **NOTE:** a model can only have one primary field, any subsequent primary fields will overwrite the existing one (also in child models).                                             |
-| `unique`     | boolean                     | `false`        | Whether or not the field is a unique field. Primary and unique fields are used for instance operations i.e. fetch, update, delete etc                                                                                               |
-| `methods`    | boolean                     | `false`        | If `true`, this adds `fetchByField`, `updateByField` and `deleteByField` static methods to the model. For example, if the field is `firstName`, then `fetchByFirstName`, `updateByFirstName` and `deleteByFirstName` will be added. |
-| `updated`    | boolean                     | `true`         | Whether or not this field should be included in the data to be updated during update operations. Intended for use with unique and primary fields.                                                                                   |
-| `references` | [Field](api/field.md#field) | none           | A field that this field references (indicating that this field is a foreign field). Used for [relations](guides/relations.md#relations).                                                                                            |
-| `cast`       | object                      | none           | An object with `forSave` or `forFetch` (or both) functions that are called with the field value to cast it to something else before save (insert and update) and after fetch operations.                                            |
-| Validators:  |                             |                |                                                                                                                                                                                                                                     |
-| `type`       | string                      | none           | The field type is also used as a validator.                                                                                                                                                                                         |
-| `required`   | boolean                     | `false`        | Validates that the field value is neither `undefined` nor `null`.                                                                                                                                                                   |
-| `minLength`  | integer                     | none           | Validates that the field value's `length` is at least as long as this value. Supported only for `string`, `text` and `array` (for [JSON validation](#json-validation)) field types.                                                 |
-| `maxLength`  | integer                     | none           | Validates that the field value's `length` is not longer than this value. Supported only for `string`, `text` and `array` (for [JSON validation](#json-validation)) field types.                                                     |
-| `oneOf`      | array                       | none           | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings.                                                                                                    |
-| `equals`     | mixed                       | none           | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings.                                                                                                                |
-| `regex`      | RegExp                      | none           | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex.                                                                                  |
-| `validate`   | function                    | none           | Validates the field's value against a custom validation function. See [custom validation](guides/validation.md#custom-validation)                                                                                                   |
-| `schema`     | string / object             | none           | Validates the structure of `json` (and `jsonb`) feilds. See [JSON validation](guides/validation.md#json-validation)                                                                                                                 |
+| Option       | Type                        | Default        | Description                                                                                                                                                                              |
+| ------------ | --------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`       | string (**required**)       | none           | See [field types](#field-types).                                                                                                                                                         |
+| `default`    | any / function              | none           | A default value to use during insert operations if the field has no value. If configured as a function, it will be called with `this` set to the model instance.                         |
+| `column`     | string                      | the field name | The column name to use for this field during database operations. **NOTE:** this takes precedence over the value returned by the `fieldToColumn` mapping function.                       |
+| `primary`    | boolean                     | `false`        | Whether or not the field is the primary field. **NOTE:** a model can only have one primary field, any subsequent primary fields will overwrite the existing one (also in child models).  |
+| `unique`     | boolean                     | `false`        | Whether or not the field is a unique field. Primary and unique fields are used for instance operations i.e. fetch, update, delete etc                                                    |
+| `methods`    | boolean                     | `false`        | If `true`, this adds `fetchByField`, `updateByField` and `deleteByField` static methods to the model. See [generated methods](#generated-methods)                                        |
+| `updated`    | boolean                     | `true`         | Whether or not this field should be included in the data to be updated during update operations. Intended for use with unique and primary fields.                                        |
+| `references` | [Field](api/field.md#field) | none           | A field that this field references (indicating that this field is a foreign field). Used for [relations](guides/relations.md#relations).                                                 |
+| `cast`       | object                      | none           | An object with `forSave` or `forFetch` (or both) functions that are called with the field value to cast it to something else before save (insert and update) and after fetch operations. |
+| Validators:  |                             |                |                                                                                                                                                                                          |
+| `type`       | string                      | none           | The field type is also used as a validator.                                                                                                                                              |
+| `required`   | boolean                     | `false`        | Validates that the field value is neither `undefined` nor `null`.                                                                                                                        |
+| `minLength`  | integer                     | none           | Validates that the field value's `length` is at least as long as this value. Supported only for `string`, `text` and `array` (for [JSON validation](#json-validation)) field types.      |
+| `maxLength`  | integer                     | none           | Validates that the field value's `length` is not longer than this value. Supported only for `string`, `text` and `array` (for [JSON validation](#json-validation)) field types.          |
+| `oneOf`      | array                       | none           | Validates that the field value is one of the values in this array. Uses strict equality and case-sensitive matching for strings.                                                         |
+| `equals`     | mixed                       | none           | Validates that the field value is equal to this value. Uses strict equality and case-sensitive matching for strings.                                                                     |
+| `regex`      | RegExp                      | none           | Validates that the field value [matches](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test) this regex.                                       |
+| `validate`   | function                    | none           | Validates the field's value against a custom validation function. See [custom validation](guides/validation.md#custom-validation)                                                        |
+| `schema`     | string / object             | none           | Validates the structure of `json` (and `jsonb`) feilds. See [JSON validation](guides/validation.md#json-validation)                                                                      |
 
 ## Field types
 
@@ -92,12 +92,15 @@ These field types are supported:
 ## Field inheritance
 
 In knorm, a model's fields (and virtuals) are cloned and inherited when the model
-is inherited. This allows you to add more fields to the child model without
-modifying the parent's fields, overwrite fields defined in the parent and
-eliminates the need to re-configure common fields for every model.
+is inherited. This:
+
+* allows adding more fields to the child model without modifying the parent's
+  fields
+* allows overwriting fields defined in the parent
+* eliminates the need to re-configure common fields for every model.
 
 To overwrite a field in a child model, add a field with the same name as the
-field you wish to overwrite. You can
+field you wish to overwrite.
 
 ```js
 class User extends Model {}
@@ -120,32 +123,56 @@ console.log(Employee.primary); // throws 'Employee: no primary field configured'
 ## Primary and unique fields
 
 Knorm uses primary and unique fields to find a row in the database for fetch,
-update and delete operations. Every model must be at least one primary field and
-can have multiple unique fields.
+update and delete operations. Every model must have at least one primary field
+but can have multiple unique fields.
 
 !> Composite/multiple primary fields are not currently supported. If two fields
 are configured as primary, only the latter will be configured as a primary field.
 
 If a field is configured as primary or unique, you may also want to prevent it
-from being updated (with the `updated` option), or you can also add static
-methods for fetching, updating and deleting rows by that field (with the
-`methods` option). Note that `methods` only works if the field is either primary
-or unique:
+from being updated (with the `updated` option). Note that this options only works
+for fields that are either primary or unique:
 
 ```js
 class User extends Model {}
 User.fields = {
-  id: { type: 'integer', primary: true, updated: false, methods: true }
+  id: { type: 'integer', primary: true, updated: false },
+  names: 'string'
 };
 
-// User now has these static methods:
+const user = await new User.insert({ id: 1, names: 'Foo' });
+
+user.names = 'Bar';
+
+await user.update(); // `id` will not be sent in the update query
+```
+
+## Generated methods
+
+You can configure static methods for fetching, updating and deleting rows by a
+field to be added to the model with the `methods` option:
+
+```js
+class User extends Model {}
+User.fields = {
+  id: { type: 'integer', methods: true },
+  firstName: { type: 'string', methods: true }
+};
+
+// User will now have these static methods:
 User.fetchById(id, options);
 User.updateById(id, data, options);
 User.deleteById(id, options);
+
+User.fetchByFirstName(firstName, options);
+User.updateByFirstName(firstName, data, options);
+User.deleteByFirstName(firstName, options);
 ```
 
-> The method names are resolved by upper-casing the first letter of the field
-> name and taking the rest of the field name as is
+> `options` are optional for all the methods
+
+The method names are resolved by upper-casing the first letter of the field name
+and taking the rest of the field name as is.
 
 ## Value casting
 
