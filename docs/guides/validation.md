@@ -147,9 +147,9 @@ User.fields = {
 
 ### JSON arrays
 
-For JSON arrays, use the custom `array` field type. You can also define the
-schema of a single array item by passing a `schema` validation object with the
-regular [validators](guides/fields.md#field-config).
+For JSON arrays, use the `array` field type. You can also define the schema of a
+single array item by passing a `schema` validation object with the regular
+[validators](guides/fields.md#field-config).
 
 ```js
 class SomeData extends Model {}
@@ -184,8 +184,8 @@ const someData = new SomeData({
 
 ### Nested objects
 
-For nested objects, use the custom `object` type. You can also define the
-nested object's schema with a nested `schema` validator.
+For nested objects, use the `object` field type. You can also define the nested
+object's schema with a nested `schema` validator.
 
 ```js
 class SomeData extends Model {}
@@ -266,10 +266,10 @@ User.fields = {
 
 ## Overriding validators
 
-In Postgres, for example, `string` types have a max-length of `255`. Instead of
-adding a `maxLength` validator for every field of type `string`, you could
-override the `string` validator to add max-length validation for every `string`
-field:
+For example, to enforce a max-length of `255` for all `string` field types,
+instead of adding a `maxLength` validator for every field of type `string`, you
+could override the `string` validator to add max-length validation for every
+`string` field:
 
 ```js
 const { Field: KnormField } = require('@knorm/knorm');

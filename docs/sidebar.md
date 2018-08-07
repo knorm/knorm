@@ -2,7 +2,7 @@
 
 * Guides
 
-  * [Getting started](guides/getting-started.md)
+  * [Getting started](guides/getting-started.md#getting-started)
   * [Models](guides/models.md#models)
   * [Fields](guides/fields.md#fields)
   * [Virtuals](guides/virtuals.md#virtuals)
