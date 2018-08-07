@@ -170,6 +170,6 @@ User.fields = {
 };
 ```
 
-!> &bull; `forSave` cast functions are called before validation <br />
+!> &bull; `forSave` cast functions are called **after** validation <br />
 &bull; cast functions are not called if the field's value is `undefined`, but
 are called if it's `null`
