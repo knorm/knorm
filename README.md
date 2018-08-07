@@ -22,9 +22,9 @@ You may also use it to create ORMs on the browser (e.g. for data validation).
 
 * [validation](https://knorm.github.io/knorm/#/guides/validation), including
   [validation for JSON fields](https://knorm.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
-* [relations](https://knorm.github.io/knorm/#/guides/relations) through SQL joins
-* [transactions](https://knorm.github.io/knorm/#/guides/transactions)
 * [plugin support](https://knorm.github.io/knorm/#/guides/plugins)
+* [transactions](https://knorm.github.io/knorm/#/guides/transactions)
+* [relations](https://knorm.github.io/knorm/#/knorm-relations) through SQL joins
 * [field-name to column-name](https://knorm.github.io/knorm/#/api/knorm?id=knormoptions) mapping (e.g. snake-casing)
 * [virtual fields](https://knorm.github.io/knorm/#/guides/virtuals) with support for `async` getters
 * [value casting](https://knorm.github.io/knorm/#/guides/fields?id=value-casting) before save and after fetch
