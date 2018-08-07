@@ -7,26 +7,29 @@ To add plugins to the ORM:
 
 ```js
 const knorm = require('@knorm/knorm');
-const knormSoftDelete = require('knorm-soft-delete');
+const knormRelations = require('@knorm/relations');
 
 const { Model, Query } = knorm({
   /* knorm options */
 }).use(
-  knormSoftDelete({
+  knormRelations({
     /* plugin options */
   })
 );
 ```
 
-> see [knorm-soft-delete](https://www.npmjs.com/package/knorm-soft-delete) for
-> this plugin's documentation
+> see [@knorm/relations](knorm-relations.md) for this plugin's documentation
 
 ## Available plugins
 
-| Plugin                                                               | Description                                                                                                     |
-| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| [knorm-timestamps](https://www.npmjs.com/package/knorm-timestamps)   | enables [timestamps](http://knexjs.org/#Schema-timestamps): adds support for `createdAt` and `updatedAt` fields |
-| [knorm-soft-delete](https://www.npmjs.com/package/knorm-soft-delete) | enables soft-deletion: adds support for `deleted` and `deletedAt` fields                                        |
+| Plugin                                     | Description                                                                |
+| ------------------------------------------ | -------------------------------------------------------------------------- |
+| [@knorm/postgres](knorm-postgres.md)       | enables connecting to postgres                                             |
+| [@knorm/to-json](knorm-to-json.md)         | adds a `toJSON` method to Model                                            |
+| [@knorm/relations](knorm-relations.md)     | enables SQL joins                                                          |
+| [@knorm/soft-delete](knorm-soft-delete.md) | enables soft-deletion: adds support for `deleted` and `deletedAt` fields   |
+| [@knorm/paginate](knorm-paginate.md)       | adds a `count` method to Model and Query and adds query pagination options |
+| [@knorm/timestamps](knorm-timestamps.md)   | enables timestamps: adds support for `createdAt` and `updatedAt` fields    |
 
 ## Creating custom plugins
 
