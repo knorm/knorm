@@ -1,33 +1,60 @@
 # Getting started
 
-## Creating an ORM
+Knorm is a collection of ES6 classes that allow creating
+[ORMs](https://en.wikipedia.org/wiki/Object-relational_mapping) in JavaScript to
+make it easier to work with relational databases.
 
-Install Knorm:
+Knorm does not create or run any database migrations (creating or altering
+tables, columns, indexes etc) and can be used on any existing database without
+requiring any changes to the database layer.
+
+You may also use it to create ORMs on the browser.
+
+## Installation
 
 ```bash
 npm install --save @knorm/knorm
 ```
 
-Then create a new ORM:
+## Creating an ORM
+
+To create a new ORM, you may use the factory method or directly create a new
+[Knorm](api/knorm.md#knorm) instance:
+
+```js
+const knorm = require('@knorm/knorm');
+const orm = knorm(/* options */);
+// or:
+const { Knorm } = require('@knorm/knorm');
+const orm = new Knorm(/* options */);
+```
+
+> see the [Knorm docs](api/knorm.md#knorm) for more info on Knorm options
+
+The ORM instance created contains [Model](api/model.md#model), [Field](api/field.md#field), [Query](api/query.md#query) and [Transaction](api/transaction.md#transaction)
+classes and [Knorm](api/knorm.md#knorm)'s internal configs that are kept separate
+from other ORM instances. You can therefore create multiple ORMs in a single
+application if needed.
+
+Once you've created a new ORM, you can directly extend the [Model](api/model.md#model)
+class to create your own models:
 
 ```js
 const knorm = require('@knorm/knorm');
 const { Model } = knorm(/* options */);
 
 class User extends Model {}
+
+User.table = 'user';
+User.fields = { id: 'integer', names: 'string' };
 ```
 
-> see the [Knorm docs](api/knorm.md#knorm) for info on Knorm options
-
-> the `knorm` factory returns an ORM instance with [Model](api/model.md#model),
-[Field](api/field.md#field), [Query](api/query.md#query) and
-[Transaction](api/transaction.md#transaction)
+> see the [models guide](guides/fields.md#fields) for more on models
 
 ## Enabling database access
 
-At this point our ORM cannot connect to the database yet. To enable that, we need
+At this point the ORM cannot connect to the database yet. To enable that, we need
 to install and load an approprite [plugin](guides/plugins.md#available-plugins).
-
 This is needed in most cases but if you only want to use Knorm's classes with no
 database access (e.g. only for data validation) you can skip this step.
 
@@ -48,19 +75,7 @@ const orm = knorm().use(knormPostgres(/* @knorm/postgres options */));
 > see the [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) docs
 > for info on @knorm/postgres options e.g. database connection options
 
-Now we can use our `User` model to manipulate data, we just need to configure
-its table-name and fields:
-
-```js
-const { Model } = orm;
-
-class User extends Model {}
-
-User.table = 'user';
-User.fields = { id: 'integer', names: 'string' };
-```
-
-With this setup you can now manipulate data:
+Now we can use the `User` model to save and retrieve data from the database:
 
 ```js
 const user = await new User({ id: 1, names: 'Foo Bar' }).insert();
@@ -95,18 +110,18 @@ class User extends Model {}
 User.fields = { names: 'string' };
 ```
 
-> See [the fields guide](guides/fields.md#fields) for more info on fields
+> see the [fields guide](guides/fields.md#fields) for more info on fields
 
 A child model inherits all fields (and virtuals) added to its parent, so `User`
 will also have the `id` field. However, fields added to the child model will not
 be added to the parent.
 
-> See [the Model docs](api/model.md) for more info on
-> [field inheritance](api/model.md#modelfields) and [virtuals inheritance](api/model.md#modelvirtuals).
+> see the [fields guide](guides/fields.md#field-inheritance) for more info on
+> field inheritance
 
 ## Adding virtual fields
 
-To add virtual or computed fields on a model:
+To add virtual (computed) fields on a model:
 
 ```js
 User.virtuals = {
@@ -125,4 +140,4 @@ const user  = new User({ names: 'Foo Bar' });
 console.log(user.initials); // => 'FB'
 ```
 
-> See [the virtuals guide](guides/virtuals.md#virtuals) for more info on virtuals
+> see [the virtuals guide](guides/virtuals.md#virtuals) for more info on virtuals
