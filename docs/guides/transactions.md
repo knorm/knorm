@@ -6,7 +6,7 @@ Creating a new transaction exposes a new set of models whose queries will run
 inside the transaction:
 
 ```js
-const knorm = require('knorm');
+const knorm = require('@knorm/knorm');
 const { Model, Transaction } = knorm();
 
 class User extends Model {}
@@ -52,7 +52,7 @@ const users = await new Transaction(async transaction => {
 });
 ```
 
-> The transaction will be automatically committed if the callback function 
+> The transaction will be automatically committed if the callback function
 > resolves successfully, otherwise it will be rolled back.
 
 ## Transactions without a callback
@@ -61,7 +61,7 @@ const users = await new Transaction(async transaction => {
 const transaction = new Transaction();
 const { User } = transaction.models;
 const insertedUsers = await User.insert([
-  { id: 1, names: 'foo' }, 
+  { id: 1, names: 'foo' },
   { id: 2, names: 'bar' }
 ]);
 // more queries
@@ -79,7 +79,7 @@ when it's time to commit the transaction.
 const transaction = new Transaction();
 const { User } = transaction.models;
 const insertedUsers = await User.insert([
-  { id: 1, names: 'foo' }, 
+  { id: 1, names: 'foo' },
   { id: 2, names: 'bar' }
 ]);
 const moreInsertedUsers = await User.insert([
@@ -89,7 +89,7 @@ const fetchedUsers = await User.fetch();
 await transaction.commit();
 ```
 
-> the second `User.insert` will be rejected with an 
+> the second `User.insert` will be rejected with an
 > [InsertError](api/query.md#queryinserterror) and the transaction will be
 > rolled back, such that no rows will end up being inserted.
 
@@ -102,7 +102,7 @@ const { User } = transaction.models;
 
 try {
   await User.insert([
-    { id: 1, names: 'foo' }, 
+    { id: 1, names: 'foo' },
     { id: 2, names: 'bar' }
   ]);
   // do other things
@@ -115,7 +115,7 @@ try {
 
 ## Nested queries in instance or class methods
 
-If you have instance methods that run nested queries using other models, access 
+If you have instance methods that run nested queries using other models, access
 those models via [models](api/model.md#modelprototypemodels) (or [the static equivalent](api/model.md#models)) to ensure that those queries are run within
 transactions. This is as opposed to `require`ing the model directly.
 
@@ -134,7 +134,7 @@ Group.table = 'group';
 Group.fields = { id: { type: 'integer', primary: true }, name: 'string' };
 ```
 
-Then if groups are first fetched within a transaction, the users will also be 
+Then if groups are first fetched within a transaction, the users will also be
 fetched within the same transaction:
 
 ```js

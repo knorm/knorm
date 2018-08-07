@@ -20,7 +20,7 @@ Queries are configured through these properties:
 Assuming this ORM:
 
 ```js
-const knorm = require('knorm');
+const knorm = require('@knorm/knorm');
 const { Model, Query } = knorm();
 
 class User extends Model {}
