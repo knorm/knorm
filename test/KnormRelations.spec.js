@@ -453,7 +453,7 @@ describe('KnormRelations', () => {
           );
         });
 
-        it('populates all instance fields', async () => {
+        it('populates all instance fields on the joined models', async () => {
           const query = new Query(User).leftJoin(new Query(Image));
           await expect(
             query.fetch(),
@@ -505,6 +505,18 @@ describe('KnormRelations', () => {
           );
 
           await Image.delete({ where: { id: 2 } });
+        });
+
+        it('allows replacing an already existing field on the parent model via `as`', async () => {
+          const query = new Query(User).leftJoin(new Query(Image).as('name'));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: [new Image({ id: 1 })] }),
+              new User({ id: 2, name: null })
+            ]
+          );
         });
 
         describe("with 'fields' configured on the joined query", () => {
@@ -660,6 +672,20 @@ describe('KnormRelations', () => {
               ]
             );
           });
+
+          it('allows replacing an already existing field on the parent model via `as`', async () => {
+            const query = new Query(User).leftJoin(
+              new Query(Image).first().as('name')
+            );
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new User({ id: 1, name: new Image({ id: 1 }) }),
+                new User({ id: 2, name: null })
+              ]
+            );
+          });
         });
 
         it('creates a left join to the model on all fields wih references', async () => {
@@ -688,42 +714,14 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  sentMessages: [
-                    new Message({
-                      id: 1,
-                      text: 'Hi User 2',
-                      senderId: 1,
-                      receiverId: 2
-                    })
-                  ],
-                  receivedMessages: [
-                    new Message({
-                      id: 2,
-                      text: 'Hi User 1',
-                      senderId: 2,
-                      receiverId: 1
-                    })
-                  ]
+                  sentMessages: [new Message({ id: 1, text: 'Hi User 2' })],
+                  receivedMessages: [new Message({ id: 2, text: 'Hi User 1' })]
                 }),
                 new User({
                   id: 2,
                   name: 'User 2',
-                  sentMessages: [
-                    new Message({
-                      id: 2,
-                      text: 'Hi User 1',
-                      senderId: 2,
-                      receiverId: 1
-                    })
-                  ],
-                  receivedMessages: [
-                    new Message({
-                      id: 1,
-                      text: 'Hi User 2',
-                      senderId: 1,
-                      receiverId: 2
-                    })
-                  ]
+                  sentMessages: [new Message({ id: 2, text: 'Hi User 1' })],
+                  receivedMessages: [new Message({ id: 1, text: 'Hi User 2' })]
                 })
               ]
             );
