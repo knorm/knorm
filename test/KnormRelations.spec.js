@@ -63,7 +63,13 @@ describe('KnormRelations', () => {
   User.table = 'user';
   User.fields = {
     name: { type: 'string', required: true },
-    confirmed: 'boolean'
+    confirmed: 'boolean',
+    creator: {
+      type: 'integer',
+      references() {
+        return User.fields.id;
+      }
+    }
   };
 
   class ImageCategory extends Model {}
@@ -90,6 +96,7 @@ describe('KnormRelations', () => {
       table.increments();
       table.string('name');
       table.boolean('confirmed');
+      table.integer('creator');
     });
     await knex.schema.createTable(ImageCategory.table, table => {
       table.increments();
@@ -1610,6 +1617,45 @@ describe('KnormRelations', () => {
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
             [{ messages: null }, { messages: null }]
+          );
+        });
+      });
+
+      describe('with models referencing themselves', () => {
+        before(async () => {
+          await User.insert([
+            { id: 3, name: 'User 3', creator: 1 },
+            { id: 4, name: 'User 4', creator: 2 }
+          ]);
+        });
+
+        after(async () => {
+          await User.delete({
+            where: User.where.in({ id: [3, 4] })
+          });
+        });
+
+        it('supports fetching the referenced models', async () => {
+          const query = new Query(User).leftJoin(
+            new Query(User).as('creator').first()
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1', creator: null }),
+              new User({ id: 2, name: 'User 2', creator: null }),
+              new User({
+                id: 3,
+                name: 'User 3',
+                creator: new User({ id: 1, name: 'User 1' })
+              }),
+              new User({
+                id: 4,
+                name: 'User 4',
+                creator: new User({ id: 2, name: 'User 2' })
+              })
+            ]
           );
         });
       });
