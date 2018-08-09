@@ -1635,7 +1635,7 @@ describe('KnormRelations', () => {
           });
         });
 
-        it('supports fetching the referenced models', async () => {
+        it('supports the self-reference', async () => {
           const query = new Query(User).leftJoin(
             new Query(User).as('creator').first()
           );
@@ -1655,6 +1655,82 @@ describe('KnormRelations', () => {
                 name: 'User 4',
                 creator: new User({ id: 2, name: 'User 2' })
               })
+            ]
+          );
+        });
+
+        it('supports `on` as a string', async () => {
+          const query = new Query(User).leftJoin(
+            new Query(User)
+              .as('creator')
+              .on('creator')
+              .first()
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, creator: null }),
+              new User({ id: 2, creator: null }),
+              new User({ id: 3, creator: new User({ id: 1 }) }),
+              new User({ id: 4, creator: new User({ id: 2 }) })
+            ]
+          );
+        });
+
+        it('supports `on` as a field instance', async () => {
+          const query = new Query(User).leftJoin(
+            new Query(User)
+              .as('creator')
+              .on(User.fields.creator)
+              .first()
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, creator: null }),
+              new User({ id: 2, creator: null }),
+              new User({ id: 3, creator: new User({ id: 1 }) }),
+              new User({ id: 4, creator: new User({ id: 2 }) })
+            ]
+          );
+        });
+
+        it('supports `on` with the other field as a string', async () => {
+          const query = new Query(User).leftJoin(
+            new Query(User)
+              .as('creator')
+              .on('id')
+              .first()
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, creator: null }),
+              new User({ id: 2, creator: null }),
+              new User({ id: 3, creator: new User({ id: 1 }) }),
+              new User({ id: 4, creator: new User({ id: 2 }) })
+            ]
+          );
+        });
+
+        it('supports `on` with the other field as a field instance', async () => {
+          const query = new Query(User).leftJoin(
+            new Query(User)
+              .as('creator')
+              .on(User.fields.id)
+              .first()
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, creator: null }),
+              new User({ id: 2, creator: null }),
+              new User({ id: 3, creator: new User({ id: 1 }) }),
+              new User({ id: 4, creator: new User({ id: 2 }) })
             ]
           );
         });
