@@ -912,6 +912,35 @@ describe('KnormPostgres', () => {
           [{ ID: 1, NAME: 'foofoo' }, { ID: 2, NAME: 'barbar' }]
         );
       });
+
+      it('supports model `schema`', async () => {
+        class OtherUser extends User {}
+        OtherUser.schema = 'public';
+        await new Query(OtherUser).insert([
+          { id: 1, name: 'foo' },
+          { id: 2, name: 'bar' }
+        ]);
+        const spy = sinon.spy(Query.prototype, 'query');
+        await expect(
+          new Query(OtherUser).update([
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'barbar' }
+          ]),
+          'to be fulfilled with value satisfying',
+          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+        );
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              sql => sql.toString(),
+              'to contain',
+              '"public"."user"'
+            )
+          );
+        });
+        spy.restore();
+      });
     });
 
     describe('save', () => {
