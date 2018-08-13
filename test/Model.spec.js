@@ -1325,6 +1325,39 @@ describe('Model', function() {
     });
   });
 
+  describe('Model.schema', function() {
+    describe('as a setter', function() {
+      it("sets the model's schema", function() {
+        class Foo extends Model {}
+        Foo.schema = 'foo';
+        expect(Foo.config.schema, 'to be', 'foo');
+      });
+    });
+
+    describe('when a model is subclassed', function() {
+      it("inherits the parent's schema", function() {
+        class Foo extends Model {}
+        class Bar extends Foo {}
+
+        Foo.schema = 'foo';
+
+        expect(Foo.schema, 'to be', 'foo');
+        expect(Bar.schema, 'to be', 'foo');
+      });
+
+      it("allows overwriting the parent's schema", function() {
+        class Foo extends Model {}
+        class Bar extends Foo {}
+
+        Foo.schema = 'foo';
+        Bar.schema = 'bar';
+
+        expect(Foo.schema, 'to be', 'foo');
+        expect(Bar.schema, 'to be', 'bar');
+      });
+    });
+  });
+
   describe('Model.table', function() {
     describe('as a setter', function() {
       it("sets the model's table", function() {

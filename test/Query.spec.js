@@ -288,6 +288,33 @@ describe('Query', () => {
       spy.restore();
     });
 
+    it('works with a model `schema` configured', async () => {
+      const spy = sinon.spy(Query.prototype, 'query');
+      class OtherUser extends User {}
+      OtherUser.schema = 'public';
+      const query = new Query(OtherUser);
+      await expect(
+        query.fetch(),
+        'to be fulfilled with sorted rows satisfying',
+        [
+          new OtherUser({ id: 1, name: 'User 1' }),
+          new OtherUser({ id: 2, name: 'User 2' })
+        ]
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            sql => sql.toString(),
+
+            'to contain',
+            '"public"."user"'
+          )
+        );
+      });
+      spy.restore();
+    });
+
     describe('if a fetch error occurs', () => {
       let queryStub;
 
@@ -1444,6 +1471,29 @@ describe('Query', () => {
       spy.restore();
     });
 
+    it('works with a model `schema` configured', async () => {
+      const spy = sinon.spy(Query.prototype, 'query');
+      class OtherUser extends User {}
+      OtherUser.schema = 'public';
+      const query = new Query(OtherUser);
+      await expect(
+        query.insert(new OtherUser({ name: 'John Doe' })),
+        'to be fulfilled with value satisfying',
+        [new OtherUser({ name: 'John Doe' })]
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            sql => sql.toString(),
+            'to contain',
+            '"public"."user"'
+          )
+        );
+      });
+      spy.restore();
+    });
+
     describe('if an insert error occurs', () => {
       let queryStub;
 
@@ -2084,6 +2134,31 @@ describe('Query', () => {
       spy.restore();
     });
 
+    it('works with a model `schema` configured', async () => {
+      const spy = sinon.spy(Query.prototype, 'query');
+      class OtherUser extends User {}
+      OtherUser.schema = 'public';
+      const query = new Query(OtherUser);
+      const otherUser = new OtherUser(user);
+      otherUser.name = 'Jane Doe';
+      await expect(
+        query.update(otherUser),
+        'to be fulfilled with value satisfying',
+        [new OtherUser({ name: 'Jane Doe' })]
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            sql => sql.toString(),
+            'to contain',
+            '"public"."user"'
+          )
+        );
+      });
+      spy.restore();
+    });
+
     describe('when data is empty', () => {
       it('does not send a db query', async () => {
         const spy = sinon.stub(Query.prototype, 'query');
@@ -2576,6 +2651,32 @@ describe('Query', () => {
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
         { id: 2, name: 'Jane Doe' }
       ]);
+    });
+
+    it('works with a model `schema` configured', async () => {
+      const spy = sinon.spy(Query.prototype, 'query');
+      class OtherUser extends User {}
+      OtherUser.schema = 'public';
+      const query = new Query(OtherUser);
+      await expect(
+        query.delete(),
+        'to be fulfilled with sorted rows satisfying',
+        [
+          new OtherUser({ id: 1, name: 'John Doe' }),
+          new OtherUser({ id: 2, name: 'Jane Doe' })
+        ]
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            sql => sql.toString(),
+            'to contain',
+            '"public"."user"'
+          )
+        );
+      });
+      spy.restore();
     });
 
     describe('if a delete error occurs', () => {
