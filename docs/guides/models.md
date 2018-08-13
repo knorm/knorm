@@ -11,6 +11,7 @@ Models are configured through these static properties:
 | Property         | Type                        | Default                     | Description                                                                                                                                                                   |
 | ---------------- | --------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Model.table`    | string (**required**)       | none                        | Configures the model's table-name. **NOTE:** this config can be omitted if the model is not used for performing any database operations (i.e. fetching, saving, deleting etc) |
+| `Model.schema`   | string                      | none                        | Configures the model's schema-name                                                                                                                                            |
 | `Model.fields`   | object                      | none                        | Configures the model's fields. See the [fields guide](guides/fields.md#fields) for more info                                                                                  |
 | `Model.virtuals` | object                      | none                        | Configures the model's virtual fields. See the [virtuals guide](guides/virtuals.md#virtuals) for more info                                                                    |
 | `Model.options`  | object                      | none                        | Configures the model's default query and plugin options (for some plugins). See [customizing queries per model](#customizing-queries-per-model) for more info                 |
@@ -239,8 +240,8 @@ class User extends orm.Model {
 
 User.table = 'user';
 
-console.log(User.models) // => { User: [Function: User] }
-console.log(orm.models) // => { User: [Function: User] }
+console.log(User.models); // => { User: [Function: User] }
+console.log(orm.models); // => { User: [Function: User] }
 ```
 
 When accessing other models from within instance and class methods, it's
