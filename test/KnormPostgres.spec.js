@@ -892,6 +892,26 @@ describe('KnormPostgres', () => {
         await expect(spy, 'was called twice');
         spy.restore();
       });
+
+      it('formats fields to columns', async () => {
+        class OtherUser extends User {}
+        OtherUser.fields = {
+          ID: { type: 'integer', primary: true, updated: false, column: 'id' },
+          NAME: { type: 'string', column: 'name' }
+        };
+        await new Query(OtherUser).insert([
+          { ID: 1, NAME: 'foo' },
+          { ID: 2, NAME: 'bar' }
+        ]);
+        await expect(
+          new Query(OtherUser).update([
+            { ID: 1, NAME: 'foofoo' },
+            { ID: 2, NAME: 'barbar' }
+          ]),
+          'to be fulfilled with value satisfying',
+          [{ ID: 1, NAME: 'foofoo' }, { ID: 2, NAME: 'barbar' }]
+        );
+      });
     });
 
     describe('save', () => {
