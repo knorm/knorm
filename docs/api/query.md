@@ -56,6 +56,10 @@
 
 ## Query.prototype.orderBy(fields) : Query
 
+## Query.prototype.forUpdate() : Query
+
+## Query.prototype.of(tables) : Query
+
 ## Query.prototype.leftJoin(queries, [options]) : Query
 
 ## Query.prototype.innerJoin(queries, [options]) : Query

@@ -1237,6 +1237,91 @@ describe('Query', () => {
       });
     });
 
+    describe('with `forUpdate` configured', () => {
+      it('supports `forUpdate`', async () => {
+        const spy = sinon.spy(Query.prototype, 'query');
+        const query = new Query(User).forUpdate();
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              sql => sql.toString(),
+              'to contain',
+              'FOR UPDATE'
+            )
+          );
+        });
+        spy.restore();
+      });
+
+      it('supports `of`', async () => {
+        const spy = sinon.spy(Query.prototype, 'query');
+        const query = new Query(User).forUpdate().of('user');
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              sql => sql.toString(),
+              'to contain',
+              'OF "user"'
+            )
+          );
+        });
+        spy.restore();
+      });
+
+      it('supports `of` with an array', async () => {
+        const spy = sinon.spy(Query.prototype, 'query');
+        const query = new Query(User).forUpdate().of(['user', 'user']);
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              sql => sql.toString(),
+              'to contain',
+              'OF "user", "user"'
+            )
+          );
+        });
+        spy.restore();
+      });
+
+      it('supports multiple `of` invocations', async () => {
+        const spy = sinon.spy(Query.prototype, 'query');
+        const query = new Query(User)
+          .forUpdate()
+          .of('user')
+          .of(['user']);
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              sql => sql.toString(),
+              'to contain',
+              'OF "user", "user"'
+            )
+          );
+        });
+        spy.restore();
+      });
+    });
+
     describe('with `debug` configured', () => {
       it('improves the FetchError stack trace', async () => {
         const stub = sinon
