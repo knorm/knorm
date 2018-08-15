@@ -534,6 +534,17 @@ describe('Query', () => {
       });
     });
 
+    describe("with 'returning' configured", () => {
+      it('returns only the fields requested (synonymous with `fields` option)', async () => {
+        const query = new Query(User).returning(['name']);
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
+        );
+      });
+    });
+
     describe("with 'distinct' configured", () => {
       it('resolves with instances matching the distinct fields', async () => {
         await expect(
@@ -1699,6 +1710,17 @@ describe('Query', () => {
           query.insert(new User({ name: 'John Doe' })),
           'to be fulfilled with value satisfying',
           [new User({ theName: 'John Doe', theConfirmed: false })]
+        );
+      });
+    });
+
+    describe('with `fields` configured', () => {
+      it('returns only the fields requested (synonymous with `returning`)', async () => {
+        const query = new Query(User).fields('name');
+        await expect(
+          query.insert(new User({ name: 'John Doe' })),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ name: 'John Doe' })]
         );
       });
     });
