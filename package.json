@@ -1,6 +1,6 @@
 {
   "name": "@knorm/knorm",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "A purely ES6 class-based ORM for Node.js",
   "main": "index.js",
   "scripts": {
