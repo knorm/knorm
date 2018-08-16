@@ -53,7 +53,7 @@ describe('KnormPaginate', () => {
   const orm = knorm()
     .use(knormPostgres({ connection: knex.client.config.connection }))
     .use(knormRelations())
-    .use(knormPaginate());
+    .use(knormPaginate({ page: 2, perPage: 2 }));
 
   const Query = orm.Query;
 
@@ -259,6 +259,322 @@ describe('KnormPaginate', () => {
             e => expect(e.stack, 'to contain', 'test/KnormPaginate.spec.js')
           );
           stub.restore();
+        });
+      });
+    });
+
+    describe('Query.prototype.fetch', () => {
+      before(async () =>
+        User.insert([
+          { id: 3, name: 'User 3', age: 10 },
+          { id: 4, name: 'User 4', age: 10 },
+          { id: 5, name: 'User 5', age: 10 },
+          { id: 6, name: 'User 6', age: 10 },
+          { id: 7, name: 'User 7', age: 10 },
+          { id: 8, name: 'User 8', age: 10 },
+          { id: 9, name: 'User 9', age: 10 },
+          { id: 10, name: 'User 10', age: 10 }
+        ])
+      );
+
+      after(async () =>
+        User.delete({ where: User.where.in({ id: [3, 4, 5, 6, 7, 8, 9, 10] }) })
+      );
+
+      describe('with no pagination options set', () => {
+        it('returns all the rows', async () => {
+          const query = new Query(User);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            expect.it('to have length', 10)
+          );
+        });
+
+        it('passes options along', async () => {
+          const query = new Query(User).fields(['name']);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value exhaustively satisfying',
+            [
+              new User({ name: 'User 1' }),
+              new User({ name: 'User 2' }),
+              new User({ name: 'User 3' }),
+              new User({ name: 'User 4' }),
+              new User({ name: 'User 5' }),
+              new User({ name: 'User 6' }),
+              new User({ name: 'User 7' }),
+              new User({ name: 'User 8' }),
+              new User({ name: 'User 9' }),
+              new User({ name: 'User 10' })
+            ]
+          );
+        });
+      });
+
+      describe('with `page` and `perPage` set', () => {
+        it('returns paginated rows and pagination data', async () => {
+          const query = new Query(User).page(2).perPage(2);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 2,
+            perPage: 2,
+            rows: [{ id: 3, name: 'User 3' }, { id: 4, name: 'User 4' }]
+          });
+        });
+
+        it('passes options along', async () => {
+          const query = new Query(User)
+            .page(3)
+            .perPage(3)
+            .fields(['name']);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value exhaustively satisfying',
+            {
+              total: 10,
+              page: 3,
+              perPage: 3,
+              rows: [
+                new User({ name: 'User 7' }),
+                new User({ name: 'User 8' }),
+                new User({ name: 'User 9' })
+              ]
+            }
+          );
+        });
+
+        it('supports `where`', async () => {
+          const query = new Query(User)
+            .page(2)
+            .perPage(1)
+            .where(User.where.in({ id: [1, 2, 3] }));
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 3,
+            page: 2,
+            perPage: 1,
+            rows: [{ id: 2, name: 'User 2' }]
+          });
+        });
+
+        it('supports `distinct`', async () => {
+          const query = new Query(User)
+            .page(1)
+            .perPage(1)
+            .distinct('age');
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 1,
+            page: 1,
+            perPage: 1,
+            rows: [{ age: 10 }]
+          });
+        });
+
+        it('overwrites any original `limit` and `offset` options passed', async () => {
+          const query = new Query(User)
+            .page(3)
+            .perPage(3)
+            .offset(1)
+            .limit(5);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 3,
+            perPage: 3,
+            rows: [
+              { id: 7, name: 'User 7' },
+              { id: 8, name: 'User 8' },
+              { id: 9, name: 'User 9' }
+            ]
+          });
+        });
+
+        it('unsets `fields` when counting total rows', async () => {
+          const query = new Query(User)
+            .page(3)
+            .perPage(1)
+            .fields(['max(age)']);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10
+          });
+        });
+
+        it('unsets `groupBy` when counting total rows', async () => {
+          const query = new Query(User)
+            .page(3)
+            .perPage(1)
+            .fields(['max(age)'])
+            .groupBy('id');
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10
+          });
+        });
+
+        it('unsets `orderBy` when counting total rows', async () => {
+          const spy = sinon.spy(Query.prototype, 'query');
+          const query = new Query(User)
+            .page(3)
+            .perPage(1)
+            .orderBy('age');
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10
+          });
+          await expect(spy, 'to have calls satisfying', () => {
+            spy(
+              expect.it(
+                'when passed as parameter to',
+                sql => sql.toString(),
+                'not to contain',
+                'ORDER BY'
+              )
+            ); // for the count query
+            spy(expect.it('not to be undefined')); // for the fetch query
+          });
+        });
+
+        it("supports `page: 'first'`", async () => {
+          const query = new Query(User).page('first').perPage(2);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 1,
+            perPage: 2,
+            rows: [{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }]
+          });
+        });
+
+        it("supports `page: 'last'`", async () => {
+          const query = new Query(User).page('last').perPage(3);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 4,
+            perPage: 3,
+            rows: [{ id: 10, name: 'User 10' }]
+          });
+        });
+
+        it('casts `page` to an integer', async () => {
+          const query = new Query(User).page('5').perPage(2);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 5,
+            perPage: 2,
+            rows: [{ id: 9, name: 'User 9' }, { id: 10, name: 'User 10' }]
+          });
+        });
+
+        it('casts `perPage` to an integer', async () => {
+          const query = new Query(User).page(5).perPage('1');
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 5,
+            perPage: 1,
+            rows: [{ id: 5, name: 'User 5' }]
+          });
+        });
+      });
+
+      describe('if `page` is out of bounds', () => {
+        it('rejects with a fetch error if `page` is 0', async () => {
+          const query = new Query(User).page(0).perPage(1);
+          await expect(
+            query.fetch(),
+            'to be rejected with error satisfying',
+            new Query.FetchError({
+              query,
+              error: new Error('OFFSET must not be negative')
+            })
+          );
+        });
+
+        it('rejects with a fetch error if `page` is less than 0', async () => {
+          const query = new Query(User).page(-1).perPage(1);
+          await expect(
+            query.fetch(),
+            'to be rejected with error satisfying',
+            new Query.FetchError({
+              query,
+              error: new Error('OFFSET must not be negative')
+            })
+          );
+        });
+
+        it('returns no rows if page is greater than max pages', async () => {
+          const query = new Query(User).page(100).perPage(1);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 100,
+            perPage: 1,
+            rows: []
+          });
+        });
+      });
+
+      describe('if `perPage` is out of bounds', () => {
+        it('returns no rows if `perPage` is 0', async () => {
+          const query = new Query(User).page(1).perPage(0);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 1,
+            perPage: 0,
+            rows: []
+          });
+        });
+
+        it('rejects with a fetch error if `perPage` is less than 0', async () => {
+          const query = new Query(User).page(1).perPage(-1);
+          await expect(
+            query.fetch(),
+            'to be rejected with error satisfying',
+            new Query.FetchError({
+              query,
+              error: new Error('LIMIT must not be negative')
+            })
+          );
+        });
+
+        it('returns all rows if page is greater than total rows', async () => {
+          const query = new Query(User).page(1).perPage(100);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 1,
+            perPage: 100,
+            rows: expect.it('to have length', 10)
+          });
+        });
+      });
+
+      describe('with only `page` set', () => {
+        it('defaults `perPage` to the default configured value', async () => {
+          const query = new Query(User).page(2);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 2,
+            perPage: 2,
+            rows: [{ id: 3, name: 'User 3' }, { id: 4, name: 'User 4' }]
+          });
+        });
+      });
+
+      describe('with only `perPage` set', () => {
+        it('defaults `page` to the default configured value', async () => {
+          const query = new Query(User).perPage(1);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', {
+            total: 10,
+            page: 2,
+            perPage: 1,
+            rows: [{ id: 2, name: 'User 2' }]
+          });
+        });
+      });
+
+      describe('with `withPaginationData` set to `false`', () => {
+        it('returns only an array of paginated rows', async () => {
+          const query = new Query(User)
+            .page(10)
+            .perPage(1)
+            .withPaginationData(false);
+          await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+            { id: 10, name: 'User 10' }
+          ]);
         });
       });
     });
