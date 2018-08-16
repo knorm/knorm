@@ -1,3 +1,13 @@
+<a name="1.4.2"></a>
+## [1.4.2](https://github.com/knorm/knorm/compare/v1.4.1...v1.4.2) (2018-08-16)
+
+
+### Bug Fixes
+
+* **Query:** fix handling of string options ([2125f6e](https://github.com/knorm/knorm/commit/2125f6e))
+
+
+
 <a name="1.4.1"></a>
 
 ## [1.4.1](https://github.com/knorm/knorm/compare/v1.2.1...v1.4.1) (2018-08-15)
