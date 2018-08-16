@@ -1204,6 +1204,32 @@ describe('Query', () => {
       });
     });
 
+    describe("with 'having' configured", () => {
+      it('supports SQL functions', async () => {
+        const query = new Query(User)
+          .fields({ maxAge: 'MAX(age)' })
+          .groupBy('id')
+          .having({ 'MAX(age)': 10 });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [new User({ maxAge: 10 }), new User({ maxAge: 10 })]
+        );
+      });
+
+      it('supports SQL functions with where expressions', async () => {
+        const query = new Query(User)
+          .fields({ maxAge: 'MAX(age)' })
+          .groupBy('id')
+          .having(Query.where.greaterThan({ 'MAX(age)': 5 }));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [new User({ maxAge: 10 }), new User({ maxAge: 10 })]
+        );
+      });
+    });
+
     describe("with 'groupBy' configured", () => {
       it('supports a single field', async () => {
         const query = new Query(User);
