@@ -178,6 +178,44 @@ describe('Query', () => {
     });
   });
 
+  describe('Query.prototype.clone', () => {
+    it('returns a Query instance', () => {
+      const query = new Query(User);
+      expect(query.clone(), 'to be a', Query);
+    });
+
+    it('returns the correct instance with a Query subclass', () => {
+      class FooQuery extends Query {}
+      const query = new FooQuery(User);
+      const clone = query.clone();
+      expect(clone, 'to be a', FooQuery);
+      expect(clone, 'to be a', Query);
+    });
+
+    it('returns an instance of the same constructor as the original', () => {
+      class FooQuery extends Query {}
+      const query = new FooQuery(User);
+      const clone = query.clone();
+      expect(clone.constructor, 'to be', query.constructor);
+    });
+
+    it('copies custom configs to the clone', () => {
+      const query = new Query(User);
+      query.config.foo = { foo: 'bar' };
+      expect(query.clone(), 'to satisfy', { config: { foo: { foo: 'bar' } } });
+    });
+
+    it('copies added options to the clone', () => {
+      const query = new Query(User)
+        .fields(['id'])
+        .forUpdate()
+        .groupBy('id');
+      expect(query.clone(), 'to satisfy', {
+        options: { fields: { id: 'id' }, forUpdate: true, groupBy: [['id']] }
+      });
+    });
+  });
+
   describe('Query.prototype.fetch', () => {
     before(async () => {
       await knex(User.table).insert([
