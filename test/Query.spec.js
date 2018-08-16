@@ -315,6 +315,20 @@ describe('Query', () => {
       spy.restore();
     });
 
+    // regression test for @knorm/relations
+    it('supports options with string values', async () => {
+      const query = new Query(User);
+      query.options.joinType = 'innerJoin';
+      await expect(
+        query.fetch(),
+        'to be fulfilled with sorted rows exhaustively satisfying',
+        [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]
+      );
+    });
+
     describe('if a fetch error occurs', () => {
       let queryStub;
 
