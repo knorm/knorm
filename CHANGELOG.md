@@ -2,11 +2,6 @@
 # [1.5.0](https://github.com/knorm/knorm/compare/v1.4.1...v1.5.0) (2018-08-19)
 
 
-### Bug Fixes
-
-* **Query:** fix handling of string options ([e6ff8b4](https://github.com/knorm/knorm/commit/e6ff8b4))
-
-
 ### Features
 
 * **Query:** add `hasOption` and `unsetOption` ([17ad152](https://github.com/knorm/knorm/commit/17ad152))
