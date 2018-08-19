@@ -513,6 +513,42 @@ describe('KnormPostgres', () => {
       );
     });
 
+    it('supports `limit: 0`', async () => {
+      await new Query(User).insert([
+        { id: 1, name: 'foo' },
+        { id: 2, name: 'bar' }
+      ]);
+      await expect(
+        new Query(User).limit(0).fetch(),
+        'to be fulfilled with value satisfying',
+        []
+      );
+    });
+
+    it('supports `offset: 0`', async () => {
+      await new Query(User).insert([
+        { id: 1, name: 'foo' },
+        { id: 2, name: 'bar' }
+      ]);
+      const spy = sinon.spy(Query.prototype, 'query');
+      await expect(
+        new Query(User).offset(0).fetch(),
+        'to be fulfilled with value satisfying',
+        [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+      );
+      await expect(spy, 'to have calls satisfying', () => {
+        spy(
+          expect.it(
+            'when passed as parameter to',
+            query => query.toString(),
+            'to contain',
+            'OFFSET 0'
+          )
+        );
+      });
+      spy.restore();
+    });
+
     it('adds `limit` for `fetch` when `first` is true', async () => {
       await new Query(User).insert({ id: 1, name: 'foo' });
       const spy = sinon.spy(Query.prototype, 'query');
