@@ -9,9 +9,11 @@
 Pagination plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
 
 ## Installation
+
 ```bash
 npm install --save @knorm/knorm @knorm/paginate
 ```
+
 > @knorm/paginate has a peer dependency on [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
 
 ## Usage
@@ -29,11 +31,18 @@ const orm = knorm({
 
 ## Options
 
-### name
-
-The name of the plugin, defaults to `'paginate'`.
+| Option | Type   | Default     | Description                                                                                   |
+| ------ | ------ | ----------- | --------------------------------------------------------------------------------------------- |
+| `name` | string | `paginate` | The name of the plugin. Allows accessing the plugin instance via `orm.plugins['plugin-name']` |
+| `page` | number | `1` | The default `page` value to use if only `perPage` is set in [query options](https://knorm.github.io/knorm/#/guides/queries?id=setting-options) |
+| `perPage` | number | `10` | The default `perPage` value to use if only `page` is set in [query options](https://knorm.github.io/knorm/#/guides/queries?id=setting-options) |
 
 ## API
 
 ### Query.prototype.count / Model.count
 
+### Query.prototype.page
+
+### Query.prototype.perPage
+
+### Query.prototype.withPaginationData
