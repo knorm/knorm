@@ -1,3 +1,20 @@
+<a name="1.5.0"></a>
+# [1.5.0](https://github.com/knorm/knorm/compare/v1.4.1...v1.5.0) (2018-08-19)
+
+
+### Bug Fixes
+
+* **Query:** fix handling of string options ([e6ff8b4](https://github.com/knorm/knorm/commit/e6ff8b4))
+
+
+### Features
+
+* **Query:** add `hasOption` and `unsetOption` ([17ad152](https://github.com/knorm/knorm/commit/17ad152))
+* **Query:** add `Query.prototype.clone` ([2315c45](https://github.com/knorm/knorm/commit/2315c45))
+* **Query:** add `unsetOptions` and `getOption` ([d896aec](https://github.com/knorm/knorm/commit/d896aec))
+
+
+
 <a name="1.4.2"></a>
 ## [1.4.2](https://github.com/knorm/knorm/compare/v1.4.1...v1.4.2) (2018-08-16)
 
