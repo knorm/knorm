@@ -1,3 +1,13 @@
+<a name="1.6.0"></a>
+# [1.6.0](https://github.com/knorm/knorm/compare/v1.5.0...v1.6.0) (2018-08-21)
+
+
+### Features
+
+* **Field:** support non-matching regex validators ([52a7d72](https://github.com/knorm/knorm/commit/52a7d72))
+
+
+
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/knorm/knorm/compare/v1.4.1...v1.5.0) (2018-08-19)
 
