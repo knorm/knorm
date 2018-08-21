@@ -12,7 +12,109 @@ whereas before updates, only the fields that have values set will be validated.
 You can trigger validation any time on a model instance via
 [Model.prototype.validate](api/model.md#modelprototypevalidateoptions-promise-gt-modelvalidationerror)
 
-> See [field configs](guides/fields.md#field-config) for the supported validators
+> you can configure validation for fields via the [field configs](guides/fields.md#field-config)  
+> the `type` field config is also used as a validator
+
+## Regex validation
+
+You can validate fields against regular expressions by either
+
+* configuring a regular expression that all values must match
+* configuring a regular expression that all values must not match
+* both matching and non-matching regular expressions
+
+The regular expressions are [tested](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test)
+against the field's value.
+
+### Matching regex
+
+Can be configured directly via the `regex` field config:
+
+```js
+class User extends Model {}
+
+User.fields = {
+  username: {
+    type: 'string',
+    regex: /[a-z]/
+  }
+};
+```
+
+Or explicitly via an object with a `matching` regex:
+
+```js
+class User extends Model {}
+
+User.fields = {
+  username: {
+    type: 'string',
+    regex: {
+      matching: /[a-z]/
+    }
+  }
+};
+```
+
+Both these configs will ensure that values for `username` will be lowercase a-z
+letters:
+
+```js
+new User({ username: 'foo' }); // valid
+new User({ username: 'foo1' }); // not valid
+```
+
+### Non-matching regex
+
+Can be configured via an object with a `notMatching` regex:
+
+```js
+class User extends Model {}
+
+User.fields = {
+  username: {
+    type: 'string',
+    regex: {
+      notMatching: /\./
+    }
+  }
+};
+```
+
+This ensures that values for `username` will not contain a dot (.):
+
+```js
+new User({ username: 'foo' }); // valid
+new User({ username: 'foo1' }); // valid
+new User({ username: 'foo.' }); // not valid
+```
+
+### Both matching and non-matching regex
+
+Can be configured via an object with both `matching` and `notMatching` regex's:
+
+```js
+class User extends Model {}
+
+User.fields = {
+  username: {
+    type: 'string',
+    regex: {
+      matching: /[a-z]/,
+      notMatching: /\./
+    }
+  }
+};
+```
+
+This ensures that values for `username` will be lowercase a-z letters and will
+not contain a dot (.):
+
+```js
+new User({ username: 'foo' }); // valid
+new User({ username: 'foo1' }); // not valid
+new User({ username: 'foo.' }); // not valid
+```
 
 ## Custom validation
 
