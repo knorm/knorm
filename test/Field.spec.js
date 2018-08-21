@@ -597,7 +597,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not type-validate if the value is undefined', async function() {
+      it('does not type-validate if the value is `undefined`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -606,7 +606,7 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it('does not type-validate if the value is null', async function() {
+      it('does not type-validate if the value is `null`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1028,7 +1028,7 @@ describe('Field', function() {
         await expect(field.validate('1234567'), 'to be fulfilled');
       });
 
-      it('does not reject if the value is undefined', async function() {
+      it('does not reject if the value is `undefined`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1097,7 +1097,7 @@ describe('Field', function() {
         await expect(field.validate('12345'), 'to be fulfilled');
       });
 
-      it('does not reject if the value is undefined', async function() {
+      it('does not reject if the value is `undefined`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1227,7 +1227,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not reject if the value is undefined', async function() {
+      it('does not reject if the value is `undefined`', async function() {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1249,47 +1249,149 @@ describe('Field', function() {
     });
 
     describe('regex', function() {
-      it('rejects with an RegexError if the value does not match the regex', async function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: 'integer',
-          regex: /[0-2]/
+      describe('when configured directly as a RegExp', () => {
+        let field;
+
+        before(() => {
+          field = new Field({
+            name: 'firstName',
+            model: User,
+            type: 'integer',
+            regex: /[0-2]/
+          });
         });
-        await expect(field.validate(3), 'to be rejected with', {
-          name: 'ValidationError',
-          type: 'RegexError'
+
+        it('rejects with a RegexError if the value does not match the regex', async function() {
+          await expect(field.validate(3), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'RegexError'
+          });
+        });
+
+        it('does not reject if the value matches the regex', async function() {
+          await expect(field.validate(2), 'to be fulfilled');
+        });
+
+        it('does not reject if the value is `undefined`', async function() {
+          await expect(field.validate(undefined), 'to be fulfilled');
+        });
+
+        it('does not reject if the passed value is `null`', async function() {
+          await expect(field.validate(null), 'to be fulfilled');
         });
       });
 
-      it('does not reject if the value matches the regex', async function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: 'string',
-          regex: /hello/
+      describe('when configured as an object with a `matching` regex', () => {
+        let field;
+
+        before(() => {
+          field = new Field({
+            name: 'firstName',
+            model: User,
+            type: 'string',
+            regex: {
+              matching: /hello/
+            }
+          });
         });
-        await expect(field.validate('hello world'), 'to be fulfilled');
+        it('rejects with a RegexError if the value does not match the regex', async function() {
+          await expect(field.validate('hi'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'RegexError'
+          });
+        });
+
+        it('does not reject if the value matches the regex', async function() {
+          await expect(field.validate('hello world'), 'to be fulfilled');
+        });
+
+        it('does not reject if the value is `undefined`', async function() {
+          await expect(field.validate(undefined), 'to be fulfilled');
+        });
+
+        it('does not reject if the passed value is `null`', async function() {
+          await expect(field.validate(null), 'to be fulfilled');
+        });
       });
 
-      it('does not reject if the value is undefined', async function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: 'integer',
-          equals: 1
+      describe('when configured as an object with a `notMatching` regex', () => {
+        let field;
+
+        before(() => {
+          field = new Field({
+            name: 'firstName',
+            model: User,
+            type: 'string',
+            regex: {
+              notMatching: /\./
+            }
+          });
         });
-        await expect(field.validate(undefined), 'to be fulfilled');
+
+        it('rejects with a RegexError if the value does match the regex', async function() {
+          await expect(field.validate('hello there.'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'RegexError'
+          });
+        });
+
+        it('does not reject if the value does not match the regex', async function() {
+          await expect(field.validate('hello world'), 'to be fulfilled');
+        });
+
+        it('does not reject if the value is `undefined`', async function() {
+          await expect(field.validate(undefined), 'to be fulfilled');
+        });
+
+        it('does not reject if the passed value is `null`', async function() {
+          await expect(field.validate(null), 'to be fulfilled');
+        });
       });
 
-      it('does not reject if the passed value is `null`', async function() {
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: 'integer',
-          equals: 1
+      describe('when configured as an object with both `matching` and `notMatching` regexs', () => {
+        let field;
+
+        before(() => {
+          field = new Field({
+            name: 'firstName',
+            model: User,
+            type: 'string',
+            regex: {
+              matching: new RegExp('hello'),
+              notMatching: /\./
+            }
+          });
         });
-        await expect(field.validate(null), 'to be fulfilled');
+
+        it('rejects with a RegexError if the value does not match the `matching` regex', async function() {
+          await expect(field.validate('HELLO'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'RegexError'
+          });
+        });
+
+        it('rejects with a RegexError if the value matches the `notMatching` regex', async function() {
+          await expect(field.validate('hello.'), 'to be rejected with', {
+            name: 'ValidationError',
+            type: 'RegexError'
+          });
+        });
+
+        it('does not reject if the value matches the `matching` regex', async function() {
+          await expect(field.validate('hello world'), 'to be fulfilled');
+        });
+
+        it('does not reject if the value does not match the `notMatching` regex', async function() {
+          await expect(field.validate('hello world'), 'to be fulfilled');
+        });
+
+        it('does not reject if the value is `undefined`', async function() {
+          await expect(field.validate(undefined), 'to be fulfilled');
+        });
+
+        it('does not reject if the passed value is `null`', async function() {
+          await expect(field.validate(null), 'to be fulfilled');
+        });
       });
     });
 
