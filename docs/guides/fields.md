@@ -175,8 +175,8 @@ The method names are resolved by upper-casing the first letter of the field name
 and taking the rest of the field name as is.
 
 **NOTE:** since these methods are intended to work with a single row, they will
-automatically throw a `NoRowsFetched`, `NoRowsUpdated` or `NoRowsDeleted` error
-if the row is not found in the database.
+automatically throw a `NoRowsFetchedError`, `NoRowsUpdatedError` or
+`NoRowsDeletedError` error if the row is not found in the database.
 
 ## Value casting
 
