@@ -166,8 +166,8 @@ a single row!
 !> Instance methods will throw automatically an error if the record is not found
 in the database (for fetch, delete and update operations).
 
-In addition, you can configure various "ByField" methods with the `methods`
-[field config option](guides/fields.md#field-config):
+In addition, you can configure [generated methods](guides/fields.md#generated-methods)
+with the `methods` [field config option](guides/fields.md#field-config):
 
 ```js
 User.fields = { email: { type: 'email', unique: true, methods: true } };
