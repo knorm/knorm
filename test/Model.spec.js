@@ -1530,6 +1530,27 @@ describe('Model', function() {
           });
         });
 
+        it('does not duplicate fieldNames when a field is overwritten', function() {
+          class User extends Model {}
+          User.fields = {
+            id: {
+              type: 'string'
+            }
+          };
+
+          expect(User.config.fieldNames, 'to equal', ['id']);
+
+          class OtherUser extends User {}
+          OtherUser.fields = {
+            id: {
+              type: 'text'
+            }
+          };
+
+          expect(User.config.fieldNames, 'to equal', ['id']);
+          expect(OtherUser.config.fieldNames, 'to equal', ['id']);
+        });
+
         it("updates the child's fields' model class", function() {
           class User extends Model {}
           User.fields = {
