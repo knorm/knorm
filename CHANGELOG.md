@@ -1,3 +1,13 @@
+<a name="1.6.2"></a>
+## [1.6.2](https://github.com/knorm/knorm/compare/v1.6.1...v1.6.2) (2018-08-23)
+
+
+### Bug Fixes
+
+* **Model:** do not duplicate Model.config.fieldNames ([4fe3cbb](https://github.com/knorm/knorm/commit/4fe3cbb))
+
+
+
 <a name="1.6.1"></a>
 ## [1.6.1](https://github.com/knorm/knorm/compare/v1.6.0...v1.6.1) (2018-08-22)
 
