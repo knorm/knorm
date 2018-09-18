@@ -1260,6 +1260,244 @@ describe('KnormPostgres', () => {
         );
       });
     });
+
+    describe('for json/jsonb field updates', function() {
+      const { Model } = knorm().use(knormPostgres({ connection }));
+
+      class Foo extends Model {}
+      Foo.table = 'foo';
+      Foo.fields = {
+        id: { type: 'integer', primary: true, updated: false, methods: true },
+        jsonb: { type: 'jsonb' },
+        json: { type: 'json' }
+      };
+
+      before(async () => {
+        await knex.schema.createTable(Foo.table, table => {
+          table.increments().primary();
+          table.jsonb('jsonb');
+          table.json('json');
+        });
+      });
+
+      after(async () => {
+        await knex.schema.dropTable(Foo.table);
+      });
+
+      beforeEach(async () => {
+        const data = {
+          string: 'foo',
+          number: 1,
+          array: ['foo', 'bar'],
+          object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+        };
+        await new Query(Foo).insert({ id: 1, jsonb: data, json: data });
+      });
+
+      afterEach(async () => {
+        await knex(Foo.table).truncate();
+      });
+
+      it('updates the whole object by default', async () => {
+        const query = new Query(Foo).where({ id: 1 }).first();
+        await expect(
+          query.update({ jsonb: { foo: 'bar' }, json: { foo: 'bar' } }),
+          'to be fulfilled with value exhaustively satisfying',
+          new Foo({ id: 1, jsonb: { foo: 'bar' }, json: { foo: 'bar' } })
+        );
+      });
+
+      describe('with `patch` configured', () => {
+        it('updates a single path', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch()
+            .debug();
+          const data = {
+            string: 'bar',
+            number: 1,
+            array: ['foo', 'bar'],
+            object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+          };
+          await expect(
+            query.update({ jsonb: { string: 'bar' }, json: { string: 'bar' } }),
+            'to be fulfilled with value exhaustively satisfying',
+            new Foo({ id: 1, jsonb: data, json: data })
+          );
+        });
+
+        it('updates multiple paths', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch();
+          const data = {
+            string: 'bar',
+            number: 2,
+            array: ['foo', 'bar'],
+            object: { string: 'bar', number: 2, array: ['bar'] }
+          };
+          await expect(
+            query.update({ jsonb: data, json: data }),
+            'to be fulfilled with value exhaustively satisfying',
+            new Foo({ id: 1, jsonb: data, json: data })
+          );
+        });
+
+        it('creates missing paths', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch();
+          const data = {
+            string: 'foo',
+            number: 1,
+            array: ['foo', 'bar'],
+            missing: 'bar',
+            object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+          };
+          await expect(
+            query.update({
+              jsonb: { missing: 'bar' },
+              json: { missing: 'bar' }
+            }),
+            'to be fulfilled with value exhaustively satisfying',
+            new Foo({ id: 1, jsonb: data, json: data })
+          );
+        });
+
+        it('allows specifying a single field to patch', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch('json');
+          await expect(
+            query.update({
+              jsonb: { array: ['bar'] },
+              json: { array: ['foo'] }
+            }),
+            'to be fulfilled with value exhaustively satisfying',
+            new Foo({
+              id: 1,
+              jsonb: {
+                array: ['bar']
+              },
+              json: {
+                string: 'foo',
+                number: 1,
+                array: ['foo'],
+                object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+              }
+            })
+          );
+        });
+
+        it('allows specifying multiple fields to patch', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch(['json', 'jsonb']);
+          await expect(
+            query.update({
+              jsonb: { array: ['bar'] },
+              json: { array: ['foo'] }
+            }),
+            'to be fulfilled with value exhaustively satisfying',
+            new Foo({
+              id: 1,
+              jsonb: {
+                string: 'foo',
+                number: 1,
+                array: ['bar'],
+                object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+              },
+              json: {
+                string: 'foo',
+                number: 1,
+                array: ['foo'],
+                object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+              }
+            })
+          );
+        });
+
+        it('allows patching with `jsonb_set` raw sql', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch();
+          await expect(
+            query.update({
+              jsonb: query.sql(
+                `jsonb_set("jsonb", '{object,array,0}', '"bar"')`
+              ),
+              json: query.sql(
+                `jsonb_set("json"::jsonb, '{object,array,1}', '"foo"')::json`
+              )
+            }),
+            'to be fulfilled with value exhaustively satisfying',
+            new Foo({
+              id: 1,
+              jsonb: {
+                string: 'foo',
+                number: 1,
+                array: ['foo', 'bar'],
+                object: {
+                  string: 'foo',
+                  number: 1,
+                  array: ['bar', 'bar']
+                }
+              },
+              json: {
+                string: 'foo',
+                number: 1,
+                array: ['foo', 'bar'],
+                object: {
+                  string: 'foo',
+                  number: 1,
+                  array: ['foo', 'foo']
+                }
+              }
+            })
+          );
+        });
+
+        it('throws if the patch value is a non-object', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch();
+          await expect(
+            query.update({
+              jsonb: 'string',
+              json: { array: ['foo'] }
+            }),
+            'to be rejected with error satisfying',
+            new Query.QueryError(
+              'Foo: cannot patch field `jsonb` (JSON patching is only supported for objects)'
+            )
+          );
+        });
+
+        it('throws if the patch value is an array', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch();
+          await expect(
+            query.update({
+              jsonb: { array: ['foo'] },
+              json: ['foo']
+            }),
+            'to be rejected with error satisfying',
+            new Query.QueryError(
+              'Foo: cannot patch field `json` (JSON patching is only supported for objects)'
+            )
+          );
+        });
+      });
+    });
   });
 
   describe('PostgresTransaction', () => {
