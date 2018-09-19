@@ -654,6 +654,7 @@ describe('KnormRelations', () => {
 
         describe("with 'first' configured on the joined query", () => {
           it('returns the first joined model', async () => {
+            await Image.insert([{ id: 2, userId: 1, categoryId: 1 }]);
             const query = new Query(User)
               .where({ id: 1 })
               .leftJoin(new Query(Image).first());
@@ -662,6 +663,20 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [new User({ id: 1, name: 'User 1', image: new Image({ id: 1 }) })]
             );
+            await Image.delete({ where: { id: 2 } });
+          });
+
+          it('returns the first joined model with `forge` disabled on the joined query', async () => {
+            await Image.insert([{ id: 2, userId: 1, categoryId: 1 }]);
+            const query = new Query(User)
+              .where({ id: 1 })
+              .leftJoin(new Query(Image).first().forge(false));
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [new User({ id: 1, name: 'User 1', image: { id: 1 } })]
+            );
+            await Image.delete({ where: { id: 2 } });
           });
 
           it('includes other joined models as `null` if no rows were matched', async () => {
