@@ -17,11 +17,11 @@
   "license": "MIT",
   "peerDependencies": {
     "@knorm/knorm": "^1.3.0",
-    "@knorm/relations": "^1.1.3"
+    "@knorm/relations": "^1.2.3"
   },
   "devDependencies": {
     "@knorm/knorm": "^1.3.0",
-    "@knorm/relations": "^1.1.3",
+    "@knorm/relations": "^1.2.3",
     "coveralls": "^3.0.0",
     "eslint": "^4.15.0",
     "eslint-config-ganintegrity": "^2.0.2",
