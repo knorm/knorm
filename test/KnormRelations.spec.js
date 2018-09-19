@@ -878,16 +878,30 @@ describe('KnormRelations', () => {
 
         describe("with 'orderBy' configured on the joined query", () => {
           it('fulfils the requested order on the joined model', async () => {
-            await Image.insert({ id: 2, userId: 1, categoryId: 1 });
+            await User.insert({ id: 3, name: 'User 3' });
+            await Image.insert([
+              { id: 2, userId: 1, categoryId: 1 },
+              { id: 3, userId: 3, categoryId: 1 }
+            ]);
 
-            const query = new Query(User)
-              .where({ id: 1 })
-              .leftJoin(new Query(Image).orderBy({ id: -1 }));
+            const query = new Query(User).leftJoin(
+              new Query(Image).orderBy({ id: -1 })
+            );
 
             await expect(
               query.fetch(),
-              'to be fulfilled with sorted rows satisfying',
+              'to be fulfilled with value satisfying',
               [
+                new User({
+                  id: 2,
+                  name: 'User 2',
+                  image: null
+                }),
+                new User({
+                  id: 3,
+                  name: 'User 3',
+                  image: [new Image({ id: 3 })]
+                }),
                 new User({
                   id: 1,
                   name: 'User 1',
@@ -896,7 +910,8 @@ describe('KnormRelations', () => {
               ]
             );
 
-            await Image.delete({ where: { id: 2 } });
+            await Image.delete({ where: Image.where.in({ id: [2, 3] }) });
+            await User.delete({ where: { id: 3 } });
           });
         });
 
