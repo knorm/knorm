@@ -1,12 +1,13 @@
 const uuid = require('uuid');
-const Field = require('../lib/Field');
-const Model = require('../lib/Model');
+const Knorm = require('../lib/Knorm');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
   .use(require('./lib/unexpected-workaround'));
-const sql = require('sql-bricks');
+
+const { Field, Model, Query } = new Knorm();
+const { sql } = Query.prototype;
 
 describe('Field', function() {
   describe('constructor', function() {
