@@ -6,6 +6,7 @@ const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
   .use(require('./lib/unexpected-workaround'));
+const sql = require('sql-bricks');
 
 describe('Field', function() {
   describe('constructor', function() {
@@ -337,9 +338,7 @@ describe('Field', function() {
           name: 'firstName',
           model: User,
           type: 'string',
-          cast: {
-            forSave
-          }
+          cast: { forSave }
         });
         field.cast('bar value', 'a model instance', { forSave: true });
         expect(forSave, 'was called with', 'bar value');
@@ -351,12 +350,22 @@ describe('Field', function() {
           name: 'firstName',
           model: User,
           type: 'string',
-          cast: {
-            forSave
-          }
+          cast: { forSave }
         });
         field.cast('bar value', 'a model instance', { forSave: true });
         expect(forSave, 'was called on', 'a model instance');
+      });
+
+      it('calls the function with raw sql values', function() {
+        const forSave = sinon.spy();
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string',
+          cast: { forSave }
+        });
+        field.cast(sql('bar value'), 'a model instance', { forSave: true });
+        expect(forSave, 'was called with', sql('bar value'));
       });
     });
 
@@ -367,9 +376,7 @@ describe('Field', function() {
           name: 'firstName',
           model: User,
           type: 'string',
-          cast: {
-            forFetch
-          }
+          cast: { forFetch }
         });
         field.cast('bar value', 'a model instance', { forFetch: true });
         expect(forFetch, 'was called with', 'bar value');
@@ -381,9 +388,7 @@ describe('Field', function() {
           name: 'firstName',
           model: User,
           type: 'string',
-          cast: {
-            forFetch
-          }
+          cast: { forFetch }
         });
         field.cast('bar value', 'a model instance', { forFetch: true });
         expect(forFetch, 'was called on', 'a model instance');
@@ -398,10 +403,7 @@ describe('Field', function() {
           name: 'firstName',
           model: User,
           type: 'string',
-          cast: {
-            forSave,
-            forFetch
-          }
+          cast: { forSave, forFetch }
         });
         field.cast('bar value', 'a model instance', { forFetch: true });
         expect(forFetch, 'was called');
@@ -415,10 +417,7 @@ describe('Field', function() {
           name: 'firstName',
           model: User,
           type: 'string',
-          cast: {
-            forSave,
-            forFetch
-          }
+          cast: { forSave, forFetch }
         });
         field.cast('bar value', 'a model instance', { forSave: true });
         expect(forSave, 'was called');
@@ -2306,6 +2305,91 @@ describe('Field', function() {
               );
             });
           });
+        });
+      });
+    });
+
+    describe('for raw sql values', function() {
+      it('does not validate `type`', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string'
+        });
+        await expect(field.validate(sql(1)), 'to be fulfilled');
+      });
+
+      it('does not validate `maxLength`', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string',
+          maxLength: 1
+        });
+        await expect(field.validate(sql('aa')), 'to be fulfilled');
+      });
+
+      it('does not validate `minLength`', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string',
+          minLength: 2
+        });
+        await expect(field.validate(sql('a')), 'to be fulfilled');
+      });
+
+      it('does not validate `oneOf`', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string',
+          oneOf: ['foo', 'bar']
+        });
+        await expect(field.validate(sql('a')), 'to be fulfilled');
+      });
+
+      it('does not validate `equals`', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string',
+          equals: 'a'
+        });
+        await expect(field.validate(sql('b')), 'to be fulfilled');
+      });
+
+      it('does not validate `regex`', async function() {
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string',
+          regex: /a/
+        });
+        await expect(field.validate(sql('b')), 'to be fulfilled');
+      });
+
+      it('does not validate `schema` for json(b) fields', async function() {
+        const field = new Field({
+          name: 'json',
+          model: User,
+          type: 'string',
+          schema: 'string'
+        });
+        await expect(field.validate(sql('b')), 'to be fulfilled');
+      });
+
+      it('passes the value to a custom validator', async function() {
+        const validate = sinon.spy();
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string',
+          validate
+        });
+        await field.validate(sql('foo'));
+        await expect(validate, 'to have calls satisfying', () => {
+          validate(sql('foo'));
         });
       });
     });

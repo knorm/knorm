@@ -1625,7 +1625,7 @@ describe('Query', () => {
       const query = new Query(User);
       await expect(
         query.insert(new User({ name: 'John Doe' }), { returning: 'name' }),
-        'to be fulfilled with value satisfying',
+        'to be fulfilled with value exhaustively satisfying',
         [new User({ name: 'John Doe' })]
       );
     });
@@ -1643,6 +1643,15 @@ describe('Query', () => {
         );
       });
       spy.restore();
+    });
+
+    it('allows inserting raw sql values', async () => {
+      const query = new Query(User);
+      await expect(
+        query.insert(new User({ name: query.sql(`lower('John Doe')`) })),
+        'to be fulfilled with value satisfying',
+        [new User({ name: 'john doe' })]
+      );
     });
 
     it('works with a model `schema` configured', async () => {
@@ -2271,7 +2280,7 @@ describe('Query', () => {
       ]);
     });
 
-    it('casts only fields returned in the updated data', async () => {
+    it('casts only fields returned in the updated data for post-fetch casts', async () => {
       const spy = sinon.spy(User.prototype, 'cast');
       const query = new Query(User).returning(['name']);
       user.jsonField = ['foo', 'bar'];
@@ -2317,6 +2326,16 @@ describe('Query', () => {
         );
       });
       spy.restore();
+    });
+
+    it('allows updating with raw sql values', async () => {
+      const query = new Query(User);
+      user.name = query.sql(`lower('Jane Doe')`);
+      await expect(
+        query.update(user),
+        'to be fulfilled with sorted rows exhaustively satisfying',
+        [new User({ name: 'jane doe' })]
+      );
     });
 
     it('works with a model `schema` configured', async () => {
