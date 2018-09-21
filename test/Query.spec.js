@@ -2696,6 +2696,96 @@ describe('Query', () => {
         spy.restore();
       });
     });
+
+    describe.only('with json fields with schema definitions', function() {
+      const { Model } = new Knorm({ knex, fieldToColumn });
+
+      class Foo extends Model {}
+      Foo.table = 'foo';
+      Foo.fields = {
+        id: { type: 'integer', primary: true, updated: false, methods: true },
+        data: {
+          type: 'jsonb',
+          schema: {
+            string: 'string',
+            number: 'number',
+            array: 'array',
+            object: {
+              type: 'object',
+              schema: { string: 'string', number: 'number', array: 'array' }
+            }
+          }
+        }
+      };
+
+      before(async function() {
+        await knex.schema.createTable(Foo.table, table => {
+          table.increments().primary();
+          table.jsonb('data');
+        });
+      });
+
+      after(async function() {
+        await knex.schema.dropTable(Foo.table);
+      });
+
+      beforeEach(async function() {
+        await new Query(Foo).insert({
+          id: 1,
+          data: {
+            string: 'foo',
+            number: 1,
+            array: ['foo', 'bar'],
+            object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+          }
+        });
+      });
+
+      afterEach(async function() {
+        await knex(Foo.table).truncate();
+      });
+
+      it('updates the whole object', async function() {
+        const query = new Query(Foo).where({ id: 1 }).first();
+        await expect(
+          query.update({
+            data: {
+              string: 'bar',
+              number: 2,
+              array: ['baz', 'quux'],
+              object: { string: 'bar', number: 2, array: ['baz', 'quux'] }
+            }
+          }),
+          'to be fulfilled with value exhaustively satisfying',
+          new Foo({
+            id: 1,
+            data: {
+              string: 'bar',
+              number: 2,
+              array: ['baz', 'quux'],
+              object: { string: 'bar', number: 2, array: ['baz', 'quux'] }
+            }
+          })
+        );
+      });
+
+      it('updates a single key with a string value', async function() {
+        const query = new Query(Foo).where({ id: 1 }).first();
+        await expect(
+          query.update({ data: { string: 'bar' } }),
+          'to be fulfilled with value exhaustively satisfying',
+          new Foo({
+            id: 1,
+            data: {
+              string: 'bar',
+              number: 1,
+              array: ['foo', 'bar'],
+              object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+            }
+          })
+        );
+      });
+    });
   });
 
   describe('Query.prototype.save', () => {
