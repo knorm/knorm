@@ -2338,6 +2338,26 @@ describe('Query', () => {
       );
     });
 
+    it('allows updating with raw sql values with columns', async () => {
+      const query = new Query(User);
+      user.name = query.sql(`name || name`);
+      await expect(
+        query.update(user),
+        'to be fulfilled with sorted rows exhaustively satisfying',
+        [new User({ name: 'John DoeJohn Doe' })]
+      );
+    });
+
+    it('allows updating with raw sql values with quoted columns', async () => {
+      const query = new Query(User);
+      user.name = query.sql(`"name" || ' ' || upper("name")`);
+      await expect(
+        query.update(user),
+        'to be fulfilled with sorted rows exhaustively satisfying',
+        [new User({ name: 'John Doe JOHN DOE' })]
+      );
+    });
+
     it('works with a model `schema` configured', async () => {
       const spy = sinon.spy(Query.prototype, 'query');
       class OtherUser extends User {}
