@@ -2393,6 +2393,18 @@ describe('Field', function() {
           validate(sql('foo'));
         });
       });
+
+      it('does not run validators when Query.prototype.sql is overloaded', async function() {
+        class Foo {}
+        Query.prototype.sql = Foo;
+        const field = new Field({
+          name: 'firstName',
+          model: User,
+          type: 'string'
+        });
+        await expect(field.validate(new Foo()), 'to be fulfilled');
+        Query.prototype.sql = sql;
+      });
     });
   });
 });
