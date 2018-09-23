@@ -203,7 +203,8 @@ describe('KnormPostgres', () => {
   });
 
   describe('PostgresField', () => {
-    const { Field, Model } = knorm().use(knormPostgres());
+    const { Field, Model, Query } = knorm().use(knormPostgres());
+    const { sql } = Query.prototype;
 
     it('enforces maxLength 255 on all strings', async () => {
       const field = new Field({ name: 'foo', model: Model, type: 'string' });
@@ -235,7 +236,26 @@ describe('KnormPostgres', () => {
 
         it('does not stringify `null` values', () => {
           const field = new Field({ name: 'foo', model: Model, type: 'json' });
-          expect(field.cast(null, { forSave: true }), 'to be undefined');
+          expect(field.cast(null, null, { forSave: true }), 'to be undefined');
+        });
+
+        it('does not stringify raw sql values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(
+            field.cast(sql('foo'), null, { forSave: true }),
+            'to be undefined'
+          );
+        });
+
+        it('does not stringify raw sql values when Query.prototype.sql is overloaded', () => {
+          class Foo {}
+          Query.prototype.sql = Foo;
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(
+            field.cast(new Foo(), null, { forSave: true }),
+            'to be undefined'
+          );
+          Query.prototype.sql = sql;
         });
 
         describe('with a forSave cast function configured', () => {
@@ -265,9 +285,21 @@ describe('KnormPostgres', () => {
               type: 'json',
               cast: { forSave }
             });
-            const instance = { model: 'instace' };
+            const instance = { model: 'instance' };
             field.cast({ foo: 'bar' }, instance, { forSave: true });
             expect(forSave, 'was called on', instance);
+          });
+
+          it('calls the function with raw sql values', function() {
+            const forSave = sinon.spy();
+            const field = new Field({
+              name: 'foo',
+              model: Model,
+              type: 'json',
+              cast: { forSave }
+            });
+            field.cast(sql('foo'), 'a model instance', { forSave: true });
+            expect(forSave, 'was called with', sql('foo'));
           });
         });
       });
@@ -627,6 +659,23 @@ describe('KnormPostgres', () => {
       spy.restore();
     });
 
+    it('allows updating with raw sql values', async () => {
+      await new Query(User).insert([{ id: 1, name: 'foo' }]);
+      const query = new Query(User);
+      await expect(
+        query.update({ name: query.sql(`upper("name")`) }),
+        'to be fulfilled with sorted rows satisfying',
+        [{ id: 1, name: 'FOO' }]
+      );
+      await expect(
+        knex,
+        'with table',
+        User.table,
+        'to have sorted rows satisfying',
+        [{ id: 1, name: 'FOO' }]
+      );
+    });
+
     describe('for field updates', () => {
       let Model;
       let Query;
@@ -929,6 +978,29 @@ describe('KnormPostgres', () => {
         spy.restore();
       });
 
+      it('does not update fields `updated: false` fields', async () => {
+        await new Query(User).insert([
+          { id: 1, name: 'foo' },
+          { id: 2, name: 'bar' }
+        ]);
+        const spy = sinon.spy(Query.prototype, 'query');
+        await new Query(User).update([
+          { id: 1, name: 'foofoo' },
+          { id: 2, name: 'barbar' }
+        ]);
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              query => query.toString(),
+              'to begin with',
+              'UPDATE "user" SET "name" = "v"."name" FROM'
+            )
+          );
+        });
+        spy.restore();
+      });
+
       it('formats fields to columns', async () => {
         class OtherUser extends User {}
         OtherUser.fields = {
@@ -946,6 +1018,29 @@ describe('KnormPostgres', () => {
           ]),
           'to be fulfilled with value satisfying',
           [{ ID: 1, NAME: 'foofoo' }, { ID: 2, NAME: 'barbar' }]
+        );
+      });
+
+      it('allows updating with raw sql values', async () => {
+        await new Query(User).insert([
+          { id: 1, name: 'foo' },
+          { id: 2, name: 'bar' }
+        ]);
+        const query = new Query(User);
+        await expect(
+          query.update([
+            { id: 1, name: query.sql(`upper('foo')`) },
+            { id: 2, name: query.sql(`upper('bar')`) }
+          ]),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, name: 'FOO' }, { id: 2, name: 'BAR' }]
+        );
+        await expect(
+          knex,
+          'with table',
+          User.table,
+          'to have sorted rows satisfying',
+          [{ id: 1, name: 'FOO' }, { id: 2, name: 'BAR' }]
         );
       });
 
