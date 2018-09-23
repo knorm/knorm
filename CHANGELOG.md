@@ -1,3 +1,18 @@
+<a name="1.7.0"></a>
+# [1.7.0](https://github.com/knorm/knorm/compare/v1.6.2...v1.7.0) (2018-09-23)
+
+
+### Bug Fixes
+
+* **Field:** support overloaded Query.prototype.sql ([e123a9d](https://github.com/knorm/knorm/commit/e123a9d))
+
+
+### Features
+
+* support inserts/updates with raw sql ([8ec7c5b](https://github.com/knorm/knorm/commit/8ec7c5b))
+
+
+
 <a name="1.6.2"></a>
 ## [1.6.2](https://github.com/knorm/knorm/compare/v1.6.1...v1.6.2) (2018-08-23)
 
