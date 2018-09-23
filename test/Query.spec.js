@@ -45,87 +45,99 @@ const expect = require('unexpected')
     }
   );
 
-const { Model, Query } = new Knorm({ fieldToColumn }).use(postgresPlugin);
-const { QueryError } = Query;
-
-Model.fields = {
-  id: {
-    type: 'integer',
-    required: true,
-    primary: true,
-    updated: false
-  }
-};
-
-class User extends Model {}
-User.table = 'user';
-User.fields = {
-  name: {
-    type: 'string',
-    required: true
-  },
-  description: {
-    type: 'string'
-  },
-  age: {
-    type: 'integer',
-    default: null
-  },
-  confirmed: {
-    type: 'boolean',
-    required: true,
-    default: false
-  },
-  dateOfBirth: {
-    type: 'dateTime'
-  },
-  dbDefault: {
-    type: 'string'
-  },
-  jsonField: {
-    type: 'json',
-    cast: {
-      forSave(value) {
-        if (value !== null) {
-          return JSON.stringify(value);
-        }
-      }
-    },
-    schema: {
-      type: 'array',
-      maxLength: 2
-    }
-  },
-  intToString: {
-    type: 'integer',
-    cast: {
-      forFetch(value) {
-        if (value !== null) {
-          return String(value);
-        }
-      }
-    }
-  }
-};
-
-const createUserTable = table => {
-  table.increments();
-  table.string('name').notNullable();
-  table.text('description');
-  table.integer('age');
-  table.boolean('confirmed').notNullable();
-  table.dateTime('date_of_birth');
-  table.string('db_default').defaultTo('set-by-db');
-  table.jsonb('json_field');
-  table.integer('int_to_string');
-};
-
-const truncateUserTable = async () => {
-  return knex.schema.raw(`TRUNCATE "${User.table}" RESTART IDENTITY CASCADE`);
-};
-
 describe('Query', () => {
+  let Model;
+  let Query;
+  let QueryError;
+  let User;
+  let createUserTable;
+  let truncateUserTable;
+
   before(async () => {
+    const orm = new Knorm({ fieldToColumn }).use(postgresPlugin);
+
+    Model = orm.Model;
+    Query = orm.Query;
+    QueryError = Query.QueryError;
+
+    Model.fields = {
+      id: {
+        type: 'integer',
+        required: true,
+        primary: true,
+        updated: false
+      }
+    };
+
+    User = class extends Model {};
+    User.table = 'user';
+    User.fields = {
+      name: {
+        type: 'string',
+        required: true
+      },
+      description: {
+        type: 'string'
+      },
+      age: {
+        type: 'integer',
+        default: null
+      },
+      confirmed: {
+        type: 'boolean',
+        required: true,
+        default: false
+      },
+      dateOfBirth: {
+        type: 'dateTime'
+      },
+      dbDefault: {
+        type: 'string'
+      },
+      jsonField: {
+        type: 'json',
+        cast: {
+          forSave(value) {
+            if (value !== null) {
+              return JSON.stringify(value);
+            }
+          }
+        },
+        schema: {
+          type: 'array',
+          maxLength: 2
+        }
+      },
+      intToString: {
+        type: 'integer',
+        cast: {
+          forFetch(value) {
+            if (value !== null) {
+              return String(value);
+            }
+          }
+        }
+      }
+    };
+
+    createUserTable = table => {
+      table.increments();
+      table.string('name').notNullable();
+      table.text('description');
+      table.integer('age');
+      table.boolean('confirmed').notNullable();
+      table.dateTime('date_of_birth');
+      table.string('db_default').defaultTo('set-by-db');
+      table.jsonb('json_field');
+      table.integer('int_to_string');
+    };
+
+    truncateUserTable = async () => {
+      return knex.schema.raw(
+        `TRUNCATE "${User.table}" RESTART IDENTITY CASCADE`
+      );
+    };
+
     await knex.schema.createTable(User.table, createUserTable);
   });
 

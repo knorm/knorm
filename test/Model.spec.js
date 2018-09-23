@@ -9,9 +9,18 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'))
   .use(require('./lib/unexpected-workaround'));
 
-const { Model, Query, Field } = new Knorm();
-
 describe('Model', function() {
+  let Model;
+  let Query;
+  let Field;
+
+  before(function() {
+    const orm = new Knorm();
+    Model = orm.Model;
+    Query = orm.Query;
+    Field = orm.Field;
+  });
+
   describe('constructor', function() {
     describe('when the model has virtuals', function() {
       it("adds virtual's getters on the instance", function() {
@@ -406,9 +415,12 @@ describe('Model', function() {
   });
 
   describe('Model.prototype.getFieldData', function() {
-    class Foo extends Model {}
+    let Foo;
 
-    Foo.fields = { foo: 'string', bar: 'string' };
+    before(function() {
+      Foo = class extends Model {};
+      Foo.fields = { foo: 'string', bar: 'string' };
+    });
 
     it('returns an object mapping fields to their values', function() {
       const foo = new Foo();
@@ -582,16 +594,19 @@ describe('Model', function() {
   });
 
   describe('Model.prototype.getVirtualDataSync', function() {
-    class Foo extends Model {}
+    let Foo;
 
-    Foo.virtuals = {
-      foo() {
-        return 'foo';
-      },
-      async bar() {
-        return 'bar';
-      }
-    };
+    before(function() {
+      Foo = class extends Model {};
+      Foo.virtuals = {
+        foo() {
+          return 'foo';
+        },
+        async bar() {
+          return 'bar';
+        }
+      };
+    });
 
     it('returns virtual data without async virtuals', function() {
       const foo = new Foo();
@@ -608,17 +623,20 @@ describe('Model', function() {
   });
 
   describe('Model.prototype.getData', function() {
-    class Foo extends Model {}
+    let Foo;
 
-    Foo.fields = { foo: 'string', bar: 'string' };
-    Foo.virtuals = {
-      baz() {
-        return 'baz';
-      },
-      async quux() {
-        return 'quux';
-      }
-    };
+    before(function() {
+      Foo = class extends Model {};
+      Foo.fields = { foo: 'string', bar: 'string' };
+      Foo.virtuals = {
+        baz() {
+          return 'baz';
+        },
+        async quux() {
+          return 'quux';
+        }
+      };
+    });
 
     it('resolves with an object with field and virtual field data', async function() {
       const foo = new Foo();
@@ -665,17 +683,20 @@ describe('Model', function() {
   });
 
   describe('Model.prototype.getDataSync', function() {
-    class Foo extends Model {}
+    let Foo;
 
-    Foo.fields = { foo: 'string', bar: 'string' };
-    Foo.virtuals = {
-      baz() {
-        return 'baz';
-      },
-      async quux() {
-        return 'quux';
-      }
-    };
+    before(function() {
+      Foo = class extends Model {};
+      Foo.fields = { foo: 'string', bar: 'string' };
+      Foo.virtuals = {
+        baz() {
+          return 'baz';
+        },
+        async quux() {
+          return 'quux';
+        }
+      };
+    });
 
     it('returns an object with field and only sync virtual field data', function() {
       const foo = new Foo();
@@ -1703,12 +1724,16 @@ describe('Model', function() {
     });
 
     describe('with a getter function', function() {
-      class User extends Model {
-        static get fields() {
-          this.config = { fields: { firstName: { type: 'string' } } };
-          return this.config.fields;
-        }
-      }
+      let User;
+
+      before(function() {
+        User = class extends Model {
+          static get fields() {
+            this.config = { fields: { firstName: { type: 'string' } } };
+            return this.config.fields;
+          }
+        };
+      });
 
       it('returns fields added via the `Model.config` setter', function() {
         expect(User.fields, 'to exhaustively satisfy', {
@@ -2330,11 +2355,14 @@ describe('Model', function() {
   });
 
   describe('Model.query', function() {
-    class User extends Model {}
+    let User;
 
-    User.table = 'foo';
-    User.fields = { id: { type: 'integer', primary: true } };
-    User.options = { query: { fields: ['id'], where: { id: 1 } } };
+    before(function() {
+      User = class extends Model {};
+      User.table = 'foo';
+      User.fields = { id: { type: 'integer', primary: true } };
+      User.options = { query: { fields: ['id'], where: { id: 1 } } };
+    });
 
     describe('as a getter', function() {
       it('returns a Query instance', function() {
@@ -2361,7 +2389,11 @@ describe('Model', function() {
   });
 
   describe('Model.where', function() {
-    class User extends Model {}
+    let User;
+
+    before(function() {
+      User = class extends Model {};
+    });
 
     it('returns a `Query.Where` instance', function() {
       expect(User.where, 'to be a', Query.Where);

@@ -6,10 +6,20 @@ const expect = require('unexpected')
   .use(require('unexpected-sinon'))
   .use(require('./lib/unexpected-workaround'));
 
-const { Field, Model, Query } = new Knorm();
-const { sql } = Query.prototype;
-
 describe('Field', function() {
+  let Model;
+  let Query;
+  let Field;
+  let sql;
+
+  before(function() {
+    const orm = new Knorm();
+    Model = orm.Model;
+    Query = orm.Query;
+    Field = orm.Field;
+    sql = Query.prototype.sql;
+  });
+
   describe('constructor', function() {
     it('throws an error if the field name is not provided', function() {
       expect(() => new Field(), 'to throw', new Error('Field requires a name'));
@@ -154,7 +164,11 @@ describe('Field', function() {
     });
 
     describe('for `json` and `jsonb` fields with a `schema` config', function() {
-      class Foo extends Model {}
+      let Foo;
+
+      before(function() {
+        Foo = class extends Model {};
+      });
 
       describe('with a root-level schema', function() {
         it('throws the correct error if the schema config has no `type`', function() {
@@ -316,7 +330,11 @@ describe('Field', function() {
   });
 
   describe('Field.prototype.cast', function() {
-    class User extends Model {}
+    let User;
+
+    before(function() {
+      User = class extends Model {};
+    });
 
     describe('with no cast functions defined', function() {
       it('returns undefined', function() {
@@ -428,7 +446,11 @@ describe('Field', function() {
   });
 
   describe('Field.prototype.hasDefault', function() {
-    class User extends Model {}
+    let User;
+
+    before(function() {
+      User = class extends Model {};
+    });
 
     it('returns false if the field was not configured with a default value', function() {
       const field = new Field({
@@ -481,7 +503,11 @@ describe('Field', function() {
   });
 
   describe('Field.prototype.getDefault', function() {
-    class User extends Model {}
+    let User;
+
+    before(function() {
+      User = class extends Model {};
+    });
 
     it('returns the default value configured', function() {
       const field = new Field({
@@ -522,7 +548,11 @@ describe('Field', function() {
   });
 
   describe('Field.prototype.validate', function() {
-    class User extends Model {}
+    let User;
+
+    before(function() {
+      User = class extends Model {};
+    });
 
     it('returns a Promise', async function() {
       const field = new Field({
