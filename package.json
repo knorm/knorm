@@ -1,6 +1,6 @@
 {
   "name": "@knorm/postgres",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Postgres plugin for knorm",
   "main": "index.js",
   "scripts": {
