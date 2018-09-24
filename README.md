@@ -95,9 +95,33 @@ User.update(data, { patch: ['json', 'jsonb'] });
 ```
 
 Note that only basic json-patching is supported: only the first level of patching
-is supported. For instance, nested objects or array values cannot be patched since
-@knorm/postgres cannot figure out if the intention is patch the object/array or
-to replace it entirely:
+is supported. For nested objects and arrays, the whole object/array is **replaced**:
+
+```js
+// before:
+new User({
+  jsonb: { top: { foo: 'foo' } },
+  json: { top: { foo: 'foo' } }
+});
+
+// patch update:
+User.query
+  .patch(['json', 'jsonb'])
+  .update({
+    jsonb: { top: { bar: 'bar' } },
+    json: { top: { bar: 'bar' } }
+  });
+
+// result:
+new User({
+  jsonb: { top: { bar: 'bar' } },
+  json: { top: { bar: 'bar' } }
+});
+```
+
+To patch nested objects or arrays, use
+[jsonb_set](https://www.postgresql.org/docs/9.5/static/functions-json.html)
+instead in a raw-sql update:
 
 ```js
 // assuming the data is currently:
@@ -106,28 +130,13 @@ new User({
   json: { top: { foo: 'foo' } }
 });
 
-// is the intention here to add a new `bar` key to the `top` object or to replace
-// the `top` key with the value `{ bar: 'bar' }`?
-User.query
-  .patch(['json', 'jsonb'])
-  .update({
-    jsonb: { top: { bar: 'bar' } },
-    json: { top: { bar: 'bar' } },
-  });
-```
-
-For complex patching, use
-[jsonb_set](https://www.postgresql.org/docs/9.5/static/functions-json.html)
-directly in a raw-sql update:
-
-```js
 // to add a nested `bar` key/value:
 User.query
   .patch(['json', 'jsonb'])
   .update({
     jsonb: User.query.sql(`jsonb_set("jsonb", '{top,bar}', '"bar"')`),
-    // for json field-types, you have to cast to jsonb and then cast the result
-    // back to json
+    // for plain json fields, you have to cast to jsonb and then cast the result
+    // back to json:
     json: User.query.sql(`jsonb_set("json"::jsonb, '{top,bar}', '"bar"')::json`)
   });
 
