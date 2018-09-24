@@ -31,5 +31,6 @@
   * [@knorm/paginate](knorm-paginate.md)
   * [@knorm/timestamps](knorm-timestamps.md)
 
-* [LICENSE](license.md)
-* [CHANGELOG](changelog.md)
+* [<b>LICENSE</b>](license.md)
+* [<b>CHANGELOG</b>](changelog.md)
+* [<b>CREDITS</b>](credits.md)
