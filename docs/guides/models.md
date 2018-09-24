@@ -195,8 +195,8 @@ User.fields = {
   type: { type: 'string', default: 'user', oneOf: ['system', 'user'] }
 };
 
-User.options: {
-  query: { where: { type: 'system' } }
+User.options = {
+  query: { where: User.where.notEqual({ type: 'system' }) }
 };
 
 User.fetch().then(console.log); // will not contain system users
@@ -205,22 +205,45 @@ User.fetch().then(console.log); // will not contain system users
 > These options will also be inherited when the model is inherited. <br />
 > Read more on [setting query options](guides/queries.md#setting-options)
 
-For more fine-grained control, you can also override the `Query` class:
+You could then have a `SystemUser` model for interacting only with system users:
+
+```js
+class SystemUser extends User {}
+
+SystemUser.options = {
+  query: { where: { type: 'system' } }
+};
+
+SystemUser.fetch().then(console.log); // will only contain system users
+```
+
+For more fine-grained control, you can also override the `Query` class and add
+custom query options:
 
 ```js
 class User extends Model {}
 
 User.Query = class UserQuery extends User.Query {
-  // add an `onlySystemUsers` query option only for the `User` model
   onlySystemUsers() {
-    return this.where({ type: 'system });
+    return this.where({ type: 'system' });
+  }
+
+  withoutSystemUsers() {
+    const where = this.constructor.where;
+    return this.where(where.notEqual({ type: 'system' }));
+  }
+
+  withSystemUsers() {
+    return this; // doesn't need to do anything, should return all users
   }
 };
 
 User.fetch({
   onlySystemUsers: true
-}).then(console.log); // will not contain system users
+}).then(console.log); // will only contain system users
 ```
+
+!> Query options must return `this` to allow chaining
 
 ## Model registry
 
