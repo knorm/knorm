@@ -1166,6 +1166,63 @@ describe('KnormPostgres', () => {
             [{ id: 1 }, { id: 2 }]
           );
         });
+
+        it('supports `first` with insert', async () => {
+          await expect(
+            new Query(User).save([{ name: 'foo' }, { name: 'bar' }], {
+              first: true
+            }),
+            'to be fulfilled with value satisfying',
+            new User({ id: 1, name: 'foo' })
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+          );
+        });
+
+        it('supports `first` with `update`', async () => {
+          await new Query(User).insert([
+            { id: 1, name: 'foo' },
+            { id: 2, name: 'bar' }
+          ]);
+          await expect(
+            new Query(User).save(
+              [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }],
+              { first: true }
+            ),
+            'to be fulfilled with value satisfying',
+            new User({ id: 1, name: 'foofoo' })
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+          );
+        });
+
+        it('supports `first` with both `update` and `insert`', async () => {
+          await new Query(User).insert([{ name: 'foo' }]);
+          await expect(
+            new Query(User).save([{ id: 1, name: 'foofoo' }, { name: 'bar' }], {
+              first: true
+            }),
+            'to be fulfilled with value satisfying',
+            { id: 2, name: 'bar' }
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          );
+        });
       });
 
       describe('with a single object', () => {
@@ -1184,12 +1241,43 @@ describe('KnormPostgres', () => {
           );
         });
 
+        it('supports `first` with `insert`', async () => {
+          await expect(
+            new Query(User).save({ name: 'foo' }, { first: true }),
+            'to be fulfilled with value satisfying',
+            { id: 1, name: 'foo' }
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foo' }]
+          );
+        });
+
         it('supports `update`', async () => {
           await new Query(User).insert([{ id: 1, name: 'foo' }]);
           await expect(
             new Query(User).save({ id: 1, name: 'foofoo' }),
             'to be fulfilled with sorted rows satisfying',
             [{ id: 1, name: 'foofoo' }]
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foofoo' }]
+          );
+        });
+
+        it('supports `first` with `update`', async () => {
+          await new Query(User).insert([{ id: 1, name: 'foo' }]);
+          await expect(
+            new Query(User).save({ id: 1, name: 'foofoo' }, { first: true }),
+            'to be fulfilled with value satisfying',
+            { id: 1, name: 'foofoo' }
           );
           await expect(
             knex,
