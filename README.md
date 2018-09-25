@@ -40,4 +40,4 @@ These environments are currently supported:
 | Node.js     | Version >= 7.6. | Knorm uses `async/await`                                                    |
 | Databases   | PostgreSQL      | via [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) plugin |
 
-## [Get started](https://knorm.github.io/knorm/#/guides/getting-started?id=getting-started) :star:
+## [Get started](https://knorm.github.io/knorm/#/guides/getting-started?id=getting-started)
