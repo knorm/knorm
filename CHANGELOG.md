@@ -1,3 +1,13 @@
+<a name="1.7.1"></a>
+## [1.7.1](https://github.com/knorm/knorm/compare/v1.7.0...v1.7.1) (2018-09-25)
+
+
+### Bug Fixes
+
+* **Field:** handle overloaded Field class in JSON validators ([a0e6964](https://github.com/knorm/knorm/commit/a0e6964))
+
+
+
 <a name="1.7.0"></a>
 # [1.7.0](https://github.com/knorm/knorm/compare/v1.6.2...v1.7.0) (2018-09-23)
 
