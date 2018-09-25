@@ -1,3 +1,13 @@
+<a name="1.7.2"></a>
+## [1.7.2](https://github.com/knorm/knorm/compare/v1.7.1...v1.7.2) (2018-09-25)
+
+
+### Bug Fixes
+
+* **Query:** ignore non-insert options for inserts ([1b0b4bd](https://github.com/knorm/knorm/commit/1b0b4bd))
+
+
+
 <a name="1.7.1"></a>
 ## [1.7.1](https://github.com/knorm/knorm/compare/v1.7.0...v1.7.1) (2018-09-25)
 
