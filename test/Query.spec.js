@@ -1642,6 +1642,15 @@ describe('Query', () => {
       );
     });
 
+    it('ignores `where` and other "non-insert" options', async () => {
+      const query = new Query(User);
+      await expect(
+        query.insert(new User({ name: 'John Doe' }), { where: { foo: 'bar' } }),
+        'to be fulfilled with value satisfying',
+        [new User({ id: 1, name: 'John Doe' })]
+      );
+    });
+
     it('quotes column names', async () => {
       const spy = sinon.spy(Query.prototype, 'query');
       await new Query(User).insert(new User({ name: 'John Doe' }));
