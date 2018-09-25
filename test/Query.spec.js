@@ -570,8 +570,21 @@ describe('Query', () => {
           );
         });
 
-        it('supports SQL functions as object values', async () => {
+        it('supports raw sql as object values as plain strings', async () => {
           const query = new Query(User).fields({ now: 'now()' });
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
+              new User({ now: expect.it('to be a', Date) }),
+              new User({ now: expect.it('to be a', Date) })
+            ]
+          );
+        });
+
+        it('supports raw sql as object values as sql-bricks instances', async () => {
+          const query = new Query(User);
+          query.fields({ now: query.sql('now()') });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
