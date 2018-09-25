@@ -676,6 +676,35 @@ describe('KnormPostgres', () => {
       );
     });
 
+    it('ignores `limit` and `offset` for inserts', async () => {
+      const query = new Query(User).limit(1).offset(2);
+      await expect(
+        query.insert([{ id: 1, name: 'foo' }]),
+        'to be fulfilled with sorted rows satisfying',
+        [{ id: 1, name: 'foo' }]
+      );
+    });
+
+    it('ignores `limit` and `offset` for updates', async () => {
+      await new Query(User).insert([{ id: 1, name: 'foo' }]);
+      const query = new Query(User).limit(1).offset(2);
+      await expect(
+        query.update({ id: 1, name: 'bar' }),
+        'to be fulfilled with sorted rows satisfying',
+        [{ id: 1, name: 'bar' }]
+      );
+    });
+
+    it('ignores `limit` and `offset` for deletes', async () => {
+      await new Query(User).insert([{ id: 1, name: 'foo' }]);
+      const query = new Query(User).limit(1).offset(2);
+      await expect(
+        query.delete(),
+        'to be fulfilled with sorted rows satisfying',
+        [{ id: 1, name: 'foo' }]
+      );
+    });
+
     describe('for field updates', () => {
       let Model;
       let Query;
