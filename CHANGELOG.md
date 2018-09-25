@@ -1,3 +1,13 @@
+<a name="1.8.0"></a>
+# [1.8.0](https://github.com/knorm/knorm/compare/v1.7.2...v1.8.0) (2018-09-25)
+
+
+### Features
+
+* **Query:** support raw sql in fetch fields ([57994c1](https://github.com/knorm/knorm/commit/57994c1))
+
+
+
 <a name="1.7.2"></a>
 ## [1.7.2](https://github.com/knorm/knorm/compare/v1.7.1...v1.7.2) (2018-09-25)
 
