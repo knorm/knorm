@@ -3,6 +3,8 @@ const knormRelations = require('@knorm/relations');
 const KnormPostgres = require('../lib/KnormPostgres');
 const knormPostgres = require('../');
 const makeKnex = require('knex');
+const { Client } = require('pg');
+const sql = require('sql-bricks-postgres');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
@@ -1615,6 +1617,75 @@ describe('KnormPostgres', () => {
         });
       });
     });
+
+    describe('for query hooks', () => {
+      it('calls `beforeQuery`', async () => {
+        const query = new Query(User);
+        const spy = sinon.spy(query, 'beforeQuery');
+        await query.fetch();
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(expect.it('to be a', Client), expect.it('to be a', sql.select));
+        });
+      });
+
+      it('allows `beforeQuery` to change the sql when running raw sql', async () => {
+        await new Query(User).insert({ id: 1, name: 'foo' });
+        const query = new Query(User);
+        sinon
+          .stub(query, 'beforeQuery')
+          .returns(sql.select(['id as "user.id"']).from('user'));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 1 })]
+        );
+      });
+
+      it('calls `beforeQuery` when running raw sql', async () => {
+        const query = new Query(User);
+        const spy = sinon.spy(query, 'beforeQuery');
+        await query.query('select now()');
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(expect.it('to be a', Client), 'select now()');
+        });
+      });
+
+      it('allows `beforeQuery` to change the sql when running raw sql', async () => {
+        const query = new Query(User);
+        sinon.stub(query, 'beforeQuery').returns('select now() as "newDate"');
+        await expect(
+          query.query('select now() as "oldDate"'),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ newDate: expect.it('to be a', Date) })]
+        );
+      });
+
+      it('calls `afterQuery`', async () => {
+        await new Query(User).insert({ id: 1, name: 'foo' });
+        const query = new Query(User);
+        const spy = sinon.spy(query, 'afterQuery');
+        await query.fetch();
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(expect.it('to be a', Client), expect.it('to be a', sql.select), {
+            command: 'SELECT',
+            rowCount: 1,
+            rows: [{ 'user.id': 1, 'user.name': 'foo' }]
+          });
+        });
+      });
+
+      it('allows `afterQuery` to change the query result', async () => {
+        const query = new Query(User);
+        sinon
+          .stub(query, 'afterQuery')
+          .returns({ rows: [{ 'user.id': 'foo' }] });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ id: 'foo' })]
+        );
+      });
+    });
   });
 
   describe('PostgresTransaction', () => {
@@ -1897,6 +1968,108 @@ describe('KnormPostgres', () => {
           spy('BEGIN');
           spy('select now()');
           spy('ROLLBACK');
+        });
+      });
+
+      describe('for query hooks', () => {
+        it('calls `beforeQuery`', async () => {
+          const transaction = new Transaction(({ models: { User } }) =>
+            User.insert({ id: 1, name: 'foo' })
+          );
+          const spy = sinon.spy(transaction, 'beforeQuery');
+          await transaction.execute();
+          await expect(spy, 'to have calls satisfying', () => {
+            spy(expect.it('to be a', Client), 'BEGIN');
+            spy(expect.it('to be a', Client), expect.it('to be a', sql.insert));
+            spy(expect.it('to be a', Client), 'COMMIT');
+          });
+        });
+
+        it('allows `beforeQuery` to change the sql when running raw sql', async () => {
+          await new Transaction(({ models: { User } }) =>
+            User.insert({ id: 1, name: 'foo' })
+          );
+          const transaction = new Transaction(async function(transaction) {
+            return transaction.models.User.fetch();
+          });
+          sinon
+            .stub(transaction, 'beforeQuery')
+            .returns(sql.select(['id as "user.id"']).from('user'));
+          await expect(
+            transaction.execute(),
+            'to be fulfilled with value exhaustively satisfying',
+            [new User({ id: 1 })]
+          );
+        });
+
+        it('calls `beforeQuery` when running raw sql', async () => {
+          const transaction = new Transaction(({ models: { User } }) =>
+            User.query.query('select now()')
+          );
+          const spy = sinon.spy(transaction, 'beforeQuery');
+          await transaction.execute();
+          await expect(spy, 'to have calls satisfying', () => {
+            spy(expect.it('to be a', Client), 'BEGIN');
+            spy(expect.it('to be a', Client), 'select now()');
+            spy(expect.it('to be a', Client), 'COMMIT');
+          });
+        });
+
+        it('allows `beforeQuery` to change the sql when running raw sql', async () => {
+          const transaction = new Transaction(({ models: { User } }) =>
+            User.query.query('select now() as "oldDate"')
+          );
+          sinon
+            .stub(transaction, 'beforeQuery')
+            .returns('select now() as "newDate"');
+          await expect(
+            transaction.execute(),
+            'to be fulfilled with value exhaustively satisfying',
+            [new User({ newDate: expect.it('to be a', Date) })]
+          );
+        });
+
+        it('calls `afterQuery`', async () => {
+          const transaction = new Transaction(({ models: { User } }) =>
+            User.insert({ id: 1, name: 'foo' })
+          );
+          const spy = sinon.spy(transaction, 'afterQuery');
+          await transaction.execute();
+          await expect(spy, 'to have calls satisfying', () => {
+            spy(expect.it('to be a', Client), 'BEGIN', {
+              command: 'BEGIN',
+              rowCount: null,
+              rows: []
+            });
+            spy(
+              expect.it('to be a', Client),
+              expect.it('to be a', sql.insert),
+              {
+                command: 'INSERT',
+                rowCount: 1,
+                rows: [{ 'user.id': 1, 'user.name': 'foo' }]
+              }
+            );
+            spy(expect.it('to be a', Client), 'COMMIT', {
+              command: 'COMMIT',
+              rowCount: null,
+              rows: []
+            });
+          });
+        });
+
+        it('allows `afterQuery` to change the query result', async () => {
+          const transaction = new Transaction(({ models: { User } }) =>
+            User.insert({ id: 1, name: 'foo' })
+          );
+          sinon
+            .stub(transaction, 'afterQuery')
+            .returns({ rows: [{ 'user.id': 'foo' }] });
+          await expect(
+            transaction.execute(),
+            'to be fulfilled with value exhaustively satisfying',
+            [new User({ id: 'foo' })]
+          );
         });
       });
     });
@@ -2210,6 +2383,105 @@ describe('KnormPostgres', () => {
               'Release called on client which has already been released to the pool.'
             )
           );
+        });
+      });
+
+      describe('for query hooks', () => {
+        it('calls `beforeQuery`', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, 'beforeQuery');
+          await transaction.models.User.insert({ id: 1, name: 'foo' });
+          await transaction.commit();
+          await expect(spy, 'to have calls satisfying', () => {
+            spy(expect.it('to be a', Client), 'BEGIN');
+            spy(expect.it('to be a', Client), expect.it('to be a', sql.insert));
+            spy(expect.it('to be a', Client), 'COMMIT');
+          });
+        });
+
+        it('allows `beforeQuery` to change the sql when running raw sql', async () => {
+          await new Transaction(({ models: { User } }) =>
+            User.insert({ id: 1, name: 'foo' })
+          );
+          const transaction = new Transaction();
+          sinon
+            .stub(transaction, 'beforeQuery')
+            .returns(sql.select(['id as "user.id"']).from('user'));
+          const users = await transaction.models.User.insert({
+            id: 1,
+            name: 'foo'
+          });
+          await transaction.commit();
+          await expect(users, 'to exhaustively satisfy', [new User({ id: 1 })]);
+        });
+
+        it('calls `beforeQuery` when running raw sql', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, 'beforeQuery');
+          await transaction.models.User.query.query('select now()');
+          await transaction.commit();
+          await expect(spy, 'to have calls satisfying', () => {
+            spy(expect.it('to be a', Client), 'BEGIN');
+            spy(expect.it('to be a', Client), 'select now()');
+            spy(expect.it('to be a', Client), 'COMMIT');
+          });
+        });
+
+        it('allows `beforeQuery` to change the sql when running raw sql', async () => {
+          const transaction = new Transaction();
+          sinon
+            .stub(transaction, 'beforeQuery')
+            .returns('select now() as "newDate"');
+          const rows = await transaction.models.User.query.query(
+            'select now() as "oldDate"'
+          );
+          await transaction.commit();
+          await expect(rows, 'to exhaustively satisfy', [
+            new User({ newDate: expect.it('to be a', Date) })
+          ]);
+        });
+
+        it('calls `afterQuery`', async () => {
+          const transaction = new Transaction();
+          const spy = sinon.spy(transaction, 'afterQuery');
+          await transaction.models.User.insert({ id: 1, name: 'foo' });
+          await transaction.commit();
+          await expect(spy, 'to have calls satisfying', () => {
+            spy(expect.it('to be a', Client), 'BEGIN', {
+              command: 'BEGIN',
+              rowCount: null,
+              rows: []
+            });
+            spy(
+              expect.it('to be a', Client),
+              expect.it('to be a', sql.insert),
+              {
+                command: 'INSERT',
+                rowCount: 1,
+                rows: [{ 'user.id': 1, 'user.name': 'foo' }]
+              }
+            );
+            spy(expect.it('to be a', Client), 'COMMIT', {
+              command: 'COMMIT',
+              rowCount: null,
+              rows: []
+            });
+          });
+        });
+
+        it('allows `afterQuery` to change the query result', async () => {
+          const transaction = new Transaction();
+          sinon
+            .stub(transaction, 'afterQuery')
+            .returns({ rows: [{ 'user.id': 'foo' }] });
+          const users = await transaction.models.User.insert({
+            id: 1,
+            name: 'foo'
+          });
+          await transaction.commit();
+          await expect(users, 'to exhaustively satisfy', [
+            new User({ id: 'foo' })
+          ]);
         });
       });
     });
