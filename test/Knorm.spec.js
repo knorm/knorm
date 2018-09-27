@@ -4,20 +4,65 @@ const expect = require('unexpected')
   .use(require('unexpected-sinon'));
 const Knorm = require('../lib/Knorm');
 const KnormError = require('../lib/KnormError');
-const Query = require('../lib/Query');
+const Field = require('../lib/Field');
 const Model = require('../lib/Model');
+const Query = require('../lib/Query');
+const Transaction = require('../lib/Transaction');
 
 describe('Knorm', () => {
-  it('exposes abstract classes as statics', () => {
-    expect(Knorm.Query, 'to be', Query);
+  it('exposes Field, Model, Query, Transaction as statics', () => {
+    expect(Knorm.Field, 'to be', Field);
     expect(Knorm.Model, 'to be', Model);
+    expect(Knorm.Query, 'to be', Query);
+    expect(Knorm.Transaction, 'to be', Transaction);
   });
 
   describe('constructor', () => {
-    it('creates scoped Model, Query classes when instantiated', () => {
+    it('creates scoped Field, Model, Query, Transaction', () => {
       const knorm = new Knorm();
-      expect(knorm.Query, 'not to be', Query);
-      expect(knorm.Query.prototype instanceof Query, 'to be true');
+
+      expect(knorm.Field.prototype, 'to be a', Field);
+      expect(knorm.Model.prototype, 'to be a', Model);
+      expect(knorm.Query.prototype, 'to be a', Query);
+      expect(knorm.Transaction.prototype, 'to be a', Transaction);
+
+      expect(knorm.Model.Field, 'to be', knorm.Field);
+      expect(knorm.Model.Query, 'to be', knorm.Query);
+    });
+
+    it('adds an accessor to the knorm instance', function() {
+      const knorm = new Knorm();
+
+      class User extends knorm.Model {}
+      User.table = 'user';
+
+      const KnormUser = knorm.models.User;
+
+      expect(knorm.Field.knorm, 'to be', knorm);
+      expect(knorm.Query.knorm, 'to be', knorm);
+      expect(knorm.Model.knorm, 'to be', knorm);
+
+      expect(knorm.Field.prototype.knorm, 'to be', knorm);
+      expect(knorm.Query.prototype.knorm, 'to be', knorm);
+      expect(knorm.Model.prototype.knorm, 'to be', knorm);
+
+      expect(KnormUser.knorm, 'to be', knorm);
+      expect(KnormUser.Field.knorm, 'to be', knorm);
+      expect(KnormUser.Query.knorm, 'to be', knorm);
+
+      expect(KnormUser.prototype.knorm, 'to be', knorm);
+      expect(KnormUser.Field.prototype.knorm, 'to be', knorm);
+      expect(KnormUser.Query.prototype.knorm, 'to be', knorm);
+    });
+
+    it('creates a scoped Model class', () => {
+      const knorm = new Knorm();
+      expect(knorm.Query.prototype, 'to be a', Query);
+    });
+
+    it('creates a scoped Model class', () => {
+      const knorm = new Knorm();
+      expect(knorm.Query.prototype, 'to be a', Query);
     });
 
     it('creates new classes per instance', () => {
@@ -47,6 +92,14 @@ describe('Knorm', () => {
         });
         Model.fields = { firstName: { type: 'string' } };
         expect(wasCalled, 'to be true');
+      });
+    });
+
+    describe('with no `fieldToColumn` option provided', () => {
+      it('does not configure a field-to-column-name mapping function', () => {
+        const { Model } = new Knorm();
+        Model.fields = { firstName: { type: 'string' } };
+        expect(Model.fields.firstName.column, 'to be', 'firstName');
       });
     });
   });
