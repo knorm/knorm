@@ -28,19 +28,23 @@ describe('Transaction', function() {
       expect(new Transaction(), 'to satisfy', transaction => {
         const TransactionUser = transaction.models.User;
         expect(TransactionUser.prototype, 'to be a', User);
+        expect(TransactionUser.models.User, 'to be', TransactionUser);
         expect(TransactionUser.prototype.models.User, 'to be', TransactionUser);
+        expect(TransactionUser.models.User.prototype, 'to be a', User);
         expect(
           TransactionUser.prototype.models.User.prototype,
           'to be a',
           User
         );
         expect(TransactionUser.Query.prototype, 'to be a', Query);
+        expect(TransactionUser.Query.models.User.prototype, 'to be a', User);
         expect(
           TransactionUser.Query.prototype.models.User.prototype,
           'to be a',
           User
         );
         expect(TransactionUser.Field.prototype, 'to be a', Field);
+        expect(TransactionUser.Field.models.User.prototype, 'to be a', User);
         expect(
           TransactionUser.Field.prototype.models.User.prototype,
           'to be a',
