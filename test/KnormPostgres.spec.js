@@ -502,6 +502,17 @@ describe('KnormPostgres', () => {
       );
     });
 
+    it('allows running { text, value } sql queries', async () => {
+      await expect(
+        new Query(User).query({
+          text: `select upper($1) as foo`,
+          values: ['foo']
+        }),
+        'to be fulfilled with value satisfying',
+        [{ foo: 'FOO' }]
+      );
+    });
+
     it('enables `returning`', async () => {
       await new Query(User).insert({ id: 1, name: 'foo' });
       await expect(
@@ -1763,6 +1774,19 @@ describe('KnormPostgres', () => {
         );
       });
 
+      it('enables running scoped { text, value } sql queries', async () => {
+        await expect(
+          new Transaction(async function() {
+            return new this.Query(this.models.User).query({
+              text: `select upper($1) as foo`,
+              values: ['foo']
+            });
+          }),
+          'to be fulfilled with value satisfying',
+          [{ foo: 'FOO' }]
+        );
+      });
+
       it('enables running multiple queries in a transaction', async () => {
         await new Transaction(async function() {
           await this.models.User.insert([{ id: 1, name: 'foo' }]);
@@ -2113,6 +2137,18 @@ describe('KnormPostgres', () => {
           [{ now: expect.it('to be a date') }]
         );
         await transaction.commit();
+      });
+
+      it('enables running scoped { text, value } sql queries', async () => {
+        const transaction = new Transaction();
+        await expect(
+          new transaction.Query(transaction.models.User).query({
+            text: `select upper($1) as foo`,
+            values: ['foo']
+          }),
+          'to be fulfilled with value satisfying',
+          [{ foo: 'FOO' }]
+        );
       });
 
       it('enables running multiple queries in a transaction', async () => {
