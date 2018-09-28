@@ -16,7 +16,7 @@
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@knorm/knorm": "^1.7.0",
+    "@knorm/knorm": "^1.9.0",
     "@knorm/relations": "^1.2.3"
   },
   "devDependencies": {
