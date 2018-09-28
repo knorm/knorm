@@ -5,41 +5,86 @@ const expect = require('unexpected')
   .use(require('unexpected-sinon'))
   .use(require('unexpected-knex'));
 
-const { Field, Transaction, Model, Query } = new Knorm();
-const { TransactionError } = Transaction;
-
-class User extends Model {}
-User.table = 'user';
-User.fields = { name: { type: 'string', primary: true } };
-
 describe('Transaction', function() {
+  let Field;
+  let Model;
+  let Query;
+  let Transaction;
+  let TransactionError;
+  let User;
+
+  before(function() {
+    const knorm = new Knorm();
+
+    Field = knorm.Field;
+    Model = knorm.Model;
+    Query = knorm.Query;
+    Transaction = knorm.Transaction;
+    TransactionError = Transaction.TransactionError;
+
+    User = class extends Model {};
+    User.table = 'user';
+    User.fields = { name: { type: 'string', primary: true } };
+  });
+
   describe('constructor', function() {
-    it('adds accessors to scoped Field, Model, Query', function() {
-      expect(new Transaction(), 'to satisfy', transaction => {
-        expect(transaction.Field, 'to be', Field);
-        expect(transaction.Query.prototype, 'to be a', Query);
-        expect(transaction.Model.prototype, 'to be a', Model);
-        expect(transaction.Model.Query.prototype, 'to be a', Query);
-      });
+    it('creates scoped Field, Model, Query', function() {
+      const transaction = new Transaction();
+
+      expect(transaction.Field.prototype, 'to be a', Field);
+      expect(transaction.Model.prototype, 'to be a', Model);
+      expect(transaction.Query.prototype, 'to be a', Query);
+
+      expect(transaction.Model.Field, 'to be', transaction.Field);
+      expect(transaction.Model.Query, 'to be', transaction.Query);
     });
 
-    it('adds accessors to scoped user models', function() {
-      expect(new Transaction(), 'to satisfy', transaction => {
-        const TransactionUser = transaction.models.User;
-        expect(TransactionUser.prototype, 'to be a', User);
-        expect(TransactionUser.prototype.models.User, 'to be', TransactionUser);
-        expect(
-          TransactionUser.prototype.models.User.prototype,
-          'to be a',
-          User
-        );
-        expect(TransactionUser.Query.prototype, 'to be a', Query);
-        expect(
-          TransactionUser.Query.prototype.models.User.prototype,
-          'to be a',
-          User
-        );
-      });
+    it('creates scoped models', function() {
+      const transaction = new Transaction();
+      const TransactionUser = transaction.models.User;
+
+      expect(TransactionUser.name, 'to be', 'User');
+
+      expect(TransactionUser.prototype, 'to be a', User);
+      expect(TransactionUser.models.User, 'to be', TransactionUser);
+      expect(TransactionUser.prototype.models.User, 'to be', TransactionUser);
+
+      expect(TransactionUser.Query.prototype, 'to be a', Query);
+      expect(TransactionUser.Query.models.User.prototype, 'to be a', User);
+      expect(
+        TransactionUser.Query.prototype.models.User.prototype,
+        'to be a',
+        User
+      );
+
+      expect(TransactionUser.Field.prototype, 'to be a', Field);
+      expect(TransactionUser.Field.models.User.prototype, 'to be a', User);
+      expect(
+        TransactionUser.Field.prototype.models.User.prototype,
+        'to be a',
+        User
+      );
+    });
+
+    it('adds an accessor to the transaction instance', function() {
+      const transaction = new Transaction();
+      const TransactionUser = transaction.models.User;
+
+      expect(transaction.Field.transaction, 'to be', transaction);
+      expect(transaction.Query.transaction, 'to be', transaction);
+      expect(transaction.Model.transaction, 'to be', transaction);
+
+      expect(transaction.Field.prototype.transaction, 'to be', transaction);
+      expect(transaction.Query.prototype.transaction, 'to be', transaction);
+      expect(transaction.Model.prototype.transaction, 'to be', transaction);
+
+      expect(TransactionUser.transaction, 'to be', transaction);
+      expect(TransactionUser.Field.transaction, 'to be', transaction);
+      expect(TransactionUser.Query.transaction, 'to be', transaction);
+
+      expect(TransactionUser.prototype.transaction, 'to be', transaction);
+      expect(TransactionUser.Field.prototype.transaction, 'to be', transaction);
+      expect(TransactionUser.Query.prototype.transaction, 'to be', transaction);
     });
   });
 
@@ -61,8 +106,8 @@ describe('Transaction', function() {
       }
 
       await expect(
-        new FooTransaction(async function() {
-          return new this.Query(this.models.User).insert({ name: 'foo' });
+        new FooTransaction(async ({ Query, models: { User } }) => {
+          return new Query(User).insert({ name: 'foo' });
         }),
         'to be rejected with error satisfying',
         {
@@ -73,8 +118,8 @@ describe('Transaction', function() {
       );
 
       await expect(
-        new FooTransaction(async function() {
-          return this.models.User.insert({ name: 'foo' });
+        new FooTransaction(async ({ models: { User } }) => {
+          return User.insert({ name: 'foo' });
         }),
         'to be rejected with error satisfying',
         {
