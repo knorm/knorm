@@ -20,7 +20,7 @@
     "@knorm/relations": "^1.2.3"
   },
   "devDependencies": {
-    "@knorm/knorm": "^1.7.0",
+    "@knorm/knorm": "^1.9.0",
     "@knorm/relations": "^1.2.3",
     "coveralls": "^3.0.0",
     "eslint": "^4.15.0",
