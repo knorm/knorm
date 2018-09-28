@@ -13,10 +13,10 @@
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@knorm/knorm": "^1.2.0"
+    "@knorm/knorm": "^1.9.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "^1.2.0",
+    "@knorm/knorm": "^1.9.0",
     "coveralls": "^3.0.2",
     "eslint": "^4.10.0",
     "eslint-config-ganintegrity": "^2.0.2",
