@@ -1,3 +1,22 @@
+<a name="1.9.0"></a>
+# [1.9.0](https://github.com/knorm/knorm/compare/v1.8.0...v1.9.0) (2018-09-28)
+
+
+### Bug Fixes
+
+* **Knorm:** always create a scoped Field class ([0e8ced9](https://github.com/knorm/knorm/commit/0e8ced9))
+* **Transaction:** update `Field.prototype.models` ([19e5363](https://github.com/knorm/knorm/commit/19e5363))
+* **Transaction:** update scoped static model accessors ([d27769e](https://github.com/knorm/knorm/commit/d27769e))
+
+
+### Features
+
+* **Query:** add before and after-query hooks ([db2eb85](https://github.com/knorm/knorm/commit/db2eb85))
+* **Transaction:** add `transaction` to scoped classes ([e8ea4a2](https://github.com/knorm/knorm/commit/e8ea4a2))
+* **Transaction:** add before and after-query hooks ([3bb2b50](https://github.com/knorm/knorm/commit/3bb2b50))
+
+
+
 <a name="1.8.0"></a>
 # [1.8.0](https://github.com/knorm/knorm/compare/v1.7.2...v1.8.0) (2018-09-25)
 
