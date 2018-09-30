@@ -13,9 +13,7 @@
     "postgres:stop": "docker-compose stop postgres",
     "postgres:remove": "docker-compose rm -sf postgres",
     "todo": "grep -rn -e TODO -e FIXME lib",
-    "docs": "docsify serve docs",
-    "changelog": "standard-changelog",
-    "release": "standard-version"
+    "docs": "docsify serve docs"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -38,19 +36,9 @@
     "semantic-release": "^15.9.16",
     "sinon": "^5.0.3",
     "sql-bricks-postgres": "^0.5.0",
-    "standard-changelog": "^1.0.19",
-    "standard-version": "^4.3.0",
     "unexpected": "^10.37.5",
     "unexpected-knex": "^1.2.0",
     "unexpected-sinon": "^10.9.0"
-  },
-  "standard-version": {
-    "skip": {
-      "changelog": true
-    },
-    "scripts": {
-      "postbump": "npm run changelog"
-    }
   },
   "directories": {
     "doc": "docs",
