@@ -1142,6 +1142,26 @@ describe('Query', () => {
       });
 
       describe('with raw `sql` clauses', () => {
+        it('supports raw sql as where-clause values', async () => {
+          const query = new Query(User);
+          query.where({ name: query.sql(`trim('  User 1  ')`) });
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        it('supports parameterized raw sql as where-clause values', async () => {
+          const query = new Query(User);
+          query.where({ name: query.sql(`trim($1)`, '  User 1  ') });
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
         it('supports a single expression', async () => {
           const query = new Query(User);
           const where = new Query.Where();
