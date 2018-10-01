@@ -4,7 +4,6 @@
 [![build status](https://travis-ci.org/knorm/to-json.svg?branch=master)](https://travis-ci.org/knorm/to-json)
 [![coverage status](https://coveralls.io/repos/github/knorm/to-json/badge.svg?branch=master)](https://coveralls.io/github/knorm/to-json?branch=master)
 [![dependency status](https://david-dm.org/knorm/to-json.svg)](https://david-dm.org/knorm/to-json)
-[![Greenkeeper badge](https://badges.greenkeeper.io/knorm/to-json.svg)](https://greenkeeper.io/)
 
 [toJSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior)
 plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
