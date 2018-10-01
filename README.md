@@ -4,7 +4,6 @@
 [![build status](https://travis-ci.org/knorm/postgres.svg?branch=master)](https://travis-ci.org/knorm/postgres)
 [![coverage status](https://coveralls.io/repos/github/knorm/postgres/badge.svg?branch=master)](https://coveralls.io/github/knorm/postgres?branch=master)
 [![dependency status](https://david-dm.org/knorm/postgres.svg)](https://david-dm.org/knorm/postgres)
-[![Greenkeeper badge](https://badges.greenkeeper.io/knorm/postgres.svg)](https://greenkeeper.io/)
 
 Postgres plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
 that enables running queries agaisnt postgres. Also, it adds postgres-specific
