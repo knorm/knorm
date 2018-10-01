@@ -22,7 +22,7 @@
     "@semantic-release/git": "7.0.4",
     "@semantic-release/github": "5.0.5",
     "@semantic-release/npm": "5.0.4",
-    "coveralls": "3.0.1",
+    "coveralls": "3.0.2",
     "docsify-cli": "4.2.1",
     "eslint": "4.19.1",
     "eslint-config-ganintegrity": "2.0.2",
