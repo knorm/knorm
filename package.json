@@ -14,7 +14,9 @@
     "postgres:remove": "docker-compose rm -sf postgres",
     "todo": "grep -rn -e TODO -e FIXME lib",
     "docs": "docsify serve docs",
-    "docs:jsdoc": "jsdoc2md --files lib/**/*.js --partial docs/jsdoc2md/templates/link.hbs --partial docs/jsdoc2md/templates/body.hbs --partial docs/jsdoc2md/templates/params-list.hbs > docs/jsdoc2md.md",
+    "docs:jsdoc": "jsdoc2md --files lib/**/*.js --partial vuepress-docs/.jsdoc2md/templates/link.hbs --partial vuepress-docs/.jsdoc2md/templates/body.hbs --partial vuepress-docs/.jsdoc2md/templates/params-list.hbs > vuepress-docs/api.md",
+    "docs:dev": "vuepress dev docs-vuepress",
+    "docs:build": "vuepress build docs-vuepress",
     "changelog": "standard-changelog",
     "release": "standard-version"
   },
@@ -39,7 +41,8 @@
     "standard-version": "^4.3.0",
     "unexpected": "^10.37.5",
     "unexpected-knex": "^1.2.0",
-    "unexpected-sinon": "^10.9.0"
+    "unexpected-sinon": "^10.9.0",
+    "vuepress": "^0.14.4"
   },
   "standard-version": {
     "skip": {
