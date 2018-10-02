@@ -32,7 +32,7 @@
     "nyc": "11.7.2",
     "pg": "7.4.3",
     "prettier": "1.12.1",
-    "proxyquire": "2.0.1",
+    "proxyquire": "2.1.0",
     "semantic-release": "15.9.16",
     "sinon": "5.0.7",
     "sql-bricks-postgres": "0.5.0",
