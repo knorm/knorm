@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/knorm/postgres/compare/v1.3.0...v1.3.1) (2018-10-03)
+
+
+### Bug Fixes
+
+* release the client if a one-off query fails ([63cea63](https://github.com/knorm/postgres/commit/63cea63))
+
 <a name="1.3.0"></a>
 # [1.3.0](https://github.com/knorm/postgres/compare/v1.2.2...v1.3.0) (2018-09-28)
 
@@ -118,6 +125,3 @@
 * pass the client to the transaction callback ([bdce3ea](https://github.com/knorm/postgres/commit/bdce3ea))
 * support `ilike` ([4738a41](https://github.com/knorm/postgres/commit/4738a41))
 * support no-callback transactions ([198e25c](https://github.com/knorm/postgres/commit/198e25c))
-
-
-
