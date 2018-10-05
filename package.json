@@ -34,7 +34,7 @@
     "prettier": "1.12.1",
     "proxyquire": "2.1.0",
     "semantic-release": "15.9.16",
-    "sinon": "6.3.4",
+    "sinon": "6.3.5",
     "sql-bricks-postgres": "0.5.0",
     "unexpected": "10.39.1",
     "unexpected-knex": "1.2.1",
