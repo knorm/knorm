@@ -16,9 +16,9 @@
 
 {{#link to~}}
 {{#if url~}}
-[`{{#if ../../caption}}{{escape ../../../caption}}{{else}}{{escape name}}{{/if}}`]({{{url}}})
+[{{#if ../../caption}}{{escape ../../../caption}}{{else}}{{escape name}}{{/if}}]({{{url}}})
 {{~else~}}
-<code>{{#if ../../caption}}{{escape ../../../caption}}{{else}}{{escape name}}{{/if~}}</code>
+`{{#if ../../caption}}{{escape ../../../caption}}{{else}}{{escape name}}{{/if~}}`
 {{~/if~}}
 {{/link~}}
 

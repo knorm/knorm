@@ -1,8 +1,8 @@
 # Models
 
 Models are synonymous to database tables. They provide the core functionality
-for setting, validating, saving, updating and deleting data. All models inherit
-the base [Model](api/model.md#model) class.
+for setting, getting, validating, saving, updating and deleting data. All models
+inherit the base [Model](api/model.md#model) class.
 
 ## Model config
 
@@ -291,7 +291,7 @@ orm.addModel(Admin); // Admin is not configured, must be added manually
 ```
 
 Since models are only automatically added when they are `require`d, it's
-recommended to load all the models syncronously when starting up a node server.
+recommended to load all the models syncronously when starting up a node app.
 For example:
 
 ```js

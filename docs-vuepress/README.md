@@ -4,11 +4,23 @@ heroImage: /logo.svg
 actionText: Get Started →
 actionLink: /getting-started
 features:
-- title: Simplicity First
-  details: Minimal setup with markdown-centered project structure helps you focus on writing.
-- title: Vue-Powered
-  details: Enjoy the dev experience of Vue + webpack, use Vue components in markdown, and develop custom themes with Vue.
-- title: Performant
-  details: VuePress generates pre-rendered static HTML for each page, and runs as an SPA once a page is loaded.
+- title: Simplicity
+  details: Easy to extend, configure or override, owing to ES6 classes.
+- title: Validation
+  details: Including validation for JSON fields, similar to Mongoose.js.
+- title: Plugin support
+  details: Allows sharing customisations. Also supports custom plugins.
+- title: Transactions
+  details: Including callback-based and non-callback-based transactions.
+- title: Relations
+  details: Implented through SQL joins.
+- title: Virtual fields
+  details: With support for `async` gettters (suitable for GraphQl for instance).
+- title: Value casting
+  details: Before save (insert or update) and after fetch operations.
+- title: Error handling
+  details: Custom error classes for all errors, including database errors.
+- title: Well tested
+  details: Extensive test coverage, plugins included.
 footer: MIT Licensed | Copyright © 2017-present, Joel Mukuthu
 ---
