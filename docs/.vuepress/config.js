@@ -1,7 +1,6 @@
 module.exports = {
   title: 'Knorm',
   description: 'A JavaScript ORM written using ES6 classes',
-  base: '/knorm/',
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
   ],
