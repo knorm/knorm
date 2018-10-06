@@ -155,6 +155,7 @@ data before and/or after database operations.
     * _instance_
         * [.knorm](#Model+knorm) : [Knorm](#Knorm)
         * [.models](#Model+models) : `object`
+        * [.transaction](#Model+transaction) : [Transaction](#Transaction)
         * [.setData(data)](#Model+setData) ⇒ [Model](#Model)
         * [.insert([options])](#Model+insert) ⇒ [Promise.&lt;Model&gt;](#Model)
         * [.update([options])](#Model+update) ⇒ [Promise.&lt;Model&gt;](#Model)
@@ -165,6 +166,7 @@ data before and/or after database operations.
         * [.fields](#Model.fields) : `object`
         * [.knorm](#Model.knorm) : [Knorm](#Knorm)
         * [.models](#Model.models) : `object`
+        * [.transaction](#Model.transaction) : [Transaction](#Transaction)
         * [.insert(data, options)](#Model.insert) ⇒ `Promise`
 
 <a name="new_Model_new"></a>
@@ -180,7 +182,7 @@ Creates a [Model](#Model) instance.
 <a name="Model+knorm"></a>
 
 ### model.knorm : [Knorm](#Knorm)
-A reference to the knorm (ORM) instance.
+A reference to the [Knorm](#Knorm) instance.
 
 ::: tip
 This is the same instance assigned to the [knorm](#Model.knorm) static
@@ -197,6 +199,22 @@ for more info.
 ::: tip
 This is the same object assigned to the [models](#Model.models) static property,
 just added as a convenience for use in instance methods.
+:::
+
+<a name="Model+transaction"></a>
+
+### model.transaction : [Transaction](#Transaction)
+For models accessed within a transaction, this is reference to the
+[Transaction](#Transaction) instance.
+
+::: warning NOTE
+This is only set for models that are accessed within a transaction, otherwise
+it's set to `null`.
+:::
+
+::: tip
+This is the same instance assigned to the [transaction](#Model+transaction) static
+property, just added as a convenience for use in static methods.
 :::
 
 <a name="Model+setData"></a>
@@ -348,7 +366,7 @@ added to a parent model.
 <a name="Model.knorm"></a>
 
 ### Model.knorm : [Knorm](#Knorm)
-A reference to the knorm (ORM) instance.
+A reference to the [Knorm](#Knorm) instance.
 
 ::: tip
 This is the same instance assigned to the [knorm](#Model+knorm) instance
@@ -364,6 +382,22 @@ for more info.
 
 ::: tip
 This is the same object assigned to the [models](#Model+models) instance
+property, just added as a convenience for use in static methods.
+:::
+
+<a name="Model.transaction"></a>
+
+### Model.transaction : [Transaction](#Transaction)
+For models accessed within a transaction, this is reference to the
+[Transaction](#Transaction) instance.
+
+::: warning NOTE
+This is only set for models that are accessed within a transaction, otherwise
+it's set to `null`.
+:::
+
+::: tip
+This is the same instance assigned to the [transaction](#Model+transaction) instance
 property, just added as a convenience for use in static methods.
 :::
 
@@ -400,6 +434,9 @@ Creates and runs queries and parses any data returned.
     * [new Query(model)](#new_Query_new)
     * [.fields(...fields)](#Query+fields) ⇒ [Query](#Query)
     * [.returning(...fields)](#Query+returning) ⇒ [Query](#Query)
+    * [.beforeQuery(client, sql)](#Query+beforeQuery)
+    * [.afterQuery(client, sql, result)](#Query+afterQuery)
+    * [.query(sql)](#Query+query)
 
 <a name="new_Query_new"></a>
 
@@ -459,11 +496,66 @@ This is an alias for [fields](#Query+fields).
 
 **Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
 **See**: [fields](#Query+fields)  
+<a name="Query+beforeQuery"></a>
+
+### query.beforeQuery(client, sql)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| client | `Client` | the database client that will be used to run the query. |
+| sql | `SqlBricks` \| `object` \| `string` | the sql that will be sent to the database. |
+
+Called before a query is sent to the database. This allows manipulating the
+sql if needed, even changing it entirely.
+
+NOTE: if this method returns anything, that will be used as the sql to send
+to the database instead. Therefore, this should be valid sql as expected by
+[query](#Query+query).
+
+<a name="Query+afterQuery"></a>
+
+### query.afterQuery(client, sql, result)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| client | `Client` | the database client that was used to run the query. |
+| sql | `SqlBricks` \| `object` \| `string` | the sql that was sent to the database to generate the result. |
+| result | `object` | the result from the database. |
+
+Called after a query is sent to the database. This allows manipulating the
+result if needed, even changing it entirely.
+
+NOTE: if this method returns anything, that will be used as the result of
+the query instead. Therefore, this should be a valid result object as
+expected by [query](#Query+query).
+
+<a name="Query+query"></a>
+
+### query.query(sql)
+
+| Param | Type |
+| --- | --- |
+| sql | `SqlBricks` \| `object` \| `string` | 
+
+Runs a query. This method is not implemented in @knorm/knorm, it's meant to
+be implemented by a plugin that provides database access.
+
+**Throws**:
+
+- `QueryError` if the method is not implemented.
+
 <a name="Transaction"></a>
 
 ## Transaction
 Creates and executes transactions, allowing multiple queries to be run within
 a transaction.
+
+
+* [Transaction](#Transaction)
+    * [new Transaction([callback])](#new_Transaction_new)
+    * [.beforeQuery(client, sql)](#Transaction+beforeQuery)
+    * [.afterQuery(client, sql, result)](#Transaction+afterQuery)
+    * [.query(sql)](#Transaction+query)
 
 <a name="new_Transaction_new"></a>
 
@@ -475,3 +567,52 @@ a transaction.
 
 Creates a [Transaction](#Transaction) instance.
 
+<a name="Transaction+beforeQuery"></a>
+
+### transaction.beforeQuery(client, sql)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| client | `Client` | the database client that will be used to run the query. |
+| sql | `SqlBricks` \| `object` \| `string` | the sql that will be sent to the database. |
+
+Called before a query is sent to the database within a transaction. This
+allows manipulating the sql if needed, even changing it entirely.
+
+NOTE: if this method returns anything, that will be used as the sql to send
+to the database instead. Therefore, this should be valid sql as expected by
+[query](#Query+query).
+
+<a name="Transaction+afterQuery"></a>
+
+### transaction.afterQuery(client, sql, result)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| client | `Client` | the database client that was used to run the query. |
+| sql | `SqlBricks` \| `object` \| `string` | the sql that was sent to the database to generate the result. |
+| result | `object` | the result from the database. |
+
+Called after a query is sent to the database within a transaction. This
+allows manipulating the result if needed, even changing it entirely.
+
+NOTE: if this method returns anything, that will be used as the result of
+the query instead. Therefore, this should be a valid result object as
+expected by [query](#Query+query).
+
+<a name="Transaction+query"></a>
+
+### transaction.query(sql)
+
+| Param | Type |
+| --- | --- |
+| sql | `SqlBricks` \| `object` \| `string` | 
+
+Runs a query within a transaction. This method is not implemented in
+
+**Throws**:
+
+- `TransactionError` if the method is not implemented.
+
+**Knorm/knorm,**: it's meant to be implemented by a plugin that provides
+database access.  
