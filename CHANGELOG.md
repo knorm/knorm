@@ -1,3 +1,52 @@
+<a name="1.9.0"></a>
+# [1.9.0](https://github.com/knorm/knorm/compare/v1.8.0...v1.9.0) (2018-09-28)
+
+
+### Bug Fixes
+
+* **Knorm:** always create a scoped Field class ([0e8ced9](https://github.com/knorm/knorm/commit/0e8ced9))
+* **Transaction:** update `Field.prototype.models` ([19e5363](https://github.com/knorm/knorm/commit/19e5363))
+* **Transaction:** update scoped static model accessors ([d27769e](https://github.com/knorm/knorm/commit/d27769e))
+
+
+### Features
+
+* **Query:** add before and after-query hooks ([db2eb85](https://github.com/knorm/knorm/commit/db2eb85))
+* **Transaction:** add `transaction` to scoped classes ([e8ea4a2](https://github.com/knorm/knorm/commit/e8ea4a2))
+* **Transaction:** add before and after-query hooks ([3bb2b50](https://github.com/knorm/knorm/commit/3bb2b50))
+
+
+
+<a name="1.8.0"></a>
+# [1.8.0](https://github.com/knorm/knorm/compare/v1.7.2...v1.8.0) (2018-09-25)
+
+
+### Features
+
+* **Query:** support raw sql in fetch fields ([57994c1](https://github.com/knorm/knorm/commit/57994c1))
+
+
+
+<a name="1.7.2"></a>
+## [1.7.2](https://github.com/knorm/knorm/compare/v1.7.1...v1.7.2) (2018-09-25)
+
+
+### Bug Fixes
+
+* **Query:** ignore non-insert options for inserts ([1b0b4bd](https://github.com/knorm/knorm/commit/1b0b4bd))
+
+
+
+<a name="1.7.1"></a>
+## [1.7.1](https://github.com/knorm/knorm/compare/v1.7.0...v1.7.1) (2018-09-25)
+
+
+### Bug Fixes
+
+* **Field:** handle overloaded Field class in JSON validators ([a0e6964](https://github.com/knorm/knorm/commit/a0e6964))
+
+
+
 <a name="1.7.0"></a>
 # [1.7.0](https://github.com/knorm/knorm/compare/v1.6.2...v1.7.0) (2018-09-23)
 

@@ -1,6 +1,6 @@
 {
   "name": "@knorm/knorm",
-  "version": "1.7.0",
+  "version": "1.9.0",
   "description": "A JavaScript ORM written using ES6 classes",
   "main": "index.js",
   "scripts": {
@@ -15,39 +15,33 @@
     "todo": "grep -rn -e TODO -e FIXME lib",
     "docs:jsdoc": "jsdoc2md --files lib/**/*.js --partial docs/.jsdoc2md/templates/link.hbs --partial docs/.jsdoc2md/templates/body.hbs > docs/api.md",
     "docs:dev": "npm run docs:jsdoc && vuepress dev docs",
-    "docs:build": "npm run docs:jsdoc && vuepress build docs",
-    "changelog": "standard-changelog",
-    "release": "standard-version"
+    "docs:build": "npm run docs:jsdoc && vuepress build docs"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "coveralls": "^3.0.0",
-    "eslint": "^4.19.1",
-    "eslint-config-ganintegrity": "^2.0.2",
+    "@semantic-release/changelog": "3.0.0",
+    "@semantic-release/git": "7.0.4",
+    "@semantic-release/github": "5.0.6",
+    "@semantic-release/npm": "5.0.4",
+    "coveralls": "3.0.2",
+    "eslint": "4.19.1",
+    "eslint-config-ganintegrity": "2.0.2",
     "jsdoc-to-markdown": "^4.0.1",
-    "knex": "^0.14.4",
-    "mocha": "^5.0.4",
-    "nyc": "^11.7.1",
-    "pg": "^7.4.1",
-    "prettier": "^1.12.1",
-    "proxyquire": "^2.0.0",
-    "sinon": "^5.0.3",
-    "sql-bricks-postgres": "^0.5.0",
-    "standard-changelog": "^1.0.19",
-    "standard-version": "^4.3.0",
-    "unexpected": "^10.37.5",
-    "unexpected-knex": "^1.2.0",
-    "unexpected-sinon": "^10.9.0",
+    "knex": "0.15.2",
+    "mocha": "5.2.0",
+    "npm-run-all": "4.1.3",
+    "nyc": "13.0.1",
+    "pg": "7.5.0",
+    "prettier": "1.12.1",
+    "proxyquire": "2.1.0",
+    "semantic-release": "15.9.17",
+    "sinon": "6.3.5",
+    "sql-bricks-postgres": "0.5.0",
+    "unexpected": "10.39.1",
+    "unexpected-knex": "1.2.1",
+    "unexpected-sinon": "10.10.1",
     "vuepress": "^0.14.4"
-  },
-  "standard-version": {
-    "skip": {
-      "changelog": true
-    },
-    "scripts": {
-      "postbump": "npm run changelog"
-    }
   },
   "directories": {
     "doc": "docs",

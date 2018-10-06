@@ -570,8 +570,21 @@ describe('Query', () => {
           );
         });
 
-        it('supports SQL functions as object values', async () => {
+        it('supports raw sql as object values as plain strings', async () => {
           const query = new Query(User).fields({ now: 'now()' });
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
+              new User({ now: expect.it('to be a', Date) }),
+              new User({ now: expect.it('to be a', Date) })
+            ]
+          );
+        });
+
+        it('supports raw sql as object values as sql-bricks instances', async () => {
+          const query = new Query(User);
+          query.fields({ now: query.sql('now()') });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1129,6 +1142,26 @@ describe('Query', () => {
       });
 
       describe('with raw `sql` clauses', () => {
+        it('supports raw sql as where-clause values', async () => {
+          const query = new Query(User);
+          query.where({ name: query.sql(`trim('  User 1  ')`) });
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
+        it('supports parameterized raw sql as where-clause values', async () => {
+          const query = new Query(User);
+          query.where({ name: query.sql(`trim($1)`, '  User 1  ') });
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
+
         it('supports a single expression', async () => {
           const query = new Query(User);
           const where = new Query.Where();
@@ -1639,6 +1672,15 @@ describe('Query', () => {
         query.insert(new User({ name: 'John Doe' }), { returning: 'name' }),
         'to be fulfilled with value exhaustively satisfying',
         [new User({ name: 'John Doe' })]
+      );
+    });
+
+    it('ignores `where` and other "non-insert" options', async () => {
+      const query = new Query(User);
+      await expect(
+        query.insert(new User({ name: 'John Doe' }), { where: { foo: 'bar' } }),
+        'to be fulfilled with value satisfying',
+        [new User({ id: 1, name: 'John Doe' })]
       );
     });
 
