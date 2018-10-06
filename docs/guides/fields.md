@@ -1,7 +1,7 @@
 # Fields
 
 Fields are synonymous to table columns. To add fields to a model, assign an
-object to [Model.fields](api/model.md#modelfields):
+object to [Model.fields](/api.md#model-fields-object):
 
 ```js
 class User extends Model {}
@@ -21,13 +21,15 @@ class User extends Model {
 }
 ```
 
-!> field names should be unique. also, the `Model.fields` setter will throw if
-the field name is already a `Model.prototype` property or is already added as a
-[virtual](guides/virtuals.md#virtuals).
+::: warning NOTE
+Field names should be unique. The `Model.fields` setter will throw if a field
+name is already a `Model.prototype` property or is already added as a
+[virtual](/guides/virtuals.md#virtuals).
+:::
 
 Knorm uses field names as column names when running queries. To transform field
 names to different column names (e.g. snake-casing), use a `fieldToColumn`
-mapping function (ref. [Knorm options](api/knorm.md#options)) or specify a
+mapping function (ref. [Knorm options](/api.md#new-knorm-config)) or specify a
 different `column` name per field with the [field config](#field-config).
 
 ## Field config
@@ -126,8 +128,11 @@ Knorm uses primary and unique fields to find a row in the database for fetch,
 update and delete operations. Every model must have at least one primary field
 but can have multiple unique fields.
 
-!> Composite/multiple primary fields are not currently supported. If two fields
-are configured as primary, only the latter will be configured as a primary field.
+::: warning NOTE
+Composite/multiple primary fields are not currently supported. If two fields are
+configured as primary, only the latter will be configured as a primary
+field.
+:::
 
 If a field is configured as primary or unique, you may also want to prevent it
 from being updated (with the `updated` option). Note that this options only works
@@ -174,26 +179,31 @@ User.deleteByFirstName(firstName, options);
 The method names are resolved by upper-casing the first letter of the field name
 and taking the rest of the field name as is.
 
-**NOTE:** since these methods are intended to work with a single row, they will
+::: tip INFO
+Since these methods are intended to work with a single row, they will
 automatically throw a `NoRowsFetchedError`, `NoRowsUpdatedError` or
 `NoRowsDeletedError` error if the row is not found in the database.
+:::
 
 ## Value casting
 
 You can configure `forSave` and `forFetch` cast functions for every field. These
-are handy for type-casting or some other functionality. For example, in
-PostgreSQL you can configure a `forSave` cast function to
-[stringify JSON arrays](http://knexjs.org/#Schema-json):
+are handy for type-casting or some other functionality:
 
 ```js
 class User extends Model {}
 User.fields = {
   data: {
-    type: 'json',
+    type: 'email',
     cast: {
       forSave(value) {
         if (value) {
-          return JSON.stringify(value);
+          return value.toLowerCase();
+        }
+      },
+      forFetch(value) {
+        if (value) {
+          return value.replace('@', '[at]');
         }
       }
     }
@@ -201,6 +211,15 @@ User.fields = {
 };
 ```
 
-!> &bull; `forSave` cast functions are called **after** validation <br />
-&bull; cast functions are not called if the field's value is `undefined`, but
-are called if it's `null`
+> `forSave` refers to both insert and update operations
+
+::: tip INFO
+`forSave` cast functions are called **after** validation. This allows specifying
+some field-type in the field's configuration while the database stores the
+values with a different type, if needed.
+:::
+
+::: tip INFO
+Cast functions are not called if the field's value is `undefined`, but are
+called if it's `null`.
+:::

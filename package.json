@@ -1,7 +1,7 @@
 {
   "name": "@knorm/knorm",
   "version": "1.9.0",
-  "description": "A purely ES6 class-based ORM for Node.js",
+  "description": "A JavaScript ORM written using ES6 classes",
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
@@ -13,7 +13,9 @@
     "postgres:stop": "docker-compose stop postgres",
     "postgres:remove": "docker-compose rm -sf postgres",
     "todo": "grep -rn -e TODO -e FIXME lib",
-    "docs": "docsify serve docs"
+    "docs:jsdoc": "jsdoc2md --files lib/**/*.js --partial docs/.jsdoc2md/templates/link.hbs --partial docs/.jsdoc2md/templates/body.hbs > docs/api.md",
+    "docs:dev": "npm run docs:jsdoc && vuepress dev docs",
+    "docs:build": "npm run docs:jsdoc && vuepress build docs"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -23,9 +25,9 @@
     "@semantic-release/github": "5.0.6",
     "@semantic-release/npm": "5.0.4",
     "coveralls": "3.0.2",
-    "docsify-cli": "4.2.1",
     "eslint": "4.19.1",
     "eslint-config-ganintegrity": "2.0.2",
+    "jsdoc-to-markdown": "^4.0.1",
     "knex": "0.15.2",
     "mocha": "5.2.0",
     "npm-run-all": "4.1.3",
@@ -38,7 +40,8 @@
     "sql-bricks-postgres": "0.5.0",
     "unexpected": "10.39.1",
     "unexpected-knex": "1.2.1",
-    "unexpected-sinon": "10.10.1"
+    "unexpected-sinon": "10.10.1",
+    "vuepress": "^0.14.4"
   },
   "directories": {
     "doc": "docs",

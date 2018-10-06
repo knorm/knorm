@@ -5,17 +5,22 @@
 [![coverage status](https://coveralls.io/repos/github/knorm/knorm/badge.svg?branch=master)](https://coveralls.io/github/knorm/knorm?branch=master)
 [![dependency status](https://david-dm.org/knorm/knorm.svg)](https://david-dm.org/knorm/knorm)
 
-> A purely ES6 class-based ORM for Node.js.
+> A JavaScript ORM written using ES6 classes.
 
 Knorm is a collection of classes that allow creating JavaScript
-[ORMs](https://en.wikipedia.org/wiki/Object-relational_mapping) to make it easier
-to work with relational databases.
+[ORM's](https://en.wikipedia.org/wiki/Object-relational_mapping) to make it
+easier to work with relational databases.
 
 Knorm can be used on any existing database without requiring any changes to the
-database layer. Also, knorm does not create or run any database migrations
-(creating or altering tables, columns, indexes etc).
+database layer. It does not (yet) create or run any database migrations
+(creating or altering tables, columns, indexes etc), nor does it generate models
+from existing database schema (yet). For creating and running migrations,
+consider a library such as [Knex.js](http://knexjs.org).
 
-You may also use it to create ORMs on the browser (e.g. for data validation).
+It can also be used on the browser to create models that do not interact with
+the  database, perhaps for data validation. Please note that it's not secure to
+generate queries on the browser and send them for processing to a backend
+server.
 
 ## Features
 
