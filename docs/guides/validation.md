@@ -1,19 +1,22 @@
 # Validation
 
 Validation is configured per field using the
-[field config](guides/fields.md#field-config).
+[field config](/guides/fields.md#field-config).
 
 A model instance is validated before
-[insert](api/model.md#modelprototypeinsertoptions-promise-gt-model) and
-[update](api/model.md#modelprototypeupdateoptions-promise-gt-model). Before inserts,
-all fields will be validated (**_except the primary field if it's `undefined`_**)
-whereas before updates, only the fields that have values set will be validated.
+[model.insert](/api.md#model-insert-options-%E2%87%92-promise-model) and
+[model.update](/api.md#model-update-options-%E2%87%92-promise-model). Before
+inserts, all fields will be validated (**_except the primary field if it's
+`undefined`_**) whereas before updates, only the fields that have values set
+will be validated.
 
 You can trigger validation any time on a model instance via
-[Model.prototype.validate](api/model.md#modelprototypevalidateoptions-promise-gt-modelvalidationerror)
+[model.validate](/api.md#model-validate-options-%E2%87%92-promise)
 
-> you can configure validation for fields via the [field configs](guides/fields.md#field-config)  
-> the `type` field config is also used as a validator
+::: tip
+Validation can be configured for each field via the [field
+configs](/guides/fields.md#field-config).
+:::
 
 ## Regex validation
 
@@ -30,7 +33,7 @@ against the field's value.
 
 Can be configured directly via the `regex` field config:
 
-```js
+```js {6}
 class User extends Model {}
 
 User.fields = {
@@ -43,7 +46,7 @@ User.fields = {
 
 Or explicitly via an object with a `matching` regex:
 
-```js
+```js {7}
 class User extends Model {}
 
 User.fields = {
@@ -68,7 +71,7 @@ new User({ username: 'foo1' }); // not valid
 
 Can be configured via an object with a `notMatching` regex:
 
-```js
+```js {7}
 class User extends Model {}
 
 User.fields = {
@@ -93,7 +96,7 @@ new User({ username: 'foo.' }); // not valid
 
 Can be configured via an object with both `matching` and `notMatching` regex's:
 
-```js
+```js {7,8}
 class User extends Model {}
 
 User.fields = {
@@ -134,13 +137,13 @@ Validation for the field fails if the function:
 If the validator throws an error or returns a rejected `Promise`, validation for
 that field fails with that error (or the rejection error). However, if it returns
 `false` or resolves the `Promise` with `false`, then validation fails with a
-[ValidationError](api/validation-error.md).
+[ValidationError](/api.md#field-validationerror).
 
 You can also continue validating by returning an object with the regular
-[validators](guides/fields.md#field-config) (or resolving the `Promise` with an
+[validators](/guides/fields.md#field-config) (or resolving the `Promise` with an
 object with validators), including another custom validator function!
 
-```js
+```js {13,14,15,16,17}
 class User extends Model {}
 
 User.fields = {
@@ -175,8 +178,10 @@ User.fields = {
 };
 ```
 
-!> Custom validators will **not** be called if the value is `undefined`, but
-will be called if the value is `null`
+::: tip INFO
+Custom validators will **not** be called if the value is `undefined`, but will
+be called if the value is `null`.
+:::
 
 ## JSON validation
 
@@ -184,9 +189,11 @@ For [json](http://knexjs.org/#Schema-json) (and
 [jsonb](http://knexjs.org/#Schema-jsonb)) fields, you can have the JSON values
 validated by adding a `schema` object to the field definition object.
 
-!> JSON fields are **only** validated if they contain a `schema` validator
+::: warning NOTE
+JSON fields are **only** validated if they contain a `schema` validator.
+:::
 
-```js
+```js {6,7,8,9,10}
 class Upload extends Model {}
 
 Upload.fields = {
@@ -226,14 +233,17 @@ new Upload({
 });
 ```
 
-> JSON `schema` validators support all the
-> [validators](guides/fields.md#field-config), including nested `schema`
-> validators [for nested objects](#nested-objects)
+::: tip INFO
+JSON `schema` validators support all the
+[validators](/guides/fields.md#field-config), including nested `schema`
+validators [for nested objects](#nested-objects).
+:::
 
-Note that you may also define the schema with the `fieldName: fieldType`
-shorthand:
+::: tip
+You may also define the schema with the `fieldName: fieldType` shorthand:
+:::
 
-```js
+```js {7,8}
 class User extends Model {}
 
 User.fields = {
@@ -251,9 +261,9 @@ User.fields = {
 
 For JSON arrays, use the `array` field type. You can also define the schema of a
 single array item by passing a `schema` validation object with the regular
-[validators](guides/fields.md#field-config).
+[validators](/guides/fields.md#field-config).
 
-```js
+```js {12,14,15,16,17}
 class SomeData extends Model {}
 
 SomeData.fields = {
@@ -289,7 +299,7 @@ const someData = new SomeData({
 For nested objects, use the `object` field type. You can also define the nested
 object's schema with a nested `schema` validator.
 
-```js
+```js {8,9,10,11,12}
 class SomeData extends Model {}
 
 SomeData.fields = {
@@ -317,15 +327,17 @@ const someData = new SomeData({
 });
 ```
 
-!> Nested object fields **must** contain a `type`, just like
-[Field](#api/field.md#field) instances
+::: warning NOTE
+Nested object fields **should** contain a `type`, just like regular
+[Field](/api.md#field) instances.
+:::
 
 ### Root-level JSON fields
 
 For JSON fields whose values are not nested in an object, define their
 validators with a `schema` validator:
 
-```js
+```js {5,6,7,8,9,18,19,20,21}
 class SomeData extends Model {}
 SomeData.fields = {
   value: {
@@ -355,7 +367,7 @@ const rootLevelArray = new RootLevelArray({ value: ['some value'] });
 Note that you may also define the schema with the `fieldName: fieldType`
 shorthand:
 
-```js
+```js {6}
 class User extends Model {}
 
 User.fields = {
@@ -368,18 +380,25 @@ User.fields = {
 
 ## Overriding validators
 
-For example, to enforce a max-length of `255` for all `string` field types,
+Instead of repeating the same validation config for multiple related fieds, you
+could instead overload a validator.
+
+For example, to enforce a max-length of `500` for all `string` field types,
 instead of adding a `maxLength` validator for every field of type `string`, you
 could override the `string` validator to add max-length validation for every
-`string` field:
+`string` field.
+
+This can be easily done with a [plugin](/guides/plugins.md):
 
 ```js
-const { Field: KnormField } = require('@knorm/knorm');
-
-class Field extends KnormField {
-  validateIsString(value, type) {
-    super.validateIsString(value, type);
-    this.validateMaxLengthIs(value, 255);
+const stringsMaxLength500 = orm => {
+  class StringsMaxLength500 extends orm.Field {
+    validateIsString(value, type) {
+      super.validateIsString(value, type);
+      this.validateMaxLengthIs(value, 500);
+    }
   }
-}
+
+  orm.Model.Field = orm.Field = StringsMaxLength500;
+};
 ```

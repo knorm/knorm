@@ -1,8 +1,8 @@
 # Models
 
 Models are synonymous to database tables. They provide the core functionality
-for setting, validating, saving, updating and deleting data. All models inherit
-the base [Model](api/model.md#model) class.
+for setting, getting, validating, casting, saving, updating and deleting data.
+All models inherit the base [Model](/api.md#model) class.
 
 ## Model config
 
@@ -12,13 +12,11 @@ Models are configured through these static properties:
 | ---------------- | --------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Model.table`    | string (**required**)       | none                        | Configures the model's table-name. **NOTE:** this config can be omitted if the model is not used for performing any database operations (i.e. fetching, saving, deleting etc) |
 | `Model.schema`   | string                      | none                        | Configures the model's schema-name                                                                                                                                            |
-| `Model.fields`   | object                      | none                        | Configures the model's fields. See the [fields guide](guides/fields.md#fields) for more info                                                                                  |
-| `Model.virtuals` | object                      | none                        | Configures the model's virtual fields. See the [virtuals guide](guides/virtuals.md#virtuals) for more info                                                                    |
+| `Model.fields`   | object                      | none                        | Configures the model's fields. See the [fields guide](/guides/fields.md#fields) for more info                                                                                  |
+| `Model.virtuals` | object                      | none                        | Configures the model's virtual fields. See the [virtuals guide](/guides/virtuals.md#virtuals) for more info                                                                    |
 | `Model.options`  | object                      | none                        | Configures the model's default query and plugin options (for some plugins). See [customizing queries per model](#customizing-queries-per-model) for more info                 |
-| `Model.Query`    | [Query](api/query.md#query) | [Query](api/query.md#query) | The `Query` class that the model uses to perform database operations. This allows [customizing queries per model](#customizing-queries-per-model).                            |
-| `Model.Field`    | [Field](api/field.md#field) | [Field](api/field.md#field) | The `Field` class that the model uses to create field instances. Also allows customizing fields per model.                                                                    |
-
-> See the [Model](api/model.md#model) docs for Model API documentation
+| `Model.Query`    | [Query](/api.md#query) | [Query](/api.md#query) | The `Query` class that the model uses to perform database operations. This allows [customizing queries per model](#customizing-queries-per-model).                            |
+| `Model.Field`    | [Field](/api.md#field) | [Field](/api.md#field) | The `Field` class that the model uses to create field instances. Also allows customizing fields per model.                                                                    |
 
 ## Setting data
 
@@ -71,7 +69,7 @@ const user = new User();
 user.names = 'Foo Bar';
 ```
 
-> See the [Model](api/model.md#model) docs for more info
+> See the [Model](/api.md#model) docs for more info
 
 ## Getting data
 
@@ -96,13 +94,15 @@ user.getVirtualData(); // Promise => { names: 'Foo Bar' }
 user.getData(); // Promise => { firstName: 'Foo', lastName: 'Bar', names: 'Foo Bar' }
 ```
 
-!> Since `async` virtual getters are intrinsically supported, the methods that
-get virtual field data always return a `Promise`. However, you can stil use the
+::: tip INFO
+Since `async` virtual getters are intrinsically supported, the methods that get
+virtual field data always return a `Promise`. However, you can stil use the
 sync variants to ignore async virtual data.
+:::
 
 ## Saving, fetching and deleting data
 
-For all [Model](api/model.md#model) instances, you can save, retrieve or delete
+For all [Model](/api.md#model) instances, you can save, retrieve or delete
 data in the database with these methods:
 
 ```js
@@ -120,23 +120,25 @@ user.fetch(options);
 user.delete(options);
 ```
 
-> All the methods return a `Promise`
-
-> `options` are optional in all methods
-
-> See the [Query](api/query.md#query) docs for supported options
+> See [model.save](/api.md#model-save-options-%E2%87%92-promise-model),
+> [model.insert](/api.md#model-insert-options-%E2%87%92-promise-model),
+> [model.update](/api.md#model-update-options-%E2%87%92-promise-model),
+> [model.fetch](/api.md#model-fetch-options-%E2%87%92-promise-model) and
+> [model.delete](/api.md#model-delete-options-%E2%87%92-promise-model) for more
+> info
 
 All the methods update the instance with the latest data from the database, so
 after an update you do not need to re-fetch the row (this can be disabled with
-the `returning` option though).
+the [returning](/api.md#query-returning-fields-%E2%87%92-query) query option
+though).
 
-The [update](api/model.md#modelprototypeupdateoptions-promise-gt-model),
-[fetch](api/model.md#modelprototypefetchoptions-promise-gt-model) and
-[delete](api/model.md#modelprototypedeleteoptions-promise-gt-model) methods
+The [model.update](/api.md#model-update-options-%E2%87%92-promise-model),
+[model.fetch](/api.md#model-fetch-options-%E2%87%92-promise-model) and
+[model.delete](/api.md#model-delete-options-%E2%87%92-promise-model) methods
 require a primary or unique field to be set on the model in order to find the
 row in the database. See the
-[primary and unique fields guide](guides/field.md#primary-and-unique-fields) for
-more info.
+[primary and unique fields guide](/guides/field.md#primary-and-unique-fields)
+for more info.
 
 All the methods also have static variants that instead enable working with
 multiple records:
@@ -156,18 +158,26 @@ User.fetch(options);
 User.delete(options);
 ```
 
-> All the methods return a `Promise`
+> See [Model.save](/api.md#model-save-data-options-%E2%87%92-promise),
+> [Model.insert](/api.md#model-insert-data-options-%E2%87%92-promise),
+> [Model.update](/api.md#model-update-data-options-%E2%87%92-promise),
+> [Model.fetch](/api.md#model-fetch-data-options-%E2%87%92-promise) and
+> [Model.delete](/api.md#model-delete-data-options-%E2%87%92-promise) for more
+> info
 
-> `options` are optional in all methods
-
-!> Static methods work on multiple rows while the instance methods only work on
+::: tip INFO
+Static methods work on multiple rows while the instance methods only work on
 a single row!
+:::
 
-!> Instance methods will throw automatically an error if the record is not found
+::: warning NOTE
+Instance methods will automatically throw an error if the record is not found
 in the database (for fetch, delete and update operations).
+:::
 
-In addition, you can configure [generated methods](guides/fields.md#generated-methods)
-with the `methods` [field config option](guides/fields.md#field-config):
+In addition, you can configure [generated
+methods](/guides/fields.md#generated-methods)
+with the `methods` [field config option](/guides/fields.md#field-config):
 
 ```js
 User.fields = { email: { type: 'email', unique: true, methods: true } };
@@ -177,15 +187,19 @@ User.updateByEmail('foo@bar.com', data, options);
 User.deleteByEmail('foo@bar.com', options);
 ```
 
-!> These methods also throw an error if the record is not found in the database
+::: warning NOTE
+These methods also throw an error if the record is not found in the database
 since they are intended to work with single records.
+:::
 
 ## Customizing queries per model
 
-You can set default query options per model via the `Model.options` setter.
+You can set default query options per model via the
+[Model.options](/api.md#Model.fields) setter.
 
 For example, if your users table has some system users that should not be
-fetched/updated/deleted, you can add a default `where` option:
+fetched/updated/deleted, you can add a default
+[where](/api.md#query-where-fields-%E2%87%92-query) option:
 
 ```js
 class User extends Model {}
@@ -202,8 +216,10 @@ User.options = {
 User.fetch().then(console.log); // will not contain system users
 ```
 
-> These options will also be inherited when the model is inherited. <br />
-> Read more on [setting query options](guides/queries.md#setting-options)
+::: tip INFO
+These options will also be inherited when the model is inherited. <br />
+Read more on [setting query options](/guides/queries.md#setting-options)
+:::
 
 You could then have a `SystemUser` model for interacting only with system users:
 
@@ -243,7 +259,9 @@ User.fetch({
 }).then(console.log); // will only contain system users
 ```
 
-!> Query options must return `this` to allow chaining
+::: warning NOTE
+Query options should return `this` to allow chaining.
+:::
 
 ## Model registry
 
@@ -270,13 +288,13 @@ console.log(orm.models); // => { User: [Function: User] }
 When accessing other models from within instance and class methods, it's
 recommended to use the `models` instance or class property, rather than
 accessing them via Node's `require` function. This allows [runnning queries
-within transactions](guides/transactions.md#nested-queries-in-instance-or-class-methods)
+within transactions](/guides/transactions.md#nested-queries-in-instance-or-class-methods)
 without having to make any further code changes.
 
 Note that for models to be automatically added to the registry, they must be
 loaded (i.e. `require`d) and [configured](#model-config). If a model is not
 configured, you can add it to the registry via
-[addModel](api/knorm.md#knormprototypeaddmodel):
+[addModel](/api.md#knorm-addmodel-model):
 
 ```js
 const knorm = require('@knorm/knorm');
@@ -291,7 +309,7 @@ orm.addModel(Admin); // Admin is not configured, must be added manually
 ```
 
 Since models are only automatically added when they are `require`d, it's
-recommended to load all the models syncronously when starting up a node server.
+recommended to load all the models syncronously when starting up a node app.
 For example:
 
 ```js
