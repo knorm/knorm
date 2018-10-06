@@ -1,8 +1,8 @@
 # Transactions
 
-Transactions are supported via the [Transaction](api/transaction.md#transaction) class.
+Transactions are supported via the [Transaction](/api.md#transaction) class.
 
-Creating a new transaction exposes a new set of models whose queries will run
+Creating a new transaction creates a new set of models whose queries will be run
 inside the transaction:
 
 ```js
@@ -34,20 +34,21 @@ All queries to be run inside the transaction are wrapped in a callback function:
 const transaction = new Transaction(async transaction => {
   const { User } = transaction.models;
   await User.insert([{ id: 1, names: 'foo' }, { id: 2, names: 'bar' }]);
-  // more queries
+  // ... more queries
   return User.fetch();
 });
 
 transaction.execute().then(console.log);
 ```
 
-Instead of calling [execute](api/transaction.md#transactionprototypeexecute-promise), you can also simply `await` the Transaction instance:
+Instead of calling [transaction.execute](/api.md#transaction-execute-promise),
+you can also simply `await` the `Transaction` instance:
 
 ```js
 const users = await new Transaction(async transaction => {
   const { User } = transaction.models;
   await User.insert([{ id: 1, names: 'foo' }, { id: 2, names: 'bar' }]);
-  // more queries
+  // ... more queries
   return User.fetch();
 });
 ```
@@ -64,16 +65,20 @@ const insertedUsers = await User.insert([
   { id: 1, names: 'foo' },
   { id: 2, names: 'bar' }
 ]);
-// more queries
+// ... more queries
 const fetchedUsers = await User.fetch();
 await transaction.commit();
 ```
 
-!> [commit](api/transaction.md#transactionprototypecommit-promise) must be called
-when it's time to commit the transaction.
+::: warning NOTE
+[transaction.commit](/api.md#transaction-commit-promise) **must** be called when
+it's time to commit the transaction.
+:::
 
-> If there is any errors running queries, the transaction will be automatically
-> rolled back before rejecting the query's promise:
+::: tip INFO
+If there is any error while running a query, the transaction will be
+automatically rolled back before the query that failed is rejected:
+:::
 
 ```js
 const transaction = new Transaction();
@@ -90,11 +95,12 @@ await transaction.commit();
 ```
 
 > the second `User.insert` will be rejected with an
-> [InsertError](api/query.md#queryinserterror) and the transaction will be
-> rolled back, such that no rows will end up being inserted.
+> [InsertError](/api.md#query-inserterror-insert-error) and the transaction will
+> be rolled back, such that no rows will end up being inserted.
 
 To ensure transactions are rolled back due to other errors besides query errors,
-use a `try..catch` and call [rollback](api/transaction.md#transactionprototyperollback-promise):
+use a `try..catch` (or `Promise.prototype.catch`) and call
+[transaction.rollback](/api.md#transaction-rollback-promise) if an error occurs:
 
 ```js
 const transaction = new Transaction();
@@ -105,7 +111,7 @@ try {
     { id: 1, names: 'foo' },
     { id: 2, names: 'bar' }
   ]);
-  // do other things
+  // ... do other things, that may throw an error
   await transaction.commit();
 } catch (e) {
   await transaction.rollback();
@@ -113,13 +119,20 @@ try {
 }
 ```
 
-## Nested queries in instance or class methods
+## Running queries inside other methods within transactions
 
 If you have instance methods that run nested queries using other models, access
-those models via [models](api/model.md#modelprototypemodels) (or [the static equivalent](api/model.md#models)) to ensure that those queries are run within
-transactions. This is as opposed to `require`ing the model directly.
+those models via [model.models](/api.md#model-models-models) (or
+[Model.models](/api/model.md#models-models-object-2) in static methods) to
+ensure that those queries are run within transactions.
 
-Assuming:
+::: tip INFO
+In transactions, the model regstry is replaced with a new set of models whose
+queries run inside a transaction. Therefore, the same code inside those methods
+will not require any changes for the queries to run inside transactions.
+:::
+
+For example, with this setup:
 
 ```js
 User.fields = { groupId: 'integer' };
@@ -130,12 +143,20 @@ class Group extends Model {
     return User.fetch({ where: { groupId: this.id }});
   }
 }
+
 Group.table = 'group';
 Group.fields = { id: { type: 'integer', primary: true }, name: 'string' };
 ```
 
-Then if groups are first fetched within a transaction, the users will also be
-fetched within the same transaction:
+To get a group's users, you would do something like:
+
+```js
+const group1 = await Group.fetch({ where: { id: 1 }, first: true });
+const group1Users = await group1.getUsers();
+```
+
+In this case, the queries are sent normally, i.e. not within a transaction. To
+run the same queries within a transaction:
 
 ```js
 const group1Users = await new Transaction(async transaction => {
@@ -144,3 +165,11 @@ const group1Users = await new Transaction(async transaction => {
   return group.getUsers();
 });
 ```
+
+Without having to change the implementation of `Group.prototype.getUsers` at
+all.
+
+For this reason, when using models in instance and static methods, it's
+recommended to always access models via the [model
+registry](/guides/models.md#model-registry) instead of requiring them with
+Node's `require` method.

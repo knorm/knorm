@@ -1,7 +1,7 @@
 # Queries
 
-For all database operations that [Model](api/model.md#model) performs, the
-[Query](api/query.md#query) class does all the heavy lifting. It transforms
+For all database operations that [Model](/api.md#model) performs, the
+[Query](/api.md#query) class does all the heavy lifting. It transforms
 JavaScript function calls into SQL and parses the data from the database into
 Model instances.
 
@@ -12,8 +12,6 @@ Queries are configured through these properties:
 | Property              | Type     | Default                                         | Description                                                                                                                                                                                                            |
 | --------------------- | -------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Query.prototype.sql` | function | [sql-bricks](https://csnw.github.io/sql-bricks) | The function used to generate SQL. This allows plugins to add more features for example with [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres), which is what [@knorm/postgres](knorm-postgres) does. |
-
-> See the [Query](api/query.md#query) docs for Query API documentation
 
 ## Initializing queries
 
@@ -28,25 +26,23 @@ User.table = 'user';
 User.fields = { id: { type: 'integer', primary: true }, names: 'string' };
 ```
 
-The most convenient way to run queries is through the `Model.query` getter:
+You can initialise query instances with the
+[Model.query](/api.md#model-query-query) getter:
 
 ```js
 const query = User.query;
 ```
 
-Alternatively, you can initialize a query via the
-[Query constructor](api/query.md#querymodel):
-
-```js
-const query = new Query(User); // the model class is required
-```
-
-!> Query instances are not reusable! Therefore, the recommended way of creating
-queries is the `Model.query` getter
+::: warning NOTE
+Query instances are not reusable! That is, you cannot use a query instance for
+one operation e.g. a fetch and then reuse it for another e.g. an insert.
+However, cloning query instances is supported via
+[query.clone](/api.md#query-clone-%E2%87%92-query).
+:::
 
 ## Running queries
 
-Similar to [Model](api/model.md#model), you can save, retrieve or delete data in
+Similar to [Model](/api.md#model), you can save, retrieve or delete data in
 the database with the same CRUD methods:
 
 ```js
@@ -64,42 +60,60 @@ User.query.fetch(options);
 User.query.delete(options);
 ```
 
-> All the methods return a `Promise`
+> See [query.save](/api.md#query-save-options-%E2%87%92-promise),
+> [query.insert](/api.md#query-insert-options-%E2%87%92-promise),
+> [query.update](/api.md#query-update-options-%E2%87%92-promise),
+> [query.fetch](/api.md#query-fetch-options-%E2%87%92-promise) and
+> [query.delete](/api.md#query-delete-options-%E2%87%92-promise) for more
+> info
 
-> `options` are optional in all methods
-
-!> The Query CRUD methods operate on multiple rows (similar to the Model statics).
-Only [update](api/query.md#queryprototypeupdatedata-options-promise-gt-model)
-behaves differently when passed an object with the primary field set:
+::: warning NOTE
+The Query CRUD methods operate on multiple rows (similar to the Model statics).
+Only [update](/api.md#query-update-data-options-%E2%87%92-promise)
+behaves differently when passed an object with the primary field-value set:
+:::
 
 ```js
 User.query.update({ names: 'foo' }); // updates all rows
-User.query.update({ id: 1, names: 'foo' }); // updates only row 1
+User.query.update({ id: 1, names: 'foo' }); // updates only the row with id 1
 ```
 
 ## Running raw queries
 
 Raw queries can be run by directly invoking the
-[query](api/query.md#queryprototypequerysql-promise-gt-) method:
+[query](api.md#query-query-sql-%E2%87%92-promise) method:
 
 ```js
 const rows = await User.query.query('select now()');
 ```
 
-To run prepared statements with parameter binding, use
-[sql](api/query.md#queryprototypesql), which by default is an
+To run queries with parameter bindings, you may use the
+[sql](/api.md#query-sql-sqlbricks) helper to construct an
 [sql-bricks](https://csnw.github.io/sql-bricks/) instance:
 
 ```js
-const sqlBricks = User.query.sql;
+const query = User.query;
+const sqlBricks = query.sql;
 const sql = sqlBricks.select(
-  sqlBricks.sql('select * from "user" where id = $1 and names = $2', [1, 'foo'])
+  sqlBricks('select * from "user" where id = $1 and names = $2', [1, 'foo'])
 );
-const rows = await User.query.query(sql);
+const rows = await query.query(sql);
 ```
 
-> with the @knorm/postgres loaded, then `Query.prototype.sql` is overridden with
-> [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
+::: tip
+with the [@knorm/postgres](https://github.com/knorm/postgres) plugin loaded,
+then `Query.prototype.sql` is overridden with
+[sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
+:::
+
+Alternatively, you can pass an object with `text` and `values` properties:
+
+```js
+const rows = await User.query.query({
+  text: 'select * from "user" where id = $1 and names = $2',
+  values: [1, 'foo']
+});
+```
 
 ## Setting options
 
@@ -123,7 +137,7 @@ User.query.fetch({
 });
 ```
 
-Which is a proxy to [setOptions](api/query.md#queryprototypesetoptionsoptions-query):
+Which is a proxy to [query.setOptions](/api.md#query-setoptions-options-%E2%87%92-query):
 
 ```js
 User.query
@@ -135,7 +149,10 @@ User.query
   .fetch();
 ```
 
-> The object notation only works for options that take one argument (majority)
+::: tip INFO
+Until v2 of @knorm/knorm, the object notation only works for options that take
+one argument (majority)
+:::
 
 For most query options, calling the same option does not overwrite the previous
 value but instead appends to it. However, for boolean-value options, setting the
@@ -156,7 +173,8 @@ User.query
   });
 ```
 
-You can set default query options per model via the `Model.options` setter:
+You can set default query options per model via the
+[Model.options](/api.md#model-options-object) setter:
 
 ```js
 User.options = {
@@ -236,11 +254,13 @@ error that wraps the error thrown by the database driver:
 ```js
 User.query.insert({ id: 1 });
 User.query.insert({ id: 1 });
-// => User.InsertError(new Error('duplicate primary key error, thrown by the database drver'));
+// => User.InsertError(new Error('duplicate primary key error'));
 ```
 
-In addition, if the `require` option is set on a query and no rows are
-inserted/updated/fetched/deleted, then the promise is rejected with a `NoRowsError`:
+In addition, if the [require](/api.md#query-require-require-%E2%87%92-query)
+option is set to `true` on a query and no rows are
+inserted/updated/fetched/deleted, then the promise is rejected with a
+`NoRowsError`:
 
 ```js
 User.query
@@ -255,4 +275,4 @@ User.query
 // => User.NoRowsUpdatedError();
 ```
 
-> See the [Query](api/query.md#query) docs for more info on all the query errors
+> See the [Query](/api.md#query) docs for more info on all the query errors

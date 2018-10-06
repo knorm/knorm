@@ -18,7 +18,8 @@ module.exports = {
           { text: 'Queries', link: '/guides/queries' },
           { text: 'Transactions', link: '/guides/transactions' },
           { text: 'Validation', link: '/guides/validation' },
-          { text: 'Plugins', link: '/guides/plugins' }
+          { text: 'Plugins', link: '/guides/plugins' },
+          { text: 'Debugging', link: '/guides/debugging' }
         ]
       },
       { text: 'API Docs', link: '/api' },
@@ -56,7 +57,8 @@ module.exports = {
           '/guides/queries',
           '/guides/transactions',
           '/guides/validation',
-          '/guides/plugins'
+          '/guides/plugins',
+          '/guides/debugging'
         ]
       },
       ['/api', 'API Docs'],
@@ -65,6 +67,9 @@ module.exports = {
       ['/credits', 'Credits' ]
     ],
     sidebarDepth: 2,
-    lastUpdated: 'Last updated'
+    lastUpdated: 'Last updated',
+    markdown: {
+      lineNumbers: true
+    }
   }
 };

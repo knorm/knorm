@@ -13,12 +13,12 @@ features:
 - title: Transactions
   details: Including callback-based and non-callback-based transactions.
 - title: Relations
-  details: Implented through SQL joins.
+  details: Implemented through SQL joins.
 - title: Virtual fields
   details: With support for `async` gettters (suitable for GraphQl for instance).
 - title: Value casting
   details: Before save (insert or update) and after fetch operations.
-- title: Error handling
+- title: Custom errors
   details: Custom error classes for all errors, including database errors.
 - title: Well tested
   details: Extensive test coverage, plugins included.
