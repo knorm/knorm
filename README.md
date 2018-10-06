@@ -24,14 +24,15 @@ server.
 
 ## Features
 
-* [validation](https://knorm.github.io/knorm/#/guides/validation), including
-  [validation for JSON fields](https://knorm.github.io/knorm/#/guides/validation?id=json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
-* [plugin support](https://knorm.github.io/knorm/#/guides/plugins)
-* [transactions](https://knorm.github.io/knorm/#/guides/transactions)
-* [relations](https://knorm.github.io/knorm/#/knorm-relations) through SQL joins
-* [field-name to column-name](https://knorm.github.io/knorm/#/api/knorm?id=knormoptions) mapping (e.g. snake-casing)
-* [virtual fields](https://knorm.github.io/knorm/#/guides/virtuals) with support for `async` getters
-* [value casting](https://knorm.github.io/knorm/#/guides/fields?id=value-casting) before save and after fetch
+* simplicity - easy to extend, configure or override, owing to ES6 classes.
+* [validation](https://knorm.netlify.com/guides/validation.html), including
+  [validation for JSON fields](https://knorm.netlify.com/guides/validation.html#json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
+* [plugin support](https://knorm.netlify.com/guides/plugins.html)
+* [transactions](https://knorm.netlify.com/guides/transactions.html)
+* [relations](https://knorm-relations.netlify.com) through SQL joins
+* [field-name to column-name](https://knorm.netlify.com/api.html#new-knorm-config) mapping (e.g. snake-casing)
+* [virtual fields](https://knorm.netlify.com/guides/virtuals.html) with support for `async` getters
+* [value casting](https://knorm.netlify.com/guides/fields.html#value-casting) before save and after fetch
 * custom error classes for database errors
 * extensive test coverage
 
@@ -42,6 +43,6 @@ These environments are currently supported:
 | Environment | Value           | Description                                                                 |
 | ----------- | --------------- | --------------------------------------------------------------------------- |
 | Node.js     | Version >= 7.6. | Knorm uses `async/await`                                                    |
-| Databases   | PostgreSQL      | via [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) plugin |
+| Databases   | PostgreSQL      | via the [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) plugin |
 
-## [Get started](https://knorm.github.io/knorm/#/guides/getting-started?id=getting-started)
+## [Get started](https://knorm.netlify.com/guides/getting-started.html)
