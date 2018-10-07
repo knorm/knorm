@@ -62,9 +62,9 @@ Creates and configures ORMs.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [config] | `object` | The ORM's configuration. |
-| config.fieldToColumn | `function` | A function to convert all field-names  to column names, for example [snakeCase](https://lodash.com/docs/4.17.10#snakeCase). |
-| config.debug | `boolean` | Whether or not to enable debug mode. See [the debugging guide](/guides/debugging) for more info. |
+| [config] | `object` | the ORM's configuration. |
+| config.fieldToColumn | `function` | a function to convert all field-names  to column names, for example [snakeCase](https://lodash.com/docs/4.17.10#snakeCase). |
+| config.debug | `boolean` \| `object` | whether or not to enable debug mode. If set to `true`, then the default debug mode config is set, which is: ```js {   stackTraces: true,   errorSqlValues: true,   logSql: false } ``` See [the debugging guide](/guides/debugging) for more info. |
 
 Creates a new ORM instance. Every ORM instance has it's own set of classes
 and configurations, which allows creating multiple ORM's in a single
@@ -464,8 +464,8 @@ This is also aliased as [returning](#Query+returning).
 
 **Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
 **Example**  
-For PostgreSQL:
-```js{10}
+Using raw SQL (with PostgreSQL):
+```js {10}
 Model.insert(
   {
     firstName: 'Foo',

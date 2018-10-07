@@ -102,6 +102,53 @@ describe('Knorm', () => {
         expect(Model.fields.firstName.column, 'to be', 'firstName');
       });
     });
+
+    describe('with `config` option set', () => {
+      describe('to `true`', () => {
+        it('enables better stack traces', () => {
+          const knorm = new Knorm({ debug: true });
+
+          expect(knorm.config.debug.stactTraces, 'to be true');
+        });
+
+        it('enables sql values in errors', () => {
+          const knorm = new Knorm({ debug: true });
+
+          expect(knorm.config.debug.errorSqlValues, 'to be true');
+        });
+
+        it('does not enable sql logging', () => {
+          const knorm = new Knorm({ debug: true });
+
+          expect(knorm.config.debug.logSql, 'to be false');
+        });
+      });
+
+      describe('to an object', () => {
+        it('merges the object into the default configs', () => {
+          const knorm = new Knorm({ debug: { foo: 'bar' } });
+
+          expect(knorm.config.debug, 'to equal', {
+            stactTraces: true,
+            errorSqlValues: true,
+            logSql: false,
+            foo: 'bar'
+          });
+        });
+
+        it('allows updating the default configs', () => {
+          const knorm = new Knorm({
+            debug: { stactTraces: false, logSql: true }
+          });
+
+          expect(knorm.config.debug, 'to equal', {
+            stactTraces: false,
+            errorSqlValues: true,
+            logSql: true
+          });
+        });
+      });
+    });
   });
 
   describe('use', () => {
