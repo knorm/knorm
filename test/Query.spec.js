@@ -178,7 +178,7 @@ describe('Query', () => {
       expect(
         () => new Query(User).setOptions({ foo: 'bar' }),
         'to throw',
-        new QueryError('unknown option `foo`')
+        new QueryError('User: unknown option `foo`')
       );
     });
 
@@ -1338,7 +1338,7 @@ describe('Query', () => {
         ]);
       });
 
-      it("defaults to 'asc' for { field: 'unkown stuff' }", async () => {
+      it("defaults to 'asc' for { field: 'unknown stuff' }", async () => {
         const query = new Query(User).orderBy({ id: 'foo' });
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
