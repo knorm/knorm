@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/knorm/knorm/compare/v1.9.0...v1.9.1) (2018-10-08)
+
+
+### Bug Fixes
+
+* **Query:** add model-name to query error ([bfdb861](https://github.com/knorm/knorm/commit/bfdb861))
+
 <a name="1.9.0"></a>
 # [1.9.0](https://github.com/knorm/knorm/compare/v1.8.0...v1.9.0) (2018-09-28)
 
