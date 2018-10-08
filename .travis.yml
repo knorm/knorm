@@ -12,7 +12,6 @@ script:
 
 after_success:
   - npm run coveralls
-  - test $TRAVIS_BRANCH = "master" && npm run docs:build
 
 deploy:
   provider: script
