@@ -718,6 +718,30 @@ describe('KnormPostgres', () => {
       );
     });
 
+    it('releases the client after running a query', async () => {
+      let client;
+      const query = new Query(User);
+      const spy = sinon.spy(query, 'releaseClient');
+      query.beforeQuery = theClient => {
+        client = theClient;
+      };
+      await expect(
+        query.insert({ id: 1, name: 'foo' }),
+        'to be fulfilled with value satisfying',
+        [{ id: 1, name: 'foo' }]
+      );
+      expect(spy, 'to have calls satisfying', () => {
+        spy(client);
+      });
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
+    });
+
     it('releases the client if `query` rejects', async () => {
       await new Query(User).insert({ id: 1, name: 'foo' });
       let client;
@@ -748,6 +772,30 @@ describe('KnormPostgres', () => {
       const query = new Query(User);
       const spy = sinon.spy(query, 'releaseClient');
       sinon.stub(query, 'beforeQuery').callsFake(async theClient => {
+        client = theClient;
+        throw new Error('foo');
+      });
+      await expect(query.fetch(), 'to be rejected with error satisfying', {
+        name: 'FetchError',
+        originalError: new Error('foo')
+      });
+      expect(spy, 'to have calls satisfying', () => {
+        spy(client);
+      });
+      await expect(
+        () => client.release(),
+        'to throw',
+        new Error(
+          'Release called on client which has already been released to the pool.'
+        )
+      );
+    });
+
+    it('releases the client if `afterQuery` rejects', async () => {
+      let client;
+      const query = new Query(User);
+      const spy = sinon.spy(query, 'releaseClient');
+      sinon.stub(query, 'afterQuery').callsFake(async theClient => {
         client = theClient;
         throw new Error('foo');
       });
