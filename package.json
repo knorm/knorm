@@ -58,7 +58,7 @@
   },
   "homepage": "https://github.com/knorm/postgres#readme",
   "dependencies": {
-    "pg": "^7.4.2",
+    "pg": "7.4.3",
     "pg-connection-string": "^2.0.0",
     "sql-bricks-postgres": "^0.5.0"
   }
