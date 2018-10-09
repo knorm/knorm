@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/knorm/postgres/compare/v1.3.1...v1.3.2) (2018-10-09)
+
+
+### Bug Fixes
+
+* pin pg to 7.4.3 ([97bfb19](https://github.com/knorm/postgres/commit/97bfb19))
+
 ## [1.3.1](https://github.com/knorm/postgres/compare/v1.3.0...v1.3.1) (2018-10-03)
 
 
