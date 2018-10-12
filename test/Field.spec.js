@@ -1810,6 +1810,45 @@ describe('Field', function() {
               'a model instance'
             );
           });
+
+          describe('that returns new validators', function() {
+            it('runs the new validators', async function() {
+              const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: 'json',
+                schema: { type: 'string', validate: () => ({ maxLength: 2 }) }
+              });
+              await expect(field.validate('ba'), 'to be fulfilled');
+              await expect(field.validate('bar'), 'to be rejected with', {
+                name: 'ValidationError',
+                type: 'MaxLengthError'
+              });
+            });
+
+            it('supports new `schema` validators', async function() {
+              const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: 'json',
+                schema: {
+                  type: 'object',
+                  validate: () => ({
+                    type: 'object',
+                    schema: {
+                      foo: { type: 'array', schema: { type: 'number' } }
+                    }
+                  })
+                }
+              });
+              await expect(field.validate({ foo: [1] }), 'to be fulfilled');
+              await expect(
+                field.validate({ foo: [1, 'foo'] }),
+                'to be rejected with',
+                { name: 'ValidationError', type: 'TypeError' }
+              );
+            });
+          });
         });
 
         describe('with a root-level `array` field with an item `schema`', function() {
@@ -2168,6 +2207,52 @@ describe('Field', function() {
               'was called on',
               'a model instance'
             );
+          });
+
+          describe('that returns new validators', function() {
+            it('runs the new validators', async function() {
+              const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: 'json',
+                schema: {
+                  foo: { type: 'string', validate: () => ({ maxLength: 2 }) }
+                }
+              });
+              await expect(
+                field.validate({ foo: 'bar' }),
+                'to be rejected with',
+                { name: 'ValidationError', type: 'MaxLengthError' }
+              );
+            });
+
+            it('supports new `schema` validators', async function() {
+              const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: 'json',
+                schema: {
+                  foo: {
+                    type: 'object',
+                    validate: () => ({
+                      type: 'object',
+                      schema: {
+                        bar: { type: 'array', schema: { type: 'number' } }
+                      }
+                    })
+                  }
+                }
+              });
+              await expect(
+                field.validate({ foo: { bar: [1] } }),
+                'to be fulfilled'
+              );
+              await expect(
+                field.validate({ foo: { bar: [1, 'bar'] } }),
+                'to be rejected with',
+                { name: 'ValidationError', type: 'TypeError' }
+              );
+            });
           });
         });
 
