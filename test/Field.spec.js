@@ -1426,7 +1426,7 @@ describe('Field', function() {
     });
 
     describe('with a custom validator', function() {
-      it('calls the validator with the passed value', async function() {
+      it('calls the validator with the passed value and model instance', async function() {
         const validate = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -1434,9 +1434,9 @@ describe('Field', function() {
           type: 'string',
           validate
         });
-        await field.validate('bar value');
+        await field.validate('bar value', 'a model instance');
         await expect(validate, 'to have calls satisfying', () => {
-          validate('bar value');
+          validate('bar value', 'a model instance');
         });
       });
 
@@ -1569,9 +1569,9 @@ describe('Field', function() {
                 };
               }
             });
-            await field.validate('bar value');
+            await field.validate('bar value', 'a model instance');
             expect(secondValidateSpy, 'to have calls satisfying', () => {
-              secondValidateSpy('bar value');
+              secondValidateSpy('bar value', 'a model instance');
             });
           });
 
@@ -1796,10 +1796,10 @@ describe('Field', function() {
             validate.resetHistory();
           });
 
-          it('calls the validator with the passed value', async function() {
-            await field.validate('foo');
+          it('calls the validator with the passed value and model instance', async function() {
+            await field.validate('foo', 'a model instance');
             await expect(validate, 'to have calls satisfying', () => {
-              validate('foo');
+              validate('foo', 'a model instance');
             });
           });
 
@@ -2155,10 +2155,10 @@ describe('Field', function() {
             validate.resetHistory();
           });
 
-          it('calls the validator with the passed value', async function() {
-            await field.validate({ foo: 'bar' });
+          it('calls the validator with the passed value and model instance', async function() {
+            await field.validate({ foo: 'bar' }, 'a model instance');
             await expect(validate, 'to have calls satisfying', () => {
-              validate('bar');
+              validate('bar', 'a model instance');
             });
           });
 
@@ -2418,9 +2418,9 @@ describe('Field', function() {
           type: 'string',
           validate
         });
-        await field.validate(sql('foo'));
+        await field.validate(sql('foo'), 'a model instance');
         await expect(validate, 'to have calls satisfying', () => {
-          validate(sql('foo'));
+          validate(sql('foo'), 'a model instance');
         });
       });
 

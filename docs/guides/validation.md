@@ -122,9 +122,9 @@ new User({ username: 'foo.' }); // not valid
 ## Custom validation
 
 To add custom validation, supply a `validate` function to the field config. The
-validator is called with the field's value as the only argument and with `this`
-set to the instance of the `Model`, so you're able to access other values on the
-instance (this is handy for validating fields based on the input of other fields).
+validator is called with the field's value and the [Model](/api.md#Model)
+instance as parameters, so you're able to access other values on the instance.
+This is handy for validating fields based on the input of other fields.
 
 Async validators (validators that return a `Promise`) are also supported.
 Validation for the field fails if the function:
@@ -143,7 +143,7 @@ You can also continue validating by returning an object with the regular
 [validators](/guides/fields.md#field-config) (or resolving the `Promise` with an
 object with validators), including another custom validator function!
 
-```js {13,14,15,16,17}
+```js {11,12,13,14,15,16,17,18,19,24,25,26,27,28,29,30}
 class User extends Model {}
 
 User.fields = {
@@ -154,8 +154,8 @@ User.fields = {
   },
   email: {
     type: 'string',
-    validate(value) {
-      if (this.loginType === 'email') {
+    validate(value, model) {
+      if (model.loginType === 'email') {
         // return new validators
         return {
           required: true,
