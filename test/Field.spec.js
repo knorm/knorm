@@ -1848,6 +1848,24 @@ describe('Field', function() {
                 { name: 'ValidationError', type: 'TypeError' }
               );
             });
+
+            it('supports new `schema` validators without a `type`', async function() {
+              const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: 'json',
+                schema: {
+                  type: 'object',
+                  validate: () => ({ schema: { foo: 'number' } })
+                }
+              });
+              await expect(field.validate({ foo: 1 }), 'to be fulfilled');
+              await expect(
+                field.validate({ foo: 'foo' }),
+                'to be rejected with',
+                { name: 'ValidationError', type: 'TypeError' }
+              );
+            });
           });
         });
 
@@ -2249,6 +2267,29 @@ describe('Field', function() {
               );
               await expect(
                 field.validate({ foo: { bar: [1, 'bar'] } }),
+                'to be rejected with',
+                { name: 'ValidationError', type: 'TypeError' }
+              );
+            });
+
+            it('supports new `schema` validators without a `type`', async function() {
+              const field = new Field({
+                name: 'firstName',
+                model: User,
+                type: 'json',
+                schema: {
+                  foo: {
+                    type: 'object',
+                    validate: () => ({ schema: { bar: 'number' } })
+                  }
+                }
+              });
+              await expect(
+                field.validate({ foo: { bar: 1 } }),
+                'to be fulfilled'
+              );
+              await expect(
+                field.validate({ foo: { bar: 'bar' } }),
                 'to be rejected with',
                 { name: 'ValidationError', type: 'TypeError' }
               );

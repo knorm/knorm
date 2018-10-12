@@ -189,10 +189,6 @@ For [json](http://knexjs.org/#Schema-json) (and
 [jsonb](http://knexjs.org/#Schema-jsonb)) fields, you can have the JSON values
 validated by adding a `schema` object to the field definition object.
 
-::: warning NOTE
-JSON fields are **only** validated if they contain a `schema` validator.
-:::
-
 ```js {6,7,8,9,10}
 class Upload extends Model {}
 
