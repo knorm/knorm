@@ -1,3 +1,15 @@
+# [1.10.0](https://github.com/knorm/knorm/compare/v1.9.1...v1.10.0) (2018-10-12)
+
+
+### Bug Fixes
+
+* **Field:** support new `schema` validators from custom validators ([ba56285](https://github.com/knorm/knorm/commit/ba56285))
+
+
+### Features
+
+* **Field:** pass model instance as param to custom validator ([5097be4](https://github.com/knorm/knorm/commit/5097be4))
+
 ## [1.9.1](https://github.com/knorm/knorm/compare/v1.9.0...v1.9.1) (2018-10-08)
 
 
