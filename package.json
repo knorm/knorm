@@ -36,7 +36,7 @@
     "prettier": "1.14.3",
     "proxyquire": "2.1.0",
     "semantic-release": "15.9.17",
-    "sinon": "6.3.5",
+    "sinon": "7.0.0",
     "unexpected": "10.39.1",
     "unexpected-knex": "1.2.1"
   },
