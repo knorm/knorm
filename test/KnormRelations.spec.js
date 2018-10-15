@@ -10,6 +10,7 @@ const expect = require('unexpected')
   .addAssertion(
     '<Promise> to be fulfilled with sorted rows [exhaustively] satisfying <array>',
     (expect, subject, value) => {
+      const exhaustive = expect.flags.exhaustively;
       const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
       expect.errorMode = 'bubble';
       return expect(
@@ -21,7 +22,7 @@ const expect = require('unexpected')
             subject,
             'sorted by',
             ascendingOrder,
-            'to [exhaustively] satisfy',
+            exhaustive ? 'to exhaustively satisfy' : 'to satisfy',
             value
           );
         }
@@ -31,6 +32,7 @@ const expect = require('unexpected')
   .addAssertion(
     '<knexQuery> to have sorted rows [exhaustively] satisfying <array>',
     (expect, subject, value) => {
+      const exhaustive = expect.flags.exhaustively;
       const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
       expect.errorMode = 'bubble';
       return expect(subject, 'to have rows satisfying', rows =>
@@ -38,7 +40,7 @@ const expect = require('unexpected')
           rows,
           'sorted by',
           ascendingOrder,
-          'to [exhaustively] satisfy',
+          exhaustive ? 'to exhaustively satisfy' : 'to satisfy',
           value
         )
       );
@@ -368,8 +370,18 @@ describe('KnormRelations', () => {
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
-              new User({ id: 1, name: 'User 1', confirmed: null }),
-              new User({ id: 2, name: 'User 2', confirmed: true })
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: null,
+                creator: null
+              }),
+              new User({
+                id: 2,
+                name: 'User 2',
+                confirmed: true,
+                creator: null
+              })
             ]
           );
         });
@@ -421,7 +433,16 @@ describe('KnormRelations', () => {
               .innerJoin(Image)
               .fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
-            [new User({ id: 1, name: 'User 1' })]
+            [
+              new User({
+                id: 1,
+                name: 'User 1',
+                image: [
+                  new Image({ id: 2, userId: 1, categoryId: 1 }),
+                  new Image({ id: 1, userId: 1, categoryId: 1 })
+                ]
+              })
+            ]
           );
 
           await Image.delete({ where: { id: 2 } });
@@ -470,12 +491,14 @@ describe('KnormRelations', () => {
                 id: 1,
                 name: 'User 1',
                 confirmed: null,
+                creator: null,
                 image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
               }),
               new User({
                 id: 2,
                 name: 'User 2',
                 confirmed: true,
+                creator: null,
                 image: null
               })
             ]
@@ -557,6 +580,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
+                  confirmed: null,
+                  creator: null,
                   image: [new Image({ id: 1 })]
                 })
               ]
@@ -1056,7 +1081,7 @@ describe('KnormRelations', () => {
 
             await expect(
               query.fetch(),
-              'to be fulfilled with sorted rows exhaustively satisfying',
+              'to be fulfilled with sorted rows satisfying',
               [{ image: null }]
             );
           });
@@ -1194,7 +1219,7 @@ describe('KnormRelations', () => {
               const query = new Query(Image).leftJoin(new Query(User).on('id'));
               await expect(
                 query.fetch(),
-                'to be fulfilled with sorted rows exhaustively satisfying',
+                'to be fulfilled with sorted rows satisfying',
                 [
                   new Image({
                     id: 1,
@@ -1210,7 +1235,7 @@ describe('KnormRelations', () => {
               );
               await expect(
                 query.fetch(),
-                'to be fulfilled with sorted rows exhaustively satisfying',
+                'to be fulfilled with sorted rows satisfying',
                 [
                   new Image({
                     id: 1,
@@ -1226,7 +1251,7 @@ describe('KnormRelations', () => {
               );
               await expect(
                 query.fetch(),
-                'to be fulfilled with sorted rows exhaustively satisfying',
+                'to be fulfilled with sorted rows satisfying',
                 [
                   new Image({
                     id: 1,
@@ -1251,14 +1276,28 @@ describe('KnormRelations', () => {
                     senderId: 1,
                     receiverId: 2,
                     text: 'Hi User 2',
-                    user: [new User({ id: 2, name: 'User 2' })]
+                    user: [
+                      new User({
+                        id: 2,
+                        name: 'User 2',
+                        confirmed: true,
+                        creator: null
+                      })
+                    ]
                   }),
                   new Message({
                     id: 2,
                     senderId: 2,
                     receiverId: 1,
                     text: 'Hi User 1',
-                    user: [new User({ id: 1, name: 'User 1' })]
+                    user: [
+                      new User({
+                        id: 1,
+                        name: 'User 1',
+                        confirmed: null,
+                        creator: null
+                      })
+                    ]
                   })
                 ]
               );
@@ -1279,6 +1318,7 @@ describe('KnormRelations', () => {
                   id: 1,
                   name: 'User 1',
                   confirmed: null,
+                  creator: null,
                   image: [
                     new Image({
                       id: 1,
@@ -1294,6 +1334,7 @@ describe('KnormRelations', () => {
                   id: 2,
                   name: 'User 2',
                   confirmed: true,
+                  creator: null,
                   image: null
                 })
               ]
@@ -1331,6 +1372,7 @@ describe('KnormRelations', () => {
                   id: 1,
                   name: 'User 1',
                   confirmed: null,
+                  creator: null,
                   image: [
                     new Image({
                       id: 1,
@@ -1349,7 +1391,8 @@ describe('KnormRelations', () => {
                                 new User({
                                   id: 1,
                                   name: 'User 1',
-                                  confirmed: null
+                                  confirmed: null,
+                                  creator: null
                                 })
                               ]
                             })
@@ -1363,6 +1406,7 @@ describe('KnormRelations', () => {
                   id: 2,
                   name: 'User 2',
                   confirmed: true,
+                  creator: null,
                   image: null
                 })
               ]
@@ -1399,7 +1443,7 @@ describe('KnormRelations', () => {
           const query = new Query(User).join(new Query(Image));
           await expect(
             query.fetch(),
-            'to be fulfilled with sorted rows exhaustively satisfying',
+            'to be fulfilled with sorted rows satisfying',
             [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
           );
         });
