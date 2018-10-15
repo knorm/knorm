@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/knorm/postgres/compare/v1.3.2...v1.3.3) (2018-10-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency pg to v7.5.0 ([2219a72](https://github.com/knorm/postgres/commit/2219a72))
+
 ## [1.3.2](https://github.com/knorm/postgres/compare/v1.3.1...v1.3.2) (2018-10-09)
 
 
