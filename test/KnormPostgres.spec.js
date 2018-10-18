@@ -1594,6 +1594,25 @@ describe('KnormPostgres', () => {
           );
         });
 
+        it('ignores paths whose value is `undefined`', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch();
+          const data = { string: undefined, number: undefined };
+          const expected = {
+            string: 'foo',
+            number: 1,
+            array: ['foo', 'bar'],
+            object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+          };
+          await expect(
+            query.update({ jsonb: data, json: data }),
+            'to be fulfilled with value exhaustively satisfying',
+            new Foo({ id: 1, jsonb: expected, json: expected })
+          );
+        });
+
         it('allows specifying a single field to patch', async () => {
           const query = new Query(Foo)
             .where({ id: 1 })
@@ -1690,7 +1709,7 @@ describe('KnormPostgres', () => {
           );
         });
 
-        it('throws if the patch value is a non-object', async () => {
+        it('rejects if the patch value is a non-object', async () => {
           const query = new Query(Foo)
             .where({ id: 1 })
             .first()
@@ -1707,7 +1726,7 @@ describe('KnormPostgres', () => {
           );
         });
 
-        it('throws if the patch value is an array', async () => {
+        it('rejects if the patch value is an array', async () => {
           const query = new Query(Foo)
             .where({ id: 1 })
             .first()
