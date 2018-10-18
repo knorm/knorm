@@ -1,3 +1,10 @@
+## [1.3.4](https://github.com/knorm/postgres/compare/v1.3.3...v1.3.4) (2018-10-18)
+
+
+### Bug Fixes
+
+* **json-patching:** ignore `undefined` paths ([789a98c](https://github.com/knorm/postgres/commit/789a98c))
+
 ## [1.3.3](https://github.com/knorm/postgres/compare/v1.3.2...v1.3.3) (2018-10-15)
 
 
