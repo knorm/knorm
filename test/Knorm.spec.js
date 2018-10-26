@@ -172,7 +172,8 @@ describe('Knorm', () => {
       });
 
       it('allows chaining', () => {
-        expect(knorm.use(function foo() {}), 'to equal', knorm);
+        const foo = () => {};
+        expect(knorm.use(foo), 'to equal', knorm);
       });
     });
 
