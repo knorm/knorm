@@ -2156,7 +2156,7 @@ describe('KnormPostgres', () => {
           await new Transaction(({ models: { User } }) =>
             User.insert({ id: 1, name: 'foo' })
           );
-          const transaction = new Transaction(async function(transaction) {
+          const transaction = new Transaction(async transaction => {
             return transaction.models.User.fetch();
           });
           sinon
