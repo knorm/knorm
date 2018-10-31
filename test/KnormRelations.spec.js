@@ -4,9 +4,11 @@ const knormPostgres = require('@knorm/postgres');
 const KnormRelations = require('../lib/KnormRelations');
 const knormRelations = require('../');
 const knex = require('./lib/knex');
+const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
-  .use(require('unexpected-knex'));
+  .use(require('unexpected-knex'))
+  .use(require('unexpected-sinon'));
 
 const { KnormRelationsError } = KnormRelations;
 
@@ -1281,20 +1283,30 @@ describe('KnormRelations', () => {
       });
 
       describe("with an 'innerJoin' configured", () => {
-        it('returns the instances with matching data in the joined table (inner join)', async () => {
+        it('returns the instances with matching data in the joined table (INNER JOIN)', async () => {
           const query = new Query(User).innerJoin(new Query(Image));
+          const execute = sinon.spy(query, 'execute');
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
             [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
           );
+          await expect(execute, 'to have calls satisfying', () => {
+            execute(
+              expect.it(
+                'when passed as parameter to',
+                sql => sql.toString(),
+                'to contain',
+                ' INNER JOIN '
+              )
+            );
+          });
         });
 
         it("resolves with an empty array if the join doesn't match any rows", async () => {
           const query = new Query(User)
             .where({ id: 2 })
             .innerJoin(new Query(Image));
-
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1304,20 +1316,28 @@ describe('KnormRelations', () => {
       });
 
       describe("with a 'join' configured", () => {
-        it('returns the instances with matching data in the joined table (inner join)', async () => {
+        it('returns the instances with matching data in the joined table (JOIN)', async () => {
           const query = new Query(User).join(new Query(Image));
+          const execute = sinon.spy(query, 'execute');
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
             [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
           );
+          await expect(execute, 'to have calls satisfying', () => {
+            execute(
+              expect.it(
+                'when passed as parameter to',
+                sql => sql.toString(),
+                'to contain',
+                ' JOIN '
+              )
+            );
+          });
         });
 
         it("resolves wih an empty array if the join doesn't match any rows", async () => {
-          const query = new Query(User)
-            .where({ id: 2 })
-            .innerJoin(new Query(Image));
-
+          const query = new Query(User).where({ id: 2 }).join(new Query(Image));
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
