@@ -32,15 +32,15 @@ const expect = require('unexpected')
   .addAssertion(
     '<knexQuery> to have sorted rows [exhaustively] satisfying <array>',
     (expect, subject, value) => {
-      const exhaustive = expect.flags.exhaustively;
       const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
       expect.errorMode = 'bubble';
-      return expect(subject, 'to have rows satisfying', rows =>
-        expect(
-          rows,
+      return expect(
+        subject,
+        'to have rows satisfying',
+        expect.it(
           'sorted by',
           ascendingOrder,
-          exhaustive ? 'to exhaustively satisfy' : 'to satisfy',
+          'to [exhaustively] satisfy',
           value
         )
       );
