@@ -450,17 +450,17 @@ describe('KnormRelations', () => {
       });
 
       describe("with a 'leftJoin' configured", () => {
-        it('throws if the models do not reference each other', () => {
+        it('rejects if the models do not reference each other', async () => {
           class Foo extends Model {}
           Foo.table = 'foo';
-          expect(
-            () => new Query(User).leftJoin(new Query(Foo)),
-            'to throw',
+          await expect(
+            new Query(User).leftJoin(new Query(Foo)).fetch(),
+            'to be rejected with error satisfying',
             new Query.QueryError('User: there are no references to `Foo`')
           );
-          expect(
-            () => new Query(Foo).leftJoin(new Query(User)),
-            'to throw',
+          await expect(
+            new Query(Foo).leftJoin(new Query(User)).fetch(),
+            'to be rejected with error satisfying',
             new Query.QueryError('Foo: there are no references to `User`')
           );
         });
@@ -1494,7 +1494,7 @@ describe('KnormRelations', () => {
           };
         });
 
-        it('throws if models used in a join do not reference each other', () => {
+        it('rejects if models used in a join do not reference each other', async () => {
           class Foo extends Model {}
           Foo.table = 'foo';
           Foo.fields = {
@@ -1503,14 +1503,14 @@ describe('KnormRelations', () => {
               references: [Message.fields.id, OtherMessage.fields.id]
             }
           };
-          expect(
-            () => new Query(User).leftJoin(new Query(Foo)),
-            'to throw',
+          await expect(
+            new Query(User).leftJoin(new Query(Foo)).fetch(),
+            'to be rejected with error satisfying',
             new Query.QueryError('User: there are no references to `Foo`')
           );
-          expect(
-            () => new Query(Foo).leftJoin(new Query(User)),
-            'to throw',
+          await expect(
+            new Query(Foo).leftJoin(new Query(User)).fetch(),
+            'to be rejected with error satisfying',
             new Query.QueryError('Foo: there are no references to `User`')
           );
         });
@@ -1823,7 +1823,7 @@ describe('KnormRelations', () => {
           };
         });
 
-        it('throws if models used in a join do not reference each other', () => {
+        it('rejects if models used in a join do not reference each other', async () => {
           class Foo extends Model {}
           Foo.table = 'foo';
           Foo.fields = {
@@ -1834,14 +1834,14 @@ describe('KnormRelations', () => {
               }
             }
           };
-          expect(
-            () => new Query(User).leftJoin(new Query(Foo)),
-            'to throw',
+          await expect(
+            new Query(User).leftJoin(new Query(Foo)).fetch(),
+            'to be rejected with error satisfying',
             new Query.QueryError('User: there are no references to `Foo`')
           );
-          expect(
-            () => new Query(Foo).leftJoin(new Query(User)),
-            'to throw',
+          await expect(
+            new Query(Foo).leftJoin(new Query(User)).fetch(),
+            'to be rejected with error satisfying',
             new Query.QueryError('Foo: there are no references to `User`')
           );
         });
@@ -2059,7 +2059,7 @@ describe('KnormRelations', () => {
             };
           });
 
-          it('throws if models used in a join do not reference each other', () => {
+          it('rejects if models used in a join do not reference each other', async () => {
             class Foo extends Model {}
             Foo.table = 'foo';
             Foo.fields = {
@@ -2070,14 +2070,14 @@ describe('KnormRelations', () => {
                 }
               }
             };
-            expect(
-              () => new Query(User).leftJoin(new Query(Foo)),
-              'to throw',
+            await expect(
+              new Query(User).leftJoin(new Query(Foo)).fetch(),
+              'to be rejected with error satisfying',
               new Query.QueryError('User: there are no references to `Foo`')
             );
-            expect(
-              () => new Query(Foo).leftJoin(new Query(User)),
-              'to throw',
+            await expect(
+              new Query(Foo).leftJoin(new Query(User)).fetch(),
+              'to be rejected with error satisfying',
               new Query.QueryError('Foo: there are no references to `User`')
             );
           });
