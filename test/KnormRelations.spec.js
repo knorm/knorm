@@ -117,7 +117,6 @@ describe('KnormRelations', () => {
     });
     await knex.schema.createTable(Message.table, table => {
       table.increments();
-      table.timestamps();
       table.text('text').notNullable();
       table
         .integer('sender_id')
