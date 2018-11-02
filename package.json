@@ -36,7 +36,7 @@
     "pg": "7.6.0",
     "prettier": "1.14.3",
     "proxyquire": "2.1.0",
-    "semantic-release": "15.10.6",
+    "semantic-release": "15.10.7",
     "sinon": "7.1.1",
     "unexpected": "10.39.1",
     "unexpected-knex": "1.2.1",
