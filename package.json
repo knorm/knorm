@@ -27,7 +27,7 @@
     "mocha": "5.2.0",
     "nyc": "13.1.0",
     "prettier": "1.14.3",
-    "semantic-release": "15.10.6",
+    "semantic-release": "15.10.7",
     "unexpected": "10.39.1"
   },
   "directories": {
