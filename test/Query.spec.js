@@ -356,7 +356,6 @@ describe('Query', () => {
           expect.it(
             'when passed as parameter to',
             sql => sql.toString(),
-
             'to contain',
             '"public"."user"'
           )
