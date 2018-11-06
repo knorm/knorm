@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/knorm/knorm/compare/v1.10.0...v1.11.0) (2018-11-06)
+
+
+### Features
+
+* **Query:** add support for `noWait` ([c03ddad](https://github.com/knorm/knorm/commit/c03ddad))
+
 # [1.10.0](https://github.com/knorm/knorm/compare/v1.9.1...v1.10.0) (2018-10-12)
 
 
