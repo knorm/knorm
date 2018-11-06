@@ -1453,6 +1453,49 @@ describe('Query', () => {
         });
         spy.restore();
       });
+
+      it('supports `noWait`', async () => {
+        const spy = sinon.spy(Query.prototype, 'query');
+        const query = new Query(User).forUpdate().noWait();
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              sql => sql.toString(),
+              'to contain',
+              'NOWAIT'
+            )
+          );
+        });
+        spy.restore();
+      });
+
+      it('supports `of` with `noWait`', async () => {
+        const spy = sinon.spy(Query.prototype, 'query');
+        const query = new Query(User)
+          .forUpdate()
+          .of('user')
+          .noWait();
+        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
+          new User({ id: 1, name: 'User 1' }),
+          new User({ id: 2, name: 'User 2' })
+        ]);
+        await expect(spy, 'to have calls satisfying', () => {
+          spy(
+            expect.it(
+              'when passed as parameter to',
+              sql => sql.toString(),
+              'to contain',
+              'OF "user" NOWAIT'
+            )
+          );
+        });
+        spy.restore();
+      });
     });
 
     describe('with `debug` configured', () => {
