@@ -41,7 +41,7 @@
     "unexpected": "10.39.1",
     "unexpected-knex": "1.2.1",
     "unexpected-sinon": "10.10.1",
-    "vuepress": "0.14.4"
+    "vuepress": "0.14.5"
   },
   "directories": {
     "doc": "docs",
