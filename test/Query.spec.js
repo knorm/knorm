@@ -1211,6 +1211,206 @@ describe('Query', () => {
       });
     });
 
+    describe("with 'from' configured", () => {
+      it('supports a string value', async () => {
+        const query = new Query(User).from('user');
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10'
+            }),
+            new User({
+              id: 2,
+              name: 'User 2',
+              confirmed: true,
+              description: 'this is user 2',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: null
+            })
+          ]
+        );
+      });
+
+      it('supports an sql-bricks instance value', async () => {
+        const query = new Query(User);
+        query.from(query.sql('user'));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({
+              id: 1,
+              name: 'User 1',
+              confirmed: false,
+              description: 'this is user 1',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: '10'
+            }),
+            new User({
+              id: 2,
+              name: 'User 2',
+              confirmed: true,
+              description: 'this is user 2',
+              age: 10,
+              dateOfBirth: null,
+              dbDefault: 'set-by-db',
+              jsonField: null,
+              intToString: null
+            })
+          ]
+        );
+      });
+
+      it('supports options', async () => {
+        const query = new Query(User)
+          .from('user')
+          .fields(['id', 'name'])
+          .where({ id: 1 })
+          .first();
+        await expect(
+          query.fetch(),
+          'to be fulfilled with value exhaustively satisfying',
+          new User({ id: 1, name: 'User 1' })
+        );
+      });
+
+      it('supports fetching data from a different table', async () => {
+        await knex.schema.createTable('other_user', table => {
+          table.string('other_name');
+        });
+        await knex('other_user').insert([
+          { other_name: 'one' },
+          { other_name: 'two' }
+        ]);
+        const query = new Query(User)
+          .from('other_user')
+          .fields({ name: 'other_name' });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ name: 'one' }), new User({ name: 'two' })]
+        );
+        await knex.schema.dropTable('other_user');
+      });
+
+      describe('with the value as a Query instance', () => {
+        it('resolves with the correct data', async () => {
+          const query = new Query(User).from(User.query);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10'
+              }),
+              new User({
+                id: 2,
+                name: 'User 2',
+                confirmed: true,
+                description: 'this is user 2',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: null
+              })
+            ]
+          );
+        });
+
+        it('supports options on the `from` query ', async () => {
+          const query = new Query(User)
+            .from(User.query.field('id').where({ id: 1 }))
+            .field('id');
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [new User({ id: 1 })]
+          );
+        });
+
+        it('supports object options as the second parameter', async () => {
+          const query = new Query(User)
+            .from(User.query, { field: 'id', where: { id: 1 } })
+            .field('id');
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [new User({ id: 1 })]
+          );
+        });
+      });
+
+      describe('with the value as a Model instance', () => {
+        it('resolves with the correct data', async () => {
+          const query = new Query(User).from(User);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
+              new User({
+                id: 1,
+                name: 'User 1',
+                confirmed: false,
+                description: 'this is user 1',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: '10'
+              }),
+              new User({
+                id: 2,
+                name: 'User 2',
+                confirmed: true,
+                description: 'this is user 2',
+                age: 10,
+                dateOfBirth: null,
+                dbDefault: 'set-by-db',
+                jsonField: null,
+                intToString: null
+              })
+            ]
+          );
+        });
+
+        it('supports object options as the second parameter', async () => {
+          const query = new Query(User)
+            .from(User, { field: 'id', where: { id: 1 } })
+            .field('id');
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [new User({ id: 1 })]
+          );
+        });
+      });
+    });
+
     // this also tests `having`
     describe("with a 'where' configured", () => {
       it('supports an object', async () => {
