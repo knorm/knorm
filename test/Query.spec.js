@@ -912,6 +912,31 @@ describe('Query', () => {
             )
           );
         });
+
+        it('works for "is null" expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.isNull('dateOfBirth'));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('works for "is not null" expressions', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(where.isNotNull('dateOfBirth'));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            []
+          );
+        });
       });
 
       describe('for `where in`', () => {
