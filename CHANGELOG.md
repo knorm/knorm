@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/knorm/knorm/compare/v1.11.0...v1.11.1) (2018-11-14)
+
+
+### Bug Fixes
+
+* **Query:** fix erroneous "where is (not) null" validation ([201db1c](https://github.com/knorm/knorm/commit/201db1c))
+
 # [1.11.0](https://github.com/knorm/knorm/compare/v1.10.0...v1.11.0) (2018-11-06)
 
 
