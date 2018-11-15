@@ -313,7 +313,7 @@ instance in order to know what row to update.
 :::
 
 ::: tip INFO
-This method sets the [Query#first](Query#first) (return only the first row) and
+This method sets the [first](#Query+first) (return only the first row) and
 [Query#require](Query#require) (throw a [NoRowsError](NoRowsError) if no row is matched for
 update) query options. However, the [Query#require](Query#require) option can be
 disabled via the `options` param.
@@ -362,7 +362,7 @@ instance in order to know what row to fetch.
 :::
 
 ::: tip INFO
-This method sets the [Query#first](Query#first) (return only the first row) and
+This method sets the [first](#Query+first) (return only the first row) and
 [Query#require](Query#require) (throw a [NoRowsError](NoRowsError) if no row is matched for
 fetching) query options. However, the [Query#require](Query#require) option can be
 disabled via the `options` param.
@@ -392,7 +392,7 @@ instance in order to know what row to delete.
 :::
 
 ::: tip INFO
-This method sets the [Query#first](Query#first) (return only the first row) and
+This method sets the [first](#Query+first) (return only the first row) and
 [Query#require](Query#require) (throw a [NoRowsError](NoRowsError) if no row is matched for
 deleting) query options. However, the [Query#require](Query#require) option can be
 disabled via the `options` param.
@@ -463,15 +463,15 @@ Inserts a single or multiple rows into the database.
 
 **Returns**: `Promise` - the promise is resolved with an array of the model's
 instances, expect in the following cases:
-- if the [Query#forge](Query#forge) query option was set to `false` (or
-  [Query#lean](Query#lean) set to `true`), then the array will contain plain
+- if the [forge](#Query+forge) query option was set to `false` (or
+  [lean](#Query+lean) set to `true`), then the array will contain plain
   objects.
 - if no rows were inserted, then the array will be empty. If the
   [Query#require](Query#require) query option was set to `true`, then the promise is
   rejected with a [NoRowsInsertedError](NoRowsInsertedError) instead.
-- if the [Query#first](Query#first) query option was set to `true`, then the
+- if the [first](#Query+first) query option was set to `true`, then the
   promise is resolved with a single model instance (by default) or plain
-  object (if the [Query#forge](Query#forge) query option was set to `true`), or
+  object (if the [forge](#Query+forge) query option was set to `true`), or
   `null` if no rows were inserted.  
 <a name="Query"></a>
 
@@ -481,6 +481,11 @@ Creates and runs queries and parses any data returned.
 
 * [Query](#Query)
     * [new Query(model)](#new_Query_new)
+    * [.batchSize([batchSize])](#Query+batchSize) ⇒ [Query](#Query)
+    * [.first([first])](#Query+first) ⇒ [Query](#Query)
+    * [.forge([forge])](#Query+forge) ⇒ [Query](#Query)
+    * [.lean([lean])](#Query+lean) ⇒ [Query](#Query)
+    * [.from(from, [options])](#Query+from) ⇒ [Query](#Query)
     * [.fields(...fields)](#Query+fields) ⇒ [Query](#Query)
     * [.returning(...fields)](#Query+returning) ⇒ [Query](#Query)
     * [.query(sql)](#Query+query) ⇒ `Promise`
@@ -499,6 +504,157 @@ Creates and runs queries and parses any data returned.
 | model | [Model](#Model) | 
 
 Creates a new Query instance.
+
+<a name="Query+batchSize"></a>
+
+### query.batchSize([batchSize]) ⇒ [Query](#Query)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [batchSize] | `number` | The number of items to send in a single INSERT or UPDATE query (where supported). |
+
+Configures the batch-size for [Query#insert](Query#insert) and [Query#update](Query#update)
+(where batch updates are supported). When a batch-size is configured and
+either of these operations is called with an array of data, multiple
+queries will be sent to the database instead of a single one. If any data
+is returned from the queries, it is merged into a single array instead of
+returning multiple arrays.
+
+::: warning NOTE
+The queries are sent to the database in parallel (i.e. via `Promise.all`).
+Take that into consideration when deciding how many queries to send vs how
+many items to have in a single query.
+:::
+
+::: warning NOTE
+When using this option, the order of the items in the array returned is
+unlikely to match the order of the rows in the original array. This is
+because the queries are sent in parallel and are not guaranteed to complete
+in order.
+:::
+
+**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
+<a name="Query+first"></a>
+
+### query.first([first]) ⇒ [Query](#Query)
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [first] | `boolean` | <code>true</code> | If `true`, return the first item, else return an array. |
+
+Configures whether or not to return the first item in a result set from the
+database from a [Query#fetch](Query#fetch), [Query#insert](Query#insert),
+[Query#update](Query#update) or [Query#delete](Query#delete) operation, instead of
+returning an array. This is handy when one is sure that there's only one
+item in the rows returned from the database.
+
+**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
+<a name="Query+forge"></a>
+
+### query.forge([forge]) ⇒ [Query](#Query)
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [forge] | `boolean` | <code>true</code> | If `true`, return [Model](#Model) instances, else return plain objects. |
+
+Configures whether to return [Model](#Model) instances or plain objects from
+a [Query#fetch](Query#fetch), [Query#insert](Query#insert), [Query#update](Query#update) or
+[Query#delete](Query#delete) operation. When `forge` is `true`, items in the
+returned array will be instances of the the [Model](#Model) class that is
+passed to the [Query](#Query) constructor.
+
+::: tip INFO
+[Model](#Model) instances will be returned by default. To disable that, pass
+`false` as the value to this option.
+:::
+
+::: tip INFO
+This is the opposite of [lean](#Query+lean).
+:::
+
+**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
+<a name="Query+lean"></a>
+
+### query.lean([lean]) ⇒ [Query](#Query)
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [lean] | `boolean` | <code>true</code> | If `true`, return plain objects, else return [Model](#Model) instances. |
+
+Configures whether to return [Model](#Model) instances or plain objects from
+a [Query#fetch](Query#fetch), [Query#insert](Query#insert), [Query#update](Query#update) or
+[Query#delete](Query#delete) operation. When `lean` is `false`, items in the
+returned array will be instances of the the [Model](#Model) class that is
+passed to the [Query](#Query) constructor.
+
+::: tip INFO
+[Model](#Model) instances will be returned by default. To disable that, pass
+`true` as the value to this option.
+:::
+
+::: tip INFO
+This is the opposite of [forge](#Query+forge).
+:::
+
+**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
+<a name="Query+from"></a>
+
+### query.from(from, [options]) ⇒ [Query](#Query)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| from | [Query](#Query) \| [Model](#Model) \| `SqlBricks` \| `string` | The value to use for the FROM clause. If passed as a [Model](#Model) class (note - note a Model instance), then a [Query](#Query) instance is constructed from it via [Model.query](Model.query). |
+| [options] | `object` | If the `from` parameter is a [Model](#Model) class or a [Query](#Query) instance, these options are passed to [Query#setOptions](Query#setOptions). |
+
+Configures the FROM clause in a query. This is handy for constructing
+subqueries or for fetching data from one table and parsing it as different
+model instance. Note that the `from` option defaults to [Model.table](Model.table)
+for the model that's passed to [Query](#Query)'s constructor.
+
+**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
+**Example**  
+For subqueries:
+
+```js
+class User extends Model {}
+
+User.table = 'user';
+User.fields = { name: 'string', type: 'string' };
+
+User.fetch({
+  from: User.query.where({ type: 'admin' })
+});
+```
+
+Which yields a query similar to:
+
+```sql
+SELECT * FROM (SELECT * FROM "user" WHERE "type" = 'admin') "user_alias";
+```
+
+For fetching data from one table and parsing it as if it's from a different
+model:
+
+```js
+User.fetch({
+  from: User.query.sql('student')
+});
+```
+
+Note that the two tables should have the same column-names for this to
+work. If that's not the case then you could use the [fields](#Query+fields)
+option to specify what columns to fetch from the other table:
+
+```js
+User.fetch({
+  from: User.query.sql('student'),
+  fields: { name: User.query.sql('student_name') }
+});
+```
+**Todo**
+
+- [ ] support multiple `from` clauses, both as an array and via multiple
+invocations
 
 <a name="Query+fields"></a>
 
