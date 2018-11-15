@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/knorm/relations/compare/v1.3.0...v1.3.1) (2018-11-15)
+
+
+### Bug Fixes
+
+* move reference-check error to preparation phase ([86954b6](https://github.com/knorm/relations/commit/86954b6))
+
 <a name="1.3.0"></a>
 # [1.3.0](https://github.com/knorm/relations/compare/v1.2.3...v1.3.0) (2018-09-30)
 
