@@ -49,8 +49,9 @@ const expect = require('unexpected')
   );
 
 const { KnormPostgresError } = KnormPostgres;
+const host = process.env.PGHOST || '127.0.0.1';
 const connection = {
-  host: process.env.PGHOST || '127.0.0.1',
+  host,
   port: process.env.PGPORT || 5432,
   user: process.env.PGUSER || 'postgres',
   password: process.env.PGPASSWORD || '',
@@ -74,7 +75,7 @@ describe('KnormPostgres', () => {
 
   it('supports passing `connection` config as a string', async () => {
     const knormPostgres = new KnormPostgres({
-      connection: 'postgres://postgres@127.0.0.1:5432/postgres'
+      connection: `postgres://postgres@${host}:5432/postgres`
     });
     const client = await knormPostgres.acquireClient();
     await knormPostgres.releaseClient(client);
@@ -82,8 +83,7 @@ describe('KnormPostgres', () => {
 
   it('supports options in the connection string', async () => {
     const knormPostgres = new KnormPostgres({
-      connection:
-        'postgres://postgres@127.0.0.1:5432/postgres?max=5&idleTimeoutMillis=1000'
+      connection: `postgres://postgres@${host}:5432/postgres?max=5`
     });
 
     // TODO: pg-connection-string should parseInt on the `max` option
@@ -93,19 +93,27 @@ describe('KnormPostgres', () => {
   });
 
   it('uses postgres environment variables if no `connection` config is provided', async () => {
-    process.env.PGHOST = '127.0.0.1';
+    const PGHOST = process.env.PGHOST;
+    const PGPORT = process.env.PGPORT;
+    const PGUSER = process.env.PGUSER;
+    const PGPASSWORD = process.env.PGPASSWORD;
+    const PGDATABASE = process.env.PGDATABASE;
+
+    process.env.PGHOST = host;
     process.env.PGPORT = 5432;
     process.env.PGUSER = 'postgres';
     process.env.PGPASSWORD = '';
     process.env.PGDATABASE = 'postgres';
+
     const knormPostgres = new KnormPostgres();
     const client = await knormPostgres.acquireClient();
     await knormPostgres.releaseClient(client);
-    process.env.PGHOST = undefined;
-    process.env.PGPORT = undefined;
-    process.env.PGUSER = undefined;
-    process.env.PGPASSWORD = undefined;
-    process.env.PGDATABASE = undefined;
+
+    process.env.PGHOST = PGHOST;
+    process.env.PGPORT = PGPORT;
+    process.env.PGUSER = PGUSER;
+    process.env.PGPASSWORD = PGPASSWORD;
+    process.env.PGDATABASE = PGDATABASE;
   });
 
   describe('init', () => {
