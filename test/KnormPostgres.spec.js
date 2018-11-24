@@ -1111,14 +1111,14 @@ describe('KnormPostgres', () => {
           new Query(User)
             .batchSize(1)
             .update([{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]),
-          'to be fulfilled with value satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
         );
         await expect(
           knex,
           'with table',
           User.table,
-          'to have rows satisfying',
+          'to have sorted rows satisfying',
           [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
         );
         await expect(spy, 'was called twice');
