@@ -3,5 +3,13 @@ services:
   postgres:
     image: postgres:9.6
     container_name: knorm
-    ports:
-      - "5432:5432"
+
+  knorm:
+    build: .
+    command: npm run test:mocha
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - postgres
+    environment:
+      PGHOST: postgres
