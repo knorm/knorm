@@ -6,7 +6,7 @@ services:
 
   knorm:
     build: .
-    command: npm test
+    command: npm run test:mocha
     volumes:
       - .:/usr/src/app
     depends_on:
