@@ -42,7 +42,7 @@
     "unexpected": "10.39.2",
     "unexpected-knex": "1.3.0",
     "unexpected-sinon": "10.10.1",
-    "vuepress": "0.14.5"
+    "vuepress": "0.14.8"
   },
   "directories": {
     "doc": "docs",
