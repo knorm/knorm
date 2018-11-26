@@ -24,8 +24,23 @@ const postgresPlugin = knorm => {
       return super.prepareSql(sql, options);
     }
 
-    async query(sql) {
-      const result = await pool.query(sql.toParams());
+    async acquireClient() {
+      return pool.connect();
+    }
+
+    async releaseClient(client) {
+      client.release();
+    }
+
+    formatSql(sql) {
+      return sql.toParams();
+    }
+
+    async runQuery(client, sql) {
+      return client.query(sql);
+    }
+
+    parseResult(result) {
       return result.rows;
     }
   }
