@@ -36,7 +36,7 @@
     "pg": "7.6.1",
     "prettier": "1.14.3",
     "proxyquire": "2.1.0",
-    "semantic-release": "15.12.1",
+    "semantic-release": "15.12.3",
     "sinon": "7.1.1",
     "sql-bricks-postgres": "0.5.0",
     "unexpected": "10.39.2",
