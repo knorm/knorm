@@ -19,7 +19,7 @@
     "@knorm/knorm": "1.11.1",
     "@semantic-release/changelog": "3.0.1",
     "@semantic-release/git": "7.0.5",
-    "@semantic-release/github": "5.2.4",
+    "@semantic-release/github": "5.2.5",
     "@semantic-release/npm": "5.1.1",
     "coveralls": "3.0.2",
     "eslint": "5.9.0",
@@ -27,7 +27,7 @@
     "mocha": "5.2.0",
     "nyc": "13.1.0",
     "prettier": "1.15.3",
-    "semantic-release": "15.12.1",
+    "semantic-release": "15.12.3",
     "unexpected": "10.39.2"
   },
   "directories": {
