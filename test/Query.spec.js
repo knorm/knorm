@@ -48,13 +48,18 @@ const expect = require('unexpected')
 describe('Query', () => {
   let Model;
   let Query;
+  let BaseQuery;
   let QueryError;
   let User;
   let createUserTable;
   let truncateUserTable;
 
   before(async () => {
-    const orm = new Knorm({ fieldToColumn }).use(postgresPlugin);
+    const orm = new Knorm({ fieldToColumn });
+
+    BaseQuery = orm.Query;
+
+    orm.use(postgresPlugin);
 
     Model = orm.Model;
     Query = orm.Query;
@@ -224,6 +229,244 @@ describe('Query', () => {
         .groupBy('id');
       expect(query.clone(), 'to satisfy', {
         options: { fields: { id: 'id' }, forUpdate: true, groupBy: [['id']] }
+      });
+    });
+  });
+
+  describe('Query.prototype.acquireClient', () => {
+    it('throws a QueryError if not implemented', async () => {
+      const query = new BaseQuery(User);
+      await expect(
+        () => query.acquireClient(),
+        'to throw',
+        new QueryError('`Query.prototype.acquireClient` is not implemented')
+      );
+    });
+  });
+
+  describe('Query.prototype.acquireClient', () => {
+    it('throws a QueryError if not implemented', async () => {
+      const query = new BaseQuery(User);
+      await expect(
+        () => query.acquireClient(),
+        'to throw',
+        new QueryError('`Query.prototype.acquireClient` is not implemented')
+      );
+    });
+  });
+
+  describe('Query.prototype.formatSql', () => {
+    it('throws a QueryError if not implemented', async () => {
+      const query = new BaseQuery(User);
+      await expect(
+        () => query.formatSql(),
+        'to throw',
+        new QueryError('`Query.prototype.formatSql` is not implemented')
+      );
+    });
+  });
+
+  describe('Query.prototype.runQuery', () => {
+    it('throws a QueryError if not implemented', async () => {
+      const query = new BaseQuery(User);
+      await expect(
+        () => query.runQuery(),
+        'to throw',
+        new QueryError('`Query.prototype.runQuery` is not implemented')
+      );
+    });
+  });
+
+  describe('Query.prototype.parseResult', () => {
+    it('throws a QueryError if not implemented', async () => {
+      const query = new BaseQuery(User);
+      await expect(
+        () => query.parseResult(),
+        'to throw',
+        new QueryError('`Query.prototype.parseResult` is not implemented')
+      );
+    });
+  });
+
+  describe('Query.prototype.releaseClient', () => {
+    it('throws a QueryError if not implemented', async () => {
+      const query = new BaseQuery(User);
+      await expect(
+        () => query.releaseClient(),
+        'to throw',
+        new QueryError('`Query.prototype.releaseClient` is not implemented')
+      );
+    });
+  });
+
+  describe('Query.prototype.query', () => {
+    let query;
+    const noop = () => {};
+
+    beforeEach(() => {
+      query = new BaseQuery(User);
+      query.acquireClient = noop;
+      query.formatSql = noop;
+      query.runQuery = noop;
+      query.parseResult = noop;
+      query.releaseClient = noop;
+    });
+
+    it('calls Query.prototype.acquireClient', async () => {
+      const acquireClient = sinon.spy();
+      query.acquireClient = acquireClient;
+      await query.query('the sql');
+      await expect(acquireClient, 'to have calls satisfying', () => {
+        acquireClient();
+      });
+    });
+
+    it('calls Query.prototype.formatSql', async () => {
+      const formatSql = sinon.spy();
+      query.formatSql = formatSql;
+      await query.query('the sql');
+      await expect(formatSql, 'to have calls satisfying', () => {
+        formatSql('the sql');
+      });
+    });
+
+    it('calls Query.prototype.runQuery', async () => {
+      const runQuery = sinon.spy();
+      query.acquireClient = () => 'the client';
+      query.formatSql = () => 'the formatted sql';
+      query.runQuery = runQuery;
+      await query.query('the sql');
+      await expect(runQuery, 'to have calls satisfying', () => {
+        runQuery('the client', 'the formatted sql');
+      });
+    });
+
+    it('calls Query.prototype.parseResult', async () => {
+      const parseResult = sinon.stub().returns('the parsed result');
+      query.runQuery = () => 'the database result';
+      query.parseResult = parseResult;
+      await expect(
+        query.query('the sql'),
+        'to be fulfilled with value satisfying',
+        'the parsed result'
+      );
+      await expect(parseResult, 'to have calls satisfying', () => {
+        parseResult('the database result');
+      });
+    });
+
+    it('calls Query.prototype.releaseClient', async () => {
+      const releaseClient = sinon.spy();
+      query.acquireClient = () => 'the client';
+      query.releaseClient = releaseClient;
+      await query.query('the sql');
+      await expect(releaseClient, 'to have calls satisfying', () => {
+        releaseClient('the client');
+      });
+    });
+
+    it('supports an `async` Query.prototype.acquireClient', async () => {
+      const releaseClient = sinon.spy();
+      query.releaseClient = releaseClient;
+      query.acquireClient = async () => 'the client';
+      await query.query('the sql');
+      await expect(releaseClient, 'to have calls satisfying', () => {
+        releaseClient('the client');
+      });
+    });
+
+    it('supports an `async` Query.prototype.formatSql', async () => {
+      const runQuery = sinon.spy();
+      query.acquireClient = () => 'the client';
+      query.formatSql = async () => 'the formatted sql';
+      query.runQuery = runQuery;
+      await query.query('the sql');
+      await expect(runQuery, 'to have calls satisfying', () => {
+        runQuery('the client', 'the formatted sql');
+      });
+    });
+
+    it('supports an `async` Query.prototype.runQuery', async () => {
+      const parseResult = sinon.spy();
+      query.runQuery = async () => 'the database result';
+      query.parseResult = parseResult;
+      await query.query('the sql');
+      await expect(parseResult, 'to have calls satisfying', () => {
+        parseResult('the database result');
+      });
+    });
+
+    // FIXME: this doesn't really test what it's supposed to :/
+    it('supports an `async` Query.prototype.parseResult', async () => {
+      const parseResult = sinon
+        .stub()
+        .returns(Promise.resolve('the parsed result'));
+      query.runQuery = () => 'the database result';
+      query.parseResult = parseResult;
+      await expect(
+        query.query('the sql'),
+        'to be fulfilled with value satisfying',
+        'the parsed result'
+      );
+    });
+
+    it('supports an `async` Query.prototype.releaseClient', async () => {
+      let called;
+      const delay = delay => new Promise(resolve => setTimeout(resolve, delay));
+      query.releaseClient = () => delay(10).then(() => (called = true));
+      await query.query('the sql');
+      await expect(called, 'to be true');
+    });
+
+    describe('releases the client', () => {
+      let releaseClient;
+
+      beforeEach(() => {
+        releaseClient = sinon.spy();
+        query.acquireClient = () => 'the client';
+        query.releaseClient = releaseClient;
+      });
+
+      it('if Query.prototype.formatSql throws', async () => {
+        query.formatSql = () => {
+          throw new Error('foo');
+        };
+        await expect(
+          query.query('the sql'),
+          'to be rejected with error satisfying',
+          new Error('foo')
+        );
+        await expect(releaseClient, 'to have calls satisfying', () => {
+          releaseClient('the client');
+        });
+      });
+
+      it('if Query.prototype.runQuery throws', async () => {
+        query.runQuery = () => {
+          throw new Error('foo');
+        };
+        await expect(
+          query.query('the sql'),
+          'to be rejected with error satisfying',
+          new Error('foo')
+        );
+        await expect(releaseClient, 'to have calls satisfying', () => {
+          releaseClient('the client');
+        });
+      });
+
+      it('if Query.prototype.parseResult throws', async () => {
+        query.parseResult = () => {
+          throw new Error('foo');
+        };
+        await expect(
+          query.query('the sql'),
+          'to be rejected with error satisfying',
+          new Error('foo')
+        );
+        await expect(releaseClient, 'to have calls satisfying', () => {
+          releaseClient('the client');
+        });
       });
     });
   });
