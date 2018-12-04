@@ -28,7 +28,7 @@ const postgresPlugin = knorm => {
       return pool.connect();
     }
 
-    async releaseClient(client) {
+    releaseClient(client) {
       client.release();
     }
 
