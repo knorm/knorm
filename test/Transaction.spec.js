@@ -6,7 +6,6 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'));
 
 describe('Transaction', function() {
-  let Field;
   let Model;
   let Query;
   let Transaction;
@@ -16,7 +15,6 @@ describe('Transaction', function() {
   before(function() {
     const knorm = new Knorm();
 
-    Field = knorm.Field;
     Model = knorm.Model;
     Query = knorm.Query;
     Transaction = knorm.Transaction;
@@ -29,10 +27,13 @@ describe('Transaction', function() {
 
   describe('constructor', function() {
     it('creates scoped models', function() {
+      User.Query = class UserQuery extends User.Query {};
+
       const transaction = new Transaction();
       const TransactionUser = transaction.models.User;
 
       expect(TransactionUser.name, 'to be', 'User');
+      expect(TransactionUser.Query.name, 'to be', 'UserQuery');
 
       expect(TransactionUser.prototype, 'to be a', User);
       expect(TransactionUser.models.User, 'to be', TransactionUser);
@@ -45,14 +46,6 @@ describe('Transaction', function() {
         'to be a',
         User
       );
-
-      expect(TransactionUser.Field.prototype, 'to be a', Field);
-      expect(TransactionUser.Field.models.User.prototype, 'to be a', User);
-      expect(
-        TransactionUser.Field.prototype.models.User.prototype,
-        'to be a',
-        User
-      );
     });
 
     it('adds an accessor to the transaction instance', function() {
@@ -60,11 +53,9 @@ describe('Transaction', function() {
       const TransactionUser = transaction.models.User;
 
       expect(TransactionUser.transaction, 'to be', transaction);
-      expect(TransactionUser.Field.transaction, 'to be', transaction);
       expect(TransactionUser.Query.transaction, 'to be', transaction);
 
       expect(TransactionUser.prototype.transaction, 'to be', transaction);
-      expect(TransactionUser.Field.prototype.transaction, 'to be', transaction);
       expect(TransactionUser.Query.prototype.transaction, 'to be', transaction);
     });
   });
