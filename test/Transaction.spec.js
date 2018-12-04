@@ -28,17 +28,6 @@ describe('Transaction', function() {
   });
 
   describe('constructor', function() {
-    it('creates scoped Field, Model, Query', function() {
-      const transaction = new Transaction();
-
-      expect(transaction.Field.prototype, 'to be a', Field);
-      expect(transaction.Model.prototype, 'to be a', Model);
-      expect(transaction.Query.prototype, 'to be a', Query);
-
-      expect(transaction.Model.Field, 'to be', transaction.Field);
-      expect(transaction.Model.Query, 'to be', transaction.Query);
-    });
-
     it('creates scoped models', function() {
       const transaction = new Transaction();
       const TransactionUser = transaction.models.User;
@@ -70,14 +59,6 @@ describe('Transaction', function() {
       const transaction = new Transaction();
       const TransactionUser = transaction.models.User;
 
-      expect(transaction.Field.transaction, 'to be', transaction);
-      expect(transaction.Query.transaction, 'to be', transaction);
-      expect(transaction.Model.transaction, 'to be', transaction);
-
-      expect(transaction.Field.prototype.transaction, 'to be', transaction);
-      expect(transaction.Query.prototype.transaction, 'to be', transaction);
-      expect(transaction.Model.prototype.transaction, 'to be', transaction);
-
       expect(TransactionUser.transaction, 'to be', transaction);
       expect(TransactionUser.Field.transaction, 'to be', transaction);
       expect(TransactionUser.Query.transaction, 'to be', transaction);
@@ -98,24 +79,12 @@ describe('Transaction', function() {
       );
     });
 
-    it('rejects on the scoped Query classes', async function() {
+    it('rejects on the scoped model classes', async function() {
       class FooTransaction extends Transaction {
         async execute() {
           return this.callback(this);
         }
       }
-
-      await expect(
-        new FooTransaction(async ({ Query, models: { User } }) => {
-          return new Query(User).insert({ name: 'foo' });
-        }),
-        'to be rejected with error satisfying',
-        {
-          originalError: new TransactionError(
-            '`Transaction.prototype.query` is not implemented'
-          )
-        }
-      );
 
       await expect(
         new FooTransaction(async ({ models: { User } }) => {
