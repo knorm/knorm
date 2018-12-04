@@ -27,6 +27,14 @@ a transaction.</p>
 Creates and holds configuration for fields, e.g. how to validate or cast
 fields.
 
+
+* [Field](#Field)
+    * [new Field([config])](#new_Field_new)
+    * _instance_
+        * [.validateWithCustom(value, validate, modelInstance)](#Field+validateWithCustom) ⇒ `Promise`
+    * _inner_
+        * [~customValidator](#Field..customValidator) ⇒ `Promise` \| `boolean` \| `object`
+
 <a name="new_Field_new"></a>
 
 ### new Field([config])
@@ -36,6 +44,47 @@ fields.
 | [config] | `object` | The field's configuration. |
 
 Creates a [Field](#Field) instance.
+
+<a name="Field+validateWithCustom"></a>
+
+### field.validateWithCustom(value, validate, modelInstance) ⇒ `Promise`
+
+| Param | Type | Description |
+| --- | --- | --- |
+| value | `any` | The value to validate |
+| validate | [customValidator](#Field..customValidator) | The validator function. |
+| modelInstance | [Model](#Model) | The [Model](#Model) instance where the field value is set, if one exists. This will always be set if this method is called via [Model#validate](Model#validate). |
+
+Validates a value with a custom validator function.
+
+**Todo**
+
+- [ ] **breaking change** in the validator function, do not set `this` to
+the model instance. Instead, `this` should point to the [Field](#Field)
+instance.
+
+<a name="Field..customValidator"></a>
+
+### Field~customValidator ⇒ `Promise` \| `boolean` \| `object`
+
+| Param | Type | Description |
+| --- | --- | --- |
+| value | `any` | the value to validate. |
+| The | [Model](#Model) | [Model](#Model) instance where the field value is set, if one exists. This will always be set if [validateWithCustom](#Field+validateWithCustom) is called via [Model#validate](Model#validate). |
+
+Custom validator function, note that `async` validator functions, or
+functions that return a [Promise](Promise), are supported.
+
+Validation for the value will be failed if the function:
+  - throws an error
+  - returns `false`
+  - returns a `Promise` that is rejected with an error
+  - returns a `Promise` that is resolved with `false`
+
+This function may also return an object with the regular
+[validators](/guides/fields.md#field-config), or resolving the `Promise`
+with an object with validators, including another custom validator
+function!
 
 <a name="Knorm"></a>
 
@@ -434,9 +483,12 @@ Creates and runs queries and parses any data returned.
     * [new Query(model)](#new_Query_new)
     * [.fields(...fields)](#Query+fields) ⇒ [Query](#Query)
     * [.returning(...fields)](#Query+returning) ⇒ [Query](#Query)
-    * [.beforeQuery(client, sql)](#Query+beforeQuery)
-    * [.afterQuery(client, sql, result)](#Query+afterQuery)
-    * [.query(sql)](#Query+query)
+    * [.query(sql)](#Query+query) ⇒ `Promise`
+    * [.acquireClient()](#Query+acquireClient) ⇒ `Client` \| `Promise`
+    * [.formatSql(sql)](#Query+formatSql) ⇒ `SqlBricks` \| `object` \| `string` \| `Promise`
+    * [.runQuery(client, formattedSql)](#Query+runQuery) ⇒ `object` \| `Promise`
+    * [.parseResult(result)](#Query+parseResult) ⇒ `Array` \| `Promise`
+    * [.releaseClient(client)](#Query+releaseClient) ⇒ `undefined` \| `Promise`
 
 <a name="new_Query_new"></a>
 
@@ -496,53 +548,134 @@ This is an alias for [fields](#Query+fields).
 
 **Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
 **See**: [fields](#Query+fields)  
-<a name="Query+beforeQuery"></a>
-
-### query.beforeQuery(client, sql)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| client | `Client` | the database client that will be used to run the query. |
-| sql | `SqlBricks` \| `object` \| `string` | the sql that will be sent to the database. |
-
-Called before a query is sent to the database. This allows manipulating the
-sql if needed, even changing it entirely.
-
-NOTE: if this method returns anything, that will be used as the sql to send
-to the database instead. Therefore, this should be valid sql as expected by
-[query](#Query+query).
-
-<a name="Query+afterQuery"></a>
-
-### query.afterQuery(client, sql, result)
-
-| Param | Type | Description |
-| --- | --- | --- |
-| client | `Client` | the database client that was used to run the query. |
-| sql | `SqlBricks` \| `object` \| `string` | the sql that was sent to the database to generate the result. |
-| result | `object` | the result from the database. |
-
-Called after a query is sent to the database. This allows manipulating the
-result if needed, even changing it entirely.
-
-NOTE: if this method returns anything, that will be used as the result of
-the query instead. Therefore, this should be a valid result object as
-expected by [query](#Query+query).
-
 <a name="Query+query"></a>
 
-### query.query(sql)
+### query.query(sql) ⇒ `Promise`
 
-| Param | Type |
-| --- | --- |
-| sql | `SqlBricks` \| `object` \| `string` | 
+| Param | Type | Description |
+| --- | --- | --- |
+| sql | `SqlBricks` \| `object` \| `string` | The SQL to run. |
 
-Runs a query. This method is not implemented in @knorm/knorm, it's meant to
-be implemented by a plugin that provides database access.
+Runs a query. This method calls [acquireClient](#Query+acquireClient) to acquire a
+client, [formatSql](#Query+formatSql) to format the SQL to be run,
+[runQuery](#Query+runQuery) to run the SQL, [parseResult](#Query+parseResult) to parse
+the database result and finally [releaseClient](#Query+releaseClient) to release the
+client.
 
+**Returns**: `Promise` - A promise that is resolved with the parsed result from
+running a query.  
+<a name="Query+acquireClient"></a>
+
+### query.acquireClient() ⇒ `Client` \| `Promise`
+Called by [query](#Query+query) to get a client, ideally from a connection
+pool, to use for running a query.
+
+::: tip INFO
+This method is normally implemented by a plugin that provides database
+connectivitiy.
+:::
+
+**Returns**: `Client` \| `Promise` - A database client or a promise that is resolved
+with the database client.  
 **Throws**:
 
-- `QueryError` if the method is not implemented.
+- `QueryError` If the method is not implemented.
+
+<a name="Query+formatSql"></a>
+
+### query.formatSql(sql) ⇒ `SqlBricks` \| `object` \| `string` \| `Promise`
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sql | `SqlBricks` \| `object` \| `string` | The SQL to be formatted. |
+
+Called by [query](#Query+query) before a query is sent to the database. This
+allows manipulating the SQL if needed, even changing it entirely.
+
+::: tip INFO
+This method is normally implemented by plugins to format the SQL passed to
+[query](#Query+query) before it's passed on to [runQuery](#Query+runQuery).
+:::
+
+**Returns**: `SqlBricks` \| `object` \| `string` \| `Promise` - The formatted SQL or a promise
+that is resolved with the formatted SQL.  
+**Throws**:
+
+- `QueryError` If the method is not implemented.
+
+<a name="Query+runQuery"></a>
+
+### query.runQuery(client, formattedSql) ⇒ `object` \| `Promise`
+
+| Param | Type | Description |
+| --- | --- | --- |
+| client | `Client` | The database client that will be used to run the query. This is the same client that is acquired via [acquireClient](#Query+acquireClient). |
+| formattedSql | `SqlBricks` \| `object` \| `string` | The SQL to be run, after it's formatted via [formatSql](#Query+formatSql). |
+
+Called by [query](#Query+query) to run a query against the database.
+
+::: tip INFO
+This method is normally implemented by a plugin that provides database
+connectivitiy.
+:::
+
+**Returns**: `object` \| `Promise` - The result from the database or a promise that is
+resolved with the database result.  
+**Throws**:
+
+- `QueryError` If the method is not implemented.
+
+<a name="Query+parseResult"></a>
+
+### query.parseResult(result) ⇒ `Array` \| `Promise`
+
+| Param | Type | Description |
+| --- | --- | --- |
+| result | `object` | The query result to be parsed. |
+
+Called by [query](#Query+query) after a query is has been run via
+[runQuery](#Query+runQuery). This allows manipulating the result if needed, even
+changing it entirely.
+
+::: tip INFO
+This method is normally implemented by plugins to parse the query result
+from [runQuery](#Query+runQuery).
+:::
+
+**Returns**: `Array` \| `Promise` - An array of rows extracted from the query result
+or a promise resolving with the extracted rows.  
+**Throws**:
+
+- `QueryError` If the method is not implemented.
+
+<a name="Query+releaseClient"></a>
+
+### query.releaseClient(client) ⇒ `undefined` \| `Promise`
+
+| Param | Type | Description |
+| --- | --- | --- |
+| client | `Client` | The client to be released. |
+
+Called by [query](#Query+query) to release a client, ideally back into the
+connection pool, after running a query.
+
+::: tip INFO
+This method is normally implemented by a plugin that provides database
+connectivitiy.
+:::
+
+::: tip INFO
+After a client is successfully acquired via [acquireClient](#Query+acquireClient),
+this method is always called to ensure that the client is restored back to
+the pool, even if [formatSql](#Query+formatSql), [runQuery](#Query+runQuery) or
+[parseResult](#Query+parseResult) fail.
+:::
+
+**Returns**: `undefined` \| `Promise` - Returns nothing or a promise that is resolved
+when the client is released.  
+**Throws**:
+
+- `QueryError` If the method is not implemented.
 
 <a name="Transaction"></a>
 
