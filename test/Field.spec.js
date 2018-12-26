@@ -163,54 +163,54 @@ describe('Field', function() {
       });
     });
 
-    describe('for `json` and `jsonb` fields with a `schema` config', function() {
+    describe('for `json` and `jsonb` fields with a `shape` config', function() {
       let Foo;
 
       before(function() {
         Foo = class extends Model {};
       });
 
-      describe('with a root-level schema', function() {
-        it('throws the correct error if the schema config has no `type`', function() {
+      describe('with a root-level `shape`', function() {
+        it('throws the correct error if the shape config has no `type`', function() {
           expect(
             () =>
               new Field({
                 name: 'json',
                 model: Foo,
                 type: 'json',
-                schema: { required: true }
+                shape: { required: true }
               }),
             'to throw',
             new Error('Field `Foo.json` has no type configured')
           );
         });
 
-        it('throws the correct error if a schema config has an invalid `type`', function() {
+        it('throws the correct error if a shape config has an invalid `type`', function() {
           expect(
             () =>
               new Field({
                 name: 'json',
                 model: Foo,
                 type: 'json',
-                schema: { type: 'foo', required: true }
+                shape: { type: 'foo', required: true }
               }),
             'to throw',
             new Error('Field `Foo.json` has an invalid type `foo`')
           );
         });
 
-        it("allows adding schema fields with the `schema: 'type'` shorthand", function() {
+        it("allows adding shape validators with the `shape: 'type'` shorthand", function() {
           expect(
             new Field({
               name: 'json',
               model: Foo,
               type: 'array',
-              schema: 'string'
+              shape: 'string'
             }),
             'to satisfy',
             {
               validators: {
-                schema: expect.it(
+                shape: expect.it(
                   'to be field',
                   new Field({
                     name: 'json',
@@ -225,7 +225,7 @@ describe('Field', function() {
         });
       });
 
-      describe('with a schema with nested fields', function() {
+      describe('with a shape with nested fields', function() {
         it('throws the correct error if a nested field has no `type`', function() {
           expect(
             () =>
@@ -233,7 +233,7 @@ describe('Field', function() {
                 name: 'json',
                 model: Foo,
                 type: 'json',
-                schema: { foo: { required: true } }
+                shape: { foo: { required: true } }
               }),
             'to throw',
             new Error('Field `Foo.json.foo` has no type configured')
@@ -247,25 +247,25 @@ describe('Field', function() {
                 name: 'json',
                 model: Foo,
                 type: 'json',
-                schema: { foo: { type: 'foo', required: true } }
+                shape: { foo: { type: 'foo', required: true } }
               }),
             'to throw',
             new Error('Field `Foo.json.foo` has an invalid type `foo`')
           );
         });
 
-        it("allows adding schema fields with the `schema: 'type'` shorthand", function() {
+        it("allows adding shape validators with the `shape: 'type'` shorthand", function() {
           expect(
             new Field({
               name: 'json',
               model: Foo,
               type: 'json',
-              schema: { foo: 'string' }
+              shape: { foo: 'string' }
             }),
             'to satisfy',
             {
               validators: {
-                schema: {
+                shape: {
                   foo: expect.it(
                     'to be field',
                     new Field({
@@ -1632,7 +1632,7 @@ describe('Field', function() {
     });
 
     describe('for `json` and `jsonb` fields', function() {
-      describe('without a `schema` configured', function() {
+      describe('without a `shape` configured', function() {
         let json;
         let jsonb;
 
@@ -1692,7 +1692,7 @@ describe('Field', function() {
             name: 'json',
             model: User,
             type: 'json',
-            schema: { foo: { type: 'string' } }
+            shape: { foo: { type: 'string' } }
           });
         });
 
@@ -1712,20 +1712,20 @@ describe('Field', function() {
           await expect(field.validate('{"foo":"foo"}'), 'to be fulfilled');
         });
 
-        describe('with a root-level `string` schema', function() {
+        describe('with a root-level `string` shape', function() {
           it('does not JSON.parse the value', async function() {
             const field = new Field({
               name: 'json',
               model: User,
               type: 'json',
-              schema: 'string'
+              shape: 'string'
             });
             await expect(field.validate('foo'), 'to be fulfilled');
           });
         });
       });
 
-      describe('with a root-level `schema` object', function() {
+      describe('with a root-level `shape` object', function() {
         let field;
 
         before(function() {
@@ -1733,7 +1733,7 @@ describe('Field', function() {
             name: 'json',
             model: User,
             type: 'json',
-            schema: { type: 'string', required: true }
+            shape: { type: 'string', required: true }
           });
         });
 
@@ -1788,7 +1788,7 @@ describe('Field', function() {
               name: 'firstName',
               model: User,
               type: 'json',
-              schema: { type: 'string', validate }
+              shape: { type: 'string', validate }
             });
           });
 
@@ -1817,7 +1817,7 @@ describe('Field', function() {
                 name: 'firstName',
                 model: User,
                 type: 'json',
-                schema: { type: 'string', validate: () => ({ maxLength: 2 }) }
+                shape: { type: 'string', validate: () => ({ maxLength: 2 }) }
               });
               await expect(field.validate('ba'), 'to be fulfilled');
               await expect(field.validate('bar'), 'to be rejected with', {
@@ -1826,17 +1826,17 @@ describe('Field', function() {
               });
             });
 
-            it('supports new `schema` validators', async function() {
+            it('supports new `shape` validators', async function() {
               const field = new Field({
                 name: 'firstName',
                 model: User,
                 type: 'json',
-                schema: {
+                shape: {
                   type: 'object',
                   validate: () => ({
                     type: 'object',
-                    schema: {
-                      foo: { type: 'array', schema: { type: 'number' } }
+                    shape: {
+                      foo: { type: 'array', shape: { type: 'number' } }
                     }
                   })
                 }
@@ -1849,14 +1849,14 @@ describe('Field', function() {
               );
             });
 
-            it('supports new `schema` validators without a `type`', async function() {
+            it('supports new `shape` validators without a `type`', async function() {
               const field = new Field({
                 name: 'firstName',
                 model: User,
                 type: 'json',
-                schema: {
+                shape: {
                   type: 'object',
-                  validate: () => ({ schema: { foo: 'number' } })
+                  validate: () => ({ shape: { foo: 'number' } })
                 }
               });
               await expect(field.validate({ foo: 1 }), 'to be fulfilled');
@@ -1869,7 +1869,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `array` field with an item `schema`', function() {
+        describe('with a root-level `array` field with an item `shape`', function() {
           let field;
 
           before(function() {
@@ -1877,10 +1877,10 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: {
+              shape: {
                 type: 'array',
                 maxLength: 2,
-                schema: { type: 'string' }
+                shape: { type: 'string' }
               }
             });
           });
@@ -1919,16 +1919,16 @@ describe('Field', function() {
             await expect(field.validate([]), 'to be fulfilled');
           });
 
-          describe('with the item schema `required`', function() {
+          describe('with the item shape specifying `required`', function() {
             before(function() {
               field = new Field({
                 name: 'json',
                 model: User,
                 type: 'json',
-                schema: {
+                shape: {
                   type: 'array',
                   maxLength: 2,
-                  schema: { type: 'string', required: true }
+                  shape: { type: 'string', required: true }
                 }
               });
             });
@@ -1956,7 +1956,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `array` field with no item `schema`', function() {
+        describe('with a root-level `array` field with no item `shape`', function() {
           let field;
 
           before(function() {
@@ -1964,7 +1964,7 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: { type: 'array', minLength: 2 }
+              shape: { type: 'array', minLength: 2 }
             });
           });
 
@@ -1988,7 +1988,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `array` field with a nested `schema`', function() {
+        describe('with a root-level `array` field with a nested `shape`', function() {
           let field;
 
           before(function() {
@@ -1996,11 +1996,11 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: {
+              shape: {
                 type: 'array',
-                schema: {
+                shape: {
                   type: 'object',
-                  schema: { foo: { type: 'string' } }
+                  shape: { foo: { type: 'string' } }
                 }
               }
             });
@@ -2024,7 +2024,7 @@ describe('Field', function() {
             );
           });
 
-          it('ignores nested keys that are not defined in the schema', async function() {
+          it('ignores nested keys that are not defined in the shape', async function() {
             await expect(
               field.validate([{ foo: 'foo', bar: 1 }]),
               'to be fulfilled'
@@ -2040,7 +2040,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `object` field with a nested `schema`', function() {
+        describe('with a root-level `object` field with a nested `shape`', function() {
           let field;
 
           before(function() {
@@ -2048,11 +2048,11 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: {
+              shape: {
                 type: 'object',
-                schema: {
+                shape: {
                   type: 'object',
-                  schema: { foo: { type: 'string' } }
+                  shape: { foo: { type: 'string' } }
                 }
               }
             });
@@ -2080,7 +2080,7 @@ describe('Field', function() {
             });
           });
 
-          it('ignores nested keys that are not defined in the schema', async function() {
+          it('ignores nested keys that are not defined in the shape', async function() {
             await expect(
               field.validate({ foo: 'foo', bar: 1 }),
               'to be fulfilled'
@@ -2108,7 +2108,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `object` field  with no nested `schema`', function() {
+        describe('with a root-level `object` field  with no nested `shape`', function() {
           let field;
 
           before(function() {
@@ -2116,9 +2116,7 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: {
-                type: 'object'
-              }
+              shape: { type: 'object' }
             });
           });
 
@@ -2147,7 +2145,7 @@ describe('Field', function() {
         });
       });
 
-      describe('with a `schema` object with nested fields', function() {
+      describe('with a `shape` object with nested fields', function() {
         let field;
 
         before(function() {
@@ -2155,7 +2153,7 @@ describe('Field', function() {
             name: 'json',
             model: User,
             type: 'json',
-            schema: { foo: { type: 'string', required: true } }
+            shape: { foo: { type: 'string', required: true } }
           });
         });
 
@@ -2179,7 +2177,7 @@ describe('Field', function() {
           await expect(field.validate({ foo: 'bar' }), 'to be fulfilled');
         });
 
-        it('ignores object keys that are not specified in the schema', async function() {
+        it('ignores object keys that are not specified in the shape', async function() {
           await expect(
             field.validate({ foo: 'foo', bar: [] }),
             'to be fulfilled'
@@ -2204,7 +2202,7 @@ describe('Field', function() {
               name: 'firstName',
               model: User,
               type: 'json',
-              schema: { foo: { type: 'string', validate } }
+              shape: { foo: { type: 'string', validate } }
             });
           });
 
@@ -2233,7 +2231,7 @@ describe('Field', function() {
                 name: 'firstName',
                 model: User,
                 type: 'json',
-                schema: {
+                shape: {
                   foo: { type: 'string', validate: () => ({ maxLength: 2 }) }
                 }
               });
@@ -2244,18 +2242,18 @@ describe('Field', function() {
               );
             });
 
-            it('supports new `schema` validators', async function() {
+            it('supports new `shape` validators', async function() {
               const field = new Field({
                 name: 'firstName',
                 model: User,
                 type: 'json',
-                schema: {
+                shape: {
                   foo: {
                     type: 'object',
                     validate: () => ({
                       type: 'object',
-                      schema: {
-                        bar: { type: 'array', schema: { type: 'number' } }
+                      shape: {
+                        bar: { type: 'array', shape: { type: 'number' } }
                       }
                     })
                   }
@@ -2272,15 +2270,15 @@ describe('Field', function() {
               );
             });
 
-            it('supports new `schema` validators without a `type`', async function() {
+            it('supports new `shape` validators without a `type`', async function() {
               const field = new Field({
                 name: 'firstName',
                 model: User,
                 type: 'json',
-                schema: {
+                shape: {
                   foo: {
                     type: 'object',
-                    validate: () => ({ schema: { bar: 'number' } })
+                    validate: () => ({ shape: { bar: 'number' } })
                   }
                 }
               });
@@ -2297,7 +2295,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `array` field with an item `schema`', function() {
+        describe('with a nested `array` field with an item `shape`', function() {
           let field;
 
           before(function() {
@@ -2305,11 +2303,11 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: {
+              shape: {
                 foo: {
                   type: 'array',
                   maxLength: 2,
-                  schema: { type: 'string', required: true }
+                  shape: { type: 'string', required: true }
                 }
               }
             });
@@ -2346,7 +2344,7 @@ describe('Field', function() {
             );
           });
 
-          it('ignores keys in the array items that are not specified in the schema', async function() {
+          it('ignores keys in the array items that are not specified in the shape', async function() {
             await expect(
               field.validate({ foo: ['foo'], bar: [] }),
               'to be fulfilled'
@@ -2362,7 +2360,7 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `array` field with no item `schema`', function() {
+        describe('with a nested `array` field with no item `shape`', function() {
           let field;
 
           before(function() {
@@ -2370,7 +2368,7 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: { foo: { type: 'array', minLength: 2 } }
+              shape: { foo: { type: 'array', minLength: 2 } }
             });
           });
 
@@ -2406,10 +2404,10 @@ describe('Field', function() {
               name: 'json',
               model: User,
               type: 'json',
-              schema: {
+              shape: {
                 foo: {
                   type: 'object',
-                  schema: { bar: { type: 'integer', required: true } }
+                  shape: { bar: { type: 'integer', required: true } }
                 }
               }
             });
@@ -2438,15 +2436,15 @@ describe('Field', function() {
             );
           });
 
-          it('ignores object keys that are not specified in the nested schema', async function() {
+          it('ignores object keys that are not specified in the nested shape', async function() {
             await expect(
               field.validate({ foo: { bar: 1, quux: 'quux' } }),
               'to be fulfilled'
             );
           });
 
-          describe('with the nested schema `required`', function() {
-            it('rejects if the value is `undefined` and the schema specifies `required`', async function() {
+          describe('with the nested shape specifying `required`', function() {
+            it('rejects if the value is `undefined`', async function() {
               await expect(
                 field.validate({ foo: { bar: undefined } }),
                 'to be rejected with',
@@ -2526,12 +2524,12 @@ describe('Field', function() {
         await expect(field.validate(sql('b')), 'to be fulfilled');
       });
 
-      it('does not validate `schema` for json(b) fields', async function() {
+      it('does not validate `shape` for json(b) fields', async function() {
         const field = new Field({
           name: 'json',
           model: User,
           type: 'string',
-          schema: 'string'
+          shape: 'string'
         });
         await expect(field.validate(sql('b')), 'to be fulfilled');
       });
