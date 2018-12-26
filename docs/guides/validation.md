@@ -187,7 +187,7 @@ be called if the value is `null`.
 
 For [json](http://knexjs.org/#Schema-json) (and
 [jsonb](http://knexjs.org/#Schema-jsonb)) fields, you can have the JSON values
-validated by adding a `schema` object to the field definition object.
+validated by adding a `shape` object to the field definition object.
 
 ```js {6,7,8,9,10}
 class Upload extends Model {}
@@ -195,7 +195,7 @@ class Upload extends Model {}
 Upload.fields = {
   image: {
     type: 'jsonb',
-    schema: {
+    shape: {
       filename: { type: 'string' },
       mimetype: { type: 'string', oneOf: ['image/jpeg', 'image/png'] },
       data: { type: 'binary', required: true }
@@ -204,7 +204,7 @@ Upload.fields = {
 };
 ```
 
-With this schema, these are valid:
+With this config, these are valid:
 
 ```js
 new Upload({
@@ -230,13 +230,13 @@ new Upload({
 ```
 
 ::: tip INFO
-JSON `schema` validators support all the
-[validators](/guides/fields.md#field-config), including nested `schema`
+JSON `shape` validators support all the
+[validators](/guides/fields.md#field-config), including nested `shape`
 validators [for nested objects](#nested-objects).
 :::
 
 ::: tip
-You may also define the schema with the `fieldName: fieldType` shorthand:
+You may also define the shape with the `fieldName: fieldType` shorthand:
 :::
 
 ```js {7,8}
@@ -245,7 +245,7 @@ class User extends Model {}
 User.fields = {
   data: {
     type: 'jsonb',
-    schema: {
+    shape: {
       firstName: 'string',
       lastName: 'string'
     }
@@ -255,8 +255,8 @@ User.fields = {
 
 ### JSON arrays
 
-For JSON arrays, use the `array` field type. You can also define the schema of a
-single array item by passing a `schema` validation object with the regular
+For JSON arrays, use the `array` field type. You can also define the shape of a
+single array item by passing a `shape` validation object with the regular
 [validators](/guides/fields.md#field-config).
 
 ```js {12,14,15,16,17}
@@ -265,7 +265,7 @@ class SomeData extends Model {}
 SomeData.fields = {
   data: {
     type: 'json',
-    schema: {
+    shape: {
       currentVersion: {
         type: 'string',
         required: true
@@ -273,7 +273,7 @@ SomeData.fields = {
       oldVersions: {
         type: 'array',
         maxLength: 2,
-        schema: {
+        shape: {
           type: 'string',
           required: true
         }
@@ -293,7 +293,7 @@ const someData = new SomeData({
 ### Nested objects
 
 For nested objects, use the `object` field type. You can also define the nested
-object's schema with a nested `schema` validator.
+object's shape with a nested `shape` validator.
 
 ```js {8,9,10,11,12}
 class SomeData extends Model {}
@@ -301,10 +301,10 @@ class SomeData extends Model {}
 SomeData.fields = {
   data: {
     type: 'json',
-    schema: {
+    shape: {
       nested: {
         type: 'object',
-        schema: {
+        shape: {
           someField: { type: 'string' },
           someOtherField: { type: 'number' }
         }
@@ -331,14 +331,14 @@ Nested object fields **should** contain a `type`, just like regular
 ### Root-level JSON fields
 
 For JSON fields whose values are not nested in an object, define their
-validators with a `schema` validator:
+validators with a `shape` validator:
 
 ```js {5,6,7,8,9,18,19,20,21}
 class SomeData extends Model {}
 SomeData.fields = {
   value: {
     type: 'json',
-    schema: {
+    shape: {
       type: 'string',
       required: true,
       maxLength: 255
@@ -351,7 +351,7 @@ class RootLevelArray extends Model {}
 RootLevelArray.fields = {
   value: {
     type: 'array',
-    schema: {
+    shape: {
       required: true,
       type: 'string'
     }
@@ -360,7 +360,7 @@ RootLevelArray.fields = {
 const rootLevelArray = new RootLevelArray({ value: ['some value'] });
 ```
 
-Note that you may also define the schema with the `fieldName: fieldType`
+Note that you may also define the shape with the `fieldName: fieldType`
 shorthand:
 
 ```js {6}
@@ -369,7 +369,7 @@ class User extends Model {}
 User.fields = {
   data: {
     type: 'jsonb',
-    schema: 'string'
+    shape: 'string'
   }
 };
 ```
