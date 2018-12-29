@@ -64,7 +64,7 @@ For object configs, these options are supported:
 | `equals`     | mixed                       | none           | Validates that the field's value is equal to this value. Uses strict equality and case-sensitive matching for strings.                                                                   |
 | `regex`      | RegExp / object             | none           | Validates that the field's value either matches or does not match a regular expression, or both. See [regex validation](guides/validation.md#regex-validation)                           |
 | `validate`   | function                    | none           | Validates the field's value against a custom validation function. See [custom validation](guides/validation.md#custom-validation)                                                        |
-| `schema`     | string / object             | none           | Validates the structure of `json` (and `jsonb`) feilds. See [JSON validation](guides/validation.md#json-validation)                                                                      |
+| `shape`     | string / object             | none           | Validates the structure of `json` (and `jsonb`) feilds. See [JSON validation](guides/validation.md#json-validation)                                                                      |
 
 ## Field types
 
