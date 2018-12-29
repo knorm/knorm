@@ -21,6 +21,12 @@ describe('Field', function() {
   });
 
   describe('constructor', function() {
+    let Foo;
+
+    before(function() {
+      Foo = class extends Model {};
+    });
+
     it('throws an error if the field name is not provided', function() {
       expect(() => new Field(), 'to throw', new Error('Field requires a name'));
     });
@@ -34,7 +40,6 @@ describe('Field', function() {
     });
 
     it('throws an error if the field type is not provided', function() {
-      class Foo extends Model {}
       expect(
         () =>
           new Field({
@@ -47,7 +52,6 @@ describe('Field', function() {
     });
 
     it('throws an error if the field type is not supported', function() {
-      class Foo extends Model {}
       expect(
         () =>
           new Field({
@@ -61,7 +65,6 @@ describe('Field', function() {
     });
 
     it("throws an error if 'validate' is provided and is not a function", function() {
-      class Foo extends Model {}
       expect(
         () =>
           new Field({
@@ -79,7 +82,6 @@ describe('Field', function() {
 
     describe('with a column name configured', function() {
       it("sets the field's column name from configured value", function() {
-        class Foo extends Model {}
         const field = new Field({
           name: 'bar',
           model: Foo,
@@ -90,7 +92,6 @@ describe('Field', function() {
       });
 
       it('does not call getColumnName', function() {
-        class Foo extends Model {}
         const spy = sinon.spy(Field.prototype, 'getColumnName');
         // eslint-disable-next-line no-unused-vars
         const field = new Field({
@@ -106,7 +107,6 @@ describe('Field', function() {
 
     describe('without a column name configured', function() {
       it("calls getColumnName to set the field's column name", function() {
-        class Foo extends Model {}
         const stub = sinon
           .stub(Field.prototype, 'getColumnName')
           .returns('the column name');
@@ -125,7 +125,6 @@ describe('Field', function() {
 
     describe('with `cast` options', function() {
       it('throws if `cast.forSave` is not a function', function() {
-        class Foo extends Model {}
         expect(
           () =>
             new Field({
@@ -144,7 +143,6 @@ describe('Field', function() {
       });
 
       it('throws if `cast.forFetch` is not a function', function() {
-        class Foo extends Model {}
         expect(
           () =>
             new Field({
@@ -164,14 +162,8 @@ describe('Field', function() {
     });
 
     describe('for `json` and `jsonb` fields with a `shape` config', function() {
-      let Foo;
-
-      before(function() {
-        Foo = class extends Model {};
-      });
-
       describe('with a root-level `shape`', function() {
-        it('throws the correct error if the shape config has no `type`', function() {
+        it('throws the correct error if the config has no `type`', function() {
           expect(
             () =>
               new Field({
@@ -280,6 +272,51 @@ describe('Field', function() {
             }
           );
         });
+      });
+    });
+
+    describe('for fields fo type `virtual`', () => {
+      it('throws an error if the field config has no `get` or `set` function', function() {
+        expect(
+          () =>
+            new Field({
+              name: 'bar',
+              type: 'virtual',
+              model: Foo
+            }),
+          'to throw',
+          new Error('Virtual field `Foo.bar` has no `get` or `set` function')
+        );
+      });
+
+      it("throws an error if the virtual's getter is not a function", function() {
+        class Foo extends Model {}
+        expect(
+          () =>
+            new Field({
+              name: 'bar',
+              type: 'virtual',
+              model: Foo,
+              get: 'foo'
+            }),
+          'to throw',
+          new Error('Getter for virtual field `Foo.bar` is not a function')
+        );
+      });
+
+      it("throws an error if the virtual's setter is not a function", function() {
+        class Foo extends Model {}
+        expect(
+          () =>
+            new Field({
+              name: 'bar',
+              type: 'virtual',
+              model: Foo,
+              set: 'foo'
+            }),
+          'to throw',
+          new Error('Setter for virtual field `Foo.bar` is not a function')
+        );
       });
     });
   });
