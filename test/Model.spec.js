@@ -1,5 +1,4 @@
 const Knorm = require('../lib/Knorm');
-const Virtual = require('../lib/Virtual');
 const postgresPlugin = require('./lib/postgresPlugin');
 const knex = require('./lib/knex');
 const sinon = require('sinon');
