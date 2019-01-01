@@ -7,6 +7,7 @@ const KnormError = require('../lib/KnormError');
 const Field = require('../lib/Field');
 const Model = require('../lib/Model');
 const Query = require('../lib/Query');
+const Connection = require('../lib/Connection');
 const Transaction = require('../lib/Transaction');
 
 describe('Knorm', () => {
@@ -14,20 +15,26 @@ describe('Knorm', () => {
     expect(Knorm.Field, 'to be', Field);
     expect(Knorm.Model, 'to be', Model);
     expect(Knorm.Query, 'to be', Query);
+    expect(Knorm.Connection, 'to be', Connection);
     expect(Knorm.Transaction, 'to be', Transaction);
   });
 
   describe('constructor', () => {
-    it('creates scoped Field, Model, Query, Transaction', () => {
+    it('creates scoped Field, Model, Query, Connection, Transaction', () => {
       const knorm = new Knorm();
 
       expect(knorm.Field.prototype, 'to be a', Field);
       expect(knorm.Model.prototype, 'to be a', Model);
       expect(knorm.Query.prototype, 'to be a', Query);
+      expect(knorm.Connection.prototype, 'to be a', Connection);
       expect(knorm.Transaction.prototype, 'to be a', Transaction);
 
       expect(knorm.Model.Field, 'to be', knorm.Field);
       expect(knorm.Model.Query, 'to be', knorm.Query);
+
+      expect(knorm.Query.Connection, 'to be', knorm.Connection);
+      expect(knorm.Model.Query.Connection, 'to be', knorm.Connection);
+      expect(knorm.Transaction.Connection, 'to be', knorm.Connection);
     });
 
     it('adds an accessor to the knorm instance', function() {
@@ -36,33 +43,29 @@ describe('Knorm', () => {
       class User extends knorm.Model {}
       User.table = 'user';
 
-      const KnormUser = knorm.models.User;
-
       expect(knorm.Field.knorm, 'to be', knorm);
-      expect(knorm.Query.knorm, 'to be', knorm);
       expect(knorm.Model.knorm, 'to be', knorm);
+      expect(knorm.Query.knorm, 'to be', knorm);
+      expect(knorm.Connection.knorm, 'to be', knorm);
+      expect(knorm.Transaction.knorm, 'to be', knorm);
 
       expect(knorm.Field.prototype.knorm, 'to be', knorm);
-      expect(knorm.Query.prototype.knorm, 'to be', knorm);
       expect(knorm.Model.prototype.knorm, 'to be', knorm);
+      expect(knorm.Query.prototype.knorm, 'to be', knorm);
+      expect(knorm.Connection.prototype.knorm, 'to be', knorm);
+      expect(knorm.Transaction.prototype.knorm, 'to be', knorm);
+
+      const KnormUser = knorm.models.User;
 
       expect(KnormUser.knorm, 'to be', knorm);
       expect(KnormUser.Field.knorm, 'to be', knorm);
       expect(KnormUser.Query.knorm, 'to be', knorm);
+      expect(KnormUser.Query.Connection.knorm, 'to be', knorm);
 
       expect(KnormUser.prototype.knorm, 'to be', knorm);
       expect(KnormUser.Field.prototype.knorm, 'to be', knorm);
       expect(KnormUser.Query.prototype.knorm, 'to be', knorm);
-    });
-
-    it('creates a scoped Model class', () => {
-      const knorm = new Knorm();
-      expect(knorm.Query.prototype, 'to be a', Query);
-    });
-
-    it('creates a scoped Model class', () => {
-      const knorm = new Knorm();
-      expect(knorm.Query.prototype, 'to be a', Query);
+      expect(KnormUser.Query.Connection.prototype.knorm, 'to be', knorm);
     });
 
     it('creates new classes per instance', () => {
