@@ -833,7 +833,7 @@ This is an alias for [fields](#Query+fields).
 | --- | --- | --- |
 | sql | `SqlBricks` \| `object` \| `string` \| `array` | The SQL to run. When passed as an array, it can be an array of `SqlBricks` instances, objects or strings. |
 | sql.text | `string` | The parameterized SQL string (with placeholders), when `sql` is passed as an object. |
-| sql.values | `array` | The values for the parameterized SQL string, when `sql` is passed as an object. ::: tip INFO When the `sql` parameter is an array, a single database connection will be created but [formatSql](#Query+formatSql) and [query](#Query+query) will be called for each item in the array. ::: |
+| sql.values | `array` | The values for the parameterized SQL string, when `sql` is passed as an object. |
 
 Executes a query. This method calls, in order, [connect](#Query+connect) to
 connect to the database, [formatSql](#Query+formatSql) to format the SQL to be
@@ -846,8 +846,18 @@ This method is used internally by all [Query](#Query) methods i.e.
 [delete](#Query+delete).
 :::
 
-**Returns**: `Promise` - A `Promise` that is resolved with the result from
-running the query.
+::: tip INFO
+When the `sql` parameter is an array, a single database connection will be
+created but [formatSql](#Query+formatSql) and [query](#Query+query) will be called
+for each item in the array.
+
+Also note that the queries are run in parallel (via `Promise.all`) and the
+rows returned from each query are merged into a single array (via
+`Array.prototype.concat`).
+:::
+
+**Returns**: `Promise` - A `Promise` that is resolved with an array of rows
+returned from running the query.
 
 ::: tip INFO
 If [query](#Query+query) rejects with an error, the SQL that caused the error
@@ -942,9 +952,29 @@ instances, expect in the following cases:
 | Param | Type | Description |
 | --- | --- | --- |
 | data | [Model](#Model) \| `object` \| `array` | The data to update. Can be a plain object, a [Model](#Model) instance or an array of objects or instances. |
-| [options] | `object` | [Query](#Query) options ::: warning NOTE When the `data` param is a single object or [Model](#Model) instance and the [Query#where](Query#where) option is not set, **ALL rows in the table will be updated!** This mimics the behaviour of `UPDATE` queries. However, if the primary field is set in the data, then only the row matching the primary field is updated. ::: ::: tip INFO The `data` param only works as an array in conjunction with plugins that support updating multiple (ideally, in a single query) e.g. [@knorm/postgres](https://github.com/knorm/postgres). ::: ::: tip INFO When the [batchSize](#Query+batchSize) option is set, multiple update batches are created and multiple queries are sent to the database, but on the same database connection. ::: |
+| [options] | `object` | [Query](#Query) options |
 
 Updates data in the database.
+
+::: warning NOTE
+When the `data` param is a single object or [Model](#Model) instance and the
+[Query#where](Query#where) option is not set, **ALL rows in the table will be
+updated!** This mimics the behaviour of `UPDATE` queries. However, if the
+primary field is set in the data, then only the row matching the primary
+field is updated.
+:::
+
+::: tip INFO
+The `data` param only works as an array in conjunction with plugins that
+support updating multiple (ideally, in a single query) e.g.
+[@knorm/postgres](https://github.com/knorm/postgres).
+:::
+
+::: tip INFO
+When the [batchSize](#Query+batchSize) option is set, multiple update batches are
+created and multiple queries are sent to the database, but on the same
+database connection.
+:::
 
 **Returns**: `Promise` - the promise is resolved with an array of the model's
 instances, expect in the following cases:
@@ -976,9 +1006,25 @@ the primary field being set)
 | Param | Type | Description |
 | --- | --- | --- |
 | data | [Model](#Model) \| `object` \| `array` | The data to update. Can be a plain object, a [Model](#Model) instance or an array of objects or instances. |
-| [options] | `object` | [Query](#Query) options ::: warning NOTE When the `data` param is a single object or [Model](#Model) instance and the [Query#where](Query#where) option is not set, **ALL rows in the table will be updated!** This mimics the behaviour of `UPDATE` queries. However, if the primary field is set in the data, then only the row matching the primary field is updated. ::: ::: tip INFO - when the `data` param is an array, this method proxies to   [insert](#Query+insert). - when the `data` param is an object and the primary field is **not** set,   this method proxies to [insert](#Query+insert). However, if the primary   field is set, then the method proxies to [update](#Query+update). ::: |
+| [options] | `object` | [Query](#Query) options |
 
 Either inserts or updates data in the database.
+
+::: warning NOTE
+When the `data` param is a single object or [Model](#Model) instance and the
+[Query#where](Query#where) option is not set, **ALL rows in the table will be
+updated!** This mimics the behaviour of `UPDATE` queries. However, if the
+primary field is set in the data, then only the row matching the primary
+field is updated.
+:::
+
+::: tip INFO
+- when the `data` param is an array, this method proxies to
+  [insert](#Query+insert).
+- when the `data` param is an object and the primary field is **not** set,
+  this method proxies to [insert](#Query+insert). However, if the primary
+  field is set, then the method proxies to [update](#Query+update).
+:::
 
 <a name="Query+fetch"></a>
 
