@@ -326,4 +326,98 @@ describe('Knorm', () => {
       expect(knorm.Model.name, 'to be', 'Model');
     });
   });
+
+  describe('updateTransaction', () => {
+    it('updates Knorm.prototype.Transaction', () => {
+      class Foo {}
+      const knorm = new Knorm().updateTransaction(Foo);
+      expect(knorm.Transaction, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateTransaction(Foo), 'to be', knorm);
+    });
+  });
+
+  describe('updateModel', () => {
+    it('updates Knorm.prototype.Model', () => {
+      class Foo {}
+      const knorm = new Knorm().updateModel(Foo);
+      expect(knorm.Model, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateModel(Foo), 'to be', knorm);
+    });
+  });
+
+  describe('updateQuery', () => {
+    it('updates Knorm.prototype.Query', () => {
+      class Foo {}
+      const knorm = new Knorm().updateQuery(Foo);
+      expect(knorm.Query, 'to be', Foo);
+    });
+
+    it('updates Knorm.Model.Query', () => {
+      class Foo {}
+      const knorm = new Knorm().updateQuery(Foo);
+      expect(knorm.Model.Query, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateQuery(Foo), 'to be', knorm);
+    });
+  });
+
+  describe('updateField', () => {
+    it('updates Knorm.prototype.Field', () => {
+      class Foo {}
+      const knorm = new Knorm().updateField(Foo);
+      expect(knorm.Field, 'to be', Foo);
+    });
+
+    it('updates Knorm.Model.Field', () => {
+      class Foo {}
+      const knorm = new Knorm().updateField(Foo);
+      expect(knorm.Model.Field, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateField(Foo), 'to be', knorm);
+    });
+  });
+
+  describe('updateConnection', () => {
+    it('updates Knorm.prototype.Connection', () => {
+      class Foo {}
+      const knorm = new Knorm().updateConnection(Foo);
+      expect(knorm.Connection, 'to be', Foo);
+    });
+
+    it('updates Knorm.Query.Connection', () => {
+      class Foo {}
+      const knorm = new Knorm().updateConnection(Foo);
+      expect(knorm.Query.Connection, 'to be', Foo);
+    });
+
+    it('updates Knorm.Transaction.Connection', () => {
+      class Foo {}
+      const knorm = new Knorm().updateConnection(Foo);
+      expect(knorm.Transaction.Connection, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateConnection(Foo), 'to be', knorm);
+    });
+  });
 });

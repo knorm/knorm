@@ -177,13 +177,15 @@ Creates and configures ORMs.
 * [Knorm](#Knorm)
     * [new Knorm([config])](#new_Knorm_new)
     * _instance_
-        * [.Field](#Knorm+Field) : [Field](#Field)
         * [.Model](#Knorm+Model) : [Model](#Model)
+        * [.Connection](#Knorm+Connection) : [Connection](#Connection)
         * [.Query](#Knorm+Query) : [Query](#Query)
         * [.Transaction](#Knorm+Transaction) : [Transaction](#Transaction)
+        * [.Field](#Knorm+Field) : [Field](#Field)
         * [.use(plugin)](#Knorm+use) ⇒ [Knorm](#Knorm)
         * [.addModel(model)](#Knorm+addModel)
         * [.clone()](#Knorm+clone) ⇒ [Knorm](#Knorm)
+        * [.updateField(Field)](#Knorm+updateField) ⇒ [Knorm](#Knorm)
     * _static_
         * [.KnormError](#Knorm.KnormError) : `KnormError`
 
@@ -201,25 +203,30 @@ Creates a new [Knorm](#Knorm) (ORM) instance. Each instance has it's own set
 of classes and configuration, which enables having multiple [Knorm](#Knorm)
 instances in a single application.
 
-<a name="Knorm+Field"></a>
-
-### knorm.Field : [Field](#Field)
-The ORM's [Field](#Field) class.
-
 <a name="Knorm+Model"></a>
 
 ### knorm.Model : [Model](#Model)
-The ORM's [Model](#Model) class.
+The [Knorm](#Knorm) instance's [Model](#Model) class.
+
+<a name="Knorm+Connection"></a>
+
+### knorm.Connection : [Connection](#Connection)
+The [Knorm](#Knorm) instance's [Connection](#Connection) class.
 
 <a name="Knorm+Query"></a>
 
 ### knorm.Query : [Query](#Query)
-The ORM's [Query](#Query) class.
+The [Knorm](#Knorm) instance's [Query](#Query) class.
 
 <a name="Knorm+Transaction"></a>
 
 ### knorm.Transaction : [Transaction](#Transaction)
-The ORM's [Transaction](#Transaction) class.
+The [Knorm](#Knorm) instance's [Transaction](#Transaction) class.
+
+<a name="Knorm+Field"></a>
+
+### knorm.Field : [Field](#Field)
+The [Knorm](#Knorm) instance's [Field](#Field) class.
 
 <a name="Knorm+use"></a>
 
@@ -269,6 +276,18 @@ Creates a clone of an existing [Knorm](#Knorm) instance, copying all the
 models and plugins loaded into the original orm.
 
 **Returns**: [Knorm](#Knorm) - the newly cloned ORM instance.  
+<a name="Knorm+updateField"></a>
+
+### knorm.updateField(Field) ⇒ [Knorm](#Knorm)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| Field | [Field](#Field) | The new class. This could be a class that extends the current [Field](#Knorm+Field) class or an entirely new class. |
+
+Updates the [Field](#Field) class used in the [Knorm](#Knorm) instance. This
+ensures all references to the new class are updated accordingly.
+
+**Returns**: [Knorm](#Knorm) - The same [Knorm](#Knorm) instance to allow chaining.  
 <a name="Knorm.KnormError"></a>
 
 ### Knorm.KnormError : `KnormError`
@@ -343,8 +362,8 @@ For models accessed within a transaction, this is reference to the
 [Transaction](#Transaction) instance.
 
 ::: warning NOTE
-This is only set for models that are accessed within a transaction, otherwise
-it's set to `null`.
+This is only set for [Model](#Model) instances that are accessed within a
+transaction, otherwise it's set to `null`.
 :::
 
 ::: tip
@@ -602,6 +621,7 @@ Creates and runs queries and parses any data returned.
 * [Query](#Query)
     * [new Query(model)](#new_Query_new)
     * _instance_
+        * [.field](#Query+field) ⇒ [Query](#Query)
         * [.knorm](#Query+knorm) : [Knorm](#Knorm)
         * [.models](#Query+models) : `object`
         * [.transaction](#Query+transaction) : [Transaction](#Transaction)
@@ -647,6 +667,23 @@ Creates and runs queries and parses any data returned.
 
 Creates a new Query instance.
 
+<a name="Query+field"></a>
+
+### query.field ⇒ [Query](#Query)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fields | `string` \| `array` \| `object` | The field to return. |
+
+Alias for [fields](#Query+fields), improves code readability when configuring a
+single field.
+
+::: tip INFO
+This is an alias for [fields](#Query+fields).
+:::
+
+**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
+**See**: [fields](#Query+fields)  
 <a name="Query+knorm"></a>
 
 ### query.knorm : [Knorm](#Knorm)
@@ -1064,9 +1101,14 @@ for limit and offset options in joined queries (probably with a subquery)
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [options] | `object` | [Query](#Query) options ::: warning NOTE If the [Query#where](Query#where) option is not set, **ALL rows in the table will be deleted!** This mimics the behaviour of `DELETE` queries. ::: |
+| [options] | `object` | [Query](#Query) options |
 
 Deletes data from the database.
+
+::: warning NOTE
+If the [Query#where](Query#where) option is not set, **ALL rows in the table will
+be deleted!** This mimics the behaviour of `DELETE` queries.
+:::
 
 **Returns**: `Promise` - the promise is resolved with an array of the model's
 instances, expect in the following cases:
@@ -1185,8 +1227,8 @@ For models accessed within a transaction, this is reference to the
 [Transaction](#Transaction) instance.
 
 ::: warning NOTE
-This is only set for models that are accessed within a transaction, otherwise
-it's set to `null`.
+This is only set for [Query](#Query) instances that are running within a
+transaction, otherwise it's set to `null`.
 :::
 
 ::: tip

@@ -5,25 +5,22 @@ const sqlBricksPostgres = require('sql-bricks-postgres');
 const pool = new Pool(knex.client.config.connection);
 
 const postgresPlugin = knorm => {
-  class ConnectionForTests extends knorm.Connection {
-    async create() {
-      this.client = await pool.connect();
-    }
+  knorm.updateConnection(
+    class ConnectionForTests extends knorm.Connection {
+      async create() {
+        this.client = await pool.connect();
+      }
 
-    async query(sql) {
-      const { rows } = await this.client.query(sql);
-      return rows;
-    }
+      async query(sql) {
+        const { rows } = await this.client.query(sql);
+        return rows;
+      }
 
-    async close() {
-      return this.client.release();
+      async close() {
+        return this.client.release();
+      }
     }
-  }
-
-  knorm.Connection = ConnectionForTests;
-  knorm.Transaction.Connection = ConnectionForTests;
-  knorm.Query.Connection = ConnectionForTests;
-  knorm.Model.Query.Connection = ConnectionForTests;
+  );
 
   class QueryForTests extends knorm.Query {
     quote(value) {
@@ -45,10 +42,10 @@ const postgresPlugin = knorm => {
     }
   }
 
+  knorm.updateQuery(QueryForTests);
+
   QueryForTests.prototype.sql = sqlBricksPostgres;
   knorm.Query.Where.prototype.sql = sqlBricksPostgres;
-
-  knorm.Query = knorm.Model.Query = QueryForTests;
 };
 
 module.exports = postgresPlugin;
