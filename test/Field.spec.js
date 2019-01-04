@@ -530,19 +530,18 @@ describe('Field', function() {
         expect(field.getDefault(), 'to be', 'bar');
       });
 
-      it("calls the function with 'this' set to the instance passed", function() {
-        const stub = sinon.stub().returns('bar');
+      it('calls the function with the mode instance as a parameter', function() {
+        const getDefault = sinon.stub().returns('bar');
         const field = new Field({
           name: 'firstName',
           model: User,
           type: 'string',
-          default: stub
+          default: getDefault
         });
         field.getDefault('a model instance');
-        expect(stub, 'was called once').and(
-          'was called on',
-          'a model instance'
-        );
+        expect(getDefault, 'to have calls satisfying', () => {
+          getDefault('a model instance');
+        });
       });
     });
   });
