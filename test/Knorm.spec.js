@@ -263,6 +263,7 @@ describe('Knorm', () => {
     it('allows plugins to update knorm.Model', () => {
       knorm.Model = class Foo extends knorm.Model {};
       knorm.addModel(knorm.Model);
+      expect(knorm.Model, 'to be', knorm.Model);
     });
 
     it('allows chaining', () => {
