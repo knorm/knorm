@@ -9,21 +9,18 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'))
   .use(require('./lib/unexpected-workaround'));
 
-describe('Model', function() {
+describe('Model', () => {
   let Model;
   let Query;
   let Field;
 
-  before(function() {
-    const orm = new Knorm();
-    Model = orm.Model;
-    Query = orm.Query;
-    Field = orm.Field;
+  before(() => {
+    ({ Model, Query, Field } = new Knorm());
   });
 
-  describe('constructor', function() {
-    describe('when the model has virtuals', function() {
-      it("adds virtual's getters on the instance", function() {
+  describe('constructor', () => {
+    describe('when the model has virtuals', () => {
+      it("adds virtual's getters on the instance", () => {
         class Foo extends Model {}
 
         Foo.virtuals = {
@@ -39,7 +36,7 @@ describe('Model', function() {
         expect(foo.foo, 'to be', 'foo');
       });
 
-      it('adds the getters with the correct scope', function() {
+      it('adds the getters with the correct scope', () => {
         class Foo extends Model {}
 
         Foo.virtuals = {
@@ -56,7 +53,7 @@ describe('Model', function() {
         expect(foo.foo, 'to be', 'bar');
       });
 
-      it("adds virtual's setters on the instance with the correct scope", function() {
+      it("adds virtual's setters on the instance with the correct scope", () => {
         class Foo extends Model {}
 
         Foo.virtuals = {
@@ -74,8 +71,8 @@ describe('Model', function() {
       });
     });
 
-    describe('with data provided', function() {
-      it('calls Model.prototype.setData to populate the instance with the data', function() {
+    describe('with data provided', () => {
+      it('calls Model.prototype.setData to populate the instance with the data', () => {
         class Foo extends Model {}
 
         Foo.fields = {
@@ -99,8 +96,8 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getField', function() {
-    it('returns the field requested', function() {
+  describe('Model.prototype.getField', () => {
+    it('returns the field requested', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -114,8 +111,8 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getFields', function() {
-    it("returns all the model's fields if called with no arguments", function() {
+  describe('Model.prototype.getFields', () => {
+    it("returns all the model's fields if called with no arguments", () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -128,7 +125,7 @@ describe('Model', function() {
       expect(foo.getFields(), 'to equal', [Foo.fields.foo]);
     });
 
-    it('returns an array of `Field` instances', function() {
+    it('returns an array of `Field` instances', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -143,7 +140,7 @@ describe('Model', function() {
       ]);
     });
 
-    it('returns the correct fields', function() {
+    it('returns the correct fields', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -162,7 +159,7 @@ describe('Model', function() {
       ]);
     });
 
-    it('returns the same fields if passed an array of field instances', function() {
+    it('returns the same fields if passed an array of field instances', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -182,8 +179,8 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.setData', function() {
-    it('populates the instance with the data with the passed object', function() {
+  describe('Model.prototype.setData', () => {
+    it('populates the instance with the data with the passed object', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -207,7 +204,7 @@ describe('Model', function() {
       expect(foo.bar, 'to equal', 1);
     });
 
-    it('populates virtuals if provided in the object', function() {
+    it('populates virtuals if provided in the object', () => {
       class Foo extends Model {}
 
       Foo.virtuals = {
@@ -230,7 +227,7 @@ describe('Model', function() {
       expect(foo.bar, 'to equal', 1);
     });
 
-    it('throws if a virtual provided in the object has no setter', function() {
+    it('throws if a virtual provided in the object has no setter', () => {
       class Foo extends Model {}
 
       Foo.virtuals = {
@@ -251,7 +248,7 @@ describe('Model', function() {
       );
     });
 
-    it("calls the virtual's getter with this set to the model instance", function() {
+    it("calls the virtual's getter with this set to the model instance", () => {
       class Foo extends Model {}
 
       const spy = sinon.spy();
@@ -267,7 +264,7 @@ describe('Model', function() {
       expect(spy, 'was called once').and('was called on', foo);
     });
 
-    it('returns the model instance to allow chaining', function() {
+    it('returns the model instance to allow chaining', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -283,8 +280,8 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.setDefaults', function() {
-    it('populates all configured fields with the configured default value', function() {
+  describe('Model.prototype.setDefaults', () => {
+    it('populates all configured fields with the configured default value', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -307,7 +304,7 @@ describe('Model', function() {
       expect(foo.bar, 'to equal', 'bar');
     });
 
-    it('accepts a list of fields to populate with the configured default value', function() {
+    it('accepts a list of fields to populate with the configured default value', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -330,7 +327,7 @@ describe('Model', function() {
       expect(foo.bar, 'to equal', 'bar');
     });
 
-    it("doesn't overwrite values that have already been set", function() {
+    it("doesn't overwrite values that have already been set", () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -348,14 +345,14 @@ describe('Model', function() {
       expect(foo.foo, 'to be', 'dont change me');
     });
 
-    describe("when a field's default value is a function", function() {
-      it('calls the function and populates the field with the return value', function() {
+    describe("when a field's default value is a function", () => {
+      it('calls the function and populates the field with the return value', () => {
         class Foo extends Model {}
 
         Foo.fields = {
           foo: {
             type: 'string',
-            default: function() {
+            default() {
               return 'foo';
             }
           }
@@ -368,7 +365,7 @@ describe('Model', function() {
         expect(foo.foo, 'to be', 'foo');
       });
 
-      it("calls the function with the instance's scope", function() {
+      it("calls the function with the instance's scope", () => {
         class Foo extends Model {}
 
         Foo.fields = {
@@ -382,7 +379,7 @@ describe('Model', function() {
           },
           computed: {
             type: 'string',
-            default: function() {
+            default() {
               return this.foo + this.bar;
             }
           }
@@ -398,7 +395,7 @@ describe('Model', function() {
       });
     });
 
-    it('returns the model instance to allow chaining', function() {
+    it('returns the model instance to allow chaining', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -414,15 +411,15 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getFieldData', function() {
+  describe('Model.prototype.getFieldData', () => {
     let Foo;
 
-    before(function() {
+    before(() => {
       Foo = class extends Model {};
       Foo.fields = { foo: 'string', bar: 'string' };
     });
 
-    it('returns an object mapping fields to their values', function() {
+    it('returns an object mapping fields to their values', () => {
       const foo = new Foo();
 
       foo.foo = 'foo';
@@ -434,7 +431,7 @@ describe('Model', function() {
       });
     });
 
-    it('does not include fields whose value has not been set', function() {
+    it('does not include fields whose value has not been set', () => {
       const foo = new Foo();
 
       foo.foo = 'foo';
@@ -445,7 +442,7 @@ describe('Model', function() {
       });
     });
 
-    it('does not include properties set on the model that are not fields', function() {
+    it('does not include properties set on the model that are not fields', () => {
       const foo = new Foo();
 
       foo.foo = 'foo';
@@ -457,8 +454,8 @@ describe('Model', function() {
       });
     });
 
-    describe('with a `fields` option', function() {
-      it('only returns data for the requested fields', function() {
+    describe('with a `fields` option', () => {
+      it('only returns data for the requested fields', () => {
         const foo = new Foo();
 
         foo.foo = 'foo';
@@ -469,7 +466,7 @@ describe('Model', function() {
         });
       });
 
-      it('does not include a field without a value even if it has been requested', function() {
+      it('does not include a field without a value even if it has been requested', () => {
         const foo = new Foo();
 
         foo.foo = 'foo';
@@ -479,8 +476,8 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getVirtualData', function() {
-    it('resolves with an object with virtuals and their data', async function() {
+  describe('Model.prototype.getVirtualData', () => {
+    it('resolves with an object with virtuals and their data', async () => {
       class Foo extends Model {}
 
       Foo.virtuals = {
@@ -498,7 +495,7 @@ describe('Model', function() {
       );
     });
 
-    it('resolves with data from async virtuals (that return a Promise)', async function() {
+    it('resolves with data from async virtuals (that return a Promise)', async () => {
       class Foo extends Model {}
 
       Foo.virtuals = {
@@ -516,7 +513,7 @@ describe('Model', function() {
       );
     });
 
-    it('skips virtuals that have no getters', async function() {
+    it('skips virtuals that have no getters', async () => {
       class Foo extends Model {}
 
       Foo.virtuals = {
@@ -534,7 +531,7 @@ describe('Model', function() {
       );
     });
 
-    it("calls the virtuals' getters with this set to the model instance", async function() {
+    it("calls the virtuals' getters with this set to the model instance", async () => {
       class Foo extends Model {}
 
       const spy = sinon.spy();
@@ -548,8 +545,8 @@ describe('Model', function() {
     });
   });
 
-  describe('with a `virtuals` option', function() {
-    it('only includes the requested virtuals', async function() {
+  describe('with a `virtuals` option', () => {
+    it('only includes the requested virtuals', async () => {
       class Foo extends Model {}
 
       Foo.virtuals = {
@@ -574,7 +571,7 @@ describe('Model', function() {
       );
     });
 
-    it('rejects with an error if a requested virtual has no getter', async function() {
+    it('rejects with an error if a requested virtual has no getter', async () => {
       class Foo extends Model {}
 
       Foo.virtuals = {
@@ -593,10 +590,10 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getVirtualDataSync', function() {
+  describe('Model.prototype.getVirtualDataSync', () => {
     let Foo;
 
-    before(function() {
+    before(() => {
       Foo = class extends Model {};
       Foo.virtuals = {
         foo() {
@@ -608,13 +605,13 @@ describe('Model', function() {
       };
     });
 
-    it('returns virtual data without async virtuals', function() {
+    it('returns virtual data without async virtuals', () => {
       const foo = new Foo();
       expect(foo.getVirtualDataSync(), 'to equal', { foo: 'foo' });
     });
 
-    describe('with a `virtuals` option', function() {
-      it('does not include async virtuals even if requested', async function() {
+    describe('with a `virtuals` option', () => {
+      it('does not include async virtuals even if requested', async () => {
         const foo = new Foo();
 
         expect(foo.getVirtualDataSync({ virtuals: ['bar'] }), 'to equal', {});
@@ -622,10 +619,10 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getData', function() {
+  describe('Model.prototype.getData', () => {
     let Foo;
 
-    before(function() {
+    before(() => {
       Foo = class extends Model {};
       Foo.fields = { foo: 'string', bar: 'string' };
       Foo.virtuals = {
@@ -638,7 +635,7 @@ describe('Model', function() {
       };
     });
 
-    it('resolves with an object with field and virtual field data', async function() {
+    it('resolves with an object with field and virtual field data', async () => {
       const foo = new Foo();
 
       foo.foo = 'foo';
@@ -651,8 +648,8 @@ describe('Model', function() {
       );
     });
 
-    describe('with a `fields` option', function() {
-      it('only includes the requested fields', async function() {
+    describe('with a `fields` option', () => {
+      it('only includes the requested fields', async () => {
         const foo = new Foo();
 
         foo.foo = 'foo';
@@ -666,8 +663,8 @@ describe('Model', function() {
       });
     });
 
-    describe('with a `virtuals` option', function() {
-      it('only includes the requested virtuals', async function() {
+    describe('with a `virtuals` option', () => {
+      it('only includes the requested virtuals', async () => {
         const foo = new Foo();
 
         foo.foo = 'foo';
@@ -682,10 +679,10 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getDataSync', function() {
+  describe('Model.prototype.getDataSync', () => {
     let Foo;
 
-    before(function() {
+    before(() => {
       Foo = class extends Model {};
       Foo.fields = { foo: 'string', bar: 'string' };
       Foo.virtuals = {
@@ -698,7 +695,7 @@ describe('Model', function() {
       };
     });
 
-    it('returns an object with field and only sync virtual field data', function() {
+    it('returns an object with field and only sync virtual field data', () => {
       const foo = new Foo();
 
       foo.foo = 'foo';
@@ -711,8 +708,8 @@ describe('Model', function() {
       });
     });
 
-    describe('with a `fields` option', function() {
-      it('only includes the requested fields', function() {
+    describe('with a `fields` option', () => {
+      it('only includes the requested fields', () => {
         const foo = new Foo();
 
         foo.foo = 'foo';
@@ -725,8 +722,8 @@ describe('Model', function() {
       });
     });
 
-    describe('with a `virtuals` option', function() {
-      it('only includes the requested sync virtuals', function() {
+    describe('with a `virtuals` option', () => {
+      it('only includes the requested sync virtuals', () => {
         const foo = new Foo();
 
         foo.foo = 'foo';
@@ -741,8 +738,8 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.validate', function() {
-    it('validates all the fields by default', async function() {
+  describe('Model.prototype.validate', () => {
+    it('validates all the fields by default', async () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -773,8 +770,8 @@ describe('Model', function() {
       barValidationSpy.restore();
     });
 
-    describe("with a 'fields' option", function() {
-      it('validates only the fields passed', async function() {
+    describe("with a 'fields' option", () => {
+      it('validates only the fields passed', async () => {
         class Foo extends Model {}
 
         Foo.fields = {
@@ -805,7 +802,7 @@ describe('Model', function() {
         barValidationSpy.restore();
       });
 
-      it('accepts a list of field objects', async function() {
+      it('accepts a list of field objects', async () => {
         class Foo extends Model {}
 
         Foo.fields = {
@@ -841,7 +838,7 @@ describe('Model', function() {
       });
     });
 
-    it('calls the validator with the set value and the model instance', async function() {
+    it('calls the validator with the set value and the model instance', async () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -863,7 +860,7 @@ describe('Model', function() {
       barValidationSpy.restore();
     });
 
-    it('rejects with the error from Field.prototype.validate', async function() {
+    it('rejects with the error from Field.prototype.validate', async () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -886,7 +883,7 @@ describe('Model', function() {
       barValidationStub.restore();
     });
 
-    it('resolves with the model instance to allow chaining', async function() {
+    it('resolves with the model instance to allow chaining', async () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -906,8 +903,8 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.cast', function() {
-    it('casts all the fields that have cast functions and a value set', async function() {
+  describe('Model.prototype.cast', () => {
+    it('casts all the fields that have cast functions and a value set', async () => {
       class Foo extends Model {}
 
       const fooSaveCast = sinon.spy();
@@ -934,8 +931,8 @@ describe('Model', function() {
       await expect(fooSaveCast, 'was called once');
     });
 
-    describe("with a 'fields' option", function() {
-      it('casts only the fields passed', async function() {
+    describe("with a 'fields' option", () => {
+      it('casts only the fields passed', async () => {
         class Foo extends Model {}
 
         const fooSaveCast = sinon.spy();
@@ -967,7 +964,7 @@ describe('Model', function() {
         await expect(barSaveCast, 'was called once');
       });
 
-      it('accepts a list of field objects', async function() {
+      it('accepts a list of field objects', async () => {
         class Foo extends Model {}
 
         const fooSaveCast = sinon.spy();
@@ -1000,7 +997,7 @@ describe('Model', function() {
       });
     });
 
-    it('calls Field.prototype.cast with the set value, the model instance and options passed', function() {
+    it('calls Field.prototype.cast with the set value, the model instance and options passed', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -1026,7 +1023,7 @@ describe('Model', function() {
       barCastSpy.restore();
     });
 
-    it('does not call Field.prototype.cast if the field has no value set', function() {
+    it('does not call Field.prototype.cast if the field has no value set', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -1048,7 +1045,7 @@ describe('Model', function() {
       barCastSpy.restore();
     });
 
-    it("calls Field.prototype.cast if the field's value is `null`", function() {
+    it("calls Field.prototype.cast if the field's value is `null`", () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -1070,7 +1067,7 @@ describe('Model', function() {
       barCastSpy.restore();
     });
 
-    it('updates the set value with the value from the cast function', function() {
+    it('updates the set value with the value from the cast function', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -1092,7 +1089,7 @@ describe('Model', function() {
       expect(foo.bar, 'to be', 'new value');
     });
 
-    it('does not update the set value if the cast function returns `undefined`', function() {
+    it('does not update the set value if the cast function returns `undefined`', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -1112,7 +1109,7 @@ describe('Model', function() {
       expect(foo.bar, 'to be', 'bar');
     });
 
-    it('updates the set value if the cast function returns `null`', function() {
+    it('updates the set value if the cast function returns `null`', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -1134,7 +1131,7 @@ describe('Model', function() {
       expect(foo.bar, 'to be', null);
     });
 
-    it('returns the model instance to allow chaining', function() {
+    it('returns the model instance to allow chaining', () => {
       class Foo extends Model {}
 
       Foo.fields = {
@@ -1153,7 +1150,7 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.prototype.getQuery', function() {
+  describe('Model.prototype.getQuery', () => {
     const { Model, Query } = new Knorm();
 
     class Foo extends Model {}
@@ -1169,7 +1166,7 @@ describe('Model', function() {
       }
     };
 
-    it('passes any options passed to Query.prototype.setOptions', function() {
+    it('passes any options passed to Query.prototype.setOptions', () => {
       const setOptions = sinon
         .stub(Query.prototype, 'setOptions')
         .returnsThis();
@@ -1180,42 +1177,42 @@ describe('Model', function() {
       setOptions.restore();
     });
 
-    it('sets `first` to `true`', function() {
+    it('sets `first` to `true`', () => {
       const first = sinon.stub(Query.prototype, 'first').returnsThis();
       new Foo({ id: 1 }).getQuery();
       expect(first, 'to have calls satisfying', () => first(true));
       first.restore();
     });
 
-    it('sets `require` to `true` by default', function() {
+    it('sets `require` to `true` by default', () => {
       const require = sinon.stub(Query.prototype, 'require').returnsThis();
       new Foo({ id: 1 }).getQuery();
       expect(require, 'to have calls satisfying', () => require(true));
       require.restore();
     });
 
-    it('allows overriding the `require` option to `false`', function() {
+    it('allows overriding the `require` option to `false`', () => {
       const require = sinon.stub(Query.prototype, 'require').returnsThis();
       new Foo({ id: 1 }).getQuery({ require: false });
       expect(require, 'to have calls satisfying', () => require(false));
       require.restore();
     });
 
-    it('sets `forge` to `false`', function() {
+    it('sets `forge` to `false`', () => {
       const forge = sinon.stub(Query.prototype, 'forge').returnsThis();
       new Foo({ id: 1 }).getQuery();
       expect(forge, 'to have calls satisfying', () => forge(false));
       forge.restore();
     });
 
-    it('passes the primary field set on the model to Query.prototype.where', function() {
+    it('passes the primary field set on the model to Query.prototype.where', () => {
       const where = sinon.stub(Query.prototype, 'where').returnsThis();
       new Foo({ id: 1 }).getQuery();
       expect(where, 'to have calls satisfying', () => where({ id: 1 }));
       where.restore();
     });
 
-    it('throws if the primary field is not set', function() {
+    it('throws if the primary field is not set', () => {
       expect(
         () => new Foo({}).getQuery(),
         'to throw',
@@ -1223,7 +1220,7 @@ describe('Model', function() {
       );
     });
 
-    it('appends the `where` clause if a `where` option is passed', function() {
+    it('appends the `where` clause if a `where` option is passed', () => {
       const where = sinon.stub(Query.prototype, 'where').returnsThis();
       new Foo({ id: 1 }).getQuery({ where: { name: 'foo' } });
       expect(where, 'to have calls satisfying', () => {
@@ -1233,7 +1230,7 @@ describe('Model', function() {
       where.restore();
     });
 
-    describe('with unique fields configured', function() {
+    describe('with unique fields configured', () => {
       class Foo extends Model {}
 
       Foo.table = 'foo';
@@ -1254,40 +1251,40 @@ describe('Model', function() {
 
       let whereStub;
 
-      before(function() {
+      before(() => {
         whereStub = sinon.stub(Query.prototype, 'where').returnsThis();
       });
 
-      beforeEach(function() {
+      beforeEach(() => {
         whereStub.resetHistory();
       });
 
-      after(function() {
+      after(() => {
         whereStub.restore();
       });
 
-      it('uses the unique fields in a where clause if the primary field is not set', function() {
+      it('uses the unique fields in a where clause if the primary field is not set', () => {
         new Foo({ name: 'foo' }).getQuery();
         expect(whereStub, 'to have calls satisfying', () =>
           whereStub({ name: 'foo' })
         );
       });
 
-      it('uses the primary field if both unique and primary fields are set', function() {
+      it('uses the primary field if both unique and primary fields are set', () => {
         new Foo({ id: 1, name: 'foo' }).getQuery();
         expect(whereStub, 'to have calls satisfying', () =>
           whereStub({ id: 1 })
         );
       });
 
-      it('uses only one of the primary fields if more than one are set', function() {
+      it('uses only one of the primary fields if more than one are set', () => {
         new Foo({ name: 'foo', number: 1 }).getQuery();
         expect(whereStub, 'to have calls satisfying', () =>
           whereStub({ name: 'foo' })
         );
       });
 
-      it('throws if neither the primary field nor unique fields are set', function() {
+      it('throws if neither the primary field nor unique fields are set', () => {
         expect(
           () => new Foo({}).getQuery(),
           'to throw',
@@ -1296,15 +1293,15 @@ describe('Model', function() {
       });
     });
 
-    describe('for inserts', function() {
-      it('does not throw if the primary field is not set', function() {
+    describe('for inserts', () => {
+      it('does not throw if the primary field is not set', () => {
         expect(
           () => new Foo({}).getQuery({}, { forInsert: true }),
           'not to throw'
         );
       });
 
-      it('does not construct a `where` clause', function() {
+      it('does not construct a `where` clause', () => {
         const where = sinon.stub(Query.prototype, 'where').returnsThis();
         new Foo({ id: 1 }).getQuery({}, { forInsert: true });
         expect(where, 'was not called');
@@ -1313,9 +1310,9 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.config', function() {
-    describe('as a setter', function() {
-      it("adds the model to the Knorm instances' models", function() {
+  describe('Model.config', () => {
+    describe('as a setter', () => {
+      it("adds the model to the Knorm instances' models", () => {
         const knorm = new Knorm();
         class Foo extends knorm.Model {}
 
@@ -1327,8 +1324,8 @@ describe('Model', function() {
       });
     });
 
-    describe('when a model is subclassed', function() {
-      it("adds the subclassed model to the Knorm instances' models", function() {
+    describe('when a model is subclassed', () => {
+      it("adds the subclassed model to the Knorm instances' models", () => {
         const knorm = new Knorm();
         class Foo extends knorm.Model {}
 
@@ -1346,17 +1343,17 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.schema', function() {
-    describe('as a setter', function() {
-      it("sets the model's schema", function() {
+  describe('Model.schema', () => {
+    describe('as a setter', () => {
+      it("sets the model's schema", () => {
         class Foo extends Model {}
         Foo.schema = 'foo';
         expect(Foo.config.schema, 'to be', 'foo');
       });
     });
 
-    describe('when a model is subclassed', function() {
-      it("inherits the parent's schema", function() {
+    describe('when a model is subclassed', () => {
+      it("inherits the parent's schema", () => {
         class Foo extends Model {}
         class Bar extends Foo {}
 
@@ -1366,7 +1363,7 @@ describe('Model', function() {
         expect(Bar.schema, 'to be', 'foo');
       });
 
-      it("allows overwriting the parent's schema", function() {
+      it("allows overwriting the parent's schema", () => {
         class Foo extends Model {}
         class Bar extends Foo {}
 
@@ -1379,17 +1376,17 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.table', function() {
-    describe('as a setter', function() {
-      it("sets the model's table", function() {
+  describe('Model.table', () => {
+    describe('as a setter', () => {
+      it("sets the model's table", () => {
         class Foo extends Model {}
         Foo.table = 'foo';
         expect(Foo.config.table, 'to be', 'foo');
       });
     });
 
-    describe('when a model is subclassed', function() {
-      it("inherits the parent's table", function() {
+    describe('when a model is subclassed', () => {
+      it("inherits the parent's table", () => {
         class Foo extends Model {}
         class Bar extends Foo {}
 
@@ -1399,7 +1396,7 @@ describe('Model', function() {
         expect(Bar.table, 'to be', 'foo');
       });
 
-      it("allows overwriting the parent's table", function() {
+      it("allows overwriting the parent's table", () => {
         class Foo extends Model {}
         class Bar extends Foo {}
 
@@ -1412,9 +1409,9 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.fields', function() {
-    describe('as a getter', function() {
-      it('returns added fields', function() {
+  describe('Model.fields', () => {
+    describe('as a getter', () => {
+      it('returns added fields', () => {
         class User extends Model {}
         User.fields = {
           firstName: {
@@ -1435,8 +1432,8 @@ describe('Model', function() {
       });
     });
 
-    describe('as a setter', function() {
-      it("adds the passed fields to the model's fields", function() {
+    describe('as a setter', () => {
+      it("adds the passed fields to the model's fields", () => {
         class User extends Model {}
         User.fields = {
           firstName: {
@@ -1456,7 +1453,7 @@ describe('Model', function() {
         });
       });
 
-      it("allows adding fields via the `fieldName: 'type'` shorthand", function() {
+      it("allows adding fields via the `fieldName: 'type'` shorthand", () => {
         class User extends Model {}
         User.fields = { firstName: 'string' };
 
@@ -1472,7 +1469,7 @@ describe('Model', function() {
         });
       });
 
-      it('throws if the field-name is already assigned to an instance property', function() {
+      it('throws if the field-name is already assigned to an instance property', () => {
         class Foo extends Model {
           bar() {}
         }
@@ -1491,7 +1488,7 @@ describe('Model', function() {
         );
       });
 
-      it('throws if the field-name is already added as a virtual', function() {
+      it('throws if the field-name is already added as a virtual', () => {
         class Foo extends Model {}
 
         Foo.virtuals = {
@@ -1512,8 +1509,8 @@ describe('Model', function() {
         );
       });
 
-      describe('when a model is subclassed', function() {
-        it('allows overwriting fields defined in the parent', function() {
+      describe('when a model is subclassed', () => {
+        it('allows overwriting fields defined in the parent', () => {
           class User extends Model {}
           User.fields = {
             id: {
@@ -1551,7 +1548,7 @@ describe('Model', function() {
           });
         });
 
-        it('does not duplicate fieldNames when a field is overwritten', function() {
+        it('does not duplicate fieldNames when a field is overwritten', () => {
           class User extends Model {}
           User.fields = {
             id: {
@@ -1572,7 +1569,7 @@ describe('Model', function() {
           expect(OtherUser.config.fieldNames, 'to equal', ['id']);
         });
 
-        it("updates the child's fields' model class", function() {
+        it("updates the child's fields' model class", () => {
           class User extends Model {}
           User.fields = {
             firstName: {
@@ -1610,7 +1607,7 @@ describe('Model', function() {
           });
         });
 
-        it("doesn't interfere with the parent's fields", function() {
+        it("doesn't interfere with the parent's fields", () => {
           class User extends Model {}
 
           User.fields = {
@@ -1672,8 +1669,8 @@ describe('Model', function() {
         });
       });
 
-      describe('with `methods` configured on a field', function() {
-        it('adds `ByField` methods', function() {
+      describe('with `methods` configured on a field', () => {
+        it('adds `ByField` methods', () => {
           class User extends Model {}
 
           User.fields = {
@@ -1688,7 +1685,7 @@ describe('Model', function() {
           expect(User.deleteById, 'to be a function');
         });
 
-        it('adds the correct names for camelCased field names', function() {
+        it('adds the correct names for camelCased field names', () => {
           class User extends Model {}
 
           User.fields = {
@@ -1704,7 +1701,7 @@ describe('Model', function() {
           expect(User.deleteBySomeFieldName, 'to be a function');
         });
 
-        it('inherits `ByField` methods', function() {
+        it('inherits `ByField` methods', () => {
           class User extends Model {}
           class OtherUser extends User {}
 
@@ -1723,10 +1720,10 @@ describe('Model', function() {
       });
     });
 
-    describe('with a getter function', function() {
+    describe('with a getter function', () => {
       let User;
 
-      before(function() {
+      before(() => {
         User = class extends Model {
           static get fields() {
             this.config = { fields: { firstName: { type: 'string' } } };
@@ -1735,7 +1732,7 @@ describe('Model', function() {
         };
       });
 
-      it('returns fields added via the `Model.config` setter', function() {
+      it('returns fields added via the `Model.config` setter', () => {
         expect(User.fields, 'to exhaustively satisfy', {
           firstName: expect.it(
             'to be field',
@@ -1748,7 +1745,7 @@ describe('Model', function() {
         });
       });
 
-      it('supports field inheritance', function() {
+      it('supports field inheritance', () => {
         class Student extends User {
           static get fields() {
             this.config = { fields: { studentId: { type: 'integer' } } };
@@ -1789,9 +1786,9 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.virtuals', function() {
-    describe('as a setter', function() {
-      it("adds the virtuals to the model's virtuals", function() {
+  describe('Model.virtuals', () => {
+    describe('as a setter', () => {
+      it("adds the virtuals to the model's virtuals", () => {
         class User extends Model {}
 
         User.virtuals = {
@@ -1813,7 +1810,7 @@ describe('Model', function() {
         });
       });
 
-      it('throws if the virtual-name is already assigned to an instance property', function() {
+      it('throws if the virtual-name is already assigned to an instance property', () => {
         class Foo extends Model {
           bar() {}
         }
@@ -1832,7 +1829,7 @@ describe('Model', function() {
         );
       });
 
-      it('throws if the virtual-name is already added as a field', function() {
+      it('throws if the virtual-name is already added as a field', () => {
         class Foo extends Model {}
 
         Foo.fields = {
@@ -1853,8 +1850,8 @@ describe('Model', function() {
         );
       });
 
-      describe('when a model is subclassed', function() {
-        it('allows overwriting the virtuals defined in the parent', function() {
+      describe('when a model is subclassed', () => {
+        it('allows overwriting the virtuals defined in the parent', () => {
           class User extends Model {}
           User.virtuals = {
             firstName: {
@@ -1898,7 +1895,7 @@ describe('Model', function() {
           });
         });
 
-        it("updates the child's virtuals' model class", function() {
+        it("updates the child's virtuals' model class", () => {
           class User extends Model {}
           User.virtuals = {
             firstName: {
@@ -1942,7 +1939,7 @@ describe('Model', function() {
           });
         });
 
-        it("doesn't interfere with the parent's virtuals", function() {
+        it("doesn't interfere with the parent's virtuals", () => {
           class User extends Model {}
 
           User.virtuals = {
@@ -2009,8 +2006,8 @@ describe('Model', function() {
       });
     });
 
-    describe('as a getter', function() {
-      it('returns the virtuals added to the model', function() {
+    describe('as a getter', () => {
+      it('returns the virtuals added to the model', () => {
         class User extends Model {}
 
         User.virtuals = {
@@ -2036,9 +2033,9 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.options', function() {
-    describe('as a getter', function() {
-      it('returns added options', function() {
+  describe('Model.options', () => {
+    describe('as a getter', () => {
+      it('returns added options', () => {
         class User extends Model {}
         User.options = {
           query: { where: { id: 1 } },
@@ -2052,8 +2049,8 @@ describe('Model', function() {
       });
     });
 
-    describe('as a setter', function() {
-      it("adds the passed options to the model's options", function() {
+    describe('as a setter', () => {
+      it("adds the passed options to the model's options", () => {
         class User extends Model {}
         User.options = {
           query: { where: { id: 1 } },
@@ -2066,8 +2063,8 @@ describe('Model', function() {
         });
       });
 
-      describe('when a model is subclassed', function() {
-        it("merges the child's options into the parent's options", function() {
+      describe('when a model is subclassed', () => {
+        it("merges the child's options into the parent's options", () => {
           class User extends Model {}
           User.options = {
             query: { where: { id: 1 } },
@@ -2094,7 +2091,7 @@ describe('Model', function() {
           });
         });
 
-        it('allows overwriting options defined in the parent', function() {
+        it('allows overwriting options defined in the parent', () => {
           class User extends Model {}
           User.options = {
             query: { where: { id: 1 } },
@@ -2118,7 +2115,7 @@ describe('Model', function() {
           });
         });
 
-        it("doesn't interfere with the parent's options", function() {
+        it("doesn't interfere with the parent's options", () => {
           class User extends Model {}
           User.options = {
             query: { where: { id: 1 } },
@@ -2150,9 +2147,9 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.config.primary', function() {
-    describe('as a getter', function() {
-      it('throws an error of the model has no primary field', function() {
+  describe('Model.config.primary', () => {
+    describe('as a getter', () => {
+      it('throws an error of the model has no primary field', () => {
         class Foo extends Model {}
 
         Foo.fields = { foo: 'string' };
@@ -2164,7 +2161,7 @@ describe('Model', function() {
         );
       });
 
-      it("returns the field-name of the model's primary field", function() {
+      it("returns the field-name of the model's primary field", () => {
         class Foo extends Model {}
 
         Foo.fields = { id: { type: 'integer', primary: true } };
@@ -2172,8 +2169,8 @@ describe('Model', function() {
         expect(Foo.config.primary, 'to equal', 'id');
       });
 
-      describe('when a model is subclassed', function() {
-        it("inherits the parent's primary field", function() {
+      describe('when a model is subclassed', () => {
+        it("inherits the parent's primary field", () => {
           class Foo extends Model {}
           class Bar extends Foo {}
 
@@ -2183,7 +2180,7 @@ describe('Model', function() {
           expect(Bar.config.primary, 'to equal', 'id');
         });
 
-        it("allows overwriting the parent's primary field", function() {
+        it("allows overwriting the parent's primary field", () => {
           class Foo extends Model {}
           class Bar extends Foo {}
 
@@ -2194,7 +2191,7 @@ describe('Model', function() {
           expect(Bar.config.primary, 'to equal', 'uuid');
         });
 
-        it("allows unsetting the parent's primary field", function() {
+        it("allows unsetting the parent's primary field", () => {
           class Foo extends Model {}
           class Bar extends Foo {}
 
@@ -2212,9 +2209,9 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.config.notUpdated', function() {
-    describe('as a getter', function() {
-      it('returns field-names that should not be updated', function() {
+  describe('Model.config.notUpdated', () => {
+    describe('as a getter', () => {
+      it('returns field-names that should not be updated', () => {
         class Foo extends Model {}
 
         Foo.fields = { id: { type: 'integer', updated: false } };
@@ -2222,8 +2219,8 @@ describe('Model', function() {
         expect(Foo.config.notUpdated, 'to equal', ['id']);
       });
 
-      describe('when a model is subclassed', function() {
-        it("inherits the parent's notUpdated fields", function() {
+      describe('when a model is subclassed', () => {
+        it("inherits the parent's notUpdated fields", () => {
           class Foo extends Model {}
           class Bar extends Foo {}
 
@@ -2233,7 +2230,7 @@ describe('Model', function() {
           expect(Bar.config.notUpdated, 'to equal', ['id']);
         });
 
-        it("allows overwriting the parent's notUpdated fields", function() {
+        it("allows overwriting the parent's notUpdated fields", () => {
           class Foo extends Model {}
           class Bar extends Foo {}
 
@@ -2247,9 +2244,9 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.config.unique', function() {
-    describe('as a getter', function() {
-      it('returns field-names of unique fields', function() {
+  describe('Model.config.unique', () => {
+    describe('as a getter', () => {
+      it('returns field-names of unique fields', () => {
         class Foo extends Model {}
 
         Foo.fields = { id: { type: 'integer', unique: true } };
@@ -2257,8 +2254,8 @@ describe('Model', function() {
         expect(Foo.config.unique, 'to equal', ['id']);
       });
 
-      describe('when a model is subclassed', function() {
-        it("inherits the parent's unique fields", function() {
+      describe('when a model is subclassed', () => {
+        it("inherits the parent's unique fields", () => {
           class Foo extends Model {}
           class Bar extends Foo {}
 
@@ -2268,7 +2265,7 @@ describe('Model', function() {
           expect(Bar.config.unique, 'to equal', ['id']);
         });
 
-        it("allows overwriting the parent's unique fields", function() {
+        it("allows overwriting the parent's unique fields", () => {
           class Foo extends Model {}
           class Bar extends Foo {}
 
@@ -2282,8 +2279,8 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.removeField', function() {
-    it('removes a field', function() {
+  describe('Model.removeField', () => {
+    it('removes a field', () => {
       class Foo extends Model {}
 
       Foo.fields = { id: 'integer' };
@@ -2293,7 +2290,7 @@ describe('Model', function() {
       expect(Foo.config.fields, 'to equal', {});
     });
 
-    it("removes a field's field-column mappings", function() {
+    it("removes a field's field-column mappings", () => {
       class Foo extends Model {}
 
       Foo.fields = { id: 'integer' };
@@ -2303,7 +2300,7 @@ describe('Model', function() {
       expect(Foo.config.fieldsToColumns, 'to equal', {});
     });
 
-    it("removes the field from the model's field names", function() {
+    it("removes the field from the model's field names", () => {
       class Foo extends Model {}
 
       Foo.fields = { id: { type: 'integer' } };
@@ -2313,7 +2310,7 @@ describe('Model', function() {
       expect(Foo.config.fieldNames, 'to equal', []);
     });
 
-    it("removes the field from the model's not-updated fields", function() {
+    it("removes the field from the model's not-updated fields", () => {
       class Foo extends Model {}
 
       Foo.fields = { id: { type: 'integer', updated: false } };
@@ -2323,7 +2320,7 @@ describe('Model', function() {
       expect(Foo.config.notUpdated, 'to equal', []);
     });
 
-    it("removes the field from the model's unique fields", function() {
+    it("removes the field from the model's unique fields", () => {
       class Foo extends Model {}
 
       Foo.fields = { id: { type: 'integer', unique: true } };
@@ -2333,7 +2330,7 @@ describe('Model', function() {
       expect(Foo.config.unique, 'to equal', []);
     });
 
-    it("removes the field from the model's primary field", function() {
+    it("removes the field from the model's primary field", () => {
       class Foo extends Model {}
 
       Foo.fields = { id: { type: 'integer', primary: true } };
@@ -2343,7 +2340,7 @@ describe('Model', function() {
       expect(() => Foo.config.primary, 'to throw');
     });
 
-    it('removes *ByField methods from the model', function() {
+    it('removes *ByField methods from the model', () => {
       class Foo extends Model {}
 
       Foo.fields = { id: { type: 'integer', primary: true, methods: true } };
@@ -2354,22 +2351,22 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.query', function() {
+  describe('Model.query', () => {
     let User;
 
-    before(function() {
+    before(() => {
       User = class extends Model {};
       User.table = 'foo';
       User.fields = { id: { type: 'integer', primary: true } };
       User.options = { query: { fields: ['id'], where: { id: 1 } } };
     });
 
-    describe('as a getter', function() {
-      it('returns a Query instance', function() {
+    describe('as a getter', () => {
+      it('returns a Query instance', () => {
         expect(User.query, 'to be a', Query);
       });
 
-      it('configures the Query instance with the model', function() {
+      it('configures the Query instance with the model', () => {
         const spy = sinon.spy(User, 'Query');
         // eslint-disable-next-line no-unused-expressions
         User.query;
@@ -2388,19 +2385,19 @@ describe('Model', function() {
     });
   });
 
-  describe('Model.where', function() {
+  describe('Model.where', () => {
     let User;
 
-    before(function() {
+    before(() => {
       User = class extends Model {};
     });
 
-    it('returns a `Query.Where` instance', function() {
+    it('returns a `Query.Where` instance', () => {
       expect(User.where, 'to be a', Query.Where);
     });
   });
 
-  describe('db methods', function() {
+  describe('for db operations', () => {
     const { Model, Query } = new Knorm().use(postgresPlugin);
 
     class User extends Model {}
@@ -2419,23 +2416,21 @@ describe('Model', function() {
       }
     };
 
-    before(async function() {
-      await knex.schema.createTable(User.table, table => {
+    before(async () => knex.schema.dropTableIfExists(User.table));
+
+    before(async () =>
+      knex.schema.createTable(User.table, table => {
         table.increments();
         table.string('name').notNullable();
-      });
-    });
+      })
+    );
 
-    after(async function() {
-      await knex.schema.dropTable(User.table);
-    });
+    after(async () => knex.schema.dropTable(User.table));
 
-    afterEach(async function() {
-      await knex(User.table).truncate();
-    });
+    afterEach(async () => knex(User.table).truncate());
 
-    describe('Model.prototype.save', function() {
-      it('inserts a model if its primary field is not set', async function() {
+    describe('Model.prototype.save', () => {
+      it('inserts a model if its primary field is not set', async () => {
         const user = new User({ name: 'John Doe' });
         await expect(
           user.save(),
@@ -2451,7 +2446,7 @@ describe('Model', function() {
         );
       });
 
-      it('updates a model if its primary field is set', async function() {
+      it('updates a model if its primary field is set', async () => {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
@@ -2468,7 +2463,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         const insert = sinon
           .stub(Query.prototype, 'query')
           .returns(Promise.resolve([]));
@@ -2482,8 +2477,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.prototype.insert', function() {
-      it('inserts a model', async function() {
+    describe('Model.prototype.insert', () => {
+      it('inserts a model', async () => {
         const user = new User({ name: 'John Doe' });
         await expect(
           user.insert(),
@@ -2499,7 +2494,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         const insert = sinon
           .stub(Query.prototype, 'query')
           .returns(Promise.resolve([]));
@@ -2512,7 +2507,7 @@ describe('Model', function() {
         insert.restore();
       });
 
-      it('resolves with the same instance that was passed', async function() {
+      it('resolves with the same instance that was passed', async () => {
         const user = await new User({ name: 'John Doe' });
         user.name = 'Jane Doe';
         user.leaveMeIntact = 'okay';
@@ -2526,7 +2521,7 @@ describe('Model', function() {
         );
       });
 
-      it('casts fields with `forFetch` cast functions', async function() {
+      it('casts fields with `forFetch` cast functions', async () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           name: {
@@ -2546,8 +2541,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.prototype.update', function() {
-      it('updates a model', async function() {
+    describe('Model.prototype.update', () => {
+      it('updates a model', async () => {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
@@ -2564,7 +2559,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
@@ -2574,7 +2569,7 @@ describe('Model', function() {
         );
       });
 
-      it('resolves with the same instance that was passed', async function() {
+      it('resolves with the same instance that was passed', async () => {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         user.leaveMeIntact = 'okay';
@@ -2588,7 +2583,7 @@ describe('Model', function() {
         );
       });
 
-      it('casts fields with `forFetch` cast functions', async function() {
+      it('casts fields with `forFetch` cast functions', async () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           name: {
@@ -2610,8 +2605,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.prototype.fetch', function() {
-      it('fetches a model', async function() {
+    describe('Model.prototype.fetch', () => {
+      it('fetches a model', async () => {
         await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
         await expect(
@@ -2621,7 +2616,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         const user = await new User({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
         await expect(
@@ -2631,7 +2626,7 @@ describe('Model', function() {
         );
       });
 
-      it('casts fields with `forFetch` cast functions', async function() {
+      it('casts fields with `forFetch` cast functions', async () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           name: {
@@ -2652,8 +2647,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.prototype.delete', function() {
-      it('deletes a model', async function() {
+    describe('Model.prototype.delete', () => {
+      it('deletes a model', async () => {
         await new User({ id: 1, name: 'John Doe' }).insert();
         const user = new User({ id: 1 });
         await expect(
@@ -2664,7 +2659,7 @@ describe('Model', function() {
         await expect(knex, 'with table', User.table, 'to be empty');
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         const user = await new User({ name: 'John Doe' }).insert();
         await expect(
           user.delete({ require: false, where: { name: 'foo' } }),
@@ -2673,7 +2668,7 @@ describe('Model', function() {
         );
       });
 
-      it('casts fields with `forFetch` cast functions', async function() {
+      it('casts fields with `forFetch` cast functions', async () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           name: {
@@ -2694,8 +2689,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.save', function() {
-      it('inserts models', async function() {
+    describe('Model.save', () => {
+      it('inserts models', async () => {
         await expect(
           User.save({ name: 'John Doe' }),
           'to be fulfilled with value exhaustively satisfying',
@@ -2710,7 +2705,7 @@ describe('Model', function() {
         );
       });
 
-      it('updates models', async function() {
+      it('updates models', async () => {
         await User.insert({ name: 'John Doe' });
         await expect(
           User.save({ id: 1, name: 'Jane Doe' }),
@@ -2726,7 +2721,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         await User.save({ name: 'John Doe' });
         await expect(
           User.save({ id: 1, name: 'Jane Doe' }, { forge: false }),
@@ -2736,8 +2731,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.insert', function() {
-      it('inserts models', async function() {
+    describe('Model.insert', () => {
+      it('inserts models', async () => {
         await expect(
           User.insert({ id: 1, name: 'John Doe' }),
           'to be fulfilled with value exhaustively satisfying',
@@ -2752,7 +2747,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         await expect(
           User.insert({ name: 'John Doe' }, { forge: false }),
           'to be fulfilled with value exhaustively satisfying',
@@ -2761,8 +2756,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.update', function() {
-      it('updates models', async function() {
+    describe('Model.update', () => {
+      it('updates models', async () => {
         await new User({ name: 'John Doe' }).insert();
         await expect(
           User.update({ name: 'Jane Doe' }),
@@ -2778,7 +2773,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         await new User({ name: 'John Doe' }).insert();
         await expect(
           User.update({ id: 1, name: 'Jane Doe' }, { forge: false }),
@@ -2788,8 +2783,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.fetch', function() {
-      it('fetches models', async function() {
+    describe('Model.fetch', () => {
+      it('fetches models', async () => {
         await User.save({ name: 'John Doe' });
         await expect(
           User.fetch(),
@@ -2798,7 +2793,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         await User.save({ name: 'John Doe' });
         await expect(
           User.fetch({ forge: false }),
@@ -2808,8 +2803,8 @@ describe('Model', function() {
       });
     });
 
-    describe('Model.delete', function() {
-      it('deletes models', async function() {
+    describe('Model.delete', () => {
+      it('deletes models', async () => {
         await User.save({ name: 'John Doe' });
         await expect(
           User.delete(),
@@ -2818,7 +2813,7 @@ describe('Model', function() {
         );
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async () => {
         await User.save({ name: 'John Doe' });
         await expect(
           User.delete({ forge: false }),
@@ -2828,11 +2823,11 @@ describe('Model', function() {
       });
     });
 
-    describe('with `methods` configured', function() {
+    describe('with `methods` configured', () => {
       beforeEach(async () => new User({ id: 1, name: 'John Doe' }).insert());
 
-      describe('Model.fetchByField', function() {
-        it('fetches a model using the field', async function() {
+      describe('Model.fetchByField', () => {
+        it('fetches a model using the field', async () => {
           await expect(
             User.fetchById(1),
             'to be fulfilled with value satisfying',
@@ -2840,7 +2835,7 @@ describe('Model', function() {
           );
         });
 
-        it('passes options along', async function() {
+        it('passes options along', async () => {
           await expect(
             User.fetchById(1, { where: { name: 'foo' } }),
             'to be rejected with error satisfying',
@@ -2849,8 +2844,8 @@ describe('Model', function() {
         });
       });
 
-      describe('Model.deleteByField', function() {
-        it('deletes a model using its primary field value', async function() {
+      describe('Model.deleteByField', () => {
+        it('deletes a model using its primary field value', async () => {
           await expect(
             User.deleteById(1),
             'to be fulfilled with value satisfying',
@@ -2859,7 +2854,7 @@ describe('Model', function() {
           await expect(knex, 'with table', User.table, 'to be empty');
         });
 
-        it('passes options along', async function() {
+        it('passes options along', async () => {
           await expect(
             User.deleteById(1, { where: { name: 'foo' } }),
             'to be rejected with error satisfying',
@@ -2868,8 +2863,8 @@ describe('Model', function() {
         });
       });
 
-      describe('Model.updateByField', function() {
-        it('updates a model using its primary field value', async function() {
+      describe('Model.updateByField', () => {
+        it('updates a model using its primary field value', async () => {
           await expect(
             User.updateById(1, { name: 'Jane Doe' }),
             'to be fulfilled with value satisfying',
@@ -2884,7 +2879,7 @@ describe('Model', function() {
           );
         });
 
-        it('passes options along', async function() {
+        it('passes options along', async () => {
           await expect(
             User.updateById(
               1,
