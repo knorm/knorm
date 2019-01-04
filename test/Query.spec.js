@@ -6,44 +6,7 @@ const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'))
-  .addAssertion(
-    '<Promise> to be fulfilled with sorted rows [exhaustively] satisfying <array>',
-    (expect, subject, value) => {
-      const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
-      expect.errorMode = 'bubble';
-      return expect(
-        subject,
-        'to be fulfilled with value satisfying',
-        subject => {
-          expect(subject, 'to be an array');
-          expect(
-            subject,
-            'sorted by',
-            ascendingOrder,
-            'to [exhaustively] satisfy',
-            value
-          );
-        }
-      );
-    }
-  )
-  .addAssertion(
-    '<knexQuery> to have sorted rows [exhaustively] satisfying <array>',
-    (expect, subject, value) => {
-      const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
-      expect.errorMode = 'bubble';
-      return expect(subject, 'to have rows satisfying', rows =>
-        expect(
-          rows,
-          'sorted by',
-          ascendingOrder,
-          'to [exhaustively] satisfy',
-          value
-        )
-      );
-    }
-  );
+  .use(require('unexpected-knex'));
 
 describe('Query', () => {
   let Model;
@@ -370,7 +333,7 @@ describe('Query', () => {
       query.options.joinType = 'innerJoin';
       await expect(
         query.fetch(),
-        'to be fulfilled with sorted rows exhaustively satisfying',
+        'to be fulfilled with sorted rows satisfying',
         [
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' })
@@ -1306,7 +1269,7 @@ describe('Query', () => {
         query.groupBy('id').having(where.equal('age', 10));
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [
             new User({ id: 1, name: 'User 1', age: 10 }),
             new User({ id: 2, name: 'User 2', age: 10 })
@@ -1320,7 +1283,7 @@ describe('Query', () => {
         query.groupBy(['id', 'age']).having(where.equal('age', 10));
         await expect(
           query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [
             new User({ id: 1, name: 'User 1', age: 10 }),
             new User({ id: 2, name: 'User 2', age: 10 })
@@ -2454,7 +2417,7 @@ describe('Query', () => {
       user.name = query.sql(`lower('Jane Doe')`);
       await expect(
         query.update(user),
-        'to be fulfilled with sorted rows exhaustively satisfying',
+        'to be fulfilled with sorted rows satisfying',
         [new User({ name: 'jane doe' })]
       );
     });
@@ -2464,7 +2427,7 @@ describe('Query', () => {
       user.name = query.sql(`name || name`);
       await expect(
         query.update(user),
-        'to be fulfilled with sorted rows exhaustively satisfying',
+        'to be fulfilled with sorted rows satisfying',
         [new User({ name: 'John DoeJohn Doe' })]
       );
     });
@@ -2474,7 +2437,7 @@ describe('Query', () => {
       user.name = query.sql(`"name" || ' ' || upper("name")`);
       await expect(
         query.update(user),
-        'to be fulfilled with sorted rows exhaustively satisfying',
+        'to be fulfilled with sorted rows satisfying',
         [new User({ name: 'John Doe JOHN DOE' })]
       );
     });
