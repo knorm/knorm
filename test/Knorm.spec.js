@@ -251,7 +251,7 @@ describe('Knorm', () => {
       expect(knorm.models.Foo, 'to be', Foo);
     });
 
-    it('adds the model that extends another model', () => {
+    it('adds a model that extends another model', () => {
       class Foo extends knorm.Model {}
       class Bar extends Foo {}
 
@@ -263,6 +263,11 @@ describe('Knorm', () => {
     it('allows plugins to update knorm.Model', () => {
       knorm.Model = class Foo extends knorm.Model {};
       knorm.addModel(knorm.Model);
+    });
+
+    it('allows chaining', () => {
+      class Foo extends knorm.Model {}
+      expect(knorm.addModel(Foo), 'to be', knorm);
     });
   });
 
