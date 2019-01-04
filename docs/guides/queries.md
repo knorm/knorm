@@ -299,8 +299,9 @@ operation is started, the following [Query](/api.md#query) methods are called:
   the connection to the database, via [Connection.protoype.close](/api.md#connection-close-%E2%87%92-promise).
 
 ::: tip INFO
-When multiple queries are run, the rows returned from each are merged into a
-single array that is resolved from [Query.protoype.execute](/api.md#query-execute-sql-%E2%87%92-promise).
+When multiple queries are run, they are run in parallel and the rows returned
+from each are merged into a single array that is resolved from
+[Query.protoype.execute](/api.md#query-execute-sql-%E2%87%92-promise).
 :::
 
 When queries are run within transactions,
