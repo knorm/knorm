@@ -1440,21 +1440,6 @@ describe('Field', function() {
         });
       });
 
-      it("calls the validator with 'this' set to the passed model instance", async function() {
-        const validate = sinon.spy();
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: 'string',
-          validate
-        });
-        await field.validate('bar value', 'a model instance');
-        await expect(validate, 'was called once').and(
-          'was called on',
-          'a model instance'
-        );
-      });
-
       it('does not call the validator if the value is `undefined`', async function() {
         const validate = sinon.spy();
         const field = new Field({
@@ -1557,7 +1542,7 @@ describe('Field', function() {
         });
 
         describe('with a `validate` function', function() {
-          it('runs the new custom validator', async function() {
+          it('runs the new custom validator with the passed value and model instance', async function() {
             const secondValidateSpy = sinon.spy();
             const field = new Field({
               name: 'firstName',
@@ -1573,25 +1558,6 @@ describe('Field', function() {
             expect(secondValidateSpy, 'to have calls satisfying', () => {
               secondValidateSpy('bar value', 'a model instance');
             });
-          });
-
-          it('runs the new validator with `this` set to the passed model instance', async function() {
-            const secondValidateSpy = sinon.spy();
-            const field = new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string',
-              validate() {
-                return {
-                  validate: secondValidateSpy
-                };
-              }
-            });
-            await field.validate('bar value', 'a model instance');
-            await expect(secondValidateSpy, 'was called once').and(
-              'was called on',
-              'a model instance'
-            );
           });
 
           it('runs the new validator asynchronously', async function() {
@@ -1801,14 +1767,6 @@ describe('Field', function() {
             await expect(validate, 'to have calls satisfying', () => {
               validate('foo', 'a model instance');
             });
-          });
-
-          it("calls the validator with 'this' set to the passed model instance", async function() {
-            await field.validate('foo', 'a model instance');
-            await expect(validate, 'was called once').and(
-              'was called on',
-              'a model instance'
-            );
           });
 
           describe('that returns new validators', function() {
@@ -2215,14 +2173,6 @@ describe('Field', function() {
             await expect(validate, 'to have calls satisfying', () => {
               validate('bar', 'a model instance');
             });
-          });
-
-          it("calls the validator with 'this' set to the passed model instance", async function() {
-            await field.validate({ foo: 'bar' }, 'a model instance');
-            await expect(validate, 'was called once').and(
-              'was called on',
-              'a model instance'
-            );
           });
 
           describe('that returns new validators', function() {
