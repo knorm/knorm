@@ -248,7 +248,7 @@ describe('Model', () => {
       );
     });
 
-    it("calls the virtual's getter with this set to the model instance", () => {
+    it("calls the virtual's setter with this set to the model instance", () => {
       class Foo extends Model {}
 
       const spy = sinon.spy();
@@ -365,7 +365,7 @@ describe('Model', () => {
         expect(foo.foo, 'to be', 'foo');
       });
 
-      it("calls the function with the instance's scope", () => {
+      it('calls the function with the model instance as a parameter', () => {
         class Foo extends Model {}
 
         Foo.fields = {
@@ -379,8 +379,8 @@ describe('Model', () => {
           },
           computed: {
             type: 'string',
-            default() {
-              return this.foo + this.bar;
+            default(model) {
+              return model.foo + model.bar;
             }
           }
         };

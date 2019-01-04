@@ -350,8 +350,8 @@ describe('Field', function() {
       });
     });
 
-    describe('with a `forSave` cast function', function() {
-      it('calls the function with the value if the `forSave` option is enabled', function() {
+    describe('with a `forSave` cast function and the `forSave` option set to `true`', function() {
+      it('calls the function with the value and the model instance', function() {
         const forSave = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -360,19 +360,9 @@ describe('Field', function() {
           cast: { forSave }
         });
         field.cast('bar value', 'a model instance', { forSave: true });
-        expect(forSave, 'was called with', 'bar value');
-      });
-
-      it('calls the function with `this` set to the passed model instance', function() {
-        const forSave = sinon.spy();
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: 'string',
-          cast: { forSave }
-        });
-        field.cast('bar value', 'a model instance', { forSave: true });
-        expect(forSave, 'was called on', 'a model instance');
+        expect(forSave, 'to have calls satisfying', () =>
+          forSave('bar value', 'a model instance')
+        );
       });
 
       it('calls the function with raw sql values', function() {
@@ -388,8 +378,8 @@ describe('Field', function() {
       });
     });
 
-    describe('with a `forFetch` cast function', function() {
-      it('calls the function with the value if the `forFetch` option is enabled', function() {
+    describe('with a `forFetch` cast function and the `forFetch` option set to `true`', function() {
+      it('calls the function with the value and the model instance', function() {
         const forFetch = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -398,19 +388,9 @@ describe('Field', function() {
           cast: { forFetch }
         });
         field.cast('bar value', 'a model instance', { forFetch: true });
-        expect(forFetch, 'was called with', 'bar value');
-      });
-
-      it('calls the function with `this` set to the passed model instance', function() {
-        const forFetch = sinon.spy();
-        const field = new Field({
-          name: 'firstName',
-          model: User,
-          type: 'string',
-          cast: { forFetch }
-        });
-        field.cast('bar value', 'a model instance', { forFetch: true });
-        expect(forFetch, 'was called on', 'a model instance');
+        expect(forFetch, 'to have calls satisfying', () =>
+          forFetch('bar value', 'a model instance')
+        );
       });
     });
 
