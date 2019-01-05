@@ -9,44 +9,7 @@ const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'))
-  .addAssertion(
-    '<Promise> to be fulfilled with sorted rows [exhaustively] satisfying <array>',
-    (expect, subject, value) => {
-      const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
-      expect.errorMode = 'bubble';
-      return expect(
-        subject,
-        'to be fulfilled with value satisfying',
-        subject => {
-          expect(subject, 'to be an array');
-          expect(
-            subject,
-            'sorted by',
-            ascendingOrder,
-            'to [exhaustively] satisfy',
-            value
-          );
-        }
-      );
-    }
-  )
-  .addAssertion(
-    '<knexQuery> to have sorted rows [exhaustively] satisfying <array>',
-    (expect, subject, value) => {
-      const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
-      expect.errorMode = 'bubble';
-      return expect(subject, 'to have rows satisfying', rows =>
-        expect(
-          rows,
-          'sorted by',
-          ascendingOrder,
-          'to [exhaustively] satisfy',
-          value
-        )
-      );
-    }
-  );
+  .use(require('unexpected-knex'));
 
 const { KnormPostgresError } = KnormPostgres;
 const host = process.env.PGHOST || '127.0.0.1';
@@ -1449,7 +1412,7 @@ describe('KnormPostgres', () => {
         ]);
         await expect(
           new Query(User).leftJoin(new Query(Image).first()).fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foo', image: { id: 1 } },
             { id: 2, name: 'bar', image: null }
@@ -1468,7 +1431,7 @@ describe('KnormPostgres', () => {
         ]);
         await expect(
           new Query(User).leftJoin(new Query(Image).limit(1)).fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foo', image: [{ id: 1 }, { id: 2 }] },
             { id: 2, name: 'bar', image: null }
@@ -1487,7 +1450,7 @@ describe('KnormPostgres', () => {
         ]);
         await expect(
           new Query(User).leftJoin(new Query(Image).offset(1)).fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
+          'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foo', image: [{ id: 1 }, { id: 2 }] },
             { id: 2, name: 'bar', image: null }
