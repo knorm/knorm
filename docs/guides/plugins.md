@@ -30,34 +30,38 @@ const { Model, Query } = knorm(/* knorm options */)
 ## Creating custom plugins
 
 A Knorm plugin can be any *named* function or an object with an `init` function
-and a `name` property. See [knorm.use](/api.md#knorm-use-plugin-⇒-knorm) for
-more info.
+and a `name` property. See
+[Knorm.prototype.use](/api.md#knorm-use-plugin-%E2%87%92-knorm) more info.
 
-When a plugin is loaded via [knorm.use](/api.md#knorm-use-plugin-⇒-knorm), the
-function (or object's `init` function) is called with the `knorm` instance. The
-plugin can then modify the classes on the instance:
+When a plugin is loaded via
+[Knorm.prototype.use](/api.md#knorm-use-plugin-%E2%87%92-knorm), the  function
+(or object's `init` function) is called with the `knorm` instance. The plugin
+can then modify the classes on the instance: 
 
 ```js
-const preventDelete = orm => {
-  class YouShallNotDelete extends orm.Query {
+const preventDelete = knorm => {
+  class YouShallNotDelete extends knorm.Query {
     async delete() {
       throw new Error('deleting is not allowed!');
     }
   }
 
-  orm.Model.Query = orm.Query = YouShallNotDelete;
+  knorm.updateQuery(YouShallNotDelete);
 };
 
-const { Model } = knorm({
-  /* knorm options */
-}).use(preventDelete);
+const { Model } = knorm().use(preventDelete);
 
 Model.delete().catch(console.log); // logs Error('deleting is not allowed!')
 ```
 
-::: warning NOTE
-If you update knorm's `Query` class then also update
-[Model.Query](/api.html#knorm-query-query) so that models use the updated
-`Query` class. Similarly, when you update the `Field` class, also update
-[Model.Field](/api.html#knorm-field-field).
+::: tip INFO
+[Knorm](/api.md#knorm) provides some utility methods for plugins to update the
+instance's classes: 
+
+- [Knorm.prototype.updateTransaction](/api.md#knorm-updatetransaction-transaction-%E2%87%92-knorm)
+- [Knorm.prototype.updateModel](/api.md#knorm-updatemodel-model-%E2%87%92-knorm)
+- [Knorm.prototype.updateQuery](/api.md#knorm-updatequery-query-%E2%87%92-knorm)
+- [Knorm.prototype.updateField](/api.md#knorm-updatefield-field-%E2%87%92-knorm)
+- [Knorm.prototype.updateConnection](/api.md#knorm-updateconnection-connection-%E2%87%92-knorm)
+
 :::
