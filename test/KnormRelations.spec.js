@@ -690,19 +690,6 @@ describe('KnormRelations', () => {
             await Image.delete({ where: { id: 2 } });
           });
 
-          it('returns the first joined model with `forge` disabled on the joined query', async () => {
-            await Image.insert([{ id: 2, userId: 1, categoryId: 1 }]);
-            const query = new Query(User)
-              .where({ id: 1 })
-              .leftJoin(new Query(Image).first().forge(false));
-            await expect(
-              query.fetch(),
-              'to be fulfilled with sorted rows satisfying',
-              [new User({ id: 1, name: 'User 1', image: { id: 1 } })]
-            );
-            await Image.delete({ where: { id: 2 } });
-          });
-
           it('includes other joined models as `null` if no rows were matched', async () => {
             const query = new Query(User).leftJoin(new Query(Image).first());
             await expect(
@@ -1007,97 +994,6 @@ describe('KnormRelations', () => {
 
             const where = new Query.Where();
             await Image.delete({ where: where.in('id', [2, 3]) });
-          });
-        });
-
-        describe("with 'forge' disabled", () => {
-          describe('on the parent query', () => {
-            it('still forges the joined model', async () => {
-              const query = new Query(User)
-                .forge(false)
-                .leftJoin(new Query(Image));
-
-              await expect(
-                query.fetch(),
-                'to be fulfilled with sorted rows satisfying',
-                [
-                  expect.it('not to be a', User).and('to satisfy', {
-                    image: [expect.it('to be an', Image)]
-                  }),
-                  expect.it('to be an object').and('not to be a', User)
-                ]
-              );
-            });
-          });
-
-          describe('on the joined model', () => {
-            it('includes a plain object of the joined model', async () => {
-              const query = new Query(User).leftJoin(
-                new Query(Image).forge(false)
-              );
-
-              await expect(
-                query.fetch(),
-                'to be fulfilled with sorted rows satisfying',
-                [
-                  expect.it('to be a', User).and('to satisfy', {
-                    image: [
-                      expect.it('to be an object').and('not to be an', Image)
-                    ]
-                  }),
-                  expect.it('to be a', User)
-                ]
-              );
-            });
-          });
-
-          describe('on both the parent and the joined models', () => {
-            it('includes plain objects of the both models', async () => {
-              const query = new Query(User)
-                .forge(false)
-                .leftJoin(new Query(Image).forge(false));
-
-              await expect(
-                query.fetch(),
-                'to be fulfilled with sorted rows exhaustively satisfying',
-                [
-                  expect.it('not to be a', User).and('to satisfy', {
-                    image: [
-                      expect.it('to be an object').and('not to be an', Image)
-                    ]
-                  }),
-                  expect.it('to be an object').and('not to be a', User)
-                ]
-              );
-            });
-          });
-
-          it('does not include the joined model if no rows were matched', async () => {
-            const query = new Query(User)
-              .leftJoin(new Query(Image))
-              .where({ id: 2 })
-              .forge(false);
-
-            await expect(
-              query.fetch(),
-              'to be fulfilled with sorted rows satisfying',
-              [{ image: null }]
-            );
-          });
-
-          it('includes all joined models if more than one rows are matched', async () => {
-            await Image.insert({ id: 2, userId: 1, categoryId: 1 });
-
-            const query = new Query(User)
-              .where({ id: 1 })
-              .leftJoin(new Query(Image));
-            await expect(
-              query.fetch(),
-              'to be fulfilled with sorted rows satisfying',
-              [{ id: 1, name: 'User 1', image: [{ id: 1 }, { id: 2 }] }]
-            );
-
-            await Image.delete({ where: { id: 2 } });
           });
         });
 
