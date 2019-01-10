@@ -425,63 +425,6 @@ describe('Field', function() {
     });
   });
 
-  describe('Field.prototype.hasDefault', function() {
-    let User;
-
-    before(function() {
-      User = class extends Model {};
-    });
-
-    it('returns false if the field was not configured with a default value', function() {
-      const field = new Field({
-        name: 'firstName',
-        model: User,
-        type: 'string'
-      });
-      expect(field.hasDefault(), 'to be false');
-    });
-
-    it('returns true if the field was configured with a default value', function() {
-      const field = new Field({
-        name: 'firstName',
-        model: User,
-        type: 'string',
-        default: 'foo'
-      });
-      expect(field.hasDefault(), 'to be true');
-    });
-
-    it('returns true if the field was configured with a default value as a function', function() {
-      const field = new Field({
-        name: 'firstName',
-        model: User,
-        type: 'string',
-        default: () => {}
-      });
-      expect(field.hasDefault(), 'to be true');
-    });
-
-    it("returns true if the field was configured with the default value as 'false'", function() {
-      const field = new Field({
-        name: 'firstName',
-        model: User,
-        type: 'string',
-        default: false
-      });
-      expect(field.hasDefault(), 'to be true');
-    });
-
-    it("returns true if the field was configured with the default value as 'null'", function() {
-      const field = new Field({
-        name: 'firstName',
-        model: User,
-        type: 'string',
-        default: null
-      });
-      expect(field.hasDefault(), 'to be true');
-    });
-  });
-
   describe('Field.prototype.getDefault', function() {
     let User;
 
@@ -497,6 +440,15 @@ describe('Field', function() {
         default: 'foo'
       });
       expect(field.getDefault(), 'to be', 'foo');
+    });
+
+    it('returns `undefined` if there is no the default value configured', function() {
+      const field = new Field({
+        name: 'firstName',
+        model: User,
+        type: 'string'
+      });
+      expect(field.getDefault(), 'to be undefined');
     });
 
     describe('when the default value is a function', function() {
