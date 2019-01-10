@@ -3,8 +3,6 @@ const knormRelations = require('@knorm/relations');
 const KnormPostgres = require('../lib/KnormPostgres');
 const knormPostgres = require('../');
 const makeKnex = require('knex');
-const { Client } = require('pg');
-const sql = require('sql-bricks-postgres');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
