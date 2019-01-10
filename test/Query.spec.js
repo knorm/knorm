@@ -840,67 +840,6 @@ describe('Query', () => {
       });
     });
 
-    describe("with 'forge' disabled", () => {
-      it('resolves with plain JS objects', async () => {
-        const query = new Query(User).forge(false);
-        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
-          expect.it('to be an object').and('not to be a', User),
-          expect.it('to be an object').and('not to be a', User)
-        ]);
-      });
-
-      it('does not cast fields with post-fetch cast functions', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, intToString: 10 }, { id: 2, intToString: null }]
-        );
-      });
-
-      it("uses the model's field names as the objects' keys", async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            {
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: 10
-            },
-            {
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            }
-          ]
-        );
-      });
-
-      describe('via the `lean` alias', () => {
-        it('resolves with plain JS objects', async () => {
-          const query = new Query(User).lean();
-          await expect(query.fetch(), 'to be fulfilled with value satisfying', [
-            expect.it('to be an object').and('not to be a', User),
-            expect.it('to be an object').and('not to be a', User)
-          ]);
-        });
-      });
-    });
-
     describe("with 'fields' configured", () => {
       it('resolves with instances containing only the requested fields', async () => {
         const query = new Query(User).fields(['name']);
@@ -2280,26 +2219,6 @@ describe('Query', () => {
       });
     });
 
-    describe("with 'forge' disabled", () => {
-      it('resolves with plain JS objects', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.insert(new User({ id: 1, name: 'John Doe' })),
-          'to be fulfilled with value satisfying',
-          [expect.it('to be an object').and('not to be a', User)]
-        );
-      });
-
-      it('does not cast fields with post-fetch cast functions', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.insert(new User({ id: 1, name: 'John Doe', intToString: 10 })),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'John Doe', intToString: 10 }]
-        );
-      });
-    });
-
     describe('if no row is inserted', () => {
       let queryStub;
 
@@ -3054,26 +2973,6 @@ describe('Query', () => {
       });
     });
 
-    describe("with 'forge' disabled", () => {
-      it('resolves with plain JS objects', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.update(new User({ name: 'Jane Doe' })),
-          'to be fulfilled with value satisfying',
-          [expect.it('to be an object').and('not to be a', User)]
-        );
-      });
-
-      it('does not cast fields with post-fetch cast functions', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.update(new User({ name: 'Jane Doe', intToString: 10 })),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'Jane Doe', intToString: 10 }]
-        );
-      });
-    });
-
     describe('if no row is updated', () => {
       let updateStub;
 
@@ -3403,25 +3302,6 @@ describe('Query', () => {
           query.delete(),
           'to be fulfilled with value satisfying',
           new User({ id: 1, name: 'John Doe' })
-        );
-      });
-    });
-
-    describe("with 'forge' disabled", () => {
-      it('resolves with plain JS objects', async () => {
-        const query = new Query(User).forge(false);
-        await expect(query.delete(), 'to be fulfilled with value satisfying', [
-          expect.it('to be an object').and('not to be a', User),
-          expect.it('to be an object').and('not to be a', User)
-        ]);
-      });
-
-      it('does not cast fields with post-fetch cast functions', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.delete(),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, intToString: 10 }, { id: 2, intToString: null }]
         );
       });
     });

@@ -1198,13 +1198,6 @@ describe('Model', () => {
       require.restore();
     });
 
-    it('sets `forge` to `false`', () => {
-      const forge = sinon.stub(Query.prototype, 'forge').returnsThis();
-      new Foo({ id: 1 }).getQuery();
-      expect(forge, 'to have calls satisfying', () => forge(false));
-      forge.restore();
-    });
-
     it('passes the primary field set on the model to Query.prototype.where', () => {
       const where = sinon.stub(Query.prototype, 'where').returnsThis();
       new Foo({ id: 1 }).getQuery();
@@ -2724,9 +2717,9 @@ describe('Model', () => {
       it('passes options along', async () => {
         await User.save({ name: 'John Doe' });
         await expect(
-          User.save({ id: 1, name: 'Jane Doe' }, { forge: false }),
+          User.save({ id: 1, name: 'Jane Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1, name: 'Jane Doe' }]
+          [{ id: 1 }]
         );
       });
     });
@@ -2749,9 +2742,9 @@ describe('Model', () => {
 
       it('passes options along', async () => {
         await expect(
-          User.insert({ name: 'John Doe' }, { forge: false }),
+          User.insert({ name: 'John Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1, name: 'John Doe' }]
+          [{ id: 1 }]
         );
       });
     });
@@ -2776,9 +2769,9 @@ describe('Model', () => {
       it('passes options along', async () => {
         await new User({ name: 'John Doe' }).insert();
         await expect(
-          User.update({ id: 1, name: 'Jane Doe' }, { forge: false }),
+          User.update({ id: 1, name: 'Jane Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1, name: 'Jane Doe' }]
+          [{ id: 1 }]
         );
       });
     });
@@ -2796,9 +2789,9 @@ describe('Model', () => {
       it('passes options along', async () => {
         await User.save({ name: 'John Doe' });
         await expect(
-          User.fetch({ forge: false }),
+          User.fetch({ returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1, name: 'John Doe' }]
+          [{ id: 1 }]
         );
       });
     });
@@ -2816,9 +2809,9 @@ describe('Model', () => {
       it('passes options along', async () => {
         await User.save({ name: 'John Doe' });
         await expect(
-          User.delete({ forge: false }),
+          User.delete({ returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1, name: 'John Doe' }]
+          [{ id: 1 }]
         );
       });
     });
