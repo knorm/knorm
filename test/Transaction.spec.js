@@ -225,6 +225,27 @@ describe('Transaction', () => {
         close()
       );
     });
+
+    it('sets the `active` flag to `true`', async () => {
+      const transaction = new DummyTransaction();
+      await expect(transaction.active, 'to be undefined');
+      await transaction.begin();
+      await expect(transaction.active, 'to be true');
+    });
+
+    it('sets the `started` flag to `true`', async () => {
+      const transaction = new DummyTransaction();
+      await expect(transaction.started, 'to be undefined');
+      await transaction.begin();
+      await expect(transaction.started, 'to be true');
+    });
+
+    it('leaves the `ended` flag as `undefined`', async () => {
+      const transaction = new DummyTransaction();
+      await expect(transaction.ended, 'to be undefined');
+      await transaction.begin();
+      await expect(transaction.ended, 'to be undefined');
+    });
   });
 
   describe('Transaction.prototype.commit', () => {
@@ -319,6 +340,30 @@ describe('Transaction', () => {
       );
       await expect(rollback, 'was not called');
     });
+
+    it('sets the `active` flag to `false`', async () => {
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.active, 'to be true');
+      await transaction.commit();
+      await expect(transaction.active, 'to be false');
+    });
+
+    it('sets the `ended` flag to `true`', async () => {
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.ended, 'to be undefined');
+      await transaction.commit();
+      await expect(transaction.ended, 'to be true');
+    });
+
+    it('leaves the `started` flag as `true`', async () => {
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.started, 'to be true');
+      await transaction.commit();
+      await expect(transaction.started, 'to be true');
+    });
   });
 
   describe('Transaction.prototype.rollback', () => {
@@ -380,6 +425,30 @@ describe('Transaction', () => {
         'to be rejected with error exhaustively satisfying',
         new TransactionError(new Error('rollback error'))
       );
+    });
+
+    it('sets the `active` flag to `false`', async () => {
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.active, 'to be true');
+      await transaction.rollback();
+      await expect(transaction.active, 'to be false');
+    });
+
+    it('sets the `ended` flag to `true`', async () => {
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.ended, 'to be undefined');
+      await transaction.rollback();
+      await expect(transaction.ended, 'to be true');
+    });
+
+    it('leaves the `started` flag as `true`', async () => {
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.started, 'to be true');
+      await transaction.rollback();
+      await expect(transaction.started, 'to be true');
     });
   });
 
