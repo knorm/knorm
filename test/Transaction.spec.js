@@ -957,6 +957,99 @@ describe('Transaction', () => {
         query.restore();
         close.restore();
       });
+
+      describe('when a transaction has ended', () => {
+        // NOTE: this test still passes even without the fix in the code because
+        // pg-pool actually closes connections 10 seconds after calling
+        // client.release(). the following two tests guard against that, but
+        // this test could also wait 10 seconds before calling the next
+        // user.update() (at a cost of slower CI builds)
+        it('can still run regular queries', async () => {
+          const user = await new Transaction(async ({ models: { User } }) => {
+            return new User({ id: 1, name: 'foo' }).insert();
+          });
+          await expect(user, 'to satisfy', { id: 1, name: 'foo' });
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foo' }]
+          );
+          user.name = 'bar';
+          await expect(user.update(), 'to be fulfilled with value satisfying', {
+            id: 1,
+            name: 'bar'
+          });
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'bar' }]
+          );
+        });
+
+        it('connects via Query.prototype.connect', async () => {
+          const create = sinon.spy(Connection.prototype, 'create');
+          const outerConnect = sinon.spy(User.Query.prototype, 'connect');
+          let innerConnect;
+          const user = await new Transaction(async ({ models: { User } }) => {
+            innerConnect = sinon.spy(User.Query.prototype, 'connect');
+            return new User({ id: 1, name: 'foo' }).insert();
+          });
+          await expect(create, 'to have calls satisfying', () => create());
+          await expect(outerConnect, 'was not called');
+          await expect(innerConnect, 'to have calls satisfying', () =>
+            innerConnect()
+          );
+          await expect(user.update(), 'to be fulfilled');
+          await expect(create, 'to have calls satisfying', () => {
+            create();
+            create();
+          });
+          await expect(outerConnect, 'to have calls satisfying', () =>
+            outerConnect()
+          );
+          await expect(innerConnect, 'to have calls satisfying', () => {
+            innerConnect();
+            innerConnect();
+          });
+          create.restore();
+          outerConnect.restore();
+          innerConnect.restore();
+        });
+
+        it('disconnects via Query.prototype.disconnect', async () => {
+          const close = sinon.spy(Connection.prototype, 'close');
+          const outerDisconnect = sinon.spy(User.Query.prototype, 'disconnect');
+          let innerDisconnect;
+          const user = await new Transaction(async ({ models: { User } }) => {
+            innerDisconnect = sinon.spy(User.Query.prototype, 'disconnect');
+            return new User({ id: 1, name: 'foo' }).insert();
+          });
+          await expect(close, 'to have calls satisfying', () => close());
+          await expect(outerDisconnect, 'was not called');
+          await expect(innerDisconnect, 'to have calls satisfying', () =>
+            innerDisconnect()
+          );
+          await expect(user.update(), 'to be fulfilled');
+          await expect(close, 'to have calls satisfying', () => {
+            close();
+            close();
+          });
+          await expect(outerDisconnect, 'to have calls satisfying', () =>
+            outerDisconnect()
+          );
+          await expect(innerDisconnect, 'to have calls satisfying', () => {
+            innerDisconnect();
+            innerDisconnect();
+          });
+          close.restore();
+          outerDisconnect.restore();
+          innerDisconnect.restore();
+        });
+      });
     });
 
     describe('without a callback function', () => {
@@ -1163,6 +1256,115 @@ describe('Transaction', () => {
         await expect(close, 'to have calls satisfying', () => close());
         query.restore();
         close.restore();
+      });
+
+      describe('when a transaction has ended', () => {
+        // NOTE: this test still passes even without the fix in the code because
+        // pg-pool actually closes connections 10 seconds after calling
+        // client.release(). the following two tests guard against that, but
+        // this test could also wait 10 seconds before calling the next
+        // user.update() (at a cost of slower CI builds)
+        it('can still run regular queries', async () => {
+          const transaction = new Transaction();
+          await transaction.models.User.query.execute('select now()');
+          const user = await new transaction.models.User({
+            id: 1,
+            name: 'foo'
+          }).insert();
+          await transaction.commit();
+          await expect(user, 'to satisfy', { id: 1, name: 'foo' });
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'foo' }]
+          );
+          user.name = 'bar';
+          await expect(user.update(), 'to be fulfilled with value satisfying', {
+            id: 1,
+            name: 'bar'
+          });
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have sorted rows satisfying',
+            [{ id: 1, name: 'bar' }]
+          );
+        });
+
+        it('connects via Query.prototype.connect', async () => {
+          const create = sinon.spy(Connection.prototype, 'create');
+          const outerConnect = sinon.spy(User.Query.prototype, 'connect');
+          const transaction = new Transaction();
+          await transaction.models.User.query.execute('select now()');
+          const innerConnect = sinon.spy(
+            transaction.models.User.Query.prototype,
+            'connect'
+          );
+          const user = await new transaction.models.User({
+            id: 1,
+            name: 'foo'
+          }).insert();
+          await transaction.commit();
+          await expect(create, 'to have calls satisfying', () => create());
+          await expect(outerConnect, 'was not called');
+          await expect(innerConnect, 'to have calls satisfying', () =>
+            innerConnect()
+          );
+          await expect(user.update(), 'to be fulfilled');
+          await expect(create, 'to have calls satisfying', () => {
+            create();
+            create();
+          });
+          await expect(outerConnect, 'to have calls satisfying', () =>
+            outerConnect()
+          );
+          await expect(innerConnect, 'to have calls satisfying', () => {
+            innerConnect();
+            innerConnect();
+          });
+          create.restore();
+          outerConnect.restore();
+          innerConnect.restore();
+        });
+
+        it('disconnects via Query.prototype.disconnect', async () => {
+          const close = sinon.spy(Connection.prototype, 'close');
+          const outerDisconnect = sinon.spy(User.Query.prototype, 'disconnect');
+          const transaction = new Transaction();
+          await transaction.models.User.query.execute('select now()');
+          const innerDisconnect = sinon.spy(
+            transaction.models.User.Query.prototype,
+            'disconnect'
+          );
+          const user = await new transaction.models.User({
+            id: 1,
+            name: 'foo'
+          }).insert();
+          await transaction.commit();
+          await expect(close, 'to have calls satisfying', () => close());
+          await expect(outerDisconnect, 'was not called');
+          await expect(innerDisconnect, 'to have calls satisfying', () =>
+            innerDisconnect()
+          );
+          await expect(user.update(), 'to be fulfilled');
+          await expect(close, 'to have calls satisfying', () => {
+            close();
+            close();
+          });
+          await expect(outerDisconnect, 'to have calls satisfying', () =>
+            outerDisconnect()
+          );
+          await expect(innerDisconnect, 'to have calls satisfying', () => {
+            innerDisconnect();
+            innerDisconnect();
+          });
+          close.restore();
+          outerDisconnect.restore();
+          innerDisconnect.restore();
+        });
       });
     });
   });
