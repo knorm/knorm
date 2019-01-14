@@ -283,14 +283,12 @@ describe('Query', () => {
     });
 
     it('closes a connection via Connection.prototype.close', async () => {
-      const closeConnection = sinon.stub(DummyConnection.prototype, 'close');
+      const close = sinon.stub(DummyConnection.prototype, 'close');
       const query = new DummyQuery(User);
       await query.connect();
-      await query.close();
-      await expect(
-        closeConnection,
-        'to have calls exhaustively satisfying',
-        () => closeConnection()
+      await query.disconnect();
+      await expect(close, 'to have calls exhaustively satisfying', () =>
+        close()
       );
     });
 
@@ -300,19 +298,19 @@ describe('Query', () => {
         .returns(Promise.resolve('foo'));
       const query = new DummyQuery(User);
       await query.connect();
-      await expect(query.close(), 'to be fulfilled with', 'foo');
+      await expect(query.disconnect(), 'to be fulfilled with', 'foo');
     });
 
     it('rejects with a QueryError on close failure', async () => {
       sinon
         .stub(DummyConnection.prototype, 'close')
-        .returns(Promise.reject(new Error('connection error')));
+        .returns(Promise.reject(new Error('connection close error')));
       const query = new DummyQuery(User);
       await query.connect();
       await expect(
-        query.close(),
+        query.disconnect(),
         'to be rejected with error exhaustively satisfying',
-        new QueryError(new Error('connection error'))
+        new QueryError(new Error('connection close error'))
       );
     });
   });
@@ -424,7 +422,7 @@ describe('Query', () => {
       it('if Query.prototype.formatSql fails', async () => {
         const query = new Query(User);
         const connect = sinon.spy(query, 'connect');
-        const close = sinon.spy(query, 'close');
+        const disconnect = sinon.spy(query, 'disconnect');
         const formatSql = sinon
           .stub(query, 'formatSql')
           .throws(new Error('format error'));
@@ -437,13 +435,15 @@ describe('Query', () => {
         await expect(formatSql, 'to have calls satisfying', () =>
           formatSql('select now() as "now"')
         );
-        await expect(close, 'to have calls satisfying', () => close());
+        await expect(disconnect, 'to have calls satisfying', () =>
+          disconnect()
+        );
       });
 
       it('if Query.prototype.query fails', async () => {
         const query = new Query(User);
         const connect = sinon.spy(query, 'connect');
-        const close = sinon.spy(query, 'close');
+        const disconnect = sinon.spy(query, 'disconnect');
         const runQuery = sinon
           .stub(query, 'query')
           .throws(new Error('query error'));
@@ -456,14 +456,16 @@ describe('Query', () => {
         await expect(runQuery, 'to have calls satisfying', () =>
           runQuery({ text: 'select now() as "now"' })
         );
-        await expect(close, 'to have calls satisfying', () => close());
+        await expect(disconnect, 'to have calls satisfying', () =>
+          disconnect()
+        );
       });
 
       describe('when passed an array', () => {
         it('if one of the Query.prototype.formatSql fails', async () => {
           const query = new Query(User);
           const connect = sinon.spy(query, 'connect');
-          const close = sinon.spy(query, 'close');
+          const disconnect = sinon.spy(query, 'disconnect');
           const formatSql = sinon
             .stub(query, 'formatSql')
             .onSecondCall()
@@ -478,13 +480,15 @@ describe('Query', () => {
             formatSql('select now() as "now"');
             formatSql('select now() as "now"');
           });
-          await expect(close, 'to have calls satisfying', () => close());
+          await expect(disconnect, 'to have calls satisfying', () =>
+            disconnect()
+          );
         });
 
         it('if one of the Query.prototype.query fails', async () => {
           const query = new Query(User);
           const connect = sinon.spy(query, 'connect');
-          const close = sinon.spy(query, 'close');
+          const disconnect = sinon.spy(query, 'disconnect');
           const runQuery = sinon.spy(query, 'query');
           await expect(
             query.execute([
@@ -513,7 +517,9 @@ describe('Query', () => {
               }" (id, name, confirmed) values (1, 'foo', false)`
             });
           });
-          await expect(close, 'to have calls satisfying', () => close());
+          await expect(disconnect, 'to have calls satisfying', () =>
+            disconnect()
+          );
           await expect(
             knex,
             'with table',
