@@ -105,7 +105,7 @@ describe('Transaction', () => {
     });
   });
 
-  describe('Transaction.prototype.close', () => {
+  describe('Transaction.prototype.disconnect', () => {
     let DummyConnection;
     let DummyTransaction;
 
@@ -118,14 +118,12 @@ describe('Transaction', () => {
     });
 
     it('closes a connection via Connection.prototype.close', async () => {
-      const closeConnection = sinon.stub(DummyConnection.prototype, 'close');
+      const close = sinon.stub(DummyConnection.prototype, 'close');
       const transaction = new DummyTransaction();
       await transaction.connect();
-      await transaction.close();
-      await expect(
-        closeConnection,
-        'to have calls exhaustively satisfying',
-        () => closeConnection()
+      await transaction.disconnect();
+      await expect(close, 'to have calls exhaustively satisfying', () =>
+        close()
       );
     });
 
@@ -135,19 +133,19 @@ describe('Transaction', () => {
         .returns(Promise.resolve('foo'));
       const transaction = new DummyTransaction();
       await transaction.connect();
-      await expect(transaction.close(), 'to be fulfilled with', 'foo');
+      await expect(transaction.disconnect(), 'to be fulfilled with', 'foo');
     });
 
     it('rejects with a TransactionError on close failure', async () => {
       sinon
         .stub(DummyConnection.prototype, 'close')
-        .returns(Promise.reject(new Error('connection error')));
+        .returns(Promise.reject(new Error('connection close error')));
       const transaction = new DummyTransaction();
       await transaction.connect();
       await expect(
-        transaction.close(),
+        transaction.disconnect(),
         'to be rejected with error exhaustively satisfying',
-        new TransactionError(new Error('connection error'))
+        new TransactionError(new Error('connection close error'))
       );
     });
   });
@@ -214,15 +212,15 @@ describe('Transaction', () => {
       sinon
         .stub(DummyTransaction.prototype, '_begin')
         .returns(Promise.reject(new Error('begin error')));
-      const close = sinon.spy(DummyTransaction.prototype, 'close');
+      const disconnect = sinon.spy(DummyTransaction.prototype, 'disconnect');
       const transaction = new DummyTransaction();
       await expect(
         transaction.begin(),
         'to be rejected with error exhaustively satisfying',
         new TransactionError(new Error('begin error'))
       );
-      await expect(close, 'to have calls exhaustively satisfying', () =>
-        close()
+      await expect(disconnect, 'to have calls exhaustively satisfying', () =>
+        disconnect()
       );
     });
 
@@ -273,12 +271,12 @@ describe('Transaction', () => {
     });
 
     it('closes the connection via Transaction.prototype.close', async () => {
-      const close = sinon.spy(DummyTransaction.prototype, 'close');
+      const disconnect = sinon.spy(DummyTransaction.prototype, 'disconnect');
       const transaction = new DummyTransaction();
       await transaction.begin();
       await transaction.commit();
-      await expect(close, 'to have calls exhaustively satisfying', () =>
-        close()
+      await expect(disconnect, 'to have calls exhaustively satisfying', () =>
+        disconnect()
       );
     });
 
@@ -288,12 +286,12 @@ describe('Transaction', () => {
         .stub(DummyTransaction.prototype, '_commit')
         .callsFake(() => order.push('commit'));
       sinon
-        .stub(DummyTransaction.prototype, 'close')
-        .callsFake(() => order.push('close'));
+        .stub(DummyTransaction.prototype, 'disconnect')
+        .callsFake(() => order.push('disconnect'));
       const transaction = new DummyTransaction();
       await transaction.begin();
       await transaction.commit();
-      await expect(order, 'to equal', ['commit', 'close']);
+      await expect(order, 'to equal', ['commit', 'disconnect']);
     });
 
     it('rejects with a TransactionError on commit failure', async () => {
@@ -326,17 +324,17 @@ describe('Transaction', () => {
       );
     });
 
-    it('does not rollback on close failure', async () => {
+    it('does not rollback on disconnect failure', async () => {
       sinon
-        .stub(DummyTransaction.prototype, 'close')
-        .returns(Promise.reject(new Error('close error')));
+        .stub(DummyTransaction.prototype, 'disconnect')
+        .returns(Promise.reject(new Error('disconnect error')));
       const rollback = sinon.spy(DummyTransaction.prototype, 'rollback');
       const transaction = new DummyTransaction();
       await transaction.begin();
       await expect(
         transaction.commit(),
         'to be rejected with error exhaustively satisfying',
-        new Error('close error')
+        new Error('disconnect error')
       );
       await expect(rollback, 'was not called');
     });
@@ -390,13 +388,13 @@ describe('Transaction', () => {
       );
     });
 
-    it('closes the connection via Transaction.prototype.close', async () => {
-      const close = sinon.spy(DummyTransaction.prototype, 'close');
+    it('closes the connection via Transaction.prototype.disconnect', async () => {
+      const disconnect = sinon.spy(DummyTransaction.prototype, 'disconnect');
       const transaction = new DummyTransaction();
       await transaction.begin();
       await transaction.rollback();
-      await expect(close, 'to have calls exhaustively satisfying', () =>
-        close()
+      await expect(disconnect, 'to have calls exhaustively satisfying', () =>
+        disconnect()
       );
     });
 
@@ -406,12 +404,12 @@ describe('Transaction', () => {
         .stub(DummyTransaction.prototype, '_rollback')
         .callsFake(() => order.push('rollback'));
       sinon
-        .stub(DummyTransaction.prototype, 'close')
-        .callsFake(() => order.push('close'));
+        .stub(DummyTransaction.prototype, 'disconnect')
+        .callsFake(() => order.push('disconnect'));
       const transaction = new DummyTransaction();
       await transaction.begin();
       await transaction.rollback();
-      await expect(order, 'to equal', ['rollback', 'close']);
+      await expect(order, 'to equal', ['rollback', 'disconnect']);
     });
 
     it('rejects with a TransactionError on rollback failure', async () => {
