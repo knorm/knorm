@@ -1,0 +1,51 @@
+{
+  "name": "@knorm/virtuals",
+  "version": "1.0.0",
+  "description": "Virtuals plugin for @knorm/knorm",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --exit --recursive",
+    "coverage": "nyc npm test",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+  },
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
+  "peerDependencies": {
+    "@knorm/knorm": "^2.0.0"
+  },
+  "devDependencies": {
+    "@knorm/knorm": "github:knorm/knorm#v2",
+    "@semantic-release/changelog": "3.0.1",
+    "@semantic-release/git": "7.0.5",
+    "@semantic-release/github": "5.2.0",
+    "@semantic-release/npm": "5.0.5",
+    "coveralls": "3.0.2",
+    "eslint": "4.19.1",
+    "eslint-config-ganintegrity": "2.0.2",
+    "mocha": "5.2.0",
+    "nyc": "13.1.0",
+    "prettier": "1.14.3",
+    "semantic-release": "15.10.5",
+    "unexpected": "10.39.1"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": [
+    "knorm",
+    "plugin",
+    "virtuals"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/knorm/virtuals.git"
+  },
+  "bugs": {
+    "url": "https://github.com/knorm/virtuals/issues"
+  },
+  "homepage": "https://github.com/knorm/virtuals#readme",
+  "dependencies": {}
+}
