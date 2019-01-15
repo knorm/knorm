@@ -4,7 +4,7 @@
   "description": "toJSON plugin for @knorm/knorm",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --exit 'test/**/*.spec.js'",
+    "test": "mocha --exit --recursive",
     "coverage": "nyc npm test",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
