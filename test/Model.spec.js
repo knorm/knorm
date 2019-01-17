@@ -1358,9 +1358,20 @@ describe('Model', function() {
     describe('when a model is subclassed', function() {
       it("inherits the parent's schema", function() {
         class Foo extends Model {}
+        Foo.schema = 'foo';
+
         class Bar extends Foo {}
 
+        expect(Foo.schema, 'to be', 'foo');
+        expect(Bar.schema, 'to be', 'foo');
+      });
+
+      it("inherits the parent's schema when other configs are set", function() {
+        class Foo extends Model {}
         Foo.schema = 'foo';
+
+        class Bar extends Foo {}
+        Bar.table = 'bar';
 
         expect(Foo.schema, 'to be', 'foo');
         expect(Bar.schema, 'to be', 'foo');
@@ -1368,9 +1379,10 @@ describe('Model', function() {
 
       it("allows overwriting the parent's schema", function() {
         class Foo extends Model {}
+        Foo.schema = 'foo';
+
         class Bar extends Foo {}
 
-        Foo.schema = 'foo';
         Bar.schema = 'bar';
 
         expect(Foo.schema, 'to be', 'foo');
@@ -1391,9 +1403,20 @@ describe('Model', function() {
     describe('when a model is subclassed', function() {
       it("inherits the parent's table", function() {
         class Foo extends Model {}
+        Foo.table = 'foo';
+
         class Bar extends Foo {}
 
+        expect(Foo.table, 'to be', 'foo');
+        expect(Bar.table, 'to be', 'foo');
+      });
+
+      it("inherits the parent's table when other configs are set", function() {
+        class Foo extends Model {}
         Foo.table = 'foo';
+
+        class Bar extends Foo {}
+        Bar.fields = { bar: 'string' };
 
         expect(Foo.table, 'to be', 'foo');
         expect(Bar.table, 'to be', 'foo');
