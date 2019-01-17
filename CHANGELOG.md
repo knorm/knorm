@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/knorm/knorm/compare/v1.11.1...v1.11.2) (2019-01-17)
+
+
+### Bug Fixes
+
+* **Model:** fix `schema` inheritance ([94dfa37](https://github.com/knorm/knorm/commit/94dfa37))
+
 ## [1.11.1](https://github.com/knorm/knorm/compare/v1.11.0...v1.11.1) (2018-11-14)
 
 
