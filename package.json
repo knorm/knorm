@@ -36,7 +36,7 @@
     "nyc": "13.1.0",
     "prettier": "1.15.3",
     "semantic-release": "15.13.3",
-    "sinon": "7.2.2",
+    "sinon": "7.2.3",
     "unexpected": "10.40.2",
     "unexpected-knex": "1.4.0",
     "unexpected-sinon": "10.11.0"
