@@ -8,44 +8,7 @@ const knex = require('./lib/knex');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'))
-  .addAssertion(
-    '<Promise> to be fulfilled with sorted rows [exhaustively] satisfying <array>',
-    (expect, subject, value) => {
-      const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
-      expect.errorMode = 'bubble';
-      return expect(
-        subject,
-        'to be fulfilled with value satisfying',
-        subject => {
-          expect(subject, 'to be an array');
-          expect(
-            subject,
-            'sorted by',
-            ascendingOrder,
-            'to [exhaustively] satisfy',
-            value
-          );
-        }
-      );
-    }
-  )
-  .addAssertion(
-    '<knexQuery> to have sorted rows [exhaustively] satisfying <array>',
-    (expect, subject, value) => {
-      const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
-      expect.errorMode = 'bubble';
-      return expect(subject, 'to have rows satisfying', rows =>
-        expect(
-          rows,
-          'sorted by',
-          ascendingOrder,
-          'to [exhaustively] satisfy',
-          value
-        )
-      );
-    }
-  );
+  .use(require('unexpected-knex'));
 
 const { KnormPaginateError } = KnormPaginate;
 
