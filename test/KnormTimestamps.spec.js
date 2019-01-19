@@ -107,7 +107,7 @@ describe('KnormTimestamps', () => {
           knex,
           'with table',
           User.table,
-          'to have rows satisfying',
+          'to have sorted rows satisfying',
           [{ id: 1, created_at: new Date(2000), updated_at: new Date(2000) }]
         );
       });
@@ -122,7 +122,7 @@ describe('KnormTimestamps', () => {
           knex,
           'with table',
           User.table,
-          'to have rows satisfying',
+          'to have sorted rows satisfying',
           [{ id: 1, created_at: new Date(0), updated_at: new Date(2000) }]
         );
       });
@@ -135,7 +135,7 @@ describe('KnormTimestamps', () => {
           knex,
           'with table',
           User.table,
-          'to have rows satisfying',
+          'to have sorted rows satisfying',
           [
             { id: 1, created_at: new Date(0), updated_at: new Date(2000) },
             { id: 2, created_at: new Date(0), updated_at: new Date(2000) }
