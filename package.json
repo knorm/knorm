@@ -39,7 +39,7 @@
     "semantic-release": "15.13.3",
     "sinon": "7.2.3",
     "unexpected": "11.0.1",
-    "unexpected-knex": "1.3.0"
+    "unexpected-knex": "2.0.0"
   },
   "directories": {
     "lib": "lib",
