@@ -9,15 +9,15 @@ Postgres plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
 that enables running queries agaisnt postgres. Also, it adds postgres-specific
 features such as:
 
-* [automatically JSON-stringifying](http://knexjs.org/#Schema-json) all `json`
+- [automatically JSON-stringifying](http://knexjs.org/#Schema-json) all `json`
   and `jsonb` fields before save (insert or update)
-* automatically validating all `string` fields with `maxLength: 255`
-* `limit`, `offset`, `returning` query options and `ilike` where option,
+- automatically validating all `string` fields with `maxLength: 255`
+- `limit`, `offset`, `returning` query options and `ilike` where option,
   via [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
-* updating multiple rows using a single query with `UPDATE FROM`, via
+- updating multiple rows using a single query with `UPDATE FROM`, via
   [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
-* connection pooling, via [pg](https://node-postgres.com/features/pooling)
-* transactions
+- connection pooling, via [pg](https://node-postgres.com/features/pooling)
+- transactions
 
 ## Installation
 
@@ -25,7 +25,8 @@ features such as:
 npm install --save @knorm/knorm @knorm/postgres
 ```
 
-> @knorm/postgres has a peer dependency on [@knorm/knorm](https://www.npmjs.com/package/knorm)
+> @knorm/postgres has a peer dependency on
+> [@knorm/knorm](https://www.npmjs.com/package/knorm)
 
 ## Initialization
 
@@ -44,13 +45,12 @@ const orm = knorm({
 
 ## Options
 
-| Option          | Type             | Description                                                                                                                                                                                                                                           |
-| --------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`          | string           | the name of the plugin, defaults to `'postgres'`                                                                                                                                                                                                      |
-| `connection`    | object or string | if set, this option is passed directly to [pg](https://node-postgres.com/features/connecting#programmatic). However, connections can also be configured via [environment variables](https://www.postgresql.org/docs/current/static/libpq-envars.html) |
-| `initClient`    | (async) function | a function called when a new client is acquired from the pool. useful for configuring the connection e.g. setting session variables. it's called with the client as the only argument                                                                 |
-| `restoreClient` | (async) function | a function called before a client is released back into the pool. useful for restoring a client e.g. unsetting session variables. it's called with the client as the only argument                                                                    |
-NOTE that all options are optional.
+| Option       | Type                 | Default    | Description                                                                                                                                                                                                                    |
+| ------------ | -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [name]       | `string`             | `postgres` | The name of the plugin, allows accessing the plugin instance via Knorm's plugin registry                                                                                                                                       |
+| [connection] | `object` \| `string` | none       | Passed directly to [pg](https://node-postgres.com/features/connecting#programmatic). However, connections can also be configured via [environment variables](https://www.postgresql.org/docs/current/static/libpq-envars.html) |
+
+Note that all options are optional.
 
 ## Usage
 
@@ -60,11 +60,11 @@ When updating `json` and `jsonb` fields, you may wish to only update part of the
 JSON data instead of the whole object. You can partially update json fields via
 the `patch` option:
 
-* set the option value to `true` to patch all the json and jsonb fields in the
+- set the option value to `true` to patch all the json and jsonb fields in the
   update data
-* set the option value to a string field-name to patch a single field in the
+- set the option value to a string field-name to patch a single field in the
   update data
-* set the option value to an array of field-names to patch a multiple fields
+- set the option value to an array of field-names to patch a multiple fields
   in the update data
 
 For example:
@@ -93,8 +93,10 @@ User.update(data, { patch: 'json' });
 User.update(data, { patch: ['json', 'jsonb'] });
 ```
 
-Note that only basic json-patching is supported: only the first level of patching
-is supported. For nested objects and arrays, the whole object/array is **replaced**:
+Note that only basic json-patching is supported: only the first level of
+patching
+is supported. For nested objects and arrays, the whole object/array is
+**replaced**:
 
 ```js
 // before:
@@ -104,12 +106,10 @@ new User({
 });
 
 // patch update:
-User.query
-  .patch(['json', 'jsonb'])
-  .update({
-    jsonb: { top: { bar: 'bar' } },
-    json: { top: { bar: 'bar' } }
-  });
+User.query.patch(['json', 'jsonb']).update({
+  jsonb: { top: { bar: 'bar' } },
+  json: { top: { bar: 'bar' } }
+});
 
 // result:
 new User({
@@ -130,14 +130,12 @@ new User({
 });
 
 // to add a nested `bar` key/value:
-User.query
-  .patch(['json', 'jsonb'])
-  .update({
-    jsonb: User.query.sql(`jsonb_set("jsonb", '{top,bar}', '"bar"')`),
-    // for plain json fields, you have to cast to jsonb and then cast the result
-    // back to json:
-    json: User.query.sql(`jsonb_set("json"::jsonb, '{top,bar}', '"bar"')::json`)
-  });
+User.query.patch(['json', 'jsonb']).update({
+  jsonb: User.query.sql(`jsonb_set("jsonb", '{top,bar}', '"bar"')`),
+  // for plain json fields, you have to cast to jsonb and then cast the result
+  // back to json:
+  json: User.query.sql(`jsonb_set("json"::jsonb, '{top,bar}', '"bar"')::json`)
+});
 
 // result:
 new User({

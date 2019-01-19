@@ -1,5 +1,6 @@
 const knorm = require('@knorm/knorm');
 const knormRelations = require('@knorm/relations');
+const { Client } = require('pg');
 const KnormPostgres = require('../lib/KnormPostgres');
 const knormPostgres = require('../');
 const makeKnex = require('knex');
@@ -38,8 +39,15 @@ describe('KnormPostgres', () => {
     const knormPostgres = new KnormPostgres({
       connection: `postgres://postgres@${host}:5432/postgres`
     });
-    const client = await knormPostgres.acquireClient();
-    await knormPostgres.releaseClient(client);
+    await expect(
+      knormPostgres.pool.connect(),
+      'to be fulfilled with',
+      expect.it('to be a', Client).and(
+        'when passed as parameter to',
+        client => client.release(),
+        'to be undefined' // but not to throw
+      )
+    );
   });
 
   it('supports options in the connection string', async () => {
@@ -49,8 +57,15 @@ describe('KnormPostgres', () => {
 
     // TODO: pg-connection-string should parseInt on the `max` option
     await expect(knormPostgres.pool.options.max, 'to be', '5');
-    const client = await knormPostgres.acquireClient();
-    await knormPostgres.releaseClient(client);
+    await expect(
+      knormPostgres.pool.connect(),
+      'to be fulfilled with',
+      expect.it('to be a', Client).and(
+        'when passed as parameter to',
+        client => client.release(),
+        'to be undefined' // but not to throw
+      )
+    );
   });
 
   it('uses postgres environment variables if no `connection` config is provided', async () => {
@@ -67,8 +82,16 @@ describe('KnormPostgres', () => {
     process.env.PGDATABASE = 'postgres';
 
     const knormPostgres = new KnormPostgres();
-    const client = await knormPostgres.acquireClient();
-    await knormPostgres.releaseClient(client);
+
+    await expect(
+      knormPostgres.pool.connect(),
+      'to be fulfilled with',
+      expect.it('to be a', Client).and(
+        'when passed as parameter to',
+        client => client.release(),
+        'to be undefined' // but not to throw
+      )
+    );
 
     process.env.PGHOST = PGHOST;
     process.env.PGPORT = PGPORT;
@@ -91,84 +114,6 @@ describe('KnormPostgres', () => {
         () => new KnormPostgres().init({}),
         'to throw',
         new KnormPostgresError('invalid Knorm instance provided')
-      );
-    });
-  });
-
-  describe('acquireClient', () => {
-    it('calls the user-provided `initClient`', async () => {
-      const initClient = sinon.spy().named('initClient');
-      const knormPostgres = new KnormPostgres({ connection, initClient });
-      const client = await knormPostgres.acquireClient();
-      await expect(initClient, 'to have calls satisfying', () => {
-        initClient(client);
-      });
-      await knormPostgres.releaseClient(client);
-    });
-
-    it('releases the client if the user-provided `initClient` rejects', async () => {
-      let client;
-      const initClient = async theClient => {
-        client = theClient;
-        throw new Error('foo');
-      };
-      const knormPostgres = new KnormPostgres({ connection, initClient });
-      await expect(
-        knormPostgres.acquireClient(),
-        'to be rejected with error satisfying',
-        new Error('foo')
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-    });
-  });
-
-  describe('releaseClient', () => {
-    it('calls the user-provided `restoreClient`', async () => {
-      const restoreClient = sinon.spy().named('restoreClient');
-      const knormPostgres = new KnormPostgres({ connection, restoreClient });
-      const client = await knormPostgres.acquireClient();
-      await knormPostgres.releaseClient(client);
-      await expect(restoreClient, 'to have calls satisfying', () => {
-        restoreClient(client);
-      });
-    });
-
-    it('releases the client if there is no user-provided `restoreClient`', async () => {
-      const knormPostgres = new KnormPostgres({ connection });
-      const client = await knormPostgres.acquireClient();
-      await knormPostgres.releaseClient(client);
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
-      );
-    });
-
-    it('releases the client even if the user-provided `restoreClient` rejects', async () => {
-      const restoreClient = async () => {
-        throw new Error('foo');
-      };
-      const knormPostgres = new KnormPostgres({ connection, restoreClient });
-      const client = await knormPostgres.acquireClient();
-      await expect(
-        knormPostgres.releaseClient(client),
-        'to be rejected with error satisfying',
-        new Error('foo')
-      );
-      await expect(
-        () => client.release(),
-        'to throw',
-        new Error(
-          'Release called on client which has already been released to the pool.'
-        )
       );
     });
   });
