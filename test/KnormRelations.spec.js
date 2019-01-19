@@ -6,46 +6,7 @@ const knormRelations = require('../');
 const knex = require('./lib/knex');
 const expect = require('unexpected')
   .clone()
-  .use(require('unexpected-knex'))
-  .addAssertion(
-    '<Promise> to be fulfilled with sorted rows [exhaustively] satisfying <array>',
-    (expect, subject, value) => {
-      const exhaustive = expect.flags.exhaustively;
-      const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
-      expect.errorMode = 'bubble';
-      return expect(
-        subject,
-        'to be fulfilled with value satisfying',
-        subject => {
-          expect(subject, 'to be an array');
-          expect(
-            subject,
-            'sorted by',
-            ascendingOrder,
-            exhaustive ? 'to exhaustively satisfy' : 'to satisfy',
-            value
-          );
-        }
-      );
-    }
-  )
-  .addAssertion(
-    '<knexQuery> to have sorted rows [exhaustively] satisfying <array>',
-    (expect, subject, value) => {
-      const ascendingOrder = (a, b) => parseInt(a.id) - parseInt(b.id);
-      expect.errorMode = 'bubble';
-      return expect(
-        subject,
-        'to have rows satisfying',
-        expect.it(
-          'sorted by',
-          ascendingOrder,
-          'to [exhaustively] satisfy',
-          value
-        )
-      );
-    }
-  );
+  .use(require('unexpected-knex'));
 
 const { KnormRelationsError } = KnormRelations;
 
