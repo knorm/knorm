@@ -11,48 +11,57 @@ const expect = require('unexpected')
 const { KnormRelationsError } = KnormRelations;
 
 describe('KnormRelations', () => {
-  const orm = knorm({ fieldToColumn })
-    .use(knormPostgres({ connection: knex.client.config.connection }))
-    .use(knormRelations());
+  let Query;
+  let Model;
+  let User;
+  let ImageCategory;
+  let Image;
+  let Message;
 
-  const Query = orm.Query;
+  before(() => {
+    const orm = knorm({ fieldToColumn, debug: true })
+      .use(knormPostgres({ connection: knex.client.config.connection }))
+      .use(knormRelations());
 
-  class Model extends orm.Model {}
-  Model.fields = {
-    id: { type: 'integer', primary: true, updated: false }
-  };
+    Query = orm.Query;
 
-  class User extends Model {}
-  User.table = 'user';
-  User.fields = {
-    name: { type: 'string', required: true },
-    confirmed: 'boolean',
-    creator: {
-      type: 'integer',
-      references() {
-        return User.fields.id;
+    Model = class extends orm.Model {};
+    Model.fields = {
+      id: { type: 'integer', primary: true, updated: false }
+    };
+
+    User = class extends Model {};
+    User.table = 'user';
+    User.fields = {
+      name: { type: 'string', required: true },
+      confirmed: 'boolean',
+      creator: {
+        type: 'integer',
+        references() {
+          return User.fields.id;
+        }
       }
-    }
-  };
+    };
 
-  class ImageCategory extends Model {}
-  ImageCategory.table = 'image_category';
-  ImageCategory.fields = { name: { type: 'string', required: true } };
+    ImageCategory = class extends Model {};
+    ImageCategory.table = 'image_category';
+    ImageCategory.fields = { name: { type: 'string', required: true } };
 
-  class Image extends Model {}
-  Image.table = 'image';
-  Image.fields = {
-    userId: { type: 'integer', references: User.fields.id },
-    categoryId: { type: 'integer', references: ImageCategory.fields.id }
-  };
+    Image = class extends Model {};
+    Image.table = 'image';
+    Image.fields = {
+      userId: { type: 'integer', references: User.fields.id },
+      categoryId: { type: 'integer', references: ImageCategory.fields.id }
+    };
 
-  class Message extends Model {}
-  Message.table = 'message';
-  Message.fields = {
-    text: { type: 'text', required: true },
-    senderId: { type: 'integer', references: User.fields.id },
-    receiverId: { type: 'integer', references: User.fields.id }
-  };
+    Message = class extends Model {};
+    Message.table = 'message';
+    Message.fields = {
+      text: { type: 'text', required: true },
+      senderId: { type: 'integer', references: User.fields.id },
+      receiverId: { type: 'integer', references: User.fields.id }
+    };
+  });
 
   before(async () => {
     await knex.schema.createTable(User.table, table => {
@@ -2349,6 +2358,73 @@ describe('KnormRelations', () => {
               new User({ id: 2, creator: null }),
               new User({ id: 3, creator: new User({ id: 1 }) }),
               new User({ id: 4, creator: new User({ id: 2 }) })
+            ]
+          );
+        });
+      });
+
+      describe('when joining across different schemata', () => {
+        let MessageInOtherSchema;
+
+        before(() => {
+          MessageInOtherSchema = class extends Message {};
+          MessageInOtherSchema.schema = 'message';
+        });
+
+        before(async () => {
+          await knex.schema.raw(`CREATE SCHEMA ${MessageInOtherSchema.schema}`);
+          await knex.schema
+            .withSchema(MessageInOtherSchema.schema)
+            .createTable(MessageInOtherSchema.table, table => {
+              table.increments();
+              table.text('text').notNullable();
+              table
+                .integer('sender_id')
+                .references('id')
+                .inTable(`public.${User.table}`);
+              table
+                .integer('receiver_id')
+                .references('id')
+                .inTable(`public.${User.table}`);
+            });
+
+          await MessageInOtherSchema.insert([
+            { id: 1, text: 'Hi User 2', senderId: 1, receiverId: 2 },
+            { id: 2, text: 'Hi User 1', senderId: 2, receiverId: 1 }
+          ]);
+        });
+
+        after(async () => {
+          await knex.schema.raw(
+            `DROP SCHEMA ${MessageInOtherSchema.schema} CASCADE`
+          );
+        });
+
+        it('supports `leftJoin`', async () => {
+          const query = new Query(User).leftJoin([
+            new Query(MessageInOtherSchema).on('senderId').as('sent'),
+            new Query(MessageInOtherSchema).on('receiverId').as('received')
+          ]);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({
+                id: 1,
+                name: 'User 1',
+                sent: [new MessageInOtherSchema({ id: 1, text: 'Hi User 2' })],
+                received: [
+                  new MessageInOtherSchema({ id: 2, text: 'Hi User 1' })
+                ]
+              }),
+              new User({
+                id: 2,
+                name: 'User 2',
+                sent: [new MessageInOtherSchema({ id: 2, text: 'Hi User 1' })],
+                received: [
+                  new MessageInOtherSchema({ id: 1, text: 'Hi User 2' })
+                ]
+              })
             ]
           );
         });
