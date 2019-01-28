@@ -923,7 +923,7 @@ describe('Query', () => {
       beforeEach(() => {
         queryStub = sinon
           .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('fetch error')));
+          .callsFake(async () => Promise.reject(new Error('fetch error')));
       });
 
       afterEach(() => {
@@ -2261,7 +2261,7 @@ describe('Query', () => {
       beforeEach(() => {
         queryStub = sinon
           .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('insert error')));
+          .callsFake(async () => Promise.reject(new Error('insert error')));
       });
 
       afterEach(() => {
@@ -2961,7 +2961,7 @@ describe('Query', () => {
       beforeEach(() => {
         queryStub = sinon
           .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('update error')));
+          .callsFake(async () => Promise.reject(new Error('update error')));
       });
 
       afterEach(() => {
@@ -3395,7 +3395,7 @@ describe('Query', () => {
       beforeEach(() => {
         queryStub = sinon
           .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('delete error')));
+          .callsFake(async () => Promise.reject(new Error('delete error')));
       });
 
       afterEach(() => {
