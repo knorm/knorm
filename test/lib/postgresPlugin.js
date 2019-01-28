@@ -2,7 +2,9 @@ const { Pool } = require('pg');
 const knex = require('./knex');
 const sqlBricksPostgres = require('sql-bricks-postgres');
 
-const pool = new Pool(knex.client.config.connection);
+const pool = new Pool(
+  Object.assign({ idleTimeoutMillis: 10 }, knex.client.config.connection)
+);
 
 const postgresPlugin = knorm => {
   knorm.updateConnection(
@@ -47,5 +49,7 @@ const postgresPlugin = knorm => {
   QueryForTests.prototype.sql = sqlBricksPostgres;
   knorm.Query.Where.prototype.sql = sqlBricksPostgres;
 };
+
+postgresPlugin.pool = pool;
 
 module.exports = postgresPlugin;

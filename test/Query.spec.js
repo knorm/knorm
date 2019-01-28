@@ -11,6 +11,7 @@ const expect = require('unexpected')
 describe('Query', () => {
   let Model;
   let Query;
+  let Transaction;
   let Connection;
   let QueryError;
   let User;
@@ -20,6 +21,7 @@ describe('Query', () => {
 
     Model = orm.Model;
     Query = orm.Query;
+    Transaction = orm.Transaction;
     Connection = orm.Connection;
     QueryError = Query.QueryError;
 
@@ -225,6 +227,114 @@ describe('Query', () => {
         new QueryError(new Error('connection error'))
       );
     });
+
+    describe('within a transaction', () => {
+      let transactionBegin;
+      let transactionConnect;
+      let queryCreateConnection;
+      let transaction;
+
+      beforeEach(() => {
+        transactionBegin = sinon.stub(Transaction.prototype, 'begin');
+        transactionConnect = sinon.stub(Transaction.prototype, 'connect');
+        queryCreateConnection = sinon.stub(
+          Query.Connection.prototype,
+          'create'
+        );
+        transaction = new Transaction();
+        transactionConnect
+          .onFirstCall()
+          .callsFake(() => {
+            transaction.connection = 'connection 1';
+          })
+          .onSecondCall()
+          .callsFake(() => {
+            transaction.connection = 'connection 2';
+          });
+      });
+
+      afterEach(() => {
+        transactionConnect.restore();
+        transactionBegin.restore();
+        queryCreateConnection.restore();
+      });
+
+      it('does not create a connection via Connection.prototype.create', async () => {
+        await transaction.models.User.query.connect();
+        await expect(queryCreateConnection, 'was not called');
+      });
+
+      it('connects via Transaction.prototype.connect', async () => {
+        await transaction.models.User.query.connect();
+        await expect(transactionConnect, 'to have calls satisfying', () =>
+          transactionConnect()
+        );
+      });
+
+      it('runs Transaction.protype.begin', async () => {
+        await transaction.models.User.query.connect();
+        await expect(transactionBegin, 'to have calls satisfying', () =>
+          transactionBegin()
+        );
+      });
+
+      describe('for multiple Query instances', () => {
+        it('connects once', async () => {
+          await transaction.models.User.query.connect();
+          await transaction.models.User.query.connect();
+          await expect(transactionConnect, 'to have calls satisfying', () =>
+            transactionConnect()
+          );
+        });
+
+        it('begins the transaction once', async () => {
+          await transaction.models.User.query.connect();
+          await transaction.models.User.query.connect();
+          await expect(transactionBegin, 'to have calls satisfying', () =>
+            transactionBegin()
+          );
+        });
+
+        it('re-uses the same transaction connection', async () => {
+          const query1 = transaction.models.User.query;
+          const query2 = transaction.models.User.query;
+          await query1.connect();
+          await query2.connect();
+          await expect(query1.connection, 'to be', 'connection 1');
+          await expect(query2.connection, 'to be', 'connection 1');
+        });
+      });
+
+      describe('when a transaction has ended', () => {
+        beforeEach(() => {
+          transaction.ended = true;
+        });
+
+        it('connects as usual via Connection.prototype.create', async () => {
+          await transaction.models.User.query.connect();
+          await expect(queryCreateConnection, 'to have calls satisfying', () =>
+            queryCreateConnection()
+          );
+        });
+
+        it('does not call Transaction.prototype.connect', async () => {
+          await transaction.models.User.query.connect();
+          await expect(transactionConnect, 'was not called');
+        });
+
+        it('does not call Transaction.prototype.begin', async () => {
+          await transaction.models.User.query.connect();
+          await expect(transactionBegin, 'was not called');
+        });
+
+        it('does not use a transaction connection', async () => {
+          transaction.connection = 'connection 1';
+          const query = transaction.models.User.query;
+          await query.connect();
+          await expect(query.connection, 'not to be', 'connection 1');
+        });
+      });
+    });
   });
 
   describe('Query.prototype.query', () => {
@@ -270,7 +380,7 @@ describe('Query', () => {
     });
   });
 
-  describe('Query.prototype.close', () => {
+  describe('Query.prototype.disconnect', () => {
     let DummyConnection;
     let DummyQuery;
 
@@ -312,6 +422,49 @@ describe('Query', () => {
         'to be rejected with error exhaustively satisfying',
         new QueryError(new Error('connection close error'))
       );
+    });
+
+    describe('within a transaction', () => {
+      let transactionBegin;
+      let transactionConnect;
+      let queryCloseConnection;
+      let transaction;
+
+      beforeEach(() => {
+        transactionBegin = sinon.stub(Transaction.prototype, 'begin');
+        transactionConnect = sinon.stub(Transaction.prototype, 'connect');
+        queryCloseConnection = sinon.stub(Query.Connection.prototype, 'close');
+        transaction = new Transaction();
+      });
+
+      afterEach(() => {
+        transactionConnect.restore();
+        transactionBegin.restore();
+        queryCloseConnection.restore();
+      });
+
+      it('does not close connections via Connection.prototype.close', async () => {
+        const query = transaction.models.User.query;
+        await query.connect();
+        await query.disconnect();
+        await expect(queryCloseConnection, 'was not called');
+      });
+
+      describe('when a transaction has ended', () => {
+        beforeEach(() => {
+          transaction.ended = true;
+        });
+
+        it('closes connections as usual via Connection.prototype.close', async () => {
+          const query = transaction.models.User.query;
+          query.connection = { close() {} };
+          await query.connect();
+          await query.disconnect();
+          await expect(queryCloseConnection, 'to have calls satisfying', () =>
+            queryCloseConnection()
+          );
+        });
+      });
     });
   });
 
