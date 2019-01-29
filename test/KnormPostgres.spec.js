@@ -690,7 +690,7 @@ describe('KnormPostgres', () => {
             'when passed as parameter to',
             query => query.toString(),
             'to begin with',
-            'UPDATE "user" SET "name" = "v"."name" FROM'
+            'UPDATE "user" AS "user" SET "name" = "v"."name" FROM'
           )
         );
       });
@@ -1064,7 +1064,7 @@ describe('KnormPostgres', () => {
               'when passed as parameter to',
               query => query.toString(),
               'to begin with',
-              'UPDATE "user" SET "name" = "v"."name" FROM'
+              'UPDATE "user" AS "user" SET "name" = "v"."name" FROM'
             )
           );
         });
