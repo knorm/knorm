@@ -1154,11 +1154,15 @@ describe('Transaction', () => {
           [{ id: 1, name: 'foo' }]
         );
         user.name = 'bar';
-        // ensure the connection is closed before firing of the second query
-        const afterConnectionClose =
-          postgresPlugin.pool.options.idleTimeoutMillis + 1;
-        await expect(afterConnectionClose, 'to be a number');
-        await new Promise(resolve => setTimeout(resolve, afterConnectionClose));
+        const {
+          options: { idleTimeoutMillis }
+        } = postgresPlugin.pool;
+        // ensure the connection is closed before running the second query
+        await expect(idleTimeoutMillis, 'to be', 10);
+        const afterConnectionClosed = idleTimeoutMillis + 1;
+        await new Promise(resolve =>
+          setTimeout(resolve, afterConnectionClosed)
+        );
         await expect(user.update(), 'to be fulfilled with value satisfying', {
           id: 1,
           name: 'bar'
