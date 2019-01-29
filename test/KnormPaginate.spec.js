@@ -151,14 +151,25 @@ describe('KnormPaginate', () => {
         it('attaches a parameterized sql string to the error', async () => {
           const query = new Query(User).where({ id: 1 });
           await expect(query.count(), 'to be rejected with error satisfying', {
-            sql: 'SELECT COUNT(*) as "count" FROM "user" WHERE "user"."id" = $1'
+            originalError: {
+              sql: {
+                text:
+                  'SELECT COUNT(*) as "count" FROM "user" as "user" WHERE "user"."id" = $1'
+              }
+            }
           });
         });
 
-        it('attaches a full sql string with values in `debug` mode', async () => {
+        it('attaches a paremeterized sql string and values in `debug` mode', async () => {
           const query = new Query(User).where({ id: 1 }).debug(true);
           await expect(query.count(), 'to be rejected with error satisfying', {
-            sql: 'SELECT COUNT(*) as "count" FROM "user" WHERE "user"."id" = 1'
+            originalError: {
+              sql: {
+                text:
+                  'SELECT COUNT(*) as "count" FROM "user" as "user" WHERE "user"."id" = $1',
+                values: [1]
+              }
+            }
           });
         });
       });
@@ -443,7 +454,9 @@ describe('KnormPaginate', () => {
             'to be rejected with error satisfying',
             new Query.FetchError({
               query,
-              error: new Error('OFFSET must not be negative')
+              error: new Query.QueryError(
+                new Error('OFFSET must not be negative')
+              )
             })
           );
         });
@@ -455,7 +468,9 @@ describe('KnormPaginate', () => {
             'to be rejected with error satisfying',
             new Query.FetchError({
               query,
-              error: new Error('OFFSET must not be negative')
+              error: new Query.QueryError(
+                new Error('OFFSET must not be negative')
+              )
             })
           );
         });
@@ -489,7 +504,9 @@ describe('KnormPaginate', () => {
             'to be rejected with error satisfying',
             new Query.FetchError({
               query,
-              error: new Error('LIMIT must not be negative')
+              error: new Query.QueryError(
+                new Error('LIMIT must not be negative')
+              )
             })
           );
         });
