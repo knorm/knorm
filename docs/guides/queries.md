@@ -81,10 +81,10 @@ User.query.update({ id: 1, names: 'foo' }); // updates only the row with id 1
 ## Running raw queries
 
 Raw queries can be run by directly invoking the
-[query](api.md#query-query-sql-%E2%87%92-promise) method:
+[execute](api.md#query-execute-sql-%E2%87%92-promise) method:
 
 ```js
-const rows = await User.query.query('select now()');
+const rows = await User.query.execute('select now()');
 ```
 
 To run queries with parameter bindings, you may use the
@@ -97,7 +97,7 @@ const sqlBricks = query.sql;
 const sql = sqlBricks.select(
   sqlBricks('select * from "user" where id = $1 and names = $2', [1, 'foo'])
 );
-const rows = await query.query(sql);
+const rows = await query.execute(sql);
 ```
 
 ::: tip
@@ -109,7 +109,7 @@ then `Query.prototype.sql` is overridden with
 Alternatively, you can pass an object with `text` and `values` properties:
 
 ```js
-const rows = await User.query.query({
+const rows = await User.query.execute({
   text: 'select * from "user" where id = $1 and names = $2',
   values: [1, 'foo']
 });
