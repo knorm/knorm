@@ -278,6 +278,24 @@ describe('Model', () => {
 
       expect(foo.setData({ foo: 'foo' }), 'to satisfy', foo);
     });
+
+    it('filters out `undefined` values from the data', () => {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        foo: {
+          set(value) {
+            if (value === undefined) {
+              throw new Error('wat');
+            }
+          }
+        }
+      };
+
+      const foo = new Foo();
+
+      expect(() => foo.setData({ foo: undefined }), 'not to throw');
+    });
   });
 
   describe('Model.prototype.setDefaults', () => {
