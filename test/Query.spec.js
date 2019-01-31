@@ -1067,6 +1067,26 @@ describe('Query', () => {
           );
         });
       });
+
+      describe('as `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).fields(false);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).fields(false).first(true);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
+      });
     });
 
     describe("with 'returning' configured", () => {
@@ -1077,6 +1097,26 @@ describe('Query', () => {
           'to be fulfilled with sorted rows exhaustively satisfying',
           [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
         );
+      });
+
+      describe('as `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).returning(false);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).returning(false).first(true);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
       });
     });
 
@@ -1127,6 +1167,26 @@ describe('Query', () => {
             new User({ id: 2, name: 'User 2' })
           ]
         );
+      });
+
+      describe('as `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).distinct(false);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).distinct(false).first(true);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
       });
     });
 
@@ -2354,6 +2414,26 @@ describe('Query', () => {
           [new User({ theName: 'John Doe', theConfirmed: false })]
         );
       });
+
+      describe('set to `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).returning(false);
+          await expect(
+            query.insert(new User({ name: 'John Doe' })),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).returning(false).first(true);
+          await expect(
+            query.insert(new User({ name: 'John Doe' })),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
+      });
     });
 
     describe('with `fields` configured', () => {
@@ -2364,6 +2444,26 @@ describe('Query', () => {
           'to be fulfilled with value exhaustively satisfying',
           [new User({ name: 'John Doe' })]
         );
+      });
+
+      describe('as `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).fields(false);
+          await expect(
+            query.insert(new User({ name: 'John Doe' })),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).fields(false).first(true);
+          await expect(
+            query.insert(new User({ name: 'John Doe' })),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
       });
     });
 
@@ -3130,6 +3230,28 @@ describe('Query', () => {
           [new User({ theName: 'Jane Doe', theConfirmed: false })]
         );
       });
+
+      describe('set to `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).returning(false);
+          user.name = 'Jane Doe';
+          await expect(
+            query.update(user),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).returning(false).first(true);
+          user.name = 'Jane Doe';
+          await expect(
+            query.update(user),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
+      });
     });
 
     describe('if no row is updated', () => {
@@ -3451,6 +3573,26 @@ describe('Query', () => {
             new User({ theName: 'Jane Doe', theConfirmed: true })
           ]
         );
+      });
+
+      describe('set to `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).returning(false);
+          await expect(
+            query.delete(),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).returning(false).first(true);
+          await expect(
+            query.delete(),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
       });
     });
 
