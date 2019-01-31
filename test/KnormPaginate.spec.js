@@ -114,7 +114,7 @@ describe('KnormPaginate', () => {
         await expect(
           query.count({ distinct: ['id', 'age'] }),
           'to be rejected with error satisfying',
-          { name: 'CountError' }
+          { name: 'FetchError' }
         );
       });
 
@@ -122,55 +122,7 @@ describe('KnormPaginate', () => {
       it("does not support counting multiple 'fields'", async () => {
         const query = new Query(User).fields(['id', 'name']);
         await expect(query.count(), 'to be rejected with error satisfying', {
-          name: 'CountError'
-        });
-      });
-
-      describe('if a fetch error occurs', () => {
-        let queryStub;
-
-        beforeEach(() => {
-          queryStub = sinon
-            .stub(Query.prototype, 'query')
-            .returns(Promise.reject(new Error('count error')));
-        });
-
-        afterEach(() => {
-          queryStub.restore();
-        });
-
-        it('rejects with a CountError', async () => {
-          const query = new Query(User);
-          await expect(
-            query.count(),
-            'to be rejected with error satisfying',
-            new Query.CountError({ error: new Error('count error'), query })
-          );
-        });
-
-        it('attaches a parameterized sql string to the error', async () => {
-          const query = new Query(User).where({ id: 1 });
-          await expect(query.count(), 'to be rejected with error satisfying', {
-            originalError: {
-              sql: {
-                text:
-                  'SELECT COUNT(*) as "count" FROM "user" as "user" WHERE "user"."id" = $1'
-              }
-            }
-          });
-        });
-
-        it('attaches a paremeterized sql string and values in `debug` mode', async () => {
-          const query = new Query(User).where({ id: 1 }).debug(true);
-          await expect(query.count(), 'to be rejected with error satisfying', {
-            originalError: {
-              sql: {
-                text:
-                  'SELECT COUNT(*) as "count" FROM "user" as "user" WHERE "user"."id" = $1',
-                values: [1]
-              }
-            }
-          });
+          name: 'FetchError'
         });
       });
 
@@ -191,6 +143,31 @@ describe('KnormPaginate', () => {
       describe("with a 'leftJoin' configured", () => {
         it('resolves with the count of rows matching the join', async () => {
           const query = new Query(User).leftJoin(new Query(Image));
+          await expect(query.count(), 'to be fulfilled with', 2);
+        });
+      });
+
+      describe("with a nested 'innerJoin' configured", () => {
+        it('resolves with the count of rows matching the join', async () => {
+          const query = new Query(User).innerJoin(
+            new Query(Image).innerJoin(User)
+          );
+          await expect(query.count(), 'to be fulfilled with', 1);
+        });
+      });
+
+      describe("with a 'leftJoin' configured", () => {
+        it('resolves with the count of rows matching the join', async () => {
+          const query = new Query(User).leftJoin(new Query(Image));
+          await expect(query.count(), 'to be fulfilled with', 2);
+        });
+      });
+
+      describe("with a nested 'leftJoin' configured", () => {
+        it('resolves with the count of rows matching the join', async () => {
+          const query = new Query(User).leftJoin(
+            new Query(Image).leftJoin(new Query(User))
+          );
           await expect(query.count(), 'to be fulfilled with', 2);
         });
       });
