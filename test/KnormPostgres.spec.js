@@ -1394,7 +1394,7 @@ describe('KnormPostgres', () => {
           'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foo', image: [{ id: 1 }, { id: 2 }] },
-            { id: 2, name: 'bar', image: null }
+            { id: 2, name: 'bar', image: [] }
           ]
         );
       });
@@ -1413,7 +1413,7 @@ describe('KnormPostgres', () => {
           'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foo', image: [{ id: 1 }, { id: 2 }] },
-            { id: 2, name: 'bar', image: null }
+            { id: 2, name: 'bar', image: [] }
           ]
         );
       });
