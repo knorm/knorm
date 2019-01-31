@@ -577,6 +577,30 @@ describe('KnormRelations', () => {
             );
           });
 
+          describe('as `false`', () => {
+            it('returns the joined model as an empty array', async () => {
+              const query = new Query(User)
+                .where({ id: 1 })
+                .leftJoin(new Query(Image).fields(false));
+              await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows satisfying',
+                [new User({ id: 1, name: 'User 1', image: [] })]
+              );
+            });
+
+            it('returns the joined model as null if `first is configured`', async () => {
+              const query = new Query(User)
+                .where({ id: 1 })
+                .leftJoin(new Query(Image).fields(false).first(true));
+              await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows satisfying',
+                [new User({ id: 1, name: 'User 1', image: null })]
+              );
+            });
+          });
+
           describe('with no primary field selected', () => {
             it('parses rows correctly by unique fields', async () => {
               class OtherUser extends User {}
@@ -594,37 +618,67 @@ describe('KnormRelations', () => {
               await expect(
                 query.fetch(),
                 'to be fulfilled with value satisfying',
-                rows =>
-                  expect(
-                    rows,
+                expect.it(
+                  'when sorted by',
+                  (a, b) => (a.name > b.name ? 1 : -1),
+                  'to exhaustively satisfy',
+                  [
+                    new OtherUser({
+                      name: 'User 1',
+                      otherImage: [new OtherImage({ id: 1 })]
+                    }),
+                    new OtherUser({
+                      name: 'User 2',
+                      otherImage: []
+                    })
+                  ]
+                )
+              );
+            });
+
+            describe('with no unique fields selected either', () => {
+              it('rejects with a QueryError', async () => {
+                const query = new Query(User)
+                  .fields(['name'])
+                  .leftJoin(new Query(Image).fields('id'));
+                await expect(
+                  query.fetch(),
+                  'to be rejected with error satisfying',
+                  new Query.QueryError(
+                    'User: cannot join `Image` with no primary or unique fields selected'
+                  )
+                );
+              });
+
+              it('resolves with an empty array if `fields` is set to `false`', async () => {
+                const query = new Query(User)
+                  .fields(false)
+                  .leftJoin(new Query(Image).fields('id'));
+                await expect(
+                  query.fetch(),
+                  'to be fulfilled with value exhaustively satisfying',
+                  []
+                );
+              });
+
+              it('resolves with join data as an empty array if `fields` is set to `false` on the joined model', async () => {
+                const query = new Query(User)
+                  .fields(['name'])
+                  .leftJoin(new Query(Image).fields(false));
+                await expect(
+                  query.fetch(),
+                  'to be fulfilled with value exhaustively satisfying',
+                  expect.it(
                     'when sorted by',
                     (a, b) => (a.name > b.name ? 1 : -1),
                     'to exhaustively satisfy',
                     [
-                      new OtherUser({
-                        name: 'User 1',
-                        otherImage: [new OtherImage({ id: 1 })]
-                      }),
-                      new OtherUser({
-                        name: 'User 2',
-                        otherImage: []
-                      })
+                      new User({ name: 'User 1', image: [] }),
+                      new User({ name: 'User 2', image: [] })
                     ]
                   )
-              );
-            });
-
-            it('rejects if no unique fields are selected either', async () => {
-              const query = new Query(User)
-                .fields(['name'])
-                .leftJoin(new Query(Image).fields('id'));
-              await expect(
-                query.fetch(),
-                'to be rejected with error satisfying',
-                new Query.QueryError(
-                  'User: cannot join `Image` with no primary or unique fields selected'
-                )
-              );
+                );
+              });
             });
           });
         });
@@ -1208,17 +1262,95 @@ describe('KnormRelations', () => {
             );
           });
 
-          it('rejects if no primary or unique fields are selected in the nested join', async () => {
-            const query = new Query(User).leftJoin(
-              new Query(Image).fields('userId').join(new Query(User))
-            );
-            await expect(
-              query.fetch(),
-              'to be rejected with error satisfying',
-              new Query.QueryError(
-                'Image: cannot join `User` with no primary or unique fields selected'
-              )
-            );
+          describe('with no primary or unique fields are selected in the nested join', () => {
+            it('rejects with a QueryError', async () => {
+              const query = new Query(User).leftJoin(
+                new Query(Image).fields('userId').join(new Query(User))
+              );
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new Query.QueryError(
+                  'Image: cannot join `User` with no primary or unique fields selected'
+                )
+              );
+            });
+
+            it('rejects with a QueryError if `fields` is set to `false` only on the root query', async () => {
+              const query = new Query(User)
+                .fields(false)
+                .leftJoin(
+                  new Query(Image).fields('userId').join(new Query(User))
+                );
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new Query.QueryError(
+                  'Image: cannot join `User` with no primary or unique fields selected'
+                )
+              );
+            });
+
+            it('resolves with no data from the second join if `fields` is set to `false` on it', async () => {
+              const query = new Query(User).leftJoin(
+                new Query(Image).fields(false).join(new Query(User))
+              );
+              await expect(
+                query.fetch(),
+                'to be fulfilled with value exhaustively satisfying',
+                expect.it(
+                  'when sorted by',
+                  (a, b) => (a.name > b.name ? 1 : -1),
+                  'to exhaustively satisfy',
+                  [
+                    new User({
+                      id: 1,
+                      name: 'User 1',
+                      confirmed: null,
+                      creator: null,
+                      image: [
+                        new Image({
+                          user: [
+                            new User({
+                              id: 1,
+                              name: 'User 1',
+                              confirmed: null,
+                              creator: null
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                )
+              );
+            });
+
+            it('resolves with join data as an empty array if `fields` is set to `false` on the last join', async () => {
+              const query = new Query(User).leftJoin(
+                new Query(Image)
+                  .fields(['userId'])
+                  .join(new Query(User).fields(false))
+              );
+              await expect(
+                query.fetch(),
+                'to be fulfilled with value exhaustively satisfying',
+                expect.it(
+                  'when sorted by',
+                  (a, b) => (a.name > b.name ? 1 : -1),
+                  'to exhaustively satisfy',
+                  [
+                    new User({
+                      id: 1,
+                      name: 'User 1',
+                      confirmed: null,
+                      creator: null,
+                      image: [new Image({ userId: 1, user: [] })]
+                    })
+                  ]
+                )
+              );
+            });
           });
         });
 
