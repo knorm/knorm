@@ -30,8 +30,8 @@ const postgresPlugin = knorm => {
       return `"${value}"`;
     }
 
-    async prepareSql(sql, options) {
-      const { forInsert, forUpdate, forDelete, forFetch } = options;
+    async prepareSql(sql) {
+      const { forInsert, forUpdate, forDelete, forFetch } = this.config;
 
       if ((forInsert || forUpdate || forDelete) && this.options.fields) {
         sql.returning(this.getColumns(this.options.fields));
@@ -41,7 +41,7 @@ const postgresPlugin = knorm => {
         sql.limit(1);
       }
 
-      return super.prepareSql(sql, options);
+      return super.prepareSql(sql);
     }
   }
 
