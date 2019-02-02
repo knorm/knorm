@@ -27,24 +27,25 @@ const orm = knorm({
 
 ### Options
 
-| Option    | Type                | Default  | Description                                                                                                              |
-| --------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [name]    | `string`            | `relations` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
+| Option | Type     | Default     | Description                                                                                                              |
+| ------ | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [name] | `string` | `relations` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
 
 ## Features
 
 Loading this plugin adds the following methods to the [Query](/api.md/query) class:
 
-* `Query.prototype.join` - fetches a related model via a `JOIN` statement
-* `Query.prototype.innerJoin` - fetches a related model via an `INNER JOIN`
+- `Query.prototype.join` - fetches a related model via a `JOIN` statement
+- `Query.prototype.innerJoin` - fetches a related model via an `INNER JOIN`
   statement
-* `Query.prototype.leftoin` - fetches a related model via a `LEFT JOIN`
+- `Query.prototype.leftoin` - fetches a related model via a `LEFT JOIN`
   statement
-* `Query.prototype.on` - specifies which field to join on
-* `Query.prototype.as` - specifies what alias to use for the related model in
+- `Query.prototype.on` - specifies which field to join on
+- `Query.prototype.as` - specifies what alias to use for the related model in
   the returned data
 
-Which enables using them as [Query options](/guides/queries.md?id=setting-options).
+Which enables using them as [Query
+options](/guides/queries.md?id=setting-options).
 
 ### One-to-many relations
 
@@ -157,7 +158,7 @@ return the first row via the [first](/api.md#query-first-first-%E2%87%92-query)
 Query option:
 
 ```js
-const usersWithAReceivedMessage  = await User.query
+const usersWithAReceivedMessage = await User.query
   .innerJoin(Message.query.on('senderId'))
   .fetch();
 

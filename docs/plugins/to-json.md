@@ -3,7 +3,8 @@
 [toJSON](<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior>)
 plugin for Knorm.
 
-This plugin adds a `toJSON` method to Knorm's [Model](/api.md#model) class and allows configuring what fields should be excluded from the output.
+This plugin adds a `toJSON` method to Knorm's [Model](/api.md#model) class and
+allows configuring what fields should be excluded from the output.
 
 ## Installation
 
@@ -30,10 +31,10 @@ const orm = knorm({
 
 ### Options
 
-| Option    | Type                | Default  | Description                                                                                                              |
-| --------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [name]    | `string`            | `toJSON` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
-| [exclude] | `array` \| `string` | `[]`     | A string or array of property-names (object keys) to exclude from the `toJSON` output                                    |
+| Option    | Type                | Default   | Description                                                                                                              |
+| --------- | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [name]    | `string`            | `to-json` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
+| [exclude] | `array` \| `string` | `[]`      | A string or array of property-names (object keys) to exclude from the `toJSON` output                                    |
 
 ## Features
 
