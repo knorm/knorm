@@ -66,18 +66,26 @@ To work with soft-deleted rows, use the `Query.prototype.withDeleted`,
 `Query.prototype.where` query option:
 
 ```js
+class User extends Model {}
+
+User.fields = {
+  id: 'integer',
+  names: 'string'
+  // `deleted` is added by @knorm/soft-delete
+};
+
 // to update only soft-deleted rows:
-Model.query.onlyDeleted().update({ foo: 'bar' });
+User.update({ names: 'Foo Bar' }, { onlyDeleted: true });
 // or:
-Model.query.where({ deleted: true }).update({ foo: 'bar' });
+User.update({ foo: 'bar' }, { where: { deleted: true } });
 
 // to fetch rows including soft-deleted rows:
-Model.query
+User.query
   .withDeleted()
   .where({ foo: 'bar' })
   .fetch();
 // or:
-Model.query
+User.query
   .where(
     Model.where.and({ foo: 'bar' }, Model.where.in({ deleted: [true, false] }))
   )
@@ -99,12 +107,12 @@ This plugin also adds `Query.prototype.restore`, `Model.prototype.restore` and
 `Model.restore` methods that can be used to restore soft-deleted records:
 
 ```js
-// to delete:
-new Model({ id: 1 }).delete();
+// to soft-delete:
+new User({ id: 1 }).delete();
 // to restore:
-new Model({ id: 1 }).restore();
+new User({ id: 1 }).restore();
 // or:
-Model.restore({ where: { id: 1 } });
+User.restore({ where: { id: 1 } });
 ```
 
 ### Hard deletion
@@ -115,7 +123,7 @@ hard-delete records:
 
 ```js
 // to hard-delete:
-new Model({ id: 1 }).hardDelete();
+new User({ id: 1 }).hardDelete();
 // or:
-Model.hardDelete({ where: { id: 1 } });
+User.hardDelete({ where: { id: 1 } });
 ```

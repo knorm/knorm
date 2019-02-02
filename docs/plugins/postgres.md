@@ -1,16 +1,6 @@
 # @knorm/postgres
 
-Postgres plugin for Knorm that enables running queries agaisnt PostgreSQL. Also,
-it adds postgres-specific features such as:
-
-- automatically `JSON-stringify`ing all `json` and `jsonb` fields before save
-  (insert or update)
-- automatically validating all `string` fields with `maxLength: 255`
-- `limit`, `offset`, `returning` query options and `ilike` where option,
-  via [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
-- updating multiple rows using a single query with `UPDATE FROM`, via
-  [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
-- connection pooling, via [pg](https://node-postgres.com/features/pooling)
+Postgres plugin for Knorm that enables running queries against PostgreSQL.
 
 ## Installation
 
@@ -42,9 +32,18 @@ const orm = knorm({
 | [name]       | `string`             | `postgres` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object)                                                                                                       |
 | [connection] | `object` \| `string` | none       | Passed directly to [pg](https://node-postgres.com/features/connecting#programmatic). However, connections can also be configured via [environment variables](https://www.postgresql.org/docs/current/static/libpq-envars.html) |
 
-Note that all options are optional.
-
 ## Features
+
+This plugin adds these postgres-specific features:
+
+- automatically `JSON-stringify`ing all `json` and `jsonb` fields before save
+  (insert or update)
+- automatically validating all `string` fields with `maxLength: 255`
+- `limit`, `offset`, `returning` query options and `ilike` where option,
+  via [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
+- updating multiple rows using a single query with `UPDATE FROM`, via
+  [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
+- connection pooling, via [pg](https://node-postgres.com/features/pooling)
 
 ### JSON patching
 
