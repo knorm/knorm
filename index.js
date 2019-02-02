@@ -15,10 +15,17 @@ const runExample = async () => {
   await bar.sendMessage({ to: foo, text: 'Pretty well, how about you?' });
   await foo.sendMessage({ to: bar, text: 'Same here!' });
 
-  console.log('\nusers:\n', await User.fetch());
-  console.log('\nmessages:\n', await Message.fetch());
+  console.log();
+  console.log('users:');
+  console.log(await User.fetch());
+
+  console.log();
+  console.log('messages:');
+  console.log(await Message.fetch());
+
+  console.log();
+  console.log('users with received messages:');
   console.log(
-    '\nusers with received messages:\n',
     inspect(
       await User.fetch({
         leftJoin: Message.query.on('receiver').as('receivedMessages')
@@ -26,8 +33,10 @@ const runExample = async () => {
       { depth: null }
     )
   );
+
+  console.log();
+  console.log('users with sent messages:');
   console.log(
-    '\nusers with sent messages:\n',
     inspect(
       await User.fetch({
         leftJoin: Message.query.on('sender').as('sentMessages')
