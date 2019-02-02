@@ -1,5 +1,7 @@
 # knorm-example
 
+[![build status](https://travis-ci.org/knorm/example.svg?branch=master)](https://travis-ci.org/knorm/example)
+
 > An example project showcasing how to use
 > [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
 
@@ -19,7 +21,7 @@ tables.
 Clone this repository then run the `start` command:
 
 ```bash
-git clone git@github.com:knorm/example.git
+git clone git@github.com:knorm/example.git knorm-example
 cd knorm-example
 npm install
 npm start # also runs migrations against the newly created postgres container
