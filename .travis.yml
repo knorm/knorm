@@ -1,0 +1,10 @@
+language: node_js
+
+services:
+  - postgresql
+
+addons:
+  postgresql: "9.6"
+
+script:
+  - npm run start:ci
