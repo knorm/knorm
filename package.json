@@ -9,10 +9,7 @@
     "test": "docker-compose run --rm knorm-paginate",
     "test:mocha": "mocha --exit --recursive",
     "coverage": "nyc npm run test:mocha",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls",
-    "postgres": "docker-compose exec postgres echo 'postgres running ...' || docker-compose up -d postgres",
-    "postgres:stop": "docker-compose stop postgres",
-    "postgres:remove": "docker-compose rm -sf postgres"
+    "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
