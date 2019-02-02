@@ -5,43 +5,10 @@
 [![coverage status](https://coveralls.io/repos/github/knorm/paginate/badge.svg?branch=master)](https://coveralls.io/github/knorm/paginate?branch=master)
 [![dependency status](https://david-dm.org/knorm/paginate.svg)](https://david-dm.org/joelmukuthu/@knorm/paginate)
 
-Pagination plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
+Pagination plugin for
+[@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
 
-## Installation
+## [Documentation](https://knorm.netlify.com/plugins/paginate.html)
 
-```bash
-npm install --save @knorm/knorm @knorm/paginate
-```
-
-> @knorm/paginate has a peer dependency on [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
-
-## Usage
-
-```js
-const knorm = require('@knorm/knorm');
-const knormPaginate = require('@knorm/paginate');
-
-const orm = knorm({
-  // knorm options
-}).use(knormPaginate({
-  // knormPaginate options
-}));
-```
-
-## Options
-
-| Option | Type   | Default     | Description                                                                                   |
-| ------ | ------ | ----------- | --------------------------------------------------------------------------------------------- |
-| `name` | string | `paginate` | The name of the plugin. Allows accessing the plugin instance via `orm.plugins['plugin-name']` |
-| `page` | number | `1` | The default `page` value to use if only `perPage` is set in [query options](https://knorm.github.io/knorm/#/guides/queries?id=setting-options) |
-| `perPage` | number | `10` | The default `perPage` value to use if only `page` is set in [query options](https://knorm.github.io/knorm/#/guides/queries?id=setting-options) |
-
-## API
-
-### Query.prototype.count / Model.count
-
-### Query.prototype.page
-
-### Query.prototype.perPage
-
-### Query.prototype.withPaginationData
+View the docs on @knorm/knorm's documentation site
+[here](https://knorm.netlify.com/plugins/paginate.html).
