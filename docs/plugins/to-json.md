@@ -11,7 +11,7 @@ This plugin adds a `toJSON` method to Knorm's [Model](/api.md#model) class and a
 npm install --save @knorm/knorm @knorm/to-json
 ```
 
-> @knorm/to-json has a peer dependency on [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
+> @knorm/to-json has a peer dependency on @knorm/knorm
 
 ## Usage
 
@@ -23,7 +23,7 @@ const orm = knorm({
   // knorm options
 }).use(
   knormToJSON({
-    // @knorm/to-json options
+    // @knormToJSON options
   })
 );
 ```

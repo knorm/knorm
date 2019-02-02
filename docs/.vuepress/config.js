@@ -27,10 +27,10 @@ module.exports = {
         items: [
           { text: '@knorm/postgres', link: '/plugins/postgres' },
           { text: '@knorm/to-json', link: '/plugins/to-json' },
-          { text: '@knorm/relations', link: 'https://github.com/knorm/relations' },
-          { text: '@knorm/soft-delete', link: 'https://github.com/knorm/soft-delete' },
-          { text: '@knorm/paginate', link: 'https://github.com/knorm/paginate' },
-          { text: '@knorm/timestamps', link: 'https://github.com/knorm/timestamps' }
+          { text: '@knorm/relations', link: '/plugins/relations' },
+          // { text: '@knorm/soft-delete', link: '/plugins/soft-delete' },
+          // { text: '@knorm/paginate', link: '/plugins/paginate' },
+          // { text: '@knorm/timestamps', link: '/plugins/timestamps' }
         ]
       },
       {
@@ -66,7 +66,11 @@ module.exports = {
         // collapsable: true,
         children: [
           '/plugins/postgres',
-          '/plugins/to-json'
+          '/plugins/to-json',
+          '/plugins/relations',
+          // '/plugins/soft-delete',
+          // '/plugins/paginate',
+          // '/plugins/timestamps'
         ]
       },
       ['/changelog', 'Changelog' ],
