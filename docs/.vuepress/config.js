@@ -25,7 +25,7 @@ module.exports = {
       {
         text: 'Plugins',
         items: [
-          { text: '@knorm/postgres', link: 'https://github.com/knorm/postgres' },
+          { text: '@knorm/postgres', link: '/plugins/postgres' },
           { text: '@knorm/to-json', link: 'https://github.com/knorm/to-json' },
           { text: '@knorm/relations', link: 'https://github.com/knorm/relations' },
           { text: '@knorm/soft-delete', link: 'https://github.com/knorm/soft-delete' },
@@ -61,6 +61,13 @@ module.exports = {
         ]
       },
       ['/api', 'API Docs'],
+      {
+        title: 'Plugins',
+        // collapsable: true,
+        children: [
+          '/plugins/postgres'
+        ]
+      },
       ['/changelog', 'Changelog' ],
       ['/license', 'License' ],
       ['/credits', 'Credits' ]

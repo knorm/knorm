@@ -81,8 +81,8 @@ query with the connection created by [create](#Connection+create).
 <a name="Connection+close"></a>
 
 ### connection.close()
-Called by [close](#Query+close) and [close](#Transaction+close) to close the
-connection created by [create](#Connection+create).
+Called by [disconnect](#Query+disconnect) and [disconnect](#Transaction+disconnect) to
+close the connection created by [create](#Connection+create).
 
 **Throws**:
 
@@ -113,7 +113,9 @@ fields.
 * [Field](#Field)
     * [new Field([config])](#new_Field_new)
     * _instance_
-        * [.validateWithCustom(value, validate, modelInstance)](#Field+validateWithCustom) ⇒ `Promise`
+        * [.validateWithCustom(value, validate, model)](#Field+validateWithCustom) ⇒ `Promise`
+        * [.cast(value, model, options)](#Field+cast) ⇒ `any`
+        * [.getDefault(model)](#Field+getDefault) ⇒ `any` \| `undefined`
     * _inner_
         * [~customValidator](#Field..customValidator) ⇒ `Promise` \| `boolean` \| `object`
 
@@ -129,30 +131,55 @@ Creates a [Field](#Field) instance.
 
 <a name="Field+validateWithCustom"></a>
 
-### field.validateWithCustom(value, validate, modelInstance) ⇒ `Promise`
+### field.validateWithCustom(value, validate, model) ⇒ `Promise`
 
 | Param | Type | Description |
 | --- | --- | --- |
 | value | `any` | The value to validate |
 | validate | [customValidator](#Field..customValidator) | The validator function. |
-| modelInstance | [Model](#Model) | The [Model](#Model) instance where the field value is set, if one exists. This will always be set if this method is called via [Model#validate](Model#validate). |
+| model | [Model](#Model) | The [Model](#Model) instance where the field's value is set. |
 
 Validates a value with a custom validator function.
 
-**Todo**
+**Returns**: `Promise` - A `Promise` that is resolved if the `value` param passes
+custom validation, or otherwise rejected.  
+<a name="Field+cast"></a>
 
-- [ ] **breaking change** in the validator function, do not set `this` to
-the model instance. Instead, `this` should point to the [Field](#Field)
-instance.
+### field.cast(value, model, options) ⇒ `any`
 
+| Param | Type | Description |
+| --- | --- | --- |
+| value | `any` | The value to be cast. |
+| model | [Model](#Model) | The [Model](#Model) instance where the field's value is set. The cast functions will be called with this instance as a parameter. |
+| options | `object` | Cast options. |
+| options.forSave | `boolean` | Whether or not to cast for save operations (i.e before insert or update). This function is called with the `value` as the first paramter and `model` as the second parameter. |
+| options.forFetch | `boolean` | Whether or not to cast for fetch operations (i.e after fetch or any other operations that return data from the database). This function is called with the `value` as the first paramter and `model` as the second parameter. |
+
+Casts a [Field](#Field)'s value with its configured cast functions.
+
+**Returns**: `any` - The cast value, or `undefined` if no cast functions are
+configured for the [Field](#Field) instance.  
+<a name="Field+getDefault"></a>
+
+### field.getDefault(model) ⇒ `any` \| `undefined`
+
+| Param | Type | Description |
+| --- | --- | --- |
+| model | [Model](#Model) | The [Model](#Model) instance where the field's default value will be set. If the default is configured as a function, the function is called with `model` as the first parameter. |
+
+Returns the default value for a field from the [Field](#Field)'s
+configuration.
+
+**Returns**: `any` \| `undefined` - The default value or `undefined` if there's no
+default value set for the field.  
 <a name="Field..customValidator"></a>
 
 ### Field~customValidator ⇒ `Promise` \| `boolean` \| `object`
 
 | Param | Type | Description |
 | --- | --- | --- |
-| value | `any` | the value to validate. |
-| The | [Model](#Model) | [Model](#Model) instance where the field value is set, if one exists. This will always be set if [validateWithCustom](#Field+validateWithCustom) is called via [Model#validate](Model#validate). |
+| value | `any` | The value to validate. |
+| model | [Model](#Model) | The [Model](#Model) instance where the field value is set. |
 
 Custom validator function, note that `async` validator functions, or
 functions that return a [Promise](Promise), are supported.
@@ -177,15 +204,22 @@ Creates and configures ORMs.
 * [Knorm](#Knorm)
     * [new Knorm([config])](#new_Knorm_new)
     * _instance_
-        * [.Model](#Knorm+Model) : [Model](#Model)
-        * [.Connection](#Knorm+Connection) : [Connection](#Connection)
-        * [.Query](#Knorm+Query) : [Query](#Query)
+        * [.models](#Knorm+models) : `object`
+        * [.plugins](#Knorm+plugins) : `object`
+        * [.config](#Knorm+config) : `object`
         * [.Transaction](#Knorm+Transaction) : [Transaction](#Transaction)
+        * [.Model](#Knorm+Model) : [Model](#Model)
         * [.Field](#Knorm+Field) : [Field](#Field)
+        * [.Query](#Knorm+Query) : [Query](#Query)
+        * [.Connection](#Knorm+Connection) : [Connection](#Connection)
         * [.use(plugin)](#Knorm+use) ⇒ [Knorm](#Knorm)
-        * [.addModel(model)](#Knorm+addModel)
+        * [.addModel(Model)](#Knorm+addModel) ⇒ [Knorm](#Knorm)
         * [.clone()](#Knorm+clone) ⇒ [Knorm](#Knorm)
+        * [.updateTransaction(Transaction)](#Knorm+updateTransaction) ⇒ [Knorm](#Knorm)
+        * [.updateModel(Model)](#Knorm+updateModel) ⇒ [Knorm](#Knorm)
         * [.updateField(Field)](#Knorm+updateField) ⇒ [Knorm](#Knorm)
+        * [.updateQuery(Query)](#Knorm+updateQuery) ⇒ [Knorm](#Knorm)
+        * [.updateConnection(Connection)](#Knorm+updateConnection) ⇒ [Knorm](#Knorm)
     * _static_
         * [.KnormError](#Knorm.KnormError) : `KnormError`
 
@@ -196,37 +230,55 @@ Creates and configures ORMs.
 | Param | Type | Description |
 | --- | --- | --- |
 | [config] | `object` | The ORM's configuration. |
-| config.fieldToColumn | `function` | A function to convert all field-names  to column names, for example [snakeCase](https://lodash.com/docs/4.17.10#snakeCase). |
-| config.debug | `boolean` | Whether or not to enable debug mode. See [the debugging guide](/guides/debugging) for more info. |
+| [config.fieldToColumn] | `function` | A function to convert all field-names  to column names, for example [snakeCase](https://lodash.com/docs/4.17.10#snakeCase). |
+| [config.debug] | `boolean` | Whether or not to enable debug mode. See [the debugging guide](/guides/debugging) for more info. |
 
 Creates a new [Knorm](#Knorm) (ORM) instance. Each instance has it's own set
 of classes and configuration, which enables having multiple [Knorm](#Knorm)
 instances in a single application.
 
-<a name="Knorm+Model"></a>
+<a name="Knorm+models"></a>
 
-### knorm.Model : [Model](#Model)
-The [Knorm](#Knorm) instance's [Model](#Model) class.
+### knorm.models : `object`
+The [Knorm](#Knorm) instance's model registry. Stores models added via
+[addModel](#Knorm+addModel).
 
-<a name="Knorm+Connection"></a>
+<a name="Knorm+plugins"></a>
 
-### knorm.Connection : [Connection](#Connection)
-The [Knorm](#Knorm) instance's [Connection](#Connection) class.
+### knorm.plugins : `object`
+The [Knorm](#Knorm) instance's plugin registry. Stores plugins added via
+[use](#Knorm+use).
 
-<a name="Knorm+Query"></a>
+<a name="Knorm+config"></a>
 
-### knorm.Query : [Query](#Query)
-The [Knorm](#Knorm) instance's [Query](#Query) class.
+### knorm.config : `object`
+The [Knorm](#Knorm) instance's config. Stores config passed in via the
+constructor.
 
 <a name="Knorm+Transaction"></a>
 
 ### knorm.Transaction : [Transaction](#Transaction)
 The [Knorm](#Knorm) instance's [Transaction](#Transaction) class.
 
+<a name="Knorm+Model"></a>
+
+### knorm.Model : [Model](#Model)
+The [Knorm](#Knorm) instance's [Model](#Model) class.
+
 <a name="Knorm+Field"></a>
 
 ### knorm.Field : [Field](#Field)
 The [Knorm](#Knorm) instance's [Field](#Field) class.
+
+<a name="Knorm+Query"></a>
+
+### knorm.Query : [Query](#Query)
+The [Knorm](#Knorm) instance's [Query](#Query) class.
+
+<a name="Knorm+Connection"></a>
+
+### knorm.Connection : [Connection](#Connection)
+The [Knorm](#Knorm) instance's [Connection](#Connection) class.
 
 <a name="Knorm+use"></a>
 
@@ -250,14 +302,15 @@ object without an `init` method.
 
 <a name="Knorm+addModel"></a>
 
-### knorm.addModel(model)
+### knorm.addModel(Model) ⇒ [Knorm](#Knorm)
 
 | Param | Type | Description |
 | --- | --- | --- |
-| model | [Model](#Model) | The model to add to the ORM. Note that models are automatically added to a [Knorm](#Knorm) instance when they are configured, therefore you will only need to call this method to add models that are not configured. See [/guides/models.html#model-registry](/guides/models.html#model-registry) for more info. |
+| Model | [Model](#Model) | The model to add to the ORM. Note that models are automatically added to a [Knorm](#Knorm) instance when they are configured, therefore you will only need to call this method to add models that are not configured. See [/guides/models.html#model-registry](/guides/models.html#model-registry) for more info. |
 
 Adds a model to a [Knorm](#Knorm) instance.
 
+**Returns**: [Knorm](#Knorm) - The same [Knorm](#Knorm) instance to allow chaining.  
 **Throws**:
 
 - `KnormError` if the model passed does not inherit the ORM's
@@ -265,17 +318,37 @@ Adds a model to a [Knorm](#Knorm) instance.
 adding a model from ORM instance X to ORM instance Y.
 - `KnormError` if the model has already been added.
 
-**Todo**
-
-- [ ] return the [Knorm](#Knorm) instance.
-
 <a name="Knorm+clone"></a>
 
 ### knorm.clone() ⇒ [Knorm](#Knorm)
 Creates a clone of an existing [Knorm](#Knorm) instance, copying all the
-models and plugins loaded into the original orm.
+models and plugins loaded into the original orm into it.
 
-**Returns**: [Knorm](#Knorm) - the newly cloned ORM instance.  
+**Returns**: [Knorm](#Knorm) - The newly cloned [Knorm](#Knorm) instance.  
+<a name="Knorm+updateTransaction"></a>
+
+### knorm.updateTransaction(Transaction) ⇒ [Knorm](#Knorm)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| Transaction | [Transaction](#Transaction) | The new class. This could be a class that extends the  current [Transaction](#Knorm+Transaction) class or an entirely new class. |
+
+Updates the [Transaction](#Transaction) class used in the [Knorm](#Knorm) instance.
+This  ensures all references to the new class are updated accordingly.
+
+**Returns**: [Knorm](#Knorm) - The same [Knorm](#Knorm) instance to allow chaining.  
+<a name="Knorm+updateModel"></a>
+
+### knorm.updateModel(Model) ⇒ [Knorm](#Knorm)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| Model | [Model](#Model) | The new class. This could be a class that extends the current [Model](#Knorm+Model) class or an entirely new class. |
+
+Updates the [Model](#Model) class used in the [Knorm](#Knorm) instance. This
+ensures all references to the new class are updated accordingly.
+
+**Returns**: [Knorm](#Knorm) - The same [Knorm](#Knorm) instance to allow chaining.  
 <a name="Knorm+updateField"></a>
 
 ### knorm.updateField(Field) ⇒ [Knorm](#Knorm)
@@ -286,6 +359,30 @@ models and plugins loaded into the original orm.
 
 Updates the [Field](#Field) class used in the [Knorm](#Knorm) instance. This
 ensures all references to the new class are updated accordingly.
+
+**Returns**: [Knorm](#Knorm) - The same [Knorm](#Knorm) instance to allow chaining.  
+<a name="Knorm+updateQuery"></a>
+
+### knorm.updateQuery(Query) ⇒ [Knorm](#Knorm)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| Query | [Query](#Query) | The new class. This could be a class that extends the current [Query](#Knorm+Query) class or an entirely new class. |
+
+Updates the [Query](#Query) class used in the [Knorm](#Knorm) instance. This
+ensures all references to the new class are updated accordingly.
+
+**Returns**: [Knorm](#Knorm) - The same [Knorm](#Knorm) instance to allow chaining.  
+<a name="Knorm+updateConnection"></a>
+
+### knorm.updateConnection(Connection) ⇒ [Knorm](#Knorm)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| Connection | [Connection](#Connection) | The new class. This could be a class that extends the  current [Connection](#Knorm+Connection) class or an entirely new class. |
+
+Updates the [Connection](#Connection) class used in the [Knorm](#Knorm) instance.
+This  ensures all references to the new class are updated accordingly.
 
 **Returns**: [Knorm](#Knorm) - The same [Knorm](#Knorm) instance to allow chaining.  
 <a name="Knorm.KnormError"></a>
@@ -367,7 +464,7 @@ transaction, otherwise it's set to `null`.
 :::
 
 ::: tip
-This is the same instance assigned to the [transaction](#Model+transaction) static
+This is the same instance assigned to the [transaction](#Model.transaction) static
 property, just added as a convenience for use in static methods.
 :::
 
@@ -377,12 +474,15 @@ property, just added as a convenience for use in static methods.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| data | `object` | The data to assign to the instance. |
+| data | `object` | The data to assign to the instance. This could contain anything, including field values (including virtual fields) and other arbitrary data. |
 
-Sets an instance's data, via
-[Object.assign](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign).
+Sets an instance's data.
 
-**Returns**: [Model](#Model) - the same model instance  
+::: tip INFO
+Keys with `undefined` values are skipped.
+:::
+
+**Returns**: [Model](#Model) - The same model instance  
 **Todo**
 
 - [ ] strict mode: for virtues, check if it has a setter
@@ -550,7 +650,7 @@ For models accessed within a transaction, this is reference to the
 [Transaction](#Transaction) instance.
 
 ::: warning NOTE
-This is only set for models that are accessed within a transaction, otherwise
+This is only set for [Model](#Model) classes within a transaction, otherwise
 it's set to `null`.
 :::
 
@@ -627,15 +727,13 @@ Creates and runs queries and parses any data returned.
         * [.transaction](#Query+transaction) : [Transaction](#Transaction)
         * [.batchSize(batchSize)](#Query+batchSize) ⇒ [Query](#Query)
         * [.first([first])](#Query+first) ⇒ [Query](#Query)
-        * [.forge([forge])](#Query+forge) ⇒ [Query](#Query)
-        * [.lean([lean])](#Query+lean) ⇒ [Query](#Query)
         * [.fields(...fields)](#Query+fields) ⇒ [Query](#Query)
         * [.returning(...fields)](#Query+returning) ⇒ [Query](#Query)
         * [.execute(sql)](#Query+execute) ⇒ `Promise`
         * [.connect()](#Query+connect) ⇒ `Promise`
         * [.formatSql(sql)](#Query+formatSql) ⇒ `object`
         * [.query(sql)](#Query+query) ⇒ `Promise`
-        * [.close()](#Query+close) ⇒ `Promise`
+        * [.disconnect()](#Query+disconnect) ⇒ `Promise`
         * [.insert(data, [options])](#Query+insert) ⇒ `Promise`
         * [.update(data, [options])](#Query+update) ⇒ `Promise`
         * [.save(data, [options])](#Query+save)
@@ -673,7 +771,7 @@ Creates a new Query instance.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| fields | `string` \| `array` \| `object` | The field to return. |
+| fields | `string` \| `array` \| `object` \| `boolean` | The field to return. |
 
 Alias for [fields](#Query+fields), improves code readability when configuring a
 single field.
@@ -709,16 +807,16 @@ just added as a convenience for use in instance methods.
 <a name="Query+transaction"></a>
 
 ### query.transaction : [Transaction](#Transaction)
-For models accessed within a transaction, this is reference to the
+For queries run within a transaction, this is reference to the
 [Transaction](#Transaction) instance.
 
 ::: warning NOTE
-This is only set for models that are accessed within a transaction, otherwise
-it's set to `null`.
+This is only set for [Query](#Query) instances that are run within a
+transaction, otherwise it's set to `null`.
 :::
 
 ::: tip
-This is the same instance assigned to the [transaction](#Query+transaction) static
+This is the same instance assigned to the [transaction](#Query.transaction) static
 property, just added as a convenience for use in static methods.
 :::
 
@@ -766,61 +864,13 @@ returning an array. This is handy when one is sure that there's only one
 item in the rows returned from the database.
 
 **Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
-<a name="Query+forge"></a>
-
-### query.forge([forge]) ⇒ [Query](#Query)
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| [forge] | `boolean` | <code>true</code> | If `true`, return [Model](#Model) instances, else return plain objects. |
-
-Configures whether to return [Model](#Model) instances or plain objects from
-a [fetch](#Query+fetch), [insert](#Query+insert), [update](#Query+update) or
-[delete](#Query+delete) operation. When `forge` is `true`, items in the
-returned array will be instances of the the [Model](#Model) class that is
-passed to the [Query](#Query) constructor.
-
-::: tip INFO
-[Model](#Model) instances will be returned by default. To disable that, pass
-`false` as the value to this option.
-:::
-
-::: tip INFO
-This is the opposite of [lean](#Query+lean).
-:::
-
-**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
-<a name="Query+lean"></a>
-
-### query.lean([lean]) ⇒ [Query](#Query)
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| [lean] | `boolean` | <code>true</code> | If `true`, return plain objects, else return [Model](#Model) instances. |
-
-Configures whether to return [Model](#Model) instances or plain objects from
-a [fetch](#Query+fetch), [insert](#Query+insert), [update](#Query+update) or
-[delete](#Query+delete) operation. When `lean` is `false`, items in the
-returned array will be instances of the the [Model](#Model) class that is
-passed to the [Query](#Query) constructor.
-
-::: tip INFO
-[Model](#Model) instances will be returned by default. To disable that, pass
-`true` as the value to this option.
-:::
-
-::: tip INFO
-This is the opposite of [forge](#Query+forge).
-:::
-
-**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
 <a name="Query+fields"></a>
 
 ### query.fields(...fields) ⇒ [Query](#Query)
 
 | Param | Type | Description |
 | --- | --- | --- |
-| ...fields | `string` \| `array` \| `object` | The fields to return. When passed as an object, the keys are used as aliases while the values are used in the query. This also allows you to use raw SQL. |
+| ...fields | `string` \| `array` \| `object` \| `boolean` | The fields to return. When passed as an object, the keys are used as aliases while the values are used in the query, which allows one to use raw SQL. When passed as `false`, no fields will be returned from the database call. |
 
 Configures what fields to return from a database call.
 
@@ -830,7 +880,7 @@ This is also aliased as [returning](#Query+returning).
 
 **Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
 **Example**  
-For PostgreSQL:
+Using raw SQL for PostgreSQL:
 ```js{10}
 Model.insert(
   {
@@ -852,7 +902,7 @@ Model.insert(
 
 | Param | Type | Description |
 | --- | --- | --- |
-| ...fields | `string` \| `array` \| `object` | The fields to return. |
+| ...fields | `string` \| `array` \| `object` \| `boolean` | The fields to return. |
 
 Configures what fields to return from a database call.
 
@@ -875,7 +925,7 @@ This is an alias for [fields](#Query+fields).
 Executes a query. This method calls, in order, [connect](#Query+connect) to
 connect to the database, [formatSql](#Query+formatSql) to format the SQL to be
 queried, [query](#Query+query) to run the query against the database, and
-finally, [close](#Query+close) to close the database connection.
+finally, [disconnect](#Query+disconnect) to close the database connection.
 
 ::: tip INFO
 This method is used internally by all [Query](#Query) methods i.e.
@@ -905,6 +955,15 @@ is attached to the error as an `sql` property.
 ### query.connect() ⇒ `Promise`
 Connects to the database, via [create](#Connection+create). This method is
 called by [execute](#Query+execute).
+
+::: tip INFO
+When running in a transaction, this method connects to the database via
+[connect](#Transaction+connect). The first query to be executed in the
+transaction runs [connect](#Transaction+connect) and [begin](#Transaction+begin),
+after which subsequent queries re-use the transaction's connection.
+However, once the transaction is [ended](#Transaction+ended), connections are
+made as usual.
+:::
 
 **Returns**: `Promise` - The `Promise` from [create](#Connection+create), that is
 resolved when a connection is established or rejected with a
@@ -941,11 +1000,17 @@ method is called by [execute](#Query+execute).
 **Returns**: `Promise` - The `Promise` from [query](#Connection+query), that is
 resolved with the query result or rejected with a [QueryError](QueryError) on
 error.  
-<a name="Query+close"></a>
+<a name="Query+disconnect"></a>
 
-### query.close() ⇒ `Promise`
+### query.disconnect() ⇒ `Promise`
 Closes the database connection after running the query, via
 [close](#Connection+close). This method is called by [execute](#Query+execute).
+
+::: tip INFO
+When running in a transaction, this method does not close the database
+connection.However, if the transaction is [ended](#Transaction+ended),
+connections are closed as usual.
+:::
 
 **Returns**: `Promise` - The `Promise` from [close](#Connection+close), that is
 resolved when the connection is closed or rejected with a
@@ -964,13 +1029,9 @@ Inserts data into the database.
 **Returns**: `Promise` - the promise is resolved with an array of the model's
 instances, expect in the following cases:
 
-- if the [forge](#Query+forge) query option was set to `false` (or
-  [lean](#Query+lean) set to `true`), then the array will contain plain
-  objects.
 - if the [first](#Query+first) query option was set to `true`, then the
-  promise is resolved with a single model instance (by default) or plain
-  object (if the [forge](#Query+forge) query option was set to `true`), or
-  `null` if no rows were inserted.
+  promise is resolved with a single model instance or `null` if no rows
+  were inserted.
 - if no rows were inserted, then the array will be empty. If the
   [Query#require](Query#require) query option was set to `true`, then the `Promise`
   is rejected with a [NoRowsInsertedError](#Query.NoRowsInsertedError) instead.
@@ -1016,13 +1077,9 @@ database connection.
 **Returns**: `Promise` - the promise is resolved with an array of the model's
 instances, expect in the following cases:
 
-- if the [forge](#Query+forge) query option was set to `false` (or
-  [lean](#Query+lean) set to `true`), then the array will contain plain
-  objects.
 - if the [first](#Query+first) query option was set to `true`, then the
-  promise is resolved with a single model instance (by default) or plain
-  object (if the [forge](#Query+forge) query option was set to `true`), or
-  `null` if no rows were inserted.
+  promise is resolved with a single model instance or `null` if no rows
+  were inserted.
 - if no rows were updated, then the array will be empty. If the
   [Query#require](Query#require) query option was set to `true`, then the `Promise`
   is rejected with a [NoRowsUpdatedError](#Query.NoRowsUpdatedError) instead.
@@ -1076,13 +1133,9 @@ Fetches data from the database.
 **Returns**: `Promise` - the promise is resolved with an array of the model's
 instances, expect in the following cases:
 
- - if the [forge](#Query+forge) query option was set to `false` (or
-  [lean](#Query+lean) set to `true`), then the array will contain plain
-  objects.
 - if the [first](#Query+first) query option was set to `true`, then the
-  promise is resolved with a single model instance (by default) or plain
-  object (if the [forge](#Query+forge) query option was set to `true`), or
-  `null` if no rows were inserted.
+  promise is resolved with a single model instance or `null` if no rows
+  were inserted.
 - if no rows were updated, then the array will be empty. If the
   [Query#require](Query#require) query option was set to `true`, then the `Promise`
   is rejected with a [NoRowsFetchedError](#Query.NoRowsFetchedError) instead.
@@ -1113,13 +1166,9 @@ be deleted!** This mimics the behaviour of `DELETE` queries.
 **Returns**: `Promise` - the promise is resolved with an array of the model's
 instances, expect in the following cases:
 
-- if the [forge](#Query+forge) query option was set to `false` (or
-  [lean](#Query+lean) set to `true`), then the array will contain plain
-  objects.
 - if the [first](#Query+first) query option was set to `true`, then the
-  promise is resolved with a single model instance (by default) or plain
-  object (if the [forge](#Query+forge) query option was set to `true`), or
-  `null` if no rows were inserted.
+  promise is resolved with a single model instance or `null` if no rows
+  were inserted.
 - if no rows were updated, then the array will be empty. If the
   [Query#require](Query#require) query option was set to `true`, then the `Promise`
   is rejected with a [NoRowsDeletedError](#Query.NoRowsDeletedError) instead.
@@ -1223,12 +1272,12 @@ property, just added as a convenience for use in static methods.
 <a name="Query.transaction"></a>
 
 ### Query.transaction : [Transaction](#Transaction)
-For models accessed within a transaction, this is reference to the
+For queries run within a transaction, this is reference to the
 [Transaction](#Transaction) instance.
 
 ::: warning NOTE
-This is only set for [Query](#Query) instances that are running within a
-transaction, otherwise it's set to `null`.
+This is only set for [Query](#Query) classes within a transaction, otherwise
+it's set to `null`.
 :::
 
 ::: tip
@@ -1246,10 +1295,13 @@ a transaction.
 * [Transaction](#Transaction)
     * [new Transaction([callback])](#new_Transaction_new)
     * _instance_
+        * [.active](#Transaction+active) : `boolean`
+        * [.started](#Transaction+started) : `boolean`
+        * [.ended](#Transaction+ended) : `boolean`
         * [.knorm](#Transaction+knorm) : [Knorm](#Knorm)
         * [.models](#Transaction+models) : `object`
         * [.connect()](#Transaction+connect) ⇒ `Promise`
-        * [.close()](#Transaction+close) ⇒ `Promise`
+        * [.disconnect()](#Transaction+disconnect) ⇒ `Promise`
         * [.begin()](#Transaction+begin) ⇒ `Promise`
         * [._begin()](#Transaction+_begin) ⇒ `Promise`
         * [.commit()](#Transaction+commit) ⇒ `Promise`
@@ -1274,6 +1326,27 @@ a transaction.
 | [callback] | `function` | The transaction callback, when [running transactions with a callback function](/guides/transactions.md#transactions-with-a-callback). |
 
 Creates a [Transaction](#Transaction) instance.
+
+<a name="Transaction+active"></a>
+
+### transaction.active : `boolean`
+Shows the state of a transaction. This is initially `undefined`, set to
+`true` after [begin](#Transaction+begin) and finally set to `false` after
+[commit](#Transaction+commit) or [rollback](#Transaction+rollback).
+
+<a name="Transaction+started"></a>
+
+### transaction.started : `boolean`
+Shows the state of a transaction. This is initially `undefined` and set
+to `true` after [begin](#Transaction+begin). Note that it stays `true`
+even after [commit](#Transaction+commit) or [rollback](#Transaction+rollback).
+
+<a name="Transaction+ended"></a>
+
+### transaction.ended : `boolean`
+Shows the state of a transaction. This is initially `undefined` and
+only set to `true` after [commit](#Transaction+commit) or
+[rollback](#Transaction+rollback).
 
 <a name="Transaction+knorm"></a>
 
@@ -1307,9 +1380,9 @@ queries are executed within transactions.
 **Returns**: `Promise` - The `Promise` from [create](#Connection+create), that is
 resolved when a connection is established or rejected with a
 [TransactionError](TransactionError) on error.  
-<a name="Transaction+close"></a>
+<a name="Transaction+disconnect"></a>
 
-### transaction.close() ⇒ `Promise`
+### transaction.disconnect() ⇒ `Promise`
 Closes the database connection (via [close](#Connection+close)) after
 committing (via [commit](#Transaction+commit)) or rolling back (via
 [rollback](#Transaction+rollback)) a transaction.
@@ -1338,7 +1411,7 @@ resolved with the query result.
 
 ### transaction.commit() ⇒ `Promise`
 Commits a transaction, via [_commit](#Transaction+_commit) and afterwards
-closes the database connection, via [close](#Transaction+close). If the
+closes the database connection, via [disconnect](#Transaction+disconnect). If the
 commit fails, the transaction is automaticaly rolled back via
 [rollback](#Transaction+rollback).
 
@@ -1357,7 +1430,7 @@ resolved with the query result.
 
 ### transaction.rollback() ⇒ `Promise`
 Rolls back a transaction, via [_rollback](#Transaction+_rollback) and afterwards
-closes the database connection, via [close](#Transaction+close).
+closes the database connection, via [disconnect](#Transaction+disconnect).
 
 **Returns**: `Promise` - A `Promise` that is resolved when the transaction is
 rolled back and the connection closed or rejected with a

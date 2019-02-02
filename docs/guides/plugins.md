@@ -20,7 +20,7 @@ const { Model, Query } = knorm(/* knorm options */)
 
 | Plugin                                     | Description                                                                |
 | ------------------------------------------ | -------------------------------------------------------------------------- |
-| [@knorm/postgres](https://github.com/knorm/postgres)       | enables connecting to postgres                                             |
+| [@knorm/postgres](/plugins/postgres.md)       | enables connecting to postgres                                             |
 | [@knorm/to-json](https://github.com/knorm/to-json)         | adds a `toJSON` method to Model                                            |
 | [@knorm/relations](https://github.com/knorm/relations)     | enables SQL joins                                                          |
 | [@knorm/soft-delete](https://github.com/knorm/soft-delete) | enables soft-deletion: adds support for `deleted` and `deletedAt` fields   |
@@ -36,7 +36,7 @@ and a `name` property. See
 When a plugin is loaded via
 [Knorm.prototype.use](/api.md#knorm-use-plugin-%E2%87%92-knorm), the  function
 (or object's `init` function) is called with the `knorm` instance. The plugin
-can then modify the classes on the instance: 
+can then modify the classes on the instance:
 
 ```js
 const preventDelete = knorm => {
@@ -56,7 +56,7 @@ Model.delete().catch(console.log); // logs Error('deleting is not allowed!')
 
 ::: tip INFO
 [Knorm](/api.md#knorm) provides some utility methods for plugins to update the
-instance's classes: 
+instance's classes:
 
 - [Knorm.prototype.updateTransaction](/api.md#knorm-updatetransaction-transaction-%E2%87%92-knorm)
 - [Knorm.prototype.updateModel](/api.md#knorm-updatemodel-model-%E2%87%92-knorm)
