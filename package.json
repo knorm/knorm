@@ -1,6 +1,6 @@
 {
-  "name": "knorm-example",
-  "version": "1.0.0",
+  "name": "@knorm/example",
+  "version": "0.0.1",
   "description": "An example project showcasing how to use Knorm",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joelmukuthu/knorm-example.git"
+    "url": "git+https://github.com/knorm/example.git"
   },
   "keywords": [
     "knorm",
@@ -25,9 +25,9 @@
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/joelmukuthu/knorm-example/issues"
+    "url": "https://github.com/knorm/example/issues"
   },
-  "homepage": "https://github.com/joelmukuthu/knorm-example#readme",
+  "homepage": "https://github.com/knorm/example#readme",
   "devDependencies": {
     "eslint": "^4.19.1",
     "eslint-config-ganintegrity": "^2.0.2",
