@@ -33,7 +33,7 @@ const orm = knorm({
 
 | Option    | Type                | Default   | Description                                                                                                              |
 | --------- | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [name]    | `string`            | `to-json` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
+| [name]    | `string`            | `toJSON`  | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
 | [exclude] | `array` \| `string` | `[]`      | A string or array of property-names (object keys) to exclude from the `toJSON` output                                    |
 
 ## Features
