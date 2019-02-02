@@ -42,6 +42,7 @@ module.exports = {
         ]
       },
       { text: 'Github', link: 'https://github.com/knorm/knorm' },
+      { text: 'Example', link: 'https://github.com/knorm/example' },
     ],
     sidebar: [
       '/',
@@ -63,7 +64,6 @@ module.exports = {
       ['/api', 'API Docs'],
       {
         title: 'Plugins',
-        // collapsable: true,
         children: [
           '/plugins/postgres',
           '/plugins/to-json',
