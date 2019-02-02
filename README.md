@@ -7,56 +7,7 @@
 
 Timestamps plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
 
-This plugin adds the [knex timestamp](http://knexjs.org/#Schema-timestamps)
-fields to your models and also updates your query methods so that `createdAt`
-and `updatedAt` are set to the current time (i.e. `new Date()`) for `insert`
-calls and the `updatedAt` field is set to the current time for any `update`
-calls. It will also ensure that any `update` calls do not overwrite the
-`createdAt` field.
+## [Documentation](https://knorm.netlify.com/plugins/timestamps.html)
 
-## Installation
-
-```bash
-npm install --save @knorm/knorm @knorm/timestamps
-```
-
-> @knorm/timestamps has a peer dependency on [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
-
-## Usage
-
-```js
-const knorm = require('@knorm/knorm');
-const knormTimestamps = require('@knorm/timestamps');
-
-const orm = knorm({
-  // knorm options
-}).use(
-  knormTimestamps({
-    // knormTimestamps options
-  })
-);
-```
-
-## Options
-
-### name
-
-The name of the plugin, defaults to `'timestamps'`.
-
-### createdAt
-
-> type: object, default: `{ name: 'createdAt', column: 'created_at' }`
-
-The `createdAt` field can be configured with these options:
-
-* `name` _string, default: createdAt_: the field name
-* `column` _string, default: created_at_: the column name
-
-### updatedAt
-
-> type: object, default: `{ name: 'updatedAt', column: 'updated_at' }`
-
-The `updatedAt` field can be configured with these options:
-
-* `name` _string, default: updatedAt_: the field name
-* `column` _string, default: updated_at_: the column name
+View the docs on @knorm/knorm's documentation site
+[here](https://knorm.netlify.com/plugins/timestamps.html).
