@@ -30,7 +30,7 @@ module.exports = {
           { text: '@knorm/relations', link: '/plugins/relations' },
           { text: '@knorm/soft-delete', link: '/plugins/soft-delete' },
           { text: '@knorm/paginate', link: '/plugins/paginate' },
-          // { text: '@knorm/timestamps', link: '/plugins/timestamps' }
+          { text: '@knorm/timestamps', link: '/plugins/timestamps' }
         ]
       },
       {
@@ -70,7 +70,7 @@ module.exports = {
           '/plugins/relations',
           '/plugins/soft-delete',
           '/plugins/paginate',
-          // '/plugins/timestamps'
+          '/plugins/timestamps'
         ]
       },
       ['/changelog', 'Changelog' ],

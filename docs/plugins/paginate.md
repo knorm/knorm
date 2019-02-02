@@ -27,11 +27,11 @@ const orm = knorm({
 
 ### Options
 
-| Option    | Type   | Default    | Description                                                                                                        |
-| --------- | ------ | ---------- | ------------------------------------------------------------------------------------------------------------------ |
-| [name]    | string | `paginate` | The name of the plugin. Allows accessing the plugin instance via `orm.plugins['plugin-name']`                      |
-| [page]    | number | `1`        | The default `page` value to use if only `perPage` is set in [query options](/guides/queries.md?id=setting-options) |
-| [perPage] | number | `10`       | The default `perPage` value to use if only `page` is set in [query options](/guides/queries.md?id=setting-options) |
+| Option    | Type   | Default    | Description                                                                                                              |
+| --------- | ------ | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [name]    | string | `paginate` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
+| [page]    | number | `1`        | The default `page` value to use if only `perPage` is set in [query options](/guides/queries.md?id=setting-options)       |
+| [perPage] | number | `10`       | The default `perPage` value to use if only `page` is set in [query options](/guides/queries.md?id=setting-options)       |
 
 ## Features
 

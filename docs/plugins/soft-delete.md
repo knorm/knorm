@@ -29,16 +29,15 @@ const orm = knorm({
 
 ### Options
 
-| Option             | Type                | Default       | Description                                                                                                              |
-| ------------------ | ------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [name]             | `string`            | `soft-delete` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
-| [exclude]          | `array` \| `string` | `[]`          | A string or array of property-names (object keys) to exclude from the `toJSON` output                                    |
-| [deleted]          | `object`            |               | Config options for the `deleted` field.                                                                                  |
-| [deleted.name]     | `string`            | `deleted`     | The field-name for the `deleted` field                                                                                   |
-| [deleted.column]   | `string`            | `deleted`     | The column-name for the `deleted` field                                                                                  |
-| [deletedAt]        | `object`            |               | Config options for the `deletedAt` field.                                                                                |
-| [deletedAt.name]   | `string`            | `deletedAt`   | The field-name for the `deletedAt` field                                                                                 |
-| [deletedAt.column] | `string`            | `deleted_at`  | The column-name for the `deletedAt` field                                                                                |
+| Option             | Type     | Default       | Description                                                                                                              |
+| ------------------ | -------- | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [name]             | `string` | `soft-delete` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
+| [deleted]          | `object` |               | Config options for the `deleted` field.                                                                                  |
+| [deleted.name]     | `string` | `deleted`     | The field-name for the `deleted` field.                                                                                  |
+| [deleted.column]   | `string` | `deleted`     | The column-name for the `deleted` field.                                                                                 |
+| [deletedAt]        | `object` |               | Config options for the `deletedAt` field.                                                                                |
+| [deletedAt.name]   | `string` | `deletedAt`   | The field-name for the `deletedAt` field.                                                                                |
+| [deletedAt.column] | `string` | `deleted_at`  | The column-name for the `deletedAt` field.                                                                               |
 
 ## Features
 
@@ -46,7 +45,8 @@ const orm = knorm({
 
 This plugin:
 
-- adds `deleted` and `deletedAt` (if enabled) fields to the Model class
+- adds `deleted` and `deletedAt` (if enabled) fields to the
+  [Model](/api.md#model) class
 - modifies [Query](/api.md#query)'s
   [delete](/api.md#query-delete-options-%E2%87%92-promise) method such that
   it does not actually delete a row but rather sets the `deleted` field to
@@ -60,6 +60,16 @@ This plugin:
   [update](/api.md#query-update-data-options-%E2%87%92-promise) and
   [delete](/api.md#query-delete-options-%E2%87%92-promise) methods such that
   they always filter out soft-deleted rows (i.e. with `deleted` set to `true`).
+
+::: tip INFO
+
+- If [insert](/api.md#query-insert-data-options-%E2%87%92-promise) is passed
+  data where `deleted` and `deletedAt` are already set, they are left as is.
+- If [update](/api.md#query-update-data-options-%E2%87%92-promise) is called
+  with `deleted` set to `false`, then `deletedAt` is set to `null` before the
+  updated. If `deleted` is `true`, then `deletedAt` is set to the current time.
+
+:::
 
 To work with soft-deleted rows, use the `Query.prototype.withDeleted`,
 `Query.prototype.onlyDeleted` query options or directly use the
