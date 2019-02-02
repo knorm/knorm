@@ -39,7 +39,7 @@ const orm = knorm({
 
 | Option       | Type                 | Default    | Description                                                                                                                                                                                                                    |
 | ------------ | -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [name]       | `string`             | `postgres` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object)                                                                                                                                       |
+| [name]       | `string`             | `postgres` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object)                                                                                                       |
 | [connection] | `object` \| `string` | none       | Passed directly to [pg](https://node-postgres.com/features/connecting#programmatic). However, connections can also be configured via [environment variables](https://www.postgresql.org/docs/current/static/libpq-envars.html) |
 
 Note that all options are optional.
@@ -159,8 +159,5 @@ be:
 const value = JSON.stringify({ type: 'image/png' });
 const sql = `jsonb_set("data"::jsonb, '{image,type}', '${value}')::json`;
 
-user.update(
-  { data: User.query.sql(sql) },
-  { patch: true }
-);
+user.update({ data: User.query.sql(sql) }, { patch: true });
 ```
