@@ -8,63 +8,7 @@
 [toJSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior)
 plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
 
-This plugin adds a `toJSON` method to knorm's `Model` class and allows configuring
-what fields should be excluded from the output.
+## [Documentation](https://knorm.netlify.com/plugins/to-json.html)
 
-## Installation
-
-```bash
-npm install --save @knorm/knorm @knorm/to-json
-```
-
-> @knorm/to-json has a peer dependency on [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm)
-
-## Usage
-
-```js
-const knorm = require('@knorm/knorm');
-const knormToJSON = require('@knorm/to-json');
-
-const orm = knorm({
-  // knorm options
-}).use(
-  knormToJSON({
-    // @knorm/to-json options
-  })
-);
-```
-
-## Options
-
-### name
-
-The name of the plugin, defaults to `'toJSON'`.
-
-### exclude
-
-> type: array|string, default: []
-
-A string or array of strings of properties to exclude from `toJSON` output.
-
-## Configuring exclusion fields per model
-
-You can configure fields to exclude via Model options:
-
-```js
-const { Model } = knorm().use(
-  knormToJSON({
-    exlude: 'id' // exclude `id` by default for all models
-  })
-);
-
-Model.fields = { id: 'integer' };
-
-class User extends Model {}
-
-User.fields = { username: 'string', password: 'string' };
-User.options = {
-  plugins: {
-    toJSON: { exclude: 'password' } // also exclude `password` for the `User` model
-  }
-};
-```
+View the docs on @knorm/knorm's documentation site
+[here](https://knorm.netlify.com/plugins/to-json.html).
