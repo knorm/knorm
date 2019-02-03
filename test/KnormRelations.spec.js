@@ -4,55 +4,66 @@ const knormPostgres = require('@knorm/postgres');
 const KnormRelations = require('../lib/KnormRelations');
 const knormRelations = require('../');
 const knex = require('./lib/knex');
+const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
-  .use(require('unexpected-knex'));
+  .use(require('unexpected-knex'))
+  .use(require('unexpected-sinon'));
 
 const { KnormRelationsError } = KnormRelations;
 
 describe('KnormRelations', () => {
-  const orm = knorm({ fieldToColumn })
-    .use(knormPostgres({ connection: knex.client.config.connection }))
-    .use(knormRelations());
+  let Query;
+  let Model;
+  let User;
+  let ImageCategory;
+  let Image;
+  let Message;
 
-  const Query = orm.Query;
+  before(() => {
+    const orm = knorm({ fieldToColumn, debug: true })
+      .use(knormPostgres({ connection: knex.client.config.connection }))
+      .use(knormRelations());
 
-  class Model extends orm.Model {}
-  Model.fields = {
-    id: { type: 'integer', primary: true, updated: false }
-  };
+    Query = orm.Query;
 
-  class User extends Model {}
-  User.table = 'user';
-  User.fields = {
-    name: { type: 'string', required: true },
-    confirmed: 'boolean',
-    creator: {
-      type: 'integer',
-      references() {
-        return User.fields.id;
+    Model = class extends orm.Model {};
+    Model.fields = {
+      id: { type: 'integer', primary: true, updated: false }
+    };
+
+    User = class extends Model {};
+    User.table = 'user';
+    User.fields = {
+      name: { type: 'string', required: true },
+      confirmed: 'boolean',
+      creator: {
+        type: 'integer',
+        references() {
+          return User.fields.id;
+        }
       }
-    }
-  };
+    };
 
-  class ImageCategory extends Model {}
-  ImageCategory.table = 'image_category';
-  ImageCategory.fields = { name: { type: 'string', required: true } };
+    ImageCategory = class extends Model {};
+    ImageCategory.table = 'image_category';
+    ImageCategory.fields = { name: { type: 'string', required: true } };
 
-  class Image extends Model {}
-  Image.table = 'image';
-  Image.fields = {
-    userId: { type: 'integer', references: User.fields.id },
-    categoryId: { type: 'integer', references: ImageCategory.fields.id }
-  };
+    Image = class extends Model {};
+    Image.table = 'image';
+    Image.fields = {
+      userId: { type: 'integer', references: User.fields.id },
+      categoryId: { type: 'integer', references: ImageCategory.fields.id }
+    };
 
-  class Message extends Model {}
-  Message.table = 'message';
-  Message.fields = {
-    text: { type: 'text', required: true },
-    senderId: { type: 'integer', references: User.fields.id },
-    receiverId: { type: 'integer', references: User.fields.id }
-  };
+    Message = class extends Model {};
+    Message.table = 'message';
+    Message.fields = {
+      text: { type: 'text', required: true },
+      senderId: { type: 'integer', references: User.fields.id },
+      receiverId: { type: 'integer', references: User.fields.id }
+    };
+  });
 
   before(async () => {
     await knex.schema.createTable(User.table, table => {
@@ -378,7 +389,7 @@ describe('KnormRelations', () => {
                     name: 'User 1',
                     image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
                   }),
-                  new User({ id: 2, name: 'User 2', image: null })
+                  new User({ id: 2, name: 'User 2', image: [] })
                 ]
               )
           );
@@ -436,7 +447,7 @@ describe('KnormRelations', () => {
                 name: 'User 1',
                 image: [new Image({ id: 1 })]
               }),
-              new User({ id: 2, name: 'User 2', image: null })
+              new User({ id: 2, name: 'User 2', image: [] })
             ]
           );
         });
@@ -459,20 +470,20 @@ describe('KnormRelations', () => {
                 name: 'User 2',
                 confirmed: true,
                 creator: null,
-                image: null
+                image: []
               })
             ]
           );
         });
 
-        it('includes the joined model as `null` if no rows were matched', async () => {
+        it('includes the joined model as an empty array if no rows were matched', async () => {
           const query = new Query(User)
             .leftJoin(new Query(Image))
             .where({ id: 2 });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
-            [new User({ id: 2, name: 'User 2', image: null })]
+            [new User({ id: 2, name: 'User 2', image: [] })]
           );
         });
 
@@ -504,7 +515,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: [new Image({ id: 1 })] }),
-              new User({ id: 2, name: null })
+              new User({ id: 2, name: [] })
             ]
           );
         });
@@ -566,6 +577,30 @@ describe('KnormRelations', () => {
             );
           });
 
+          describe('as `false`', () => {
+            it('returns the joined model as an empty array', async () => {
+              const query = new Query(User)
+                .where({ id: 1 })
+                .leftJoin(new Query(Image).fields(false));
+              await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows satisfying',
+                [new User({ id: 1, name: 'User 1', image: [] })]
+              );
+            });
+
+            it('returns the joined model as null if `first is configured`', async () => {
+              const query = new Query(User)
+                .where({ id: 1 })
+                .leftJoin(new Query(Image).fields(false).first(true));
+              await expect(
+                query.fetch(),
+                'to be fulfilled with sorted rows satisfying',
+                [new User({ id: 1, name: 'User 1', image: null })]
+              );
+            });
+          });
+
           describe('with no primary field selected', () => {
             it('parses rows correctly by unique fields', async () => {
               class OtherUser extends User {}
@@ -583,37 +618,67 @@ describe('KnormRelations', () => {
               await expect(
                 query.fetch(),
                 'to be fulfilled with value satisfying',
-                rows =>
-                  expect(
-                    rows,
+                expect.it(
+                  'when sorted by',
+                  (a, b) => (a.name > b.name ? 1 : -1),
+                  'to exhaustively satisfy',
+                  [
+                    new OtherUser({
+                      name: 'User 1',
+                      otherImage: [new OtherImage({ id: 1 })]
+                    }),
+                    new OtherUser({
+                      name: 'User 2',
+                      otherImage: []
+                    })
+                  ]
+                )
+              );
+            });
+
+            describe('with no unique fields selected either', () => {
+              it('rejects with a QueryError', async () => {
+                const query = new Query(User)
+                  .fields(['name'])
+                  .leftJoin(new Query(Image).fields('id'));
+                await expect(
+                  query.fetch(),
+                  'to be rejected with error satisfying',
+                  new Query.QueryError(
+                    'User: cannot join `Image` with no primary or unique fields selected'
+                  )
+                );
+              });
+
+              it('resolves with an empty array if `fields` is set to `false`', async () => {
+                const query = new Query(User)
+                  .fields(false)
+                  .leftJoin(new Query(Image).fields('id'));
+                await expect(
+                  query.fetch(),
+                  'to be fulfilled with value exhaustively satisfying',
+                  []
+                );
+              });
+
+              it('resolves with join data as an empty array if `fields` is set to `false` on the joined model', async () => {
+                const query = new Query(User)
+                  .fields(['name'])
+                  .leftJoin(new Query(Image).fields(false));
+                await expect(
+                  query.fetch(),
+                  'to be fulfilled with value exhaustively satisfying',
+                  expect.it(
                     'when sorted by',
                     (a, b) => (a.name > b.name ? 1 : -1),
                     'to exhaustively satisfy',
                     [
-                      new OtherUser({
-                        name: 'User 1',
-                        otherImage: [new OtherImage({ id: 1 })]
-                      }),
-                      new OtherUser({
-                        name: 'User 2',
-                        otherImage: null
-                      })
+                      new User({ name: 'User 1', image: [] }),
+                      new User({ name: 'User 2', image: [] })
                     ]
                   )
-              );
-            });
-
-            it('rejects if no unique fields are selected either', async () => {
-              const query = new Query(User)
-                .fields(['name'])
-                .leftJoin(new Query(Image).fields('id'));
-              await expect(
-                query.fetch(),
-                'to be rejected with error satisfying',
-                new Query.QueryError(
-                  'User: cannot join `Image` with no primary or unique fields selected'
-                )
-              );
+                );
+              });
             });
           });
         });
@@ -647,19 +712,6 @@ describe('KnormRelations', () => {
               query.fetch(),
               'to be fulfilled with sorted rows satisfying',
               [new User({ id: 1, name: 'User 1', image: new Image({ id: 1 }) })]
-            );
-            await Image.delete({ where: { id: 2 } });
-          });
-
-          it('returns the first joined model with `forge` disabled on the joined query', async () => {
-            await Image.insert([{ id: 2, userId: 1, categoryId: 1 }]);
-            const query = new Query(User)
-              .where({ id: 1 })
-              .leftJoin(new Query(Image).first().forge(false));
-            await expect(
-              query.fetch(),
-              'to be fulfilled with sorted rows satisfying',
-              [new User({ id: 1, name: 'User 1', image: { id: 1 } })]
             );
             await Image.delete({ where: { id: 2 } });
           });
@@ -704,7 +756,7 @@ describe('KnormRelations', () => {
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
-            [{ messages: null }, { messages: null }]
+            [{ messages: [] }, { messages: [] }]
           );
         });
 
@@ -768,7 +820,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new User({ id: 1, images: [new Image({ id: 1 })] }),
-                new User({ id: 2, images: null })
+                new User({ id: 2, images: [] })
               ]
             );
           });
@@ -895,7 +947,7 @@ describe('KnormRelations', () => {
                 new User({
                   id: 2,
                   name: 'User 2',
-                  image: null
+                  image: []
                 }),
                 new User({
                   id: 3,
@@ -968,97 +1020,6 @@ describe('KnormRelations', () => {
 
             const where = new Query.Where();
             await Image.delete({ where: where.in('id', [2, 3]) });
-          });
-        });
-
-        describe("with 'forge' disabled", () => {
-          describe('on the parent query', () => {
-            it('still forges the joined model', async () => {
-              const query = new Query(User)
-                .forge(false)
-                .leftJoin(new Query(Image));
-
-              await expect(
-                query.fetch(),
-                'to be fulfilled with sorted rows satisfying',
-                [
-                  expect.it('not to be a', User).and('to satisfy', {
-                    image: [expect.it('to be an', Image)]
-                  }),
-                  expect.it('to be an object').and('not to be a', User)
-                ]
-              );
-            });
-          });
-
-          describe('on the joined model', () => {
-            it('includes a plain object of the joined model', async () => {
-              const query = new Query(User).leftJoin(
-                new Query(Image).forge(false)
-              );
-
-              await expect(
-                query.fetch(),
-                'to be fulfilled with sorted rows satisfying',
-                [
-                  expect.it('to be a', User).and('to satisfy', {
-                    image: [
-                      expect.it('to be an object').and('not to be an', Image)
-                    ]
-                  }),
-                  expect.it('to be a', User)
-                ]
-              );
-            });
-          });
-
-          describe('on both the parent and the joined models', () => {
-            it('includes plain objects of the both models', async () => {
-              const query = new Query(User)
-                .forge(false)
-                .leftJoin(new Query(Image).forge(false));
-
-              await expect(
-                query.fetch(),
-                'to be fulfilled with sorted rows exhaustively satisfying',
-                [
-                  expect.it('not to be a', User).and('to satisfy', {
-                    image: [
-                      expect.it('to be an object').and('not to be an', Image)
-                    ]
-                  }),
-                  expect.it('to be an object').and('not to be a', User)
-                ]
-              );
-            });
-          });
-
-          it('does not include the joined model if no rows were matched', async () => {
-            const query = new Query(User)
-              .leftJoin(new Query(Image))
-              .where({ id: 2 })
-              .forge(false);
-
-            await expect(
-              query.fetch(),
-              'to be fulfilled with sorted rows satisfying',
-              [{ image: null }]
-            );
-          });
-
-          it('includes all joined models if more than one rows are matched', async () => {
-            await Image.insert({ id: 2, userId: 1, categoryId: 1 });
-
-            const query = new Query(User)
-              .where({ id: 1 })
-              .leftJoin(new Query(Image));
-            await expect(
-              query.fetch(),
-              'to be fulfilled with sorted rows satisfying',
-              [{ id: 1, name: 'User 1', image: [{ id: 1 }, { id: 2 }] }]
-            );
-
-            await Image.delete({ where: { id: 2 } });
           });
         });
 
@@ -1295,23 +1256,101 @@ describe('KnormRelations', () => {
                   name: 'User 2',
                   confirmed: true,
                   creator: null,
-                  image: null
+                  image: []
                 })
               ]
             );
           });
 
-          it('rejects if no primary or unique fields are selected in the nested join', async () => {
-            const query = new Query(User).leftJoin(
-              new Query(Image).fields('userId').join(new Query(User))
-            );
-            await expect(
-              query.fetch(),
-              'to be rejected with error satisfying',
-              new Query.QueryError(
-                'Image: cannot join `User` with no primary or unique fields selected'
-              )
-            );
+          describe('with no primary or unique fields are selected in the nested join', () => {
+            it('rejects with a QueryError', async () => {
+              const query = new Query(User).leftJoin(
+                new Query(Image).fields('userId').join(new Query(User))
+              );
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new Query.QueryError(
+                  'Image: cannot join `User` with no primary or unique fields selected'
+                )
+              );
+            });
+
+            it('rejects with a QueryError if `fields` is set to `false` only on the root query', async () => {
+              const query = new Query(User)
+                .fields(false)
+                .leftJoin(
+                  new Query(Image).fields('userId').join(new Query(User))
+                );
+              await expect(
+                query.fetch(),
+                'to be rejected with error satisfying',
+                new Query.QueryError(
+                  'Image: cannot join `User` with no primary or unique fields selected'
+                )
+              );
+            });
+
+            it('resolves with no data from the second join if `fields` is set to `false` on it', async () => {
+              const query = new Query(User).leftJoin(
+                new Query(Image).fields(false).join(new Query(User))
+              );
+              await expect(
+                query.fetch(),
+                'to be fulfilled with value exhaustively satisfying',
+                expect.it(
+                  'when sorted by',
+                  (a, b) => (a.name > b.name ? 1 : -1),
+                  'to exhaustively satisfy',
+                  [
+                    new User({
+                      id: 1,
+                      name: 'User 1',
+                      confirmed: null,
+                      creator: null,
+                      image: [
+                        new Image({
+                          user: [
+                            new User({
+                              id: 1,
+                              name: 'User 1',
+                              confirmed: null,
+                              creator: null
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                )
+              );
+            });
+
+            it('resolves with join data as an empty array if `fields` is set to `false` on the last join', async () => {
+              const query = new Query(User).leftJoin(
+                new Query(Image)
+                  .fields(['userId'])
+                  .join(new Query(User).fields(false))
+              );
+              await expect(
+                query.fetch(),
+                'to be fulfilled with value exhaustively satisfying',
+                expect.it(
+                  'when sorted by',
+                  (a, b) => (a.name > b.name ? 1 : -1),
+                  'to exhaustively satisfy',
+                  [
+                    new User({
+                      id: 1,
+                      name: 'User 1',
+                      confirmed: null,
+                      creator: null,
+                      image: [new Image({ userId: 1, user: [] })]
+                    })
+                  ]
+                )
+              );
+            });
           });
         });
 
@@ -1367,7 +1406,7 @@ describe('KnormRelations', () => {
                   name: 'User 2',
                   confirmed: true,
                   creator: null,
-                  image: null
+                  image: []
                 })
               ]
             );
@@ -1376,20 +1415,30 @@ describe('KnormRelations', () => {
       });
 
       describe("with an 'innerJoin' configured", () => {
-        it('returns the instances with matching data in the joined table (inner join)', async () => {
+        it('returns the instances with matching data in the joined table (INNER JOIN)', async () => {
           const query = new Query(User).innerJoin(new Query(Image));
+          const execute = sinon.spy(query, 'execute');
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
             [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
           );
+          await expect(execute, 'to have calls satisfying', () => {
+            execute(
+              expect.it(
+                'when passed as parameter to',
+                sql => sql.toString(),
+                'to contain',
+                ' INNER JOIN '
+              )
+            );
+          });
         });
 
         it("resolves with an empty array if the join doesn't match any rows", async () => {
           const query = new Query(User)
             .where({ id: 2 })
             .innerJoin(new Query(Image));
-
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1399,20 +1448,28 @@ describe('KnormRelations', () => {
       });
 
       describe("with a 'join' configured", () => {
-        it('returns the instances with matching data in the joined table (inner join)', async () => {
+        it('returns the instances with matching data in the joined table (JOIN)', async () => {
           const query = new Query(User).join(new Query(Image));
+          const execute = sinon.spy(query, 'execute');
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
             [new User({ id: 1, name: 'User 1', image: [new Image({ id: 1 })] })]
           );
+          await expect(execute, 'to have calls satisfying', () => {
+            execute(
+              expect.it(
+                'when passed as parameter to',
+                sql => sql.toString(),
+                'to contain',
+                ' JOIN '
+              )
+            );
+          });
         });
 
         it("resolves wih an empty array if the join doesn't match any rows", async () => {
-          const query = new Query(User)
-            .where({ id: 2 })
-            .innerJoin(new Query(Image));
-
+          const query = new Query(User).where({ id: 2 }).join(new Query(Image));
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1481,7 +1538,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, otherImage: [new OtherImage({ id: 1 })] }),
-              new User({ id: 2, otherImage: null })
+              new User({ id: 2, otherImage: [] })
             ]
           );
           await expect(
@@ -1489,7 +1546,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new OtherUser({ id: 1, otherImage: [new OtherImage({ id: 1 })] }),
-              new OtherUser({ id: 2, otherImage: null })
+              new OtherUser({ id: 2, otherImage: [] })
             ]
           );
         });
@@ -1607,7 +1664,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new User({ id: 1, images: [new OtherImage({ id: 1 })] }),
-                new User({ id: 2, images: null })
+                new User({ id: 2, images: [] })
               ]
             );
             await expect(
@@ -1619,7 +1676,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new OtherUser({ id: 1, images: [new OtherImage({ id: 1 })] }),
-                new OtherUser({ id: 2, images: null })
+                new OtherUser({ id: 2, images: [] })
               ]
             );
           });
@@ -1813,7 +1870,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, otherImage: [new OtherImage({ id: 1 })] }),
-              new User({ id: 2, otherImage: null })
+              new User({ id: 2, otherImage: [] })
             ]
           );
         });
@@ -1878,7 +1935,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new User({ id: 1, images: [new OtherImage({ id: 1 })] }),
-                new User({ id: 2, images: null })
+                new User({ id: 2, images: [] })
               ]
             );
           });
@@ -1976,7 +2033,7 @@ describe('KnormRelations', () => {
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
-            [{ messages: null }, { messages: null }]
+            [{ messages: [] }, { messages: [] }]
           );
         });
 
@@ -2051,7 +2108,7 @@ describe('KnormRelations', () => {
                   id: 1,
                   anotherImage: [new AnotherImage({ id: 1 })]
                 }),
-                new User({ id: 2, anotherImage: null })
+                new User({ id: 2, anotherImage: [] })
               ]
             );
             await expect(
@@ -2062,7 +2119,7 @@ describe('KnormRelations', () => {
                   id: 1,
                   anotherImage: [new AnotherImage({ id: 1 })]
                 }),
-                new AnotherUser({ id: 2, anotherImage: null })
+                new AnotherUser({ id: 2, anotherImage: [] })
               ]
             );
           });
@@ -2180,7 +2237,7 @@ describe('KnormRelations', () => {
                 'to be fulfilled with sorted rows satisfying',
                 [
                   new User({ id: 1, images: [new AnotherImage({ id: 1 })] }),
-                  new User({ id: 2, images: null })
+                  new User({ id: 2, images: [] })
                 ]
               );
               await expect(
@@ -2197,7 +2254,7 @@ describe('KnormRelations', () => {
                     id: 1,
                     images: [new AnotherImage({ id: 1 })]
                   }),
-                  new AnotherUser({ id: 2, images: null })
+                  new AnotherUser({ id: 2, images: [] })
                 ]
               );
             });
@@ -2453,6 +2510,73 @@ describe('KnormRelations', () => {
               new User({ id: 2, creator: null }),
               new User({ id: 3, creator: new User({ id: 1 }) }),
               new User({ id: 4, creator: new User({ id: 2 }) })
+            ]
+          );
+        });
+      });
+
+      describe('when joining across different schemata', () => {
+        let MessageInOtherSchema;
+
+        before(() => {
+          MessageInOtherSchema = class extends Message {};
+          MessageInOtherSchema.schema = 'message';
+        });
+
+        before(async () => {
+          await knex.schema.raw(`CREATE SCHEMA ${MessageInOtherSchema.schema}`);
+          await knex.schema
+            .withSchema(MessageInOtherSchema.schema)
+            .createTable(MessageInOtherSchema.table, table => {
+              table.increments();
+              table.text('text').notNullable();
+              table
+                .integer('sender_id')
+                .references('id')
+                .inTable(`public.${User.table}`);
+              table
+                .integer('receiver_id')
+                .references('id')
+                .inTable(`public.${User.table}`);
+            });
+
+          await MessageInOtherSchema.insert([
+            { id: 1, text: 'Hi User 2', senderId: 1, receiverId: 2 },
+            { id: 2, text: 'Hi User 1', senderId: 2, receiverId: 1 }
+          ]);
+        });
+
+        after(async () => {
+          await knex.schema.raw(
+            `DROP SCHEMA ${MessageInOtherSchema.schema} CASCADE`
+          );
+        });
+
+        it('supports `leftJoin`', async () => {
+          const query = new Query(User).leftJoin([
+            new Query(MessageInOtherSchema).on('senderId').as('sent'),
+            new Query(MessageInOtherSchema).on('receiverId').as('received')
+          ]);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({
+                id: 1,
+                name: 'User 1',
+                sent: [new MessageInOtherSchema({ id: 1, text: 'Hi User 2' })],
+                received: [
+                  new MessageInOtherSchema({ id: 2, text: 'Hi User 1' })
+                ]
+              }),
+              new User({
+                id: 2,
+                name: 'User 2',
+                sent: [new MessageInOtherSchema({ id: 2, text: 'Hi User 1' })],
+                received: [
+                  new MessageInOtherSchema({ id: 1, text: 'Hi User 2' })
+                ]
+              })
             ]
           );
         });
