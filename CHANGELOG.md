@@ -1,3 +1,30 @@
+# [2.0.0](https://github.com/knorm/relations/compare/v1.3.1...v2.0.0) (2019-02-03)
+
+
+### Bug Fixes
+
+* **Query:** parse empty left-joined rows as empty array ([b67ed9a](https://github.com/knorm/relations/commit/b67ed9a)), closes [#8](https://github.com/knorm/relations/issues/8)
+* **Query:** use `JOIN` clause for `join` query option ([b320cc4](https://github.com/knorm/relations/commit/b320cc4))
+
+
+### chore
+
+* update [@knorm](https://github.com/knorm)/knorm to v2 ([4c18e2f](https://github.com/knorm/relations/commit/4c18e2f))
+
+
+### Features
+
+* **Query:** support `fields: false` on joined queries ([a3efbf3](https://github.com/knorm/relations/commit/a3efbf3))
+
+
+### BREAKING CHANGES
+
+* This plugin now peer-depends on @knorm/knorm v2
+* **Query:** Empty rows in left-joined data are now returned
+as an empty array instead of `null`. However, if the `first`
+option is configured on the joined query, the empty row is still
+returned as `null`. This matches other Query methods (fetch etc).
+
 ## [1.3.1](https://github.com/knorm/relations/compare/v1.3.0...v1.3.1) (2018-11-15)
 
 
