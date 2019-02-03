@@ -23,9 +23,35 @@ Model.fetch({
 });
 ```
 
-When turned on, debug mode enables these features:
+::: tip INFO
+If `debug` is set to `true`, then the default debug config is enabled, which is:
+
+```js
+{
+  stackTraces: true,
+  errorSqlValues: true,
+  logSql: false
+}
+```
+
+You can instead set it's value to an object, which is merged into the default
+debug config. So, for example, if you wanted to disable `stackTraces`, enable
+`logSql` but leave `errorSqlValues` as it's default value, you could set it to:
+
+```js
+{
+  stackTraces: false,
+  logSql: true
+}
+```
+
+:::
+
+Debug mode supports these features:
 
 ## Better stack traces
+
+> `{ debug: { stackTraces: true } }`
 
 To work around [this Node.js async/await
 issue](https://github.com/nodejs/node/issues/11865), Knorm updates the `stack`
@@ -47,6 +73,8 @@ negative impact on the performance of the database operation.
 | [query.count](/api.md#query-count-data-options-⇒-promise) | [CountError](/api.html#query-counterror-inserterror) |
 
 ## SQL values in database errors
+
+> `{ debug: { errorSqlValues: true } }`
 
 When queries fail, Knorm attaches an `sql` property to the error with the
 **parameterized** SQL that caused the failure. With debugging enabled, it
@@ -73,3 +101,15 @@ up the logging mechanism and persisted somewhere. Whether it ends up on a log
 file or is sent to some log-collection service, the user's information would
 be made available in an environment that probably doesn't have the same security
 policies as the database storing user data.
+
+## Logging all SQL
+
+> `{ debug: { logSql: true } }`
+
+This enables logging all SQL before it's sent to the database. If enabled, Knorm will log the **stringified** version of the SQL, with actual values instead of placeholders. As outlined under [SQL values in database
+errors](#sql-values-in-database-errors), this presents a security risk.
+
+The logged SQL will be something like:
+
+```bash
+```
