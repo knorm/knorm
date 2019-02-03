@@ -1,3 +1,34 @@
+# [2.0.0](https://github.com/knorm/postgres/compare/v1.3.4...v2.0.0) (2019-02-03)
+
+
+### Bug Fixes
+
+* update multi-update code to handle table aliasing ([bcbe4d0](https://github.com/knorm/postgres/commit/bcbe4d0))
+
+
+### chore
+
+* update [@knorm](https://github.com/knorm)/knorm to v2 ([03da38b](https://github.com/knorm/postgres/commit/03da38b))
+
+
+### Code Refactoring
+
+* move connection handling into [@knorm](https://github.com/knorm)/knorm ([db2e46e](https://github.com/knorm/postgres/commit/db2e46e))
+* remove `initClient` and `restoreClient` options ([4595588](https://github.com/knorm/postgres/commit/4595588))
+
+
+### BREAKING CHANGES
+
+* This plugin now peer-depends on @knorm/knorm v2
+* Removed `initClient` and `restoreClient` options.
+Instead, use
+[Connection.prototype.create](https://knorm.netlify.com/api.md##connection-create)
+and
+[Connection.prototype.close](https://knorm.netlify.com/api.md##connection-close)
+for any logic to be run before creating and closing database
+connections.
+* These changes depend on v2 of @knorm/knorm
+
 ## [1.3.4](https://github.com/knorm/postgres/compare/v1.3.3...v1.3.4) (2018-10-18)
 
 
