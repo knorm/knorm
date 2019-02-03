@@ -1,6 +1,6 @@
 {
   "name": "@knorm/to-json",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "toJSON plugin for @knorm/knorm",
   "main": "index.js",
   "scripts": {
