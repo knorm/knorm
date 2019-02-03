@@ -173,3 +173,30 @@ For this reason, when using models in instance and static methods, it's
 recommended to always access models via the [model
 registry](/guides/models.md#model-registry) instead of requiring them with
 Node's `require` method.
+
+## Running queries with transaction models after transactions are ended
+
+::: warning NOTE
+When transactions are ended, it's still possible to run queries with transaction
+models. However, **those queries will not run inside a transaction**:
+:::
+
+```js
+const transaction = new Transaction();
+const { User } = transaction.models;
+const user = await new User({ id: 1, names: 'foo' }).insert();
+await transaction.commit(); // transaction is ended
+user.name = 'bar';
+await user.update(); // this runs, but not inside a transaction
+```
+
+The same holds true for transactions with a callback:
+
+```js
+const user = await new Transaction(async transaction => {
+  const { User } = transaction.models;
+  return new User({ id: 1, names: 'foo' }).insert();
+}); // transaction is automatically committed/ended
+user.name = 'bar';
+await user.update(); // this runs, but not inside a transaction
+```
