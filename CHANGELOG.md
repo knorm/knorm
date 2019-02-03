@@ -66,7 +66,7 @@ custom validator functions. Instead, the Model instance is passed
 as a parameter. See the Field docs for more info.
 * **Transaction:** Removed Transaction.prototype.query. Now, Transaction
 does not completely override the query execution by Query. It only
-overrides Query.prototype.connect and Query.prototype.close to ensure
+overrides Query.prototype.connect and Query.prototype.disconnect to ensure
 all queries within the transaction are run on the same database
 connection.
 * **Query:** Removed Query.prototype.forge and
@@ -84,7 +84,7 @@ property. Also, its value is now always an object with `text` and `values`
 properties. The `value` property is only added in the debug mode though.
 * **Query:** Renamed Query.prototype.acquireClient to Query.prototype.connect,
 which calls Connection.prototye.create.
-* **Query:** Renamed Query.prototype.releaseClient to Query.prototype.close,
+* **Query:** Renamed Query.prototype.releaseClient to Query.prototype.disconnect,
 which calls Connection.prototype.close.
 * **Field:** Removed:
 - `Field.prototype.models` and `Field.models`
