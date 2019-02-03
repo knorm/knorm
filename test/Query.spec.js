@@ -13,7 +13,6 @@ describe('Query', () => {
   let Query;
   let QueryError;
   let User;
-  let createUserTable;
   let truncateUserTable;
 
   before(async () => {
@@ -83,7 +82,13 @@ describe('Query', () => {
       }
     };
 
-    createUserTable = table => {
+    truncateUserTable = async () => {
+      return knex.schema.raw(
+        `TRUNCATE "${User.table}" RESTART IDENTITY CASCADE`
+      );
+    };
+
+    await knex.schema.createTable(User.table, table => {
       table.increments();
       table.string('name').notNullable();
       table.text('description');
@@ -93,15 +98,7 @@ describe('Query', () => {
       table.string('db_default').defaultTo('set-by-db');
       table.jsonb('json_field');
       table.integer('int_to_string');
-    };
-
-    truncateUserTable = async () => {
-      return knex.schema.raw(
-        `TRUNCATE "${User.table}" RESTART IDENTITY CASCADE`
-      );
-    };
-
-    await knex.schema.createTable(User.table, createUserTable);
+    });
   });
 
   after(async () => {
@@ -226,7 +223,7 @@ describe('Query', () => {
       await expect(
         query.fetch(),
         'to be fulfilled with value satisfying',
-        rows => expect(rows, 'to have length', 2)
+        expect.it('to have length', 2)
       );
     });
 
@@ -608,14 +605,12 @@ describe('Query', () => {
         await expect(
           new Query(User).distinct(['name']).fetch(),
           'to be fulfilled with value satisfying',
-          rows =>
-            expect(
-              rows,
-              'when sorted by',
-              (a, b) => (a.name > b.name ? 1 : -1),
-              'to exhaustively satisfy',
-              [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
-            )
+          expect.it(
+            'when sorted by',
+            (a, b) => (a.name > b.name ? 1 : -1),
+            'to exhaustively satisfy',
+            [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
+          )
         );
       });
 
@@ -1494,12 +1489,12 @@ describe('Query', () => {
         await expect(
           new Query(User).fetch(),
           'to be rejected with error satisfying',
-          e => expect(e.stack, 'not to contain', 'test/Query.spec.js')
+          { stack: expect.it('not to contain', 'test/Query.spec.js') }
         );
         await expect(
           new Query(User).debug(true).fetch(),
           'to be rejected with error satisfying',
-          e => expect(e.stack, 'to contain', 'test/Query.spec.js')
+          { stack: expect.it('to contain', 'test/Query.spec.js') }
         );
         stub.restore();
       });
@@ -1511,12 +1506,12 @@ describe('Query', () => {
         await expect(
           new Query(User).insert({ name: 'foo' }),
           'to be rejected with error satisfying',
-          e => expect(e.stack, 'not to contain', 'test/Query.spec.js')
+          { stack: expect.it('not to contain', 'test/Query.spec.js') }
         );
         await expect(
           new Query(User).debug(true).insert({ name: 'foo' }),
           'to be rejected with error satisfying',
-          e => expect(e.stack, 'to contain', 'test/Query.spec.js')
+          { stack: expect.it('to contain', 'test/Query.spec.js') }
         );
         stub.restore();
       });
@@ -1528,12 +1523,12 @@ describe('Query', () => {
         await expect(
           new Query(User).update({ name: 'foo' }),
           'to be rejected with error satisfying',
-          e => expect(e.stack, 'not to contain', 'test/Query.spec.js')
+          { stack: expect.it('not to contain', 'test/Query.spec.js') }
         );
         await expect(
           new Query(User).debug(true).update({ name: 'foo' }),
           'to be rejected with error satisfying',
-          e => expect(e.stack, 'to contain', 'test/Query.spec.js')
+          { stack: expect.it('to contain', 'test/Query.spec.js') }
         );
         stub.restore();
       });
@@ -1545,12 +1540,12 @@ describe('Query', () => {
         await expect(
           new Query(User).delete(),
           'to be rejected with error satisfying',
-          e => expect(e.stack, 'not to contain', 'test/Query.spec.js')
+          { stack: expect.it('not to contain', 'test/Query.spec.js') }
         );
         await expect(
           new Query(User).debug(true).delete(),
           'to be rejected with error satisfying',
-          e => expect(e.stack, 'to contain', 'test/Query.spec.js')
+          { stack: expect.it('to contain', 'test/Query.spec.js') }
         );
         stub.restore();
       });

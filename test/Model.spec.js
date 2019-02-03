@@ -2542,10 +2542,7 @@ describe('Model', function() {
         await expect(
           user.insert(),
           'to be fulfilled with value satisfying',
-          inserted => {
-            expect(user === inserted, 'to be true');
-            expect(user.leaveMeIntact, 'to be', 'okay');
-          }
+          expect.it('to be', user).and('to satisfy', { leaveMeIntact: 'okay' })
         );
       });
 
@@ -2604,10 +2601,7 @@ describe('Model', function() {
         await expect(
           user.update(),
           'to be fulfilled with value satisfying',
-          updated => {
-            expect(user === updated, 'to be true');
-            expect(user.leaveMeIntact, 'to be', 'okay');
-          }
+          expect.it('to be', user).and('to satisfy', { leaveMeIntact: 'okay' })
         );
       });
 
