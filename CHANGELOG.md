@@ -1,3 +1,22 @@
+# [2.0.0](https://github.com/knorm/paginate/compare/v1.2.0...v2.0.0) (2019-02-03)
+
+
+### chore
+
+* update [@knorm](https://github.com/knorm)/knorm to v2 ([52f54d1](https://github.com/knorm/paginate/commit/52f54d1))
+
+
+### Code Refactoring
+
+* refactor Query.prototype.count to use Query.prototpye.fetch ([afc7195](https://github.com/knorm/paginate/commit/afc7195))
+
+
+### BREAKING CHANGES
+
+* This plugin now peer-depends on @knorm/knorm v2
+* Removed `Query.CountError`. Instead, a
+`Query.FetchError` is thrown.
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/knorm/paginate/compare/v1.1.0...v1.2.0) (2018-08-19)
 
@@ -32,6 +51,3 @@
 ### Features
 
 * add plugin name ([256c639](https://github.com/knorm/paginate/commit/256c639))
-
-
-
