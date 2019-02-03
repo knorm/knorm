@@ -2754,7 +2754,7 @@ describe('Model', () => {
         await expect(
           User.save({ id: 1, name: 'Jane Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
@@ -2779,7 +2779,7 @@ describe('Model', () => {
         await expect(
           User.insert({ name: 'John Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
@@ -2806,7 +2806,7 @@ describe('Model', () => {
         await expect(
           User.update({ id: 1, name: 'Jane Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
@@ -2826,7 +2826,7 @@ describe('Model', () => {
         await expect(
           User.fetch({ returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
@@ -2846,7 +2846,7 @@ describe('Model', () => {
         await expect(
           User.delete({ returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
