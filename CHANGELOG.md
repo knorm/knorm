@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/knorm/soft-delete/compare/v1.0.0...v2.0.0) (2019-02-03)
+
+
+### chore
+
+* update [@knorm](https://github.com/knorm)/knorm to v2 ([52475e5](https://github.com/knorm/soft-delete/commit/52475e5))
+
+
+### BREAKING CHANGES
+
+* This plugin now peer-depends on @knorm/knorm v2
+
 <a name="1.0.0"></a>
 # [1.0.0](https://github.com/knorm/soft-delete/compare/v2.1.2-old...v1.0.0) (2018-09-30)
 
