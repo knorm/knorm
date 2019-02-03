@@ -661,19 +661,19 @@ describe('KnormSoftDelete', () => {
           deleted: true,
           deletedAt: new Date()
         }).insert();
-        const spy = sinon.spy(Query.prototype, 'query');
+        const execute = sinon.spy(Query.prototype, 'execute');
         await user.restore({ returning: 'id' });
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
+        await expect(execute, 'to have calls satisfying', () => {
+          execute(
             expect.it(
               'when passed as parameter to',
               query => query.toString(),
               'to end with',
-              'RETURNING "user"."id" as "user.id"'
+              'RETURNING "user"."id" AS "user.id"'
             )
           );
         });
-        spy.restore();
+        execute.restore();
       });
     });
 
@@ -725,19 +725,19 @@ describe('KnormSoftDelete', () => {
 
       it('passes options passed to Query.prototype.setOptions', async () => {
         const user = await new User({ id: 1, name: 'one' }).insert();
-        const spy = sinon.spy(Query.prototype, 'query');
+        const execute = sinon.spy(Query.prototype, 'execute');
         await user.hardDelete({ returning: 'id' });
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
+        await expect(execute, 'to have calls satisfying', () => {
+          execute(
             expect.it(
               'when passed as parameter to',
               query => query.toString(),
               'to end with',
-              'RETURNING "user"."id" as "user.id"'
+              'RETURNING "user"."id" AS "user.id"'
             )
           );
         });
-        spy.restore();
+        execute.restore();
       });
     });
 
