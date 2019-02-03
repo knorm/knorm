@@ -1,3 +1,104 @@
+# [2.0.0](https://github.com/knorm/knorm/compare/v1.11.2...v2.0.0) (2019-02-03)
+
+
+### Bug Fixes
+
+* **Model:** filter out `undefined` values in setData ([844a7c3](https://github.com/knorm/knorm/commit/844a7c3))
+* **Query:** always alias the table in queries ([0010a47](https://github.com/knorm/knorm/commit/0010a47))
+* **Transaction:** run queries outside transaction after transaction ends ([84aa6aa](https://github.com/knorm/knorm/commit/84aa6aa))
+
+
+### Code Refactoring
+
+* **Field:** do not set `this` for "get default" functions ([96aace4](https://github.com/knorm/knorm/commit/96aace4))
+* **Field:** do not set `this` for cast functions ([6d16cdb](https://github.com/knorm/knorm/commit/6d16cdb))
+* **Field:** do not set `this` for custom validator functions ([05c59e8](https://github.com/knorm/knorm/commit/05c59e8)), closes [#136](https://github.com/knorm/knorm/issues/136)
+* **Field:** remove Field.prototype.hasDefault ([6ffbd96](https://github.com/knorm/knorm/commit/6ffbd96))
+* **Field:** remove model registry and Transaction reference ([54e5603](https://github.com/knorm/knorm/commit/54e5603)), closes [#166](https://github.com/knorm/knorm/issues/166)
+* **Field:** rename `schema` validator to `shape` ([db950d4](https://github.com/knorm/knorm/commit/db950d4)), closes [#85](https://github.com/knorm/knorm/issues/85)
+* **Query:** refactor connection handling ([4e7ef6b](https://github.com/knorm/knorm/commit/4e7ef6b))
+* **Query:** refactor interal options into configs ([07591f8](https://github.com/knorm/knorm/commit/07591f8))
+* **Query:** remove `forge` and `lean` options ([bb18c1a](https://github.com/knorm/knorm/commit/bb18c1a)), closes [#198](https://github.com/knorm/knorm/issues/198)
+* **Transaction:** refactor connection handling ([32875f0](https://github.com/knorm/knorm/commit/32875f0))
+* **Transaction:** remove scoped Field, Model and Query classes ([60d061c](https://github.com/knorm/knorm/commit/60d061c)), closes [#166](https://github.com/knorm/knorm/issues/166)
+
+
+### Features
+
+* **Connection:** add Connection class ([03b4b58](https://github.com/knorm/knorm/commit/03b4b58))
+* **Knorm:** add helpers for updating Knorm classes ([5c6b009](https://github.com/knorm/knorm/commit/5c6b009))
+* **Knorm:** allow chaining from `addModel` ([fc8a3b2](https://github.com/knorm/knorm/commit/fc8a3b2))
+* **Query:** support `false` for `fields` and `returning` options ([71b28d4](https://github.com/knorm/knorm/commit/71b28d4))
+* **QueryError:** extract error messages from error instances only ([b75eb0c](https://github.com/knorm/knorm/commit/b75eb0c))
+* **Transaction:** add 'started', 'active' and 'ended' flags ([0c5b6b8](https://github.com/knorm/knorm/commit/0c5b6b8))
+
+
+### BREAKING CHANGES
+
+* **Query:** `Query.prototype.prepareSql` no longer receives
+an `options` parameter, instead, those options (`forFetch`,
+`forInsert` etc) are stored in `Query.prototype.config`.
+* **Field:** JSON validators should now be configured with
+a `shape` object (or string) instead of `schema`:
+```js
+Model.fields = {
+  data: {
+    type: 'jsonb',
+    shape: { // instead of `shape`
+      value1: 'string',
+      value2: 'integer',
+      value3: 'object'
+    }
+  }
+};
+```
+* **Field:** Removed Field.prototype.hasDefault. Note that
+Field.prototype.getDefault returns `undefined` if the field has
+no default value configured.
+* **Field:** `this` is no longer set to the Model instance for
+a Field's cast functions. Instead, the Model instance is passed as
+a parameter. See the Field docs for more info.
+* **Field:** `this` is no longer set to the Model instance for
+functions that return a Field's default value. Instead, the Model
+instance is passed as a parameter. See the Field docs for more info.
+* **Field:** `this` is no longer set to the Model instance in
+custom validator functions. Instead, the Model instance is passed
+as a parameter. See the Field docs for more info.
+* **Transaction:** Removed Transaction.prototype.query. Now, Transaction
+does not completely override the query execution by Query. It only
+overrides Query.prototype.connect and Query.prototype.close to ensure
+all queries within the transaction are run on the same database
+connection.
+* **Query:** Removed Query.prototype.forge and
+Query.prototype.lean. These slightly improve data-parsing
+performance but do so by removing features e.g. value-casting.
+More info here: https://github.com/knorm/knorm/issues/198.
+* **Query:** When the `batchSize` option is set, Query.prototype.insert and
+Query.prototype.update, run multiple queries *on the same database connection*.
+Previously, the queries would be run in different connections. Specifically,
+Query.prototype.execute is called once (with all the queries as an array), while
+Query.prototype.query is called repeatedly, once for each query.
+* **Query:** When query errors occur, the SQL that led to the error is no
+longer attached to the error's `sql` property, but rather the `originalError.sql`
+property. Also, its value is now always an object with `text` and `values`
+properties. The `value` property is only added in the debug mode though.
+* **Query:** Renamed Query.prototype.acquireClient to Query.prototype.connect,
+which calls Connection.prototye.create.
+* **Query:** Renamed Query.prototype.releaseClient to Query.prototype.close,
+which calls Connection.prototype.close.
+* **Field:** Removed:
+- `Field.prototype.models` and `Field.models`
+- `Field.prototype.transaction` and `Field.transaction`
+* **Transaction:** Removed:
+- `Transaction.prototype.Field`
+- `Transaction.prototype.Model`
+- `Transaction.prototype.Query`
+* **Query:** Query.prototype.query was renamed to Query.prototype.execute,
+but a new Query.prototype.query method was added. Query.prototype.execute
+handles the entire query life-cycle, from creating a database connection,
+formatting and running SQL to closing the connection. See the Query API docs
+for more info.
+
 ## [1.11.2](https://github.com/knorm/knorm/compare/v1.11.1...v1.11.2) (2019-01-17)
 
 
