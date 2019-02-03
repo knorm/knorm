@@ -2548,10 +2548,7 @@ describe('Model', () => {
         await expect(
           user.insert(),
           'to be fulfilled with value satisfying',
-          inserted => {
-            expect(user === inserted, 'to be true');
-            expect(user.leaveMeIntact, 'to be', 'okay');
-          }
+          expect.it('to be', user).and('to satisfy', { leaveMeIntact: 'okay' })
         );
       });
 
@@ -2610,10 +2607,7 @@ describe('Model', () => {
         await expect(
           user.update(),
           'to be fulfilled with value satisfying',
-          updated => {
-            expect(user === updated, 'to be true');
-            expect(user.leaveMeIntact, 'to be', 'okay');
-          }
+          expect.it('to be', user).and('to satisfy', { leaveMeIntact: 'okay' })
         );
       });
 
@@ -2760,7 +2754,7 @@ describe('Model', () => {
         await expect(
           User.save({ id: 1, name: 'Jane Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
@@ -2785,7 +2779,7 @@ describe('Model', () => {
         await expect(
           User.insert({ name: 'John Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
@@ -2812,7 +2806,7 @@ describe('Model', () => {
         await expect(
           User.update({ id: 1, name: 'Jane Doe' }, { returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
@@ -2832,7 +2826,7 @@ describe('Model', () => {
         await expect(
           User.fetch({ returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
@@ -2852,7 +2846,7 @@ describe('Model', () => {
         await expect(
           User.delete({ returning: 'id' }),
           'to be fulfilled with value exhaustively satisfying',
-          [{ id: 1 }]
+          [new User({ id: 1 })]
         );
       });
     });
