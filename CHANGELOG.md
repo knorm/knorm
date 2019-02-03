@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/knorm/timestamps/compare/v1.0.0...v2.0.0) (2019-02-03)
+
+
+### chore
+
+* update [@knorm](https://github.com/knorm)/knorm to v2 ([93d9d8d](https://github.com/knorm/timestamps/commit/93d9d8d))
+
+
+### BREAKING CHANGES
+
+* This plugin now peer-depends on @knorm/knorm v2
+
 <a name="1.0.0"></a>
 # [1.0.0](https://github.com/knorm/timestamps/compare/v3.0.2-old...v1.0.0) (2018-09-30)
 
