@@ -11,16 +11,18 @@ const expect = require('unexpected')
 describe('Query', () => {
   let Model;
   let Query;
+  let Transaction;
+  let Connection;
   let QueryError;
   let User;
-  let createUserTable;
-  let truncateUserTable;
 
-  before(async () => {
+  before(() => {
     const orm = new Knorm({ fieldToColumn }).use(postgresPlugin);
 
     Model = orm.Model;
     Query = orm.Query;
+    Transaction = orm.Transaction;
+    Connection = orm.Connection;
     QueryError = Query.QueryError;
 
     Model.fields = {
@@ -82,8 +84,12 @@ describe('Query', () => {
         }
       }
     };
+  });
 
-    createUserTable = table => {
+  before(async () => knex.schema.dropTableIfExists(User.table));
+
+  before(async () =>
+    knex.schema.createTable(User.table, table => {
       table.increments();
       table.string('name').notNullable();
       table.text('description');
@@ -93,20 +99,10 @@ describe('Query', () => {
       table.string('db_default').defaultTo('set-by-db');
       table.jsonb('json_field');
       table.integer('int_to_string');
-    };
+    })
+  );
 
-    truncateUserTable = async () => {
-      return knex.schema.raw(
-        `TRUNCATE "${User.table}" RESTART IDENTITY CASCADE`
-      );
-    };
-
-    await knex.schema.createTable(User.table, createUserTable);
-  });
-
-  after(async () => {
-    await knex.schema.dropTable(User.table);
-  });
+  after(async () => knex.schema.dropTable(User.table));
 
   describe('constructor', () => {
     it('throws an error if not passed a model', () => {
@@ -191,9 +187,591 @@ describe('Query', () => {
     });
   });
 
+  describe('Query.prototype.connect', () => {
+    let DummyConnection;
+    let DummyQuery;
+
+    beforeEach(() => {
+      DummyQuery = class DummyQuery extends Query {};
+      DummyConnection = class DummyConnection extends Connection {};
+      DummyQuery.Connection = DummyConnection;
+    });
+
+    it('creates a connection via Connection.prototype.create', async () => {
+      const createConnection = sinon.stub(DummyConnection.prototype, 'create');
+      const query = new DummyQuery(User);
+      await query.connect();
+      await expect(
+        createConnection,
+        'to have calls exhaustively satisfying',
+        () => createConnection()
+      );
+    });
+
+    it('supports an async Connection.prototype.create', async () => {
+      sinon
+        .stub(DummyConnection.prototype, 'create')
+        .returns(Promise.resolve('foo'));
+      const query = new DummyQuery(User);
+      await expect(query.connect(), 'to be fulfilled with', 'foo');
+    });
+
+    it('rejects with a QueryError on creation failure', async () => {
+      sinon
+        .stub(DummyConnection.prototype, 'create')
+        .returns(Promise.reject(new Error('connection error')));
+      const query = new DummyQuery(User);
+      await expect(
+        query.connect(),
+        'to be rejected with error exhaustively satisfying',
+        new QueryError(new Error('connection error'))
+      );
+    });
+
+    describe('within a transaction', () => {
+      let transactionBegin;
+      let transactionConnect;
+      let queryCreateConnection;
+      let transaction;
+
+      beforeEach(() => {
+        transactionBegin = sinon.stub(Transaction.prototype, 'begin');
+        transactionConnect = sinon.stub(Transaction.prototype, 'connect');
+        queryCreateConnection = sinon.stub(
+          Query.Connection.prototype,
+          'create'
+        );
+        transaction = new Transaction();
+        transactionConnect
+          .onFirstCall()
+          .callsFake(() => {
+            transaction.connection = 'connection 1';
+          })
+          .onSecondCall()
+          .callsFake(() => {
+            transaction.connection = 'connection 2';
+          });
+      });
+
+      afterEach(() => {
+        transactionConnect.restore();
+        transactionBegin.restore();
+        queryCreateConnection.restore();
+      });
+
+      it('does not create a connection via Connection.prototype.create', async () => {
+        await transaction.models.User.query.connect();
+        await expect(queryCreateConnection, 'was not called');
+      });
+
+      it('connects via Transaction.prototype.connect', async () => {
+        await transaction.models.User.query.connect();
+        await expect(transactionConnect, 'to have calls satisfying', () =>
+          transactionConnect()
+        );
+      });
+
+      it('runs Transaction.protype.begin', async () => {
+        await transaction.models.User.query.connect();
+        await expect(transactionBegin, 'to have calls satisfying', () =>
+          transactionBegin()
+        );
+      });
+
+      describe('for multiple Query instances', () => {
+        it('connects once', async () => {
+          await transaction.models.User.query.connect();
+          await transaction.models.User.query.connect();
+          await expect(transactionConnect, 'to have calls satisfying', () =>
+            transactionConnect()
+          );
+        });
+
+        it('begins the transaction once', async () => {
+          await transaction.models.User.query.connect();
+          await transaction.models.User.query.connect();
+          await expect(transactionBegin, 'to have calls satisfying', () =>
+            transactionBegin()
+          );
+        });
+
+        it('re-uses the same transaction connection', async () => {
+          const query1 = transaction.models.User.query;
+          const query2 = transaction.models.User.query;
+          await query1.connect();
+          await query2.connect();
+          await expect(query1.connection, 'to be', 'connection 1');
+          await expect(query2.connection, 'to be', 'connection 1');
+        });
+      });
+
+      describe('when a transaction has ended', () => {
+        beforeEach(() => {
+          transaction.ended = true;
+        });
+
+        it('connects as usual via Connection.prototype.create', async () => {
+          await transaction.models.User.query.connect();
+          await expect(queryCreateConnection, 'to have calls satisfying', () =>
+            queryCreateConnection()
+          );
+        });
+
+        it('does not call Transaction.prototype.connect', async () => {
+          await transaction.models.User.query.connect();
+          await expect(transactionConnect, 'was not called');
+        });
+
+        it('does not call Transaction.prototype.begin', async () => {
+          await transaction.models.User.query.connect();
+          await expect(transactionBegin, 'was not called');
+        });
+
+        it('does not use a transaction connection', async () => {
+          transaction.connection = 'connection 1';
+          const query = transaction.models.User.query;
+          await query.connect();
+          await expect(query.connection, 'not to be', 'connection 1');
+        });
+      });
+    });
+  });
+
+  describe('Query.prototype.query', () => {
+    let DummyConnection;
+    let DummyQuery;
+
+    beforeEach(() => {
+      DummyQuery = class DummyQuery extends Query {};
+      DummyConnection = class DummyConnection extends Connection {};
+      DummyQuery.Connection = DummyConnection;
+    });
+
+    it('runs a query via Connection.prototype.query', async () => {
+      const querySpy = sinon.stub(DummyConnection.prototype, 'query');
+      const query = new DummyQuery(User);
+      await query.connect();
+      await query.query('select now()');
+      await expect(querySpy, 'to have calls exhaustively satisfying', () =>
+        querySpy('select now()')
+      );
+    });
+
+    it('supports an async Connection.prototype.query', async () => {
+      sinon
+        .stub(DummyConnection.prototype, 'query')
+        .returns(Promise.resolve('foo'));
+      const query = new DummyQuery(User);
+      await query.connect();
+      await expect(query.query('select now()'), 'to be fulfilled with', 'foo');
+    });
+
+    it('rejects with a QueryError on creation failure', async () => {
+      sinon.stub(DummyConnection.prototype, 'query').callsFake(() => {
+        throw new Error('query error');
+      });
+      const query = new DummyQuery(User);
+      await query.connect();
+      await expect(
+        query.query('select now()'),
+        'to be rejected with error exhaustively satisfying',
+        new QueryError(new Error('query error'))
+      );
+    });
+  });
+
+  describe('Query.prototype.disconnect', () => {
+    let DummyConnection;
+    let DummyQuery;
+
+    beforeEach(() => {
+      DummyQuery = class DummyQuery extends Query {};
+      DummyConnection = class DummyConnection extends Connection {
+        create() {}
+      };
+      DummyQuery.Connection = DummyConnection;
+    });
+
+    it('closes a connection via Connection.prototype.close', async () => {
+      const close = sinon.stub(DummyConnection.prototype, 'close');
+      const query = new DummyQuery(User);
+      await query.connect();
+      await query.disconnect();
+      await expect(close, 'to have calls exhaustively satisfying', () =>
+        close()
+      );
+    });
+
+    it('supports an async Connection.prototype.close', async () => {
+      sinon
+        .stub(DummyConnection.prototype, 'close')
+        .returns(Promise.resolve('foo'));
+      const query = new DummyQuery(User);
+      await query.connect();
+      await expect(query.disconnect(), 'to be fulfilled with', 'foo');
+    });
+
+    it('rejects with a QueryError on close failure', async () => {
+      sinon
+        .stub(DummyConnection.prototype, 'close')
+        .returns(Promise.reject(new Error('connection close error')));
+      const query = new DummyQuery(User);
+      await query.connect();
+      await expect(
+        query.disconnect(),
+        'to be rejected with error exhaustively satisfying',
+        new QueryError(new Error('connection close error'))
+      );
+    });
+
+    describe('within a transaction', () => {
+      let transactionBegin;
+      let transactionConnect;
+      let queryCloseConnection;
+      let transaction;
+
+      beforeEach(() => {
+        transactionBegin = sinon.stub(Transaction.prototype, 'begin');
+        transactionConnect = sinon.stub(Transaction.prototype, 'connect');
+        queryCloseConnection = sinon.stub(Query.Connection.prototype, 'close');
+        transaction = new Transaction();
+      });
+
+      afterEach(() => {
+        transactionConnect.restore();
+        transactionBegin.restore();
+        queryCloseConnection.restore();
+      });
+
+      it('does not close connections via Connection.prototype.close', async () => {
+        const query = transaction.models.User.query;
+        await query.connect();
+        await query.disconnect();
+        await expect(queryCloseConnection, 'was not called');
+      });
+
+      describe('when a transaction has ended', () => {
+        beforeEach(() => {
+          transaction.ended = true;
+        });
+
+        it('closes connections as usual via Connection.prototype.close', async () => {
+          const query = transaction.models.User.query;
+          query.connection = { close() {} };
+          await query.connect();
+          await query.disconnect();
+          await expect(queryCloseConnection, 'to have calls satisfying', () =>
+            queryCloseConnection()
+          );
+        });
+      });
+    });
+  });
+
+  describe('Query.prototype.formatSql', () => {
+    describe('when passed a string', () => {
+      it('returns an object with the sql as the `text` property', async () => {
+        const query = new Query(User);
+        await expect(query.formatSql('select now()'), 'to equal', {
+          text: 'select now()'
+        });
+      });
+    });
+
+    describe('when passed an sql-bricks instance', () => {
+      it('returns an object with `text` and `values` properties', async () => {
+        const query = new Query(User);
+        await expect(
+          query.formatSql(query.sql.insert('table').values({ foo: 'bar' })),
+          'to equal',
+          {
+            text: 'INSERT INTO "table" (foo) VALUES ($1)',
+            values: ['bar']
+          }
+        );
+      });
+    });
+
+    describe('when passed an object', () => {
+      it('returns an object with `text` and `values` properties', async () => {
+        const query = new Query(User);
+        await expect(query.formatSql({ text: 'select now()' }), 'to equal', {
+          text: 'select now()',
+          values: undefined
+        });
+      });
+    });
+  });
+
+  describe('Query.prototype.execute', () => {
+    afterEach(async () => knex(User.table).truncate());
+
+    it('executes SQL as a string', async () => {
+      await expect(
+        new Query(User).execute('select now() as "now"'),
+        'to be fulfilled with value exhaustively satisfying',
+        [{ now: expect.it('to be a', Date) }]
+      );
+    });
+
+    it('executes SQL as an sql-bricks instance', async () => {
+      const query = new Query(User);
+      await expect(
+        query.execute(
+          query.sql
+            .insert(User.table)
+            .values({ id: 1, name: 'foo', confirmed: true })
+        ),
+        'to be fulfilled with value exhaustively satisfying',
+        []
+      );
+      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+        { id: 1, name: 'foo', confirmed: true }
+      ]);
+    });
+
+    it('executes SQL as an object with `text` and `values properties', async () => {
+      const query = new Query(User);
+      await expect(
+        query.execute({
+          text: `insert into "${
+            User.table
+          }" (id, name, confirmed) values ($1, $2, $3) returning id`,
+          values: [1, 'foo', true]
+        }),
+        'to be fulfilled with value exhaustively satisfying',
+        [{ id: 1 }]
+      );
+      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+        { id: 1, name: 'foo', confirmed: true }
+      ]);
+    });
+
+    it('executes multiple SQLs as an array', async () => {
+      const query = new Query(User);
+      await expect(
+        query.execute([
+          'select now() as "now"',
+          query.sql
+            .insert(User.table)
+            .values({ id: 1, name: 'foo', confirmed: true }),
+          {
+            text: `insert into "${
+              User.table
+            }" (id, name, confirmed) values ($1, $2, $3) returning id`,
+            values: [2, 'bar', false]
+          }
+        ]),
+        'to be fulfilled with value exhaustively satisfying',
+        [{ now: expect.it('to be a', Date) }, { id: 2 }]
+      );
+      await expect(knex, 'with table', User.table, 'to have rows satisfying', [
+        { id: 1, name: 'foo', confirmed: true },
+        { id: 2, name: 'bar', confirmed: false }
+      ]);
+    });
+
+    describe('closes the connection', () => {
+      it('if Query.prototype.formatSql fails', async () => {
+        const query = new Query(User);
+        const connect = sinon.spy(query, 'connect');
+        const disconnect = sinon.spy(query, 'disconnect');
+        const formatSql = sinon
+          .stub(query, 'formatSql')
+          .throws(new Error('format error'));
+        await expect(
+          query.execute('select now() as "now"'),
+          'to be rejected with error satisfying',
+          new Error('format error')
+        );
+        await expect(connect, 'to have calls satisfying', () => connect());
+        await expect(formatSql, 'to have calls satisfying', () =>
+          formatSql('select now() as "now"')
+        );
+        await expect(disconnect, 'to have calls satisfying', () =>
+          disconnect()
+        );
+      });
+
+      it('if Query.prototype.query fails', async () => {
+        const query = new Query(User);
+        const connect = sinon.spy(query, 'connect');
+        const disconnect = sinon.spy(query, 'disconnect');
+        const runQuery = sinon
+          .stub(query, 'query')
+          .throws(new Error('query error'));
+        await expect(
+          query.execute('select now() as "now"'),
+          'to be rejected with error satisfying',
+          new Error('query error')
+        );
+        await expect(connect, 'to have calls satisfying', () => connect());
+        await expect(runQuery, 'to have calls satisfying', () =>
+          runQuery({ text: 'select now() as "now"' })
+        );
+        await expect(disconnect, 'to have calls satisfying', () =>
+          disconnect()
+        );
+      });
+
+      describe('when passed an array', () => {
+        it('if one of the Query.prototype.formatSql fails', async () => {
+          const query = new Query(User);
+          const connect = sinon.spy(query, 'connect');
+          const disconnect = sinon.spy(query, 'disconnect');
+          const formatSql = sinon
+            .stub(query, 'formatSql')
+            .onSecondCall()
+            .throws(new Error('format error'));
+          await expect(
+            query.execute(['select now() as "now"', 'select now() as "now"']),
+            'to be rejected with error satisfying',
+            new Error('format error')
+          );
+          await expect(connect, 'to have calls satisfying', () => connect());
+          await expect(formatSql, 'to have calls satisfying', () => {
+            formatSql('select now() as "now"');
+            formatSql('select now() as "now"');
+          });
+          await expect(disconnect, 'to have calls satisfying', () =>
+            disconnect()
+          );
+        });
+
+        it('if one of the Query.prototype.query fails', async () => {
+          const query = new Query(User);
+          const connect = sinon.spy(query, 'connect');
+          const disconnect = sinon.spy(query, 'disconnect');
+          const runQuery = sinon.spy(query, 'query');
+          await expect(
+            query.execute([
+              `insert into "${
+                User.table
+              }" (id, name, confirmed) values (1, 'foo', false)`,
+              `insert into "${
+                User.table
+              }" (id, name, confirmed) values (1, 'foo', false)`
+            ]),
+            'to be rejected with error satisfying',
+            new QueryError(
+              'duplicate key value violates unique constraint "user_pkey"'
+            )
+          );
+          await expect(connect, 'to have calls satisfying', () => connect());
+          await expect(runQuery, 'to have calls satisfying', () => {
+            runQuery({
+              text: `insert into "${
+                User.table
+              }" (id, name, confirmed) values (1, 'foo', false)`
+            });
+            runQuery({
+              text: `insert into "${
+                User.table
+              }" (id, name, confirmed) values (1, 'foo', false)`
+            });
+          });
+          await expect(disconnect, 'to have calls satisfying', () =>
+            disconnect()
+          );
+          await expect(
+            knex,
+            'with table',
+            User.table,
+            'to have rows satisfying',
+            [{ id: 1, name: 'foo', confirmed: false }]
+          );
+        });
+      });
+    });
+
+    describe('when Query.prototype.query rejects', () => {
+      describe('attaches the parameterized SQL to the error', () => {
+        let query;
+
+        beforeEach(() => {
+          query = new Query(User);
+          sinon.stub(query, 'query').callsFake(async () => {
+            throw new Error('query error');
+          });
+        });
+
+        it('when passed SQL as a string', async () => {
+          await expect(
+            query.execute('select now()'),
+            'to be rejected with error satisfying',
+            { message: 'query error', sql: { text: 'select now()' } }
+          );
+        });
+
+        it('when passed SQL as an sql-bricks instance', async () => {
+          await expect(
+            query.execute(query.sql.insert('table').values({ foo: 'bar' })),
+            'to be rejected with error satisfying',
+            {
+              message: 'query error',
+              sql: { text: 'INSERT INTO "table" (foo) VALUES ($1)' }
+            }
+          );
+        });
+
+        it('when passed SQL as an object', async () => {
+          await expect(
+            query.execute({ text: 'select now()', values: [] }),
+            'to be rejected with error satisfying',
+            { message: 'query error', sql: { text: 'select now()' } }
+          );
+        });
+      });
+
+      describe('attaches only the parameterized SQL to the error when `debug` is configured', () => {
+        let query;
+
+        beforeEach(() => {
+          query = new Query(User).debug();
+          sinon.stub(query, 'query').callsFake(async () => {
+            throw new Error('query error');
+          });
+        });
+
+        it('when passed SQL as a string', async () => {
+          await expect(
+            query.execute('select now()'),
+            'to be rejected with error satisfying',
+            { message: 'query error', sql: { text: 'select now()' } }
+          );
+        });
+
+        it('when passed SQL as an sql-bricks instance', async () => {
+          await expect(
+            query.execute(query.sql.insert('table').values({ foo: 'bar' })),
+            'to be rejected with error satisfying',
+            {
+              message: 'query error',
+              sql: {
+                text: 'INSERT INTO "table" (foo) VALUES ($1)',
+                values: ['bar']
+              }
+            }
+          );
+        });
+
+        it('when passed SQL as an object', async () => {
+          await expect(
+            query.execute({ text: 'select now()', values: [] }),
+            'to be rejected with error satisfying',
+            {
+              message: 'query error',
+              sql: { text: 'select now()', values: [] }
+            }
+          );
+        });
+      });
+    });
+  });
+
   describe('Query.prototype.fetch', () => {
-    before(async () => {
-      await knex(User.table).insert([
+    before(async () =>
+      knex(User.table).insert([
         {
           id: 1,
           name: 'User 1',
@@ -214,12 +792,10 @@ describe('Query', () => {
           json_field: null,
           int_to_string: null
         }
-      ]);
-    });
+      ])
+    );
 
-    after(async () => {
-      await truncateUserTable();
-    });
+    after(async () => knex(User.table).truncate());
 
     it('resolves with all the rows in the table', async () => {
       const query = new Query(User);
@@ -302,7 +878,7 @@ describe('Query', () => {
     });
 
     it('works with a model `schema` configured', async () => {
-      const spy = sinon.spy(Query.prototype, 'query');
+      const execute = sinon.spy(Query.prototype, 'execute');
       class OtherUser extends User {}
       OtherUser.schema = 'public';
       const query = new Query(OtherUser);
@@ -314,8 +890,8 @@ describe('Query', () => {
           new OtherUser({ id: 2, name: 'User 2' })
         ]
       );
-      await expect(spy, 'to have calls satisfying', () => {
-        spy(
+      await expect(execute, 'to have calls satisfying', () => {
+        execute(
           expect.it(
             'when passed as parameter to',
             sql => sql.toString(),
@@ -324,7 +900,7 @@ describe('Query', () => {
           )
         );
       });
-      spy.restore();
+      execute.restore();
     });
 
     // regression test for @knorm/relations
@@ -347,7 +923,7 @@ describe('Query', () => {
       beforeEach(() => {
         queryStub = sinon
           .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('fetch error')));
+          .callsFake(async () => Promise.reject(new Error('fetch error')));
       });
 
       afterEach(() => {
@@ -362,41 +938,22 @@ describe('Query', () => {
           new Query.FetchError({ error: new Error('fetch error'), query })
         );
       });
-
-      it('attaches a parameterized sql string to the error', async () => {
-        const query = new Query(User).field('id').where({ id: 1 });
-        await expect(query.fetch(), 'to be rejected with error satisfying', {
-          sql:
-            'SELECT "user"."id" as "user.id" FROM "user" WHERE "user"."id" = $1'
-        });
-      });
-
-      it('attaches a full sql string with values in `debug` mode', async () => {
-        const query = new Query(User)
-          .field('id')
-          .where({ id: 1 })
-          .debug(true);
-        await expect(query.fetch(), 'to be rejected with error satisfying', {
-          sql:
-            'SELECT "user"."id" as "user.id" FROM "user" WHERE "user"."id" = 1'
-        });
-      });
     });
 
     describe('if no rows are fetched', () => {
-      let selectStub;
+      let queryStub;
 
       before(() => {
-        selectStub = sinon.stub(Query.prototype, 'query');
+        queryStub = sinon.stub(Query.prototype, 'query');
       });
 
       beforeEach(() => {
-        selectStub.resetHistory();
-        selectStub.returns(Promise.resolve([]));
+        queryStub.resetHistory();
+        queryStub.returns(Promise.resolve([]));
       });
 
       after(() => {
-        selectStub.restore();
+        queryStub.restore();
       });
 
       it('resolves with an empty array', async () => {
@@ -439,67 +996,6 @@ describe('Query', () => {
           'to be fulfilled with value satisfying',
           new User({ id: 1 })
         );
-      });
-    });
-
-    describe("with 'forge' disabled", () => {
-      it('resolves with plain JS objects', async () => {
-        const query = new Query(User).forge(false);
-        await expect(query.fetch(), 'to be fulfilled with value satisfying', [
-          expect.it('to be an object').and('not to be a', User),
-          expect.it('to be an object').and('not to be a', User)
-        ]);
-      });
-
-      it('does not cast fields with post-fetch cast functions', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, intToString: 10 }, { id: 2, intToString: null }]
-        );
-      });
-
-      it("uses the model's field names as the objects' keys", async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            {
-              id: 1,
-              name: 'User 1',
-              confirmed: false,
-              description: 'this is user 1',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: 10
-            },
-            {
-              id: 2,
-              name: 'User 2',
-              confirmed: true,
-              description: 'this is user 2',
-              age: 10,
-              dateOfBirth: null,
-              dbDefault: 'set-by-db',
-              jsonField: null,
-              intToString: null
-            }
-          ]
-        );
-      });
-
-      describe('via the `lean` alias', () => {
-        it('resolves with plain JS objects', async () => {
-          const query = new Query(User).lean();
-          await expect(query.fetch(), 'to be fulfilled with value satisfying', [
-            expect.it('to be an object').and('not to be a', User),
-            expect.it('to be an object').and('not to be a', User)
-          ]);
-        });
       });
     });
 
@@ -571,6 +1067,26 @@ describe('Query', () => {
           );
         });
       });
+
+      describe('as `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).fields(false);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).fields(false).first(true);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
+      });
     });
 
     describe("with 'returning' configured", () => {
@@ -581,6 +1097,26 @@ describe('Query', () => {
           'to be fulfilled with sorted rows exhaustively satisfying',
           [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
         );
+      });
+
+      describe('as `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).returning(false);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).returning(false).first(true);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
       });
     });
 
@@ -631,6 +1167,26 @@ describe('Query', () => {
             new User({ id: 2, name: 'User 2' })
           ]
         );
+      });
+
+      describe('as `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).distinct(false);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).distinct(false).first(true);
+          await expect(
+            query.fetch(),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
       });
     });
 
@@ -1360,14 +1916,14 @@ describe('Query', () => {
 
     describe('with `forUpdate` configured', () => {
       it('supports `forUpdate`', async () => {
-        const spy = sinon.spy(Query.prototype, 'query');
+        const execute = sinon.spy(Query.prototype, 'execute');
         const query = new Query(User).forUpdate();
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' })
         ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
+        await expect(execute, 'to have calls satisfying', () => {
+          execute(
             expect.it(
               'when passed as parameter to',
               sql => sql.toString(),
@@ -1376,18 +1932,18 @@ describe('Query', () => {
             )
           );
         });
-        spy.restore();
+        execute.restore();
       });
 
       it('supports `of`', async () => {
-        const spy = sinon.spy(Query.prototype, 'query');
+        const execute = sinon.spy(Query.prototype, 'execute');
         const query = new Query(User).forUpdate().of('user');
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' })
         ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
+        await expect(execute, 'to have calls satisfying', () => {
+          execute(
             expect.it(
               'when passed as parameter to',
               sql => sql.toString(),
@@ -1396,18 +1952,18 @@ describe('Query', () => {
             )
           );
         });
-        spy.restore();
+        execute.restore();
       });
 
       it('supports `of` with an array', async () => {
-        const spy = sinon.spy(Query.prototype, 'query');
+        const execute = sinon.spy(Query.prototype, 'execute');
         const query = new Query(User).forUpdate().of(['user', 'user']);
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' })
         ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
+        await expect(execute, 'to have calls satisfying', () => {
+          execute(
             expect.it(
               'when passed as parameter to',
               sql => sql.toString(),
@@ -1416,11 +1972,11 @@ describe('Query', () => {
             )
           );
         });
-        spy.restore();
+        execute.restore();
       });
 
       it('supports multiple `of` invocations', async () => {
-        const spy = sinon.spy(Query.prototype, 'query');
+        const execute = sinon.spy(Query.prototype, 'execute');
         const query = new Query(User)
           .forUpdate()
           .of('user')
@@ -1429,8 +1985,8 @@ describe('Query', () => {
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' })
         ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
+        await expect(execute, 'to have calls satisfying', () => {
+          execute(
             expect.it(
               'when passed as parameter to',
               sql => sql.toString(),
@@ -1439,18 +1995,18 @@ describe('Query', () => {
             )
           );
         });
-        spy.restore();
+        execute.restore();
       });
 
       it('supports `noWait`', async () => {
-        const spy = sinon.spy(Query.prototype, 'query');
+        const execute = sinon.spy(Query.prototype, 'execute');
         const query = new Query(User).forUpdate().noWait();
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' })
         ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
+        await expect(execute, 'to have calls satisfying', () => {
+          execute(
             expect.it(
               'when passed as parameter to',
               sql => sql.toString(),
@@ -1459,11 +2015,11 @@ describe('Query', () => {
             )
           );
         });
-        spy.restore();
+        execute.restore();
       });
 
       it('supports `of` with `noWait`', async () => {
-        const spy = sinon.spy(Query.prototype, 'query');
+        const execute = sinon.spy(Query.prototype, 'execute');
         const query = new Query(User)
           .forUpdate()
           .of('user')
@@ -1472,8 +2028,8 @@ describe('Query', () => {
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' })
         ]);
-        await expect(spy, 'to have calls satisfying', () => {
-          spy(
+        await expect(execute, 'to have calls satisfying', () => {
+          execute(
             expect.it(
               'when passed as parameter to',
               sql => sql.toString(),
@@ -1482,7 +2038,7 @@ describe('Query', () => {
             )
           );
         });
-        spy.restore();
+        execute.restore();
       });
     });
 
@@ -1558,9 +2114,7 @@ describe('Query', () => {
   });
 
   describe('Query.prototype.insert', () => {
-    afterEach(async () => {
-      await truncateUserTable();
-    });
+    afterEach(async () => knex(User.table).truncate());
 
     it('inserts a row to the database table from a model instance', async () => {
       const query = new Query(User);
@@ -1715,10 +2269,10 @@ describe('Query', () => {
     });
 
     it('quotes column names', async () => {
-      const spy = sinon.spy(Query.prototype, 'query');
+      const execute = sinon.spy(Query.prototype, 'execute');
       await new Query(User).insert(new User({ name: 'John Doe' }));
-      await expect(spy, 'to have calls satisfying', () => {
-        spy(
+      await expect(execute, 'to have calls satisfying', () => {
+        execute(
           expect.it(
             'when passed as parameter to',
             query => query.toString(),
@@ -1726,7 +2280,7 @@ describe('Query', () => {
           )
         );
       });
-      spy.restore();
+      execute.restore();
     });
 
     it('allows inserting raw sql values', async () => {
@@ -1739,7 +2293,7 @@ describe('Query', () => {
     });
 
     it('works with a model `schema` configured', async () => {
-      const spy = sinon.spy(Query.prototype, 'query');
+      const execute = sinon.spy(Query.prototype, 'execute');
       class OtherUser extends User {}
       OtherUser.schema = 'public';
       const query = new Query(OtherUser);
@@ -1748,8 +2302,8 @@ describe('Query', () => {
         'to be fulfilled with value satisfying',
         [new OtherUser({ name: 'John Doe' })]
       );
-      await expect(spy, 'to have calls satisfying', () => {
-        spy(
+      await expect(execute, 'to have calls satisfying', () => {
+        execute(
           expect.it(
             'when passed as parameter to',
             sql => sql.toString(),
@@ -1758,7 +2312,7 @@ describe('Query', () => {
           )
         );
       });
-      spy.restore();
+      execute.restore();
     });
 
     describe('if an insert error occurs', () => {
@@ -1767,7 +2321,7 @@ describe('Query', () => {
       beforeEach(() => {
         queryStub = sinon
           .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('insert error')));
+          .callsFake(async () => Promise.reject(new Error('insert error')));
       });
 
       afterEach(() => {
@@ -1780,29 +2334,6 @@ describe('Query', () => {
           query.insert(new User({ name: 'John Doe' })),
           'to be rejected with error satisfying',
           new Query.InsertError({ error: new Error('insert error'), query })
-        );
-      });
-
-      it('attaches a parameterized sql string to the error', async () => {
-        const query = new Query(User).returning('id');
-        await expect(
-          query.insert(new User({ name: 'John Doe' })),
-          'to be rejected with error satisfying',
-          {
-            sql:
-              'INSERT INTO "user" ("name", "age", "confirmed") VALUES ($1, $2, $3) RETURNING "user"."id" as "user.id"'
-          }
-        );
-      });
-
-      it('attaches a full sql string with values in `debug` mode', async () => {
-        const query = new Query(User).returning('id').debug(true);
-        await expect(
-          query.insert(new User({ name: 'John Doe' })),
-          'to be rejected with error satisfying',
-          {
-            sql: `INSERT INTO "user" ("name", "age", "confirmed") VALUES ('John Doe', null, FALSE) RETURNING "user"."id" as "user.id"`
-          }
         );
       });
     });
@@ -1883,6 +2414,26 @@ describe('Query', () => {
           [new User({ theName: 'John Doe', theConfirmed: false })]
         );
       });
+
+      describe('set to `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).returning(false);
+          await expect(
+            query.insert(new User({ name: 'John Doe' })),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).returning(false).first(true);
+          await expect(
+            query.insert(new User({ name: 'John Doe' })),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
+      });
     });
 
     describe('with `fields` configured', () => {
@@ -1893,6 +2444,26 @@ describe('Query', () => {
           'to be fulfilled with value exhaustively satisfying',
           [new User({ name: 'John Doe' })]
         );
+      });
+
+      describe('as `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).fields(false);
+          await expect(
+            query.insert(new User({ name: 'John Doe' })),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).fields(false).first(true);
+          await expect(
+            query.insert(new User({ name: 'John Doe' })),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
       });
     });
 
@@ -1907,40 +2478,20 @@ describe('Query', () => {
       });
     });
 
-    describe("with 'forge' disabled", () => {
-      it('resolves with plain JS objects', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.insert(new User({ id: 1, name: 'John Doe' })),
-          'to be fulfilled with value satisfying',
-          [expect.it('to be an object').and('not to be a', User)]
-        );
-      });
-
-      it('does not cast fields with post-fetch cast functions', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.insert(new User({ id: 1, name: 'John Doe', intToString: 10 })),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'John Doe', intToString: 10 }]
-        );
-      });
-    });
-
     describe('if no row is inserted', () => {
-      let insertStub;
+      let queryStub;
 
       before(() => {
-        insertStub = sinon.stub(Query.prototype, 'query');
+        queryStub = sinon.stub(Query.prototype, 'query');
       });
 
       beforeEach(() => {
-        insertStub.resetHistory();
-        insertStub.returns(Promise.resolve([]));
+        queryStub.resetHistory();
+        queryStub.returns(Promise.resolve([]));
       });
 
       after(() => {
-        insertStub.restore();
+        queryStub.restore();
       });
 
       it('resolves with an empty array', async () => {
@@ -2199,30 +2750,30 @@ describe('Query', () => {
       });
 
       it('runs a single insert query', async () => {
-        const spy = sinon.spy(Query.prototype, 'insert');
+        const querySpy = sinon.spy(Query.prototype, 'query');
         const query = new Query(User);
         await query.insert([
           new User({ name: 'John Doe' }),
           new User({ name: 'Jane Doe' })
         ]);
-        await expect(spy, 'was called once');
-        spy.restore();
+        await expect(querySpy, 'was called once');
+        querySpy.restore();
       });
 
       describe('if no rows are inserted', () => {
-        let insertStub;
+        let queryStub;
 
         before(() => {
-          insertStub = sinon.stub(Query.prototype, 'query');
+          queryStub = sinon.stub(Query.prototype, 'query');
         });
 
         beforeEach(() => {
-          insertStub.resetHistory();
-          insertStub.returns(Promise.resolve([]));
+          queryStub.resetHistory();
+          queryStub.returns(Promise.resolve([]));
         });
 
         after(() => {
-          insertStub.restore();
+          queryStub.restore();
         });
 
         it('resolves with am empty array', async () => {
@@ -2247,8 +2798,8 @@ describe('Query', () => {
       });
 
       describe('with a `batchSize` configured', () => {
-        it('does multiple insert operations with batched arrays of data', async () => {
-          const spy = sinon.spy(Query.prototype, 'query');
+        it('sends multiple insert queries with batched arrays of data', async () => {
+          const runQuery = sinon.spy(Query.prototype, 'query');
           const query = new Query(User);
           await query
             .batchSize(1)
@@ -2256,12 +2807,12 @@ describe('Query', () => {
               new User({ name: 'John Doe' }),
               new User({ name: 'Jane Doe' })
             ]);
-          await expect(spy, 'was called twice');
-          spy.restore();
+          await expect(runQuery, 'was called twice');
+          runQuery.restore();
         });
 
         it('creates the right batches', async () => {
-          const spy = sinon.spy(Query.prototype, 'query');
+          const runQuery = sinon.spy(Query.prototype, 'query');
           const users = [
             { name: 'John Doe' },
             { name: 'Jane Doe' },
@@ -2270,29 +2821,29 @@ describe('Query', () => {
           ];
 
           await new Query(User).batchSize(1).insert(users);
-          await expect(spy, 'was called times', 4);
+          await expect(runQuery, 'was called times', 4);
 
-          spy.resetHistory();
+          runQuery.resetHistory();
           await new Query(User).batchSize(2).insert(users);
-          await expect(spy, 'was called twice');
+          await expect(runQuery, 'was called twice');
 
-          spy.resetHistory();
+          runQuery.resetHistory();
           await new Query(User).batchSize(3).insert(users);
-          await expect(spy, 'was called twice');
+          await expect(runQuery, 'was called twice');
 
-          spy.resetHistory();
+          runQuery.resetHistory();
           await new Query(User).batchSize(4).insert(users);
-          await expect(spy, 'was called once');
+          await expect(runQuery, 'was called once');
 
-          spy.resetHistory();
+          runQuery.resetHistory();
           await new Query(User).batchSize(5).insert(users);
-          await expect(spy, 'was called once');
+          await expect(runQuery, 'was called once');
 
-          spy.resetHistory();
+          runQuery.resetHistory();
           await new Query(User).batchSize(0).insert(users);
-          await expect(spy, 'was called once');
+          await expect(runQuery, 'was called once');
 
-          spy.restore();
+          runQuery.restore();
         });
 
         it('returns a single array of inserted data', async () => {
@@ -2324,9 +2875,7 @@ describe('Query', () => {
         .insert(new User({ id: 1, name: 'John Doe' }));
     });
 
-    afterEach(async () => {
-      await truncateUserTable();
-    });
+    afterEach(async () => knex(User.table).truncate());
 
     it('updates rows in the database table from a model instance', async () => {
       const query = new Query(User);
@@ -2397,11 +2946,11 @@ describe('Query', () => {
     });
 
     it('quotes column names', async () => {
-      const spy = sinon.spy(Query.prototype, 'query');
+      const execute = sinon.spy(Query.prototype, 'execute');
       user.name = 'Jane Doe';
       await new Query(User).update(user);
-      await expect(spy, 'to have calls satisfying', () => {
-        spy(
+      await expect(execute, 'to have calls satisfying', () => {
+        execute(
           expect.it(
             'when passed as parameter to',
             query => query.toString(),
@@ -2409,7 +2958,7 @@ describe('Query', () => {
           )
         );
       });
-      spy.restore();
+      execute.restore();
     });
 
     it('allows updating with raw sql values', async () => {
@@ -2443,7 +2992,7 @@ describe('Query', () => {
     });
 
     it('works with a model `schema` configured', async () => {
-      const spy = sinon.spy(Query.prototype, 'query');
+      const execute = sinon.spy(Query.prototype, 'execute');
       class OtherUser extends User {}
       OtherUser.schema = 'public';
       const query = new Query(OtherUser);
@@ -2454,8 +3003,8 @@ describe('Query', () => {
         'to be fulfilled with value satisfying',
         [new OtherUser({ name: 'Jane Doe' })]
       );
-      await expect(spy, 'to have calls satisfying', () => {
-        spy(
+      await expect(execute, 'to have calls satisfying', () => {
+        execute(
           expect.it(
             'when passed as parameter to',
             sql => sql.toString(),
@@ -2464,7 +3013,7 @@ describe('Query', () => {
           )
         );
       });
-      spy.restore();
+      execute.restore();
     });
 
     describe('when data is empty', () => {
@@ -2512,7 +3061,7 @@ describe('Query', () => {
       beforeEach(() => {
         queryStub = sinon
           .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('update error')));
+          .callsFake(async () => Promise.reject(new Error('update error')));
       });
 
       afterEach(() => {
@@ -2526,29 +3075,6 @@ describe('Query', () => {
           query.update(user),
           'to be rejected with error satisfying',
           new Query.UpdateError({ error: new Error('update error'), query })
-        );
-      });
-
-      it('attaches a parameterized sql string to the error', async () => {
-        const query = new Query(User).returning('id');
-        await expect(
-          query.update({ name: 'Jane Doe' }),
-          'to be rejected with error satisfying',
-          {
-            sql:
-              'UPDATE "user" SET "name" = $1 RETURNING "user"."id" as "user.id"'
-          }
-        );
-      });
-
-      it('attaches a full sql string with values in `debug` mode', async () => {
-        const query = new Query(User).returning('id').debug(true);
-        await expect(
-          query.update({ name: 'Jane Doe' }),
-          'to be rejected with error satisfying',
-          {
-            sql: `UPDATE "user" SET "name" = 'Jane Doe' RETURNING "user"."id" as "user.id"`
-          }
         );
       });
     });
@@ -2704,25 +3230,27 @@ describe('Query', () => {
           [new User({ theName: 'Jane Doe', theConfirmed: false })]
         );
       });
-    });
 
-    describe("with 'forge' disabled", () => {
-      it('resolves with plain JS objects', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.update(new User({ name: 'Jane Doe' })),
-          'to be fulfilled with value satisfying',
-          [expect.it('to be an object').and('not to be a', User)]
-        );
-      });
+      describe('set to `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).returning(false);
+          user.name = 'Jane Doe';
+          await expect(
+            query.update(user),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
 
-      it('does not cast fields with post-fetch cast functions', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.update(new User({ name: 'Jane Doe', intToString: 10 })),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'Jane Doe', intToString: 10 }]
-        );
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).returning(false).first(true);
+          user.name = 'Jane Doe';
+          await expect(
+            query.update(user),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
       });
     });
 
@@ -2803,9 +3331,7 @@ describe('Query', () => {
   });
 
   describe('Query.prototype.save', () => {
-    afterEach(async () => {
-      await truncateUserTable();
-    });
+    afterEach(async () => knex(User.table).truncate());
 
     it('proxies to Query.prototype.insert if passed an array', async () => {
       const spy = sinon.spy(Query.prototype, 'insert');
@@ -2905,9 +3431,7 @@ describe('Query', () => {
       ]);
     });
 
-    afterEach(async () => {
-      await truncateUserTable();
-    });
+    afterEach(async () => knex(User.table).truncate());
 
     it('deletes all rows from the database', async () => {
       await expect(new Query(User).delete(), 'to be fulfilled');
@@ -2962,7 +3486,7 @@ describe('Query', () => {
     });
 
     it('works with a model `schema` configured', async () => {
-      const spy = sinon.spy(Query.prototype, 'query');
+      const execute = sinon.spy(Query.prototype, 'execute');
       class OtherUser extends User {}
       OtherUser.schema = 'public';
       const query = new Query(OtherUser);
@@ -2974,8 +3498,8 @@ describe('Query', () => {
           new OtherUser({ id: 2, name: 'Jane Doe' })
         ]
       );
-      await expect(spy, 'to have calls satisfying', () => {
-        spy(
+      await expect(execute, 'to have calls satisfying', () => {
+        execute(
           expect.it(
             'when passed as parameter to',
             sql => sql.toString(),
@@ -2984,7 +3508,7 @@ describe('Query', () => {
           )
         );
       });
-      spy.restore();
+      execute.restore();
     });
 
     describe('if a delete error occurs', () => {
@@ -2993,7 +3517,7 @@ describe('Query', () => {
       beforeEach(() => {
         queryStub = sinon
           .stub(Query.prototype, 'query')
-          .returns(Promise.reject(new Error('delete error')));
+          .callsFake(async () => Promise.reject(new Error('delete error')));
       });
 
       afterEach(() => {
@@ -3007,24 +3531,6 @@ describe('Query', () => {
           'to be rejected with error satisfying',
           new Query.DeleteError({ error: new Error('delete error'), query })
         );
-      });
-
-      it('attaches a parameterized sql string to the error', async () => {
-        const query = new Query(User).returning('id').where({ id: 1 });
-        await expect(query.delete(), 'to be rejected with error satisfying', {
-          sql:
-            'DELETE FROM "user" WHERE "user"."id" = $1 RETURNING "user"."id" as "user.id"'
-        });
-      });
-
-      it('attaches a full sql string with values in `debug` mode', async () => {
-        const query = new Query(User)
-          .returning('id')
-          .where({ id: 1 })
-          .debug(true);
-        await expect(query.delete(), 'to be rejected with error satisfying', {
-          sql: `DELETE FROM "user" WHERE "user"."id" = 1 RETURNING "user"."id" as "user.id"`
-        });
       });
     });
 
@@ -3068,6 +3574,26 @@ describe('Query', () => {
           ]
         );
       });
+
+      describe('set to `false`', () => {
+        it('resolves with an empty array', async () => {
+          const query = new Query(User).returning(false);
+          await expect(
+            query.delete(),
+            'to be fulfilled with value satisfying',
+            []
+          );
+        });
+
+        it('resolves with `null` if `first` is configured', async () => {
+          const query = new Query(User).returning(false).first(true);
+          await expect(
+            query.delete(),
+            'to be fulfilled with value satisfying',
+            null
+          );
+        });
+      });
     });
 
     describe("with 'first' configured", () => {
@@ -3077,25 +3603,6 @@ describe('Query', () => {
           query.delete(),
           'to be fulfilled with value satisfying',
           new User({ id: 1, name: 'John Doe' })
-        );
-      });
-    });
-
-    describe("with 'forge' disabled", () => {
-      it('resolves with plain JS objects', async () => {
-        const query = new Query(User).forge(false);
-        await expect(query.delete(), 'to be fulfilled with value satisfying', [
-          expect.it('to be an object').and('not to be a', User),
-          expect.it('to be an object').and('not to be a', User)
-        ]);
-      });
-
-      it('does not cast fields with post-fetch cast functions', async () => {
-        const query = new Query(User).forge(false);
-        await expect(
-          query.delete(),
-          'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, intToString: 10 }, { id: 2, intToString: null }]
         );
       });
     });
@@ -3142,8 +3649,8 @@ describe('Query', () => {
     });
   });
 
-  describe('Query.where', function() {
-    it('returns a `Query.Where` instance', function() {
+  describe('Query.where', () => {
+    it('returns a `Query.Where` instance', () => {
       expect(Query.where, 'to be a', Query.Where);
     });
   });

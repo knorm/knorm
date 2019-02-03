@@ -7,6 +7,7 @@ const KnormError = require('../lib/KnormError');
 const Field = require('../lib/Field');
 const Model = require('../lib/Model');
 const Query = require('../lib/Query');
+const Connection = require('../lib/Connection');
 const Transaction = require('../lib/Transaction');
 
 describe('Knorm', () => {
@@ -14,20 +15,26 @@ describe('Knorm', () => {
     expect(Knorm.Field, 'to be', Field);
     expect(Knorm.Model, 'to be', Model);
     expect(Knorm.Query, 'to be', Query);
+    expect(Knorm.Connection, 'to be', Connection);
     expect(Knorm.Transaction, 'to be', Transaction);
   });
 
   describe('constructor', () => {
-    it('creates scoped Field, Model, Query, Transaction', () => {
+    it('creates scoped Field, Model, Query, Connection, Transaction', () => {
       const knorm = new Knorm();
 
       expect(knorm.Field.prototype, 'to be a', Field);
       expect(knorm.Model.prototype, 'to be a', Model);
       expect(knorm.Query.prototype, 'to be a', Query);
+      expect(knorm.Connection.prototype, 'to be a', Connection);
       expect(knorm.Transaction.prototype, 'to be a', Transaction);
 
       expect(knorm.Model.Field, 'to be', knorm.Field);
       expect(knorm.Model.Query, 'to be', knorm.Query);
+
+      expect(knorm.Query.Connection, 'to be', knorm.Connection);
+      expect(knorm.Model.Query.Connection, 'to be', knorm.Connection);
+      expect(knorm.Transaction.Connection, 'to be', knorm.Connection);
     });
 
     it('adds an accessor to the knorm instance', function() {
@@ -36,33 +43,29 @@ describe('Knorm', () => {
       class User extends knorm.Model {}
       User.table = 'user';
 
-      const KnormUser = knorm.models.User;
-
       expect(knorm.Field.knorm, 'to be', knorm);
-      expect(knorm.Query.knorm, 'to be', knorm);
       expect(knorm.Model.knorm, 'to be', knorm);
+      expect(knorm.Query.knorm, 'to be', knorm);
+      expect(knorm.Connection.knorm, 'to be', knorm);
+      expect(knorm.Transaction.knorm, 'to be', knorm);
 
       expect(knorm.Field.prototype.knorm, 'to be', knorm);
-      expect(knorm.Query.prototype.knorm, 'to be', knorm);
       expect(knorm.Model.prototype.knorm, 'to be', knorm);
+      expect(knorm.Query.prototype.knorm, 'to be', knorm);
+      expect(knorm.Connection.prototype.knorm, 'to be', knorm);
+      expect(knorm.Transaction.prototype.knorm, 'to be', knorm);
+
+      const KnormUser = knorm.models.User;
 
       expect(KnormUser.knorm, 'to be', knorm);
       expect(KnormUser.Field.knorm, 'to be', knorm);
       expect(KnormUser.Query.knorm, 'to be', knorm);
+      expect(KnormUser.Query.Connection.knorm, 'to be', knorm);
 
       expect(KnormUser.prototype.knorm, 'to be', knorm);
       expect(KnormUser.Field.prototype.knorm, 'to be', knorm);
       expect(KnormUser.Query.prototype.knorm, 'to be', knorm);
-    });
-
-    it('creates a scoped Model class', () => {
-      const knorm = new Knorm();
-      expect(knorm.Query.prototype, 'to be a', Query);
-    });
-
-    it('creates a scoped Model class', () => {
-      const knorm = new Knorm();
-      expect(knorm.Query.prototype, 'to be a', Query);
+      expect(KnormUser.Query.Connection.prototype.knorm, 'to be', knorm);
     });
 
     it('creates new classes per instance', () => {
@@ -248,7 +251,7 @@ describe('Knorm', () => {
       expect(knorm.models.Foo, 'to be', Foo);
     });
 
-    it('adds the model that extends another model', () => {
+    it('adds a model that extends another model', () => {
       class Foo extends knorm.Model {}
       class Bar extends Foo {}
 
@@ -260,6 +263,12 @@ describe('Knorm', () => {
     it('allows plugins to update knorm.Model', () => {
       knorm.Model = class Foo extends knorm.Model {};
       knorm.addModel(knorm.Model);
+      expect(knorm.Model, 'to be', knorm.Model);
+    });
+
+    it('allows chaining', () => {
+      class Foo extends knorm.Model {}
+      expect(knorm.addModel(Foo), 'to be', knorm);
     });
   });
 
@@ -321,6 +330,100 @@ describe('Knorm', () => {
 
       expect(knorm.plugins, 'to be empty');
       expect(knorm.Model.name, 'to be', 'Model');
+    });
+  });
+
+  describe('updateTransaction', () => {
+    it('updates Knorm.prototype.Transaction', () => {
+      class Foo {}
+      const knorm = new Knorm().updateTransaction(Foo);
+      expect(knorm.Transaction, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateTransaction(Foo), 'to be', knorm);
+    });
+  });
+
+  describe('updateModel', () => {
+    it('updates Knorm.prototype.Model', () => {
+      class Foo {}
+      const knorm = new Knorm().updateModel(Foo);
+      expect(knorm.Model, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateModel(Foo), 'to be', knorm);
+    });
+  });
+
+  describe('updateQuery', () => {
+    it('updates Knorm.prototype.Query', () => {
+      class Foo {}
+      const knorm = new Knorm().updateQuery(Foo);
+      expect(knorm.Query, 'to be', Foo);
+    });
+
+    it('updates Knorm.Model.Query', () => {
+      class Foo {}
+      const knorm = new Knorm().updateQuery(Foo);
+      expect(knorm.Model.Query, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateQuery(Foo), 'to be', knorm);
+    });
+  });
+
+  describe('updateField', () => {
+    it('updates Knorm.prototype.Field', () => {
+      class Foo {}
+      const knorm = new Knorm().updateField(Foo);
+      expect(knorm.Field, 'to be', Foo);
+    });
+
+    it('updates Knorm.Model.Field', () => {
+      class Foo {}
+      const knorm = new Knorm().updateField(Foo);
+      expect(knorm.Model.Field, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateField(Foo), 'to be', knorm);
+    });
+  });
+
+  describe('updateConnection', () => {
+    it('updates Knorm.prototype.Connection', () => {
+      class Foo {}
+      const knorm = new Knorm().updateConnection(Foo);
+      expect(knorm.Connection, 'to be', Foo);
+    });
+
+    it('updates Knorm.Query.Connection', () => {
+      class Foo {}
+      const knorm = new Knorm().updateConnection(Foo);
+      expect(knorm.Query.Connection, 'to be', Foo);
+    });
+
+    it('updates Knorm.Transaction.Connection', () => {
+      class Foo {}
+      const knorm = new Knorm().updateConnection(Foo);
+      expect(knorm.Transaction.Connection, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateConnection(Foo), 'to be', knorm);
     });
   });
 });

@@ -47,7 +47,7 @@ For object configs, these options are supported:
 | Option       | Type                        | Default        | Description                                                                                                                                                                              |
 | ------------ | --------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `type`       | string (**required**)       | none           | See [field types](#field-types).                                                                                                                                                         |
-| `default`    | any / function              | none           | A default value to use during insert operations if the field has no value. If configured as a function, it will be called with `this` set to the model instance.                         |
+| `default`    | any / function              | none           | A default value to use during insert operations if the field has no value. If configured as a function, it will be called the model instance as a parameter.                         |
 | `column`     | string                      | the field name | The column name to use for this field during database operations. **NOTE:** this takes precedence over the value returned by the `fieldToColumn` mapping function.                       |
 | `primary`    | boolean                     | `false`        | Whether or not the field is the primary field. **NOTE:** a model can only have one primary field, any subsequent primary fields will overwrite the existing one (also in child models).  |
 | `unique`     | boolean                     | `false`        | Whether or not the field is a unique field. Primary and unique fields are used for instance operations i.e. fetch, update, delete etc                                                    |
@@ -64,7 +64,7 @@ For object configs, these options are supported:
 | `equals`     | mixed                       | none           | Validates that the field's value is equal to this value. Uses strict equality and case-sensitive matching for strings.                                                                   |
 | `regex`      | RegExp / object             | none           | Validates that the field's value either matches or does not match a regular expression, or both. See [regex validation](guides/validation.md#regex-validation)                           |
 | `validate`   | function                    | none           | Validates the field's value against a custom validation function. See [custom validation](guides/validation.md#custom-validation)                                                        |
-| `schema`     | string / object             | none           | Validates the structure of `json` (and `jsonb`) feilds. See [JSON validation](guides/validation.md#json-validation)                                                                      |
+| `shape`     | string / object             | none           | Validates the structure of `json` (and `jsonb`) feilds. See [JSON validation](guides/validation.md#json-validation)                                                                      |
 
 ## Field types
 
@@ -196,12 +196,12 @@ User.fields = {
   data: {
     type: 'email',
     cast: {
-      forSave(value) {
+      forSave(value, model) {
         if (value) {
           return value.toLowerCase();
         }
       },
-      forFetch(value) {
+      forFetch(value, model) {
         if (value) {
           return value.replace('@', '[at]');
         }
@@ -211,7 +211,14 @@ User.fields = {
 };
 ```
 
-> `forSave` refers to both insert and update operations
+::: tip INFO
+`forSave` cast functions are called whenever data is being sent to the
+database e.g. for insert and update operations.
+
+`forFetch` cast functions are called whenever data is fetched from the database.
+Thos could be from a fetch operation or when data is returned after an insert,
+update or delete operation.
+:::
 
 ::: tip INFO
 `forSave` cast functions are called **after** validation. This allows specifying

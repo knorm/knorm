@@ -81,10 +81,10 @@ User.query.update({ id: 1, names: 'foo' }); // updates only the row with id 1
 ## Running raw queries
 
 Raw queries can be run by directly invoking the
-[query](api.md#query-query-sql-%E2%87%92-promise) method:
+[execute](api.md#query-execute-sql-%E2%87%92-promise) method:
 
 ```js
-const rows = await User.query.query('select now()');
+const rows = await User.query.execute('select now()');
 ```
 
 To run queries with parameter bindings, you may use the
@@ -97,7 +97,7 @@ const sqlBricks = query.sql;
 const sql = sqlBricks.select(
   sqlBricks('select * from "user" where id = $1 and names = $2', [1, 'foo'])
 );
-const rows = await query.query(sql);
+const rows = await query.execute(sql);
 ```
 
 ::: tip
@@ -109,7 +109,7 @@ then `Query.prototype.sql` is overridden with
 Alternatively, you can pass an object with `text` and `values` properties:
 
 ```js
-const rows = await User.query.query({
+const rows = await User.query.execute({
   text: 'select * from "user" where id = $1 and names = $2',
   values: [1, 'foo']
 });
@@ -260,7 +260,7 @@ User.query.insert({ id: 1 });
 In addition, if the [require](/api.md#query-require-require-%E2%87%92-query)
 option is set to `true` on a query and no rows are
 inserted/updated/fetched/deleted, then the promise is rejected with a
-`NoRowsError`:
+[Query.NoRowsError](/api.md#query-norowserror):
 
 ```js
 User.query
@@ -276,3 +276,43 @@ User.query
 ```
 
 > See the [Query](/api.md#query) docs for more info on all the query errors
+
+## Query life-cycle
+
+Database connections are created lazily; that is, connections are not created
+until a database operation is called (e.g a
+[fetch](/api.md#query-fetch-options-%E2%87%92-promise)). When a database
+operation is started, the following [Query](/api.md#query) methods are called:
+
+* **[Query.prototype.execute](/api.md#query-execute-sql-%E2%87%92-promise)**:
+  handles the entire query life-cycle
+* **[Query.prototype.connect](/api.md#query-connect-%E2%87%92-promise)**:
+  creates a connection to the database, via [Connection.prototype.create](/api.md#connection-create-%E2%87%92-promise).
+* **[Query.prototype.formatSql](/api.md#query-formatsql-sql-%E2%87%92-object)**:
+  formats the SQL to be run. If multiple queries are to be run, this is called
+  to format each of them.
+* **[Query.prototype.query](/api.md#query-query-sql-%E2%87%92-promise)**: runs
+  the SQL against the database, via
+  [Connection.prototype.query](/api.md#connection-query-sql-%E2%87%92-promise).
+  If multiple queries are to be run, this is called to run each of them.
+* **[Query.prototype.disconnect](/api.md#query-disconnect-%E2%87%92-promise)**:
+  closes the connection to the database, via [Connection.prototype.close](/api.md#connection-close-%E2%87%92-promise).
+
+::: tip INFO
+When multiple queries are run, they are run in parallel and the rows returned
+from each are merged into a single array that is resolved from
+[Query.prototype.execute](/api.md#query-execute-sql-%E2%87%92-promise).
+:::
+
+When queries are run within transactions,
+[Query.prototype.connect](/api.md#query-connect-%E2%87%92-promise) and
+[Query.prototype.disconnect](/api.md#query-disconnect-%E2%87%92-promise) are
+overriden to ensure only a single connection is used for all the queries. In
+this case
+[Transaction.prototype.connect](/api.md#transaction-connect-%E2%87%92-promise)
+and
+[Transaction.prototype.disconnect](/api.md#transaction-disconnect-%E2%87%92-promise)
+control the connection handling.
+[Transaction.prototype.connect](/api.md#transaction-connect-%E2%87%92-promise)
+is only called once the first
+[Query.prototype.connect](/api.md#query-connect-%E2%87%92-promise) is called.
