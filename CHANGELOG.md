@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/knorm/postgres/compare/v2.0.0...v2.0.1) (2019-02-19)
+
+
+### Bug Fixes
+
+* enable updating `uuid` and `uuid4` type fields ([5bb9b98](https://github.com/knorm/postgres/commit/5bb9b98))
+
 # [2.0.0](https://github.com/knorm/postgres/compare/v1.3.4...v2.0.0) (2019-02-03)
 
 
