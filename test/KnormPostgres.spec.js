@@ -993,6 +993,43 @@ describe('KnormPostgres', () => {
           [{ id: 1, boolean: null }]
         );
       });
+
+      it('allows updating `uuid` and `uuid4` fields', async () => {
+        await createTable(table => {
+          table.uuid('uuid');
+          table.uuid('uuid4');
+        });
+
+        class Foo extends Model {}
+        Foo.table = 'foo';
+        Foo.fields = { uuid: 'uuid', uuid4: 'uuid4' };
+
+        await new Query(Foo).insert({
+          id: 1,
+          uuid: '44bbd080-3453-11e9-8f01-0f3f09e1cf60',
+          uuid4: 'bb726591-e5ee-4725-b8b2-92101a387a56'
+        });
+        await expect(
+          new Query(Foo).update({
+            id: 1,
+            uuid: 'a4af1ba0-3453-11e9-8f01-0f3f09e1cf60',
+            uuid4: '1c5e91d3-07b7-47cc-980a-cef937c66bef'
+          }),
+          'to be fulfilled with value satisfying',
+          [
+            {
+              id: 1,
+              uuid: 'a4af1ba0-3453-11e9-8f01-0f3f09e1cf60',
+              uuid4: '1c5e91d3-07b7-47cc-980a-cef937c66bef'
+            }
+          ]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, uuid: null, uuid4: null }),
+          'to be fulfilled with value satisfying',
+          [{ id: 1, uuid: null, uuid4: null }]
+        );
+      });
     });
 
     describe('for multi-updates', () => {
