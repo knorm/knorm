@@ -36,7 +36,7 @@
     "proxyquire": "2.1.0",
     "semantic-release": "15.13.3",
     "sinon": "7.2.3",
-    "unexpected": "11.0.1",
+    "unexpected": "11.1.0",
     "unexpected-knex": "2.0.0",
     "unexpected-sinon": "10.11.0"
   },
