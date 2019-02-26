@@ -22,7 +22,7 @@
     "@semantic-release/github": "5.2.9",
     "@semantic-release/npm": "5.1.4",
     "coveralls": "3.0.3",
-    "eslint": "5.13.0",
+    "eslint": "5.14.1",
     "eslint-config-ganintegrity": "3.1.4",
     "mocha": "6.0.2",
     "nyc": "13.3.0",
