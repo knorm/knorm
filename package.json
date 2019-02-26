@@ -39,7 +39,7 @@
     "sinon": "7.2.3",
     "unexpected": "10.40.2",
     "unexpected-knex": "2.0.0",
-    "unexpected-sinon": "10.11.0"
+    "unexpected-sinon": "10.11.1"
   },
   "directories": {
     "lib": "lib",
