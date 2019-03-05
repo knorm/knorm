@@ -397,8 +397,20 @@ describe('Query', () => {
       const query = new DummyQuery(User);
       await query.connect();
       await query.disconnect();
+      await expect(
+        close,
+        'to have calls exhaustively satisfying',
+        () => close(undefined) // no error
+      );
+    });
+
+    it('passes errors to Connection.prototype.close', async () => {
+      const close = sinon.stub(DummyConnection.prototype, 'close');
+      const query = new DummyQuery(User);
+      await query.connect();
+      await query.disconnect(new Error('some query error'));
       await expect(close, 'to have calls exhaustively satisfying', () =>
-        close()
+        close(new Error('some query error'))
       );
     });
 
@@ -460,8 +472,10 @@ describe('Query', () => {
           query.connection = { close() {} };
           await query.connect();
           await query.disconnect();
-          await expect(queryCloseConnection, 'to have calls satisfying', () =>
-            queryCloseConnection()
+          await expect(
+            queryCloseConnection,
+            'to have calls satisfying',
+            () => queryCloseConnection(undefined) // no query error
           );
         });
       });
@@ -588,8 +602,10 @@ describe('Query', () => {
         await expect(formatSql, 'to have calls satisfying', () =>
           formatSql('select now() as "now"')
         );
-        await expect(disconnect, 'to have calls satisfying', () =>
-          disconnect()
+        await expect(
+          disconnect,
+          'to have calls satisfying',
+          () => disconnect(undefined) // no query error
         );
       });
 
@@ -610,7 +626,7 @@ describe('Query', () => {
           runQuery({ text: 'select now() as "now"' })
         );
         await expect(disconnect, 'to have calls satisfying', () =>
-          disconnect()
+          disconnect(new Error('query error'))
         );
       });
 
@@ -633,8 +649,10 @@ describe('Query', () => {
             formatSql('select now() as "now"');
             formatSql('select now() as "now"');
           });
-          await expect(disconnect, 'to have calls satisfying', () =>
-            disconnect()
+          await expect(
+            disconnect,
+            'to have calls satisfying',
+            () => disconnect(undefined) // no query error
           );
         });
 
@@ -671,7 +689,11 @@ describe('Query', () => {
             });
           });
           await expect(disconnect, 'to have calls satisfying', () =>
-            disconnect()
+            disconnect(
+              new QueryError(
+                'duplicate key value violates unique constraint "user_pkey"'
+              )
+            )
           );
           await expect(
             knex,
