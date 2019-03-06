@@ -19,8 +19,8 @@ const postgresPlugin = knorm => {
         return rows;
       }
 
-      async close() {
-        return this.client.release();
+      async close(error) {
+        return this.client.release(error);
       }
     }
   );
