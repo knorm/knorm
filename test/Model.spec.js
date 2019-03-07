@@ -2851,6 +2851,15 @@ describe('Model', () => {
       });
     });
 
+    describe('Model.truncate', () => {
+      it('truncates the model', async () => {
+        await new User({ id: 1, name: 'John Doe' }).insert();
+        await new User({ id: 2, name: 'Richard Roe' }).insert();
+        await User.truncate();
+        await expect(knex, 'with table', User.table, 'to be empty');
+      });
+    });
+
     describe('with `methods` configured', () => {
       beforeEach(async () => new User({ id: 1, name: 'John Doe' }).insert());
 
