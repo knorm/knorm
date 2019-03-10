@@ -18,6 +18,9 @@ jobs:
     - stage: release
       node_js: "10"
       script: skip
+      branches:
+        only:
+          - master
       deploy:
         provider: script
         skip_cleanup: true
