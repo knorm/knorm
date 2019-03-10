@@ -5,18 +5,19 @@ services:
 addons:
   postgresql: '9.6'
 
-script:
-  - npm run lint
-  - npm run coverage
-
 jobs:
   include:
     - stage: test
       node_js: '10'
+      script:
+        - npm run lint
+        - npm run coverage
       after_success:
         - npm run coveralls
     - stage: test
       node_js: '8'
+      script:
+        - npm run coverage
     - stage: release
       node_js: '10'
       script: skip
