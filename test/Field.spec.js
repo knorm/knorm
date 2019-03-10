@@ -374,7 +374,9 @@ describe('Field', function() {
           cast: { forSave }
         });
         field.cast(sql('bar value'), 'a model instance', { forSave: true });
-        expect(forSave, 'was called with', sql('bar value'));
+        expect(forSave, 'to have calls satisfying', () =>
+          forSave(sql('bar value'), 'a model instance')
+        );
       });
     });
 
