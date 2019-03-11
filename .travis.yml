@@ -1,17 +1,18 @@
 language: node_js
 
-node_js:
-  - "8"
-  - "10"
-
 jobs:
   include:
     - stage: test
+      node_js: "10"
       script:
         - npm run lint
         - npm run coverage
       after_success:
         - npm run coveralls
+    - stage: test
+      node_js: "8"
+      script:
+        - npm run test
     - stage: release
       node_js: "10"
       script: skip
