@@ -3,6 +3,7 @@ language: node_js
 jobs:
   include:
     - stage: test
+      name: "Node.js 10"
       node_js: "10"
       script:
         - npm run lint
@@ -10,6 +11,7 @@ jobs:
       after_success:
         - npm run coveralls
     - stage: test
+      name: "Node.js 8"
       node_js: "8"
       script:
         - npm run test
