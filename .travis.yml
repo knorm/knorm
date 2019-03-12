@@ -4,12 +4,6 @@ node_js:
   - "8"
   - "10"
 
-services:
-  - postgresql
-
-addons:
-  postgresql: "9.6"
-
 jobs:
   include:
     - stage: test
@@ -18,6 +12,10 @@ jobs:
         - npm run coverage
       after_success:
         - npm run coveralls
+      services:
+        - postgresql
+      addons:
+        postgresql: "9.6"
     - stage: release
       node_js: "10"
       script: skip
