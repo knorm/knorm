@@ -20,6 +20,8 @@ jobs:
         - postgresql
       addons:
         postgresql: "9.6"
+      script:
+        - npm run test:mocha
     - stage: release
       node_js: "10"
       script: skip
