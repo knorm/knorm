@@ -1,3 +1,15 @@
+# [2.1.0](https://github.com/knorm/knorm/compare/v2.0.0...v2.1.0) (2019-03-13)
+
+
+### Bug Fixes
+
+* **Query:** automatically rollback transactions on query errors ([879e8d1](https://github.com/knorm/knorm/commit/879e8d1))
+
+
+### Features
+
+* **Query:** pass query errors to Connection.prototype.close ([2edbfe0](https://github.com/knorm/knorm/commit/2edbfe0))
+
 # [2.0.0](https://github.com/knorm/knorm/compare/v1.11.2...v2.0.0) (2019-02-03)
 
 
