@@ -13,7 +13,6 @@ describe('Transaction', () => {
   let Connection;
   let Transaction;
   let TransactionError;
-  let User;
 
   before(() => {
     const knorm = new Knorm();
@@ -26,12 +25,16 @@ describe('Transaction', () => {
   });
 
   describe('constructor', () => {
-    it('creates scoped models', () => {
+    let User;
+
+    before(() => {
       User = class extends Model {};
       User.table = 'user';
       User.fields = { name: { type: 'string', primary: true } };
       User.Query = class UserQuery extends User.Query {};
+    });
 
+    it('creates scoped models', () => {
       const transaction = new Transaction();
       const TransactionUser = transaction.models.User;
 
@@ -60,6 +63,58 @@ describe('Transaction', () => {
 
       expect(TransactionUser.prototype.transaction, 'to be', transaction);
       expect(TransactionUser.Query.prototype.transaction, 'to be', transaction);
+    });
+
+    it('does not add an accessor to the parent models and queries', () => {
+      new Transaction(); // eslint-disable-line no-new
+
+      expect(User.transaction, 'to be null');
+      expect(User.Query.transaction, 'to be null');
+
+      expect(User.prototype.transaction, 'to be null');
+      expect(User.Query.prototype.transaction, 'to be null');
+    });
+
+    it('enables access to the transaction instance via `super`', async () => {
+      let employeeTested = false;
+      let internTested = false;
+
+      class Employee extends User {
+        async test() {
+          await expect(this.transaction, 'to be', transaction);
+          employeeTested = true;
+        }
+      }
+
+      class Intern extends Employee {
+        async test() {
+          await expect(this.transaction, 'to be', transaction);
+          internTested = true;
+          return super.test();
+        }
+      }
+
+      Employee.table = 'employee';
+      Intern.table = 'intern';
+
+      const transaction = new Transaction();
+
+      await expect(
+        new Intern().test(),
+        'to be rejected with error satisfying',
+        // unexpected thinks Transaction is Promise since it's a thenable
+        'expected null to be Promise'
+      );
+
+      // because the test failed, the assignments were never reached
+      await expect(employeeTested, 'to be false');
+      await expect(internTested, 'to be false');
+
+      const TransactionIntern = transaction.models.Intern;
+
+      await expect(new TransactionIntern().test(), 'to be fulfilled');
+      await expect(employeeTested, 'to be true');
+      await expect(internTested, 'to be true');
     });
   });
 
@@ -220,7 +275,7 @@ describe('Transaction', () => {
         new TransactionError(new Error('begin error'))
       );
       await expect(disconnect, 'to have calls exhaustively satisfying', () =>
-        disconnect()
+        disconnect(new TransactionError(new Error('begin error')))
       );
     });
 
@@ -320,7 +375,7 @@ describe('Transaction', () => {
         new TransactionError(new Error('commit error'))
       );
       await expect(rollback, 'to have calls exhaustively satisfying', () =>
-        rollback()
+        rollback(new TransactionError(new Error('commit error')))
       );
     });
 
@@ -398,6 +453,46 @@ describe('Transaction', () => {
       );
     });
 
+    it('passes errors to Transaction.prototype.disconnect', async () => {
+      const disconnect = sinon.spy(DummyTransaction.prototype, 'disconnect');
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await transaction.rollback(new Error('foo'));
+      await expect(disconnect, 'to have calls exhaustively satisfying', () =>
+        disconnect(new Error('foo'))
+      );
+    });
+
+    it('passes rollback errors to Transaction.prototype.disconnect', async () => {
+      const disconnect = sinon.spy(DummyTransaction.prototype, 'disconnect');
+      sinon
+        .stub(DummyTransaction.prototype, '_rollback')
+        .callsFake(async () => {
+          throw new Error('rollback error');
+        });
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.rollback(), 'to be rejected');
+      await expect(disconnect, 'to have calls exhaustively satisfying', () =>
+        disconnect(new TransactionError(new Error('rollback error')))
+      );
+    });
+
+    it('only forwards rollback errors if it was called with no error', async () => {
+      const disconnect = sinon.spy(DummyTransaction.prototype, 'disconnect');
+      sinon
+        .stub(DummyTransaction.prototype, '_rollback')
+        .callsFake(async () => {
+          throw new Error('rollback error');
+        });
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.rollback(new Error('foo')), 'to be rejected');
+      await expect(disconnect, 'to have calls exhaustively satisfying', () =>
+        disconnect(new Error('foo'))
+      );
+    });
+
     it('closes the connection after rollback', async () => {
       const order = [];
       sinon
@@ -447,6 +542,17 @@ describe('Transaction', () => {
       await expect(transaction.started, 'to be true');
       await transaction.rollback();
       await expect(transaction.started, 'to be true');
+    });
+
+    it('updates flags even on rollback failure', async () => {
+      sinon
+        .stub(DummyTransaction.prototype, '_rollback')
+        .returns(Promise.reject(new Error('rollback error')));
+      const transaction = new DummyTransaction();
+      await transaction.begin();
+      await expect(transaction.rollback(), 'to be rejected');
+      await expect(transaction.active, 'to be false');
+      await expect(transaction.ended, 'to be true');
     });
   });
 
@@ -836,21 +942,6 @@ describe('Transaction', () => {
         query.restore();
       });
 
-      it('rolls back a transaction on failure', async () => {
-        await expect(
-          new Transaction(async ({ models: { User } }) => {
-            await User.insert({ id: 1, name: 'foo' });
-            await User.insert({ id: 1, name: 'bar' }); // primary key error
-          }),
-          'to be rejected with error satisfying',
-          {
-            message:
-              'User: duplicate key value violates unique constraint "user_pkey"'
-          }
-        );
-        await expect(knex, 'with table', User.table, 'to be empty');
-      });
-
       it('closes the connection after runnning queries', async () => {
         const close = sinon.spy(Connection.prototype, 'close');
         await new Transaction(async ({ models: { User } }) => {
@@ -880,7 +971,9 @@ describe('Transaction', () => {
         await expect(query, 'to have calls satisfying', () => {
           query('BEGIN');
         });
-        await expect(close, 'to have calls satisfying', () => close());
+        await expect(close, 'to have calls satisfying', () =>
+          close(new TransactionError(new Error('begin error')))
+        );
         query.restore();
         close.restore();
       });
@@ -923,9 +1016,110 @@ describe('Transaction', () => {
           query('COMMIT');
           query('ROLLBACK'); // rollback will be automatically called
         });
-        await expect(close, 'to have calls satisfying', () => close());
+        await expect(close, 'to have calls satisfying', () =>
+          close(new TransactionError(new Error('commit error')))
+        );
         query.restore();
         close.restore();
+      });
+
+      it('closes the connection if `rollback` fails', async () => {
+        const close = sinon.spy(Connection.prototype, 'close');
+        const query = sinon
+          .stub(Connection.prototype, 'query')
+          .callsFake(sql => {
+            if (sql === 'ROLLBACK') {
+              throw new Error('rollback error');
+            }
+            return { rows: [] };
+          });
+        const transaction = new Transaction(async ({ models: { User } }) => {
+          await User.query.execute('select now()');
+          throw new Error('foo');
+        });
+        await expect(
+          transaction.execute(),
+          'to be rejected with error satisfying',
+          new TransactionError(new Error('rollback error'))
+        );
+        await expect(query, 'to have calls satisfying', () => {
+          query('BEGIN');
+          query({ text: 'select now()' });
+          query('ROLLBACK');
+        });
+        await expect(close, 'to have calls satisfying', () =>
+          close(new TransactionError(new Error('rollback error')))
+        );
+        query.restore();
+        close.restore();
+      });
+
+      describe('on query error', () => {
+        it('rolls back a transaction', async () => {
+          await expect(
+            new Transaction(async ({ models: { User } }) => {
+              await User.insert({ id: 1, name: 'foo' });
+              // trigger a primary key error:
+              await User.insert({ id: 1, name: 'bar' });
+            }),
+            'to be rejected'
+          );
+          await expect(knex, 'with table', User.table, 'to be empty');
+        });
+
+        it('fails with the query error', async () => {
+          await expect(
+            new Transaction(async ({ models: { User } }) => {
+              await User.insert({ id: 1, name: 'foo' });
+              // trigger a primary key error:
+              await User.insert({ id: 1, name: 'bar' });
+            }),
+            'to be rejected with error satisfying',
+            {
+              message:
+                'User: duplicate key value violates unique constraint "user_pkey"'
+            }
+          );
+        });
+
+        it('rolls back via Transaction.prototype.rollback', async () => {
+          const rollback = sinon.spy(Transaction.prototype, 'rollback');
+          const commit = sinon.spy(Transaction.prototype, 'commit');
+          await expect(
+            new Transaction(async ({ models: { User } }) => {
+              await User.insert({ id: 1, name: 'foo' });
+              // trigger a primary key error:
+              await User.insert({ id: 1, name: 'bar' });
+            }),
+            'to be rejected'
+          );
+          await expect(rollback, 'to have calls satisfying', () => {
+            rollback({
+              message:
+                'duplicate key value violates unique constraint "user_pkey"'
+            }); // one call from Query#execute
+            rollback(); // one call from the try..catch in Transaction#execute
+          });
+          await expect(commit, 'was not called'); // `commit` was never reached
+          rollback.restore();
+          commit.restore();
+        });
+
+        it('does not roll back twice', async () => {
+          const _rollback = sinon.spy(Transaction.prototype, '_rollback');
+          await expect(
+            new Transaction(async ({ models: { User } }) => {
+              await User.insert({ id: 1, name: 'foo' });
+              // trigger a primary key error:
+              await User.insert({ id: 1, name: 'bar' });
+            }),
+            'to be rejected'
+          );
+          await expect(_rollback, 'to have calls satisfying', () => {
+            _rollback();
+          });
+          _rollback.restore();
+        });
       });
     });
 
@@ -1018,23 +1212,6 @@ describe('Transaction', () => {
         query.restore();
       });
 
-      it('rolls back a transaction on query failure', async () => {
-        await expect(
-          async () => {
-            const transaction = new Transaction();
-            await transaction.models.User.insert({ id: 1, name: 'foo' });
-            await transaction.models.User.insert([{ id: 1, name: 'bar' }]); // primary key error
-            await transaction.commit();
-          },
-          'to be rejected with error satisfying',
-          {
-            message:
-              'User: duplicate key value violates unique constraint "user_pkey"'
-          }
-        );
-        await expect(knex, 'with table', User.table, 'to be empty');
-      });
-
       it('closes the connection after `commit`', async () => {
         const close = sinon.spy(Connection.prototype, 'close');
         const transaction = new Transaction();
@@ -1074,7 +1251,9 @@ describe('Transaction', () => {
         await expect(query, 'to have calls satisfying', () => {
           query('BEGIN');
         });
-        await expect(close, 'to have calls satisfying', () => close());
+        await expect(close, 'to have calls satisfying', () =>
+          close(new TransactionError(new Error('begin error')))
+        );
         query.restore();
         close.restore();
       });
@@ -1102,7 +1281,9 @@ describe('Transaction', () => {
           query('COMMIT');
           query('ROLLBACK'); // rollback will be automatically called
         });
-        await expect(close, 'to have calls satisfying', () => close());
+        await expect(close, 'to have calls satisfying', () =>
+          close(new TransactionError(new Error('commit error')))
+        );
         query.restore();
         close.restore();
       });
@@ -1130,9 +1311,91 @@ describe('Transaction', () => {
           query({ text: 'select now()' });
           query('ROLLBACK');
         });
-        await expect(close, 'to have calls satisfying', () => close());
+        await expect(close, 'to have calls satisfying', () =>
+          close(new TransactionError(new Error('rollback error')))
+        );
         query.restore();
         close.restore();
+      });
+
+      describe('on query error', () => {
+        it('rolls back the transaction', async () => {
+          await expect(async () => {
+            const transaction = new Transaction();
+            await transaction.models.User.insert({ id: 1, name: 'foo' });
+            // trigger a primary key error:
+            await transaction.models.User.insert({ id: 1, name: 'bar' });
+            await transaction.commit();
+          }, 'to be rejected');
+          await expect(knex, 'with table', User.table, 'to be empty');
+        });
+
+        it('fails with the query error', async () => {
+          await expect(
+            async () => {
+              const transaction = new Transaction();
+              await transaction.models.User.insert({ id: 1, name: 'foo' });
+              // trigger a primary key error:
+              await transaction.models.User.insert({ id: 1, name: 'bar' });
+              await transaction.commit();
+            },
+            'to be rejected with error satisfying',
+            {
+              message:
+                'User: duplicate key value violates unique constraint "user_pkey"'
+            }
+          );
+        });
+
+        it('rolls back via Transaction.prototype.rollback', async () => {
+          const rollback = sinon.spy(Transaction.prototype, 'rollback');
+          const commit = sinon.spy(Transaction.prototype, 'commit');
+          await expect(async () => {
+            const transaction = new Transaction();
+            await transaction.models.User.insert({ id: 1, name: 'foo' });
+            // trigger a primary key error:
+            await transaction.models.User.insert({ id: 1, name: 'bar' });
+            await transaction.commit();
+          }, 'to be rejected');
+          await expect(rollback, 'to have calls satisfying', () =>
+            rollback({
+              message:
+                'duplicate key value violates unique constraint "user_pkey"'
+            })
+          );
+          await expect(commit, 'was not called'); // `commit` was never reached
+          rollback.restore();
+          commit.restore();
+        });
+
+        it('does not roll back twice when code is wrapped in a try..catch', async () => {
+          let rollback;
+          let _rollback;
+          await expect(async () => {
+            const transaction = new Transaction();
+            rollback = sinon.spy(transaction, 'rollback');
+            _rollback = sinon.spy(transaction, '_rollback');
+            try {
+              await transaction.models.User.insert({ id: 1, name: 'foo' });
+              // trigger a primary key error:
+              await transaction.models.User.insert({ id: 1, name: 'bar' });
+              await transaction.commit();
+            } catch (e) {
+              await transaction.rollback();
+              throw e;
+            }
+          }, 'to be rejected');
+          await expect(rollback, 'to have calls satisfying', () => {
+            rollback({
+              message:
+                'duplicate key value violates unique constraint "user_pkey"'
+            }); // one call from Query#execture
+            rollback(); // one call from the try..catch above
+          });
+          await expect(_rollback, 'to have calls satisfying', () => {
+            _rollback();
+          });
+        });
       });
     });
 
