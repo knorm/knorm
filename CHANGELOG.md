@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/knorm/postgres/compare/v2.0.1...v2.0.2) (2019-03-13)
+
+
+### Bug Fixes
+
+* pass query errors to client.release ([035c5b5](https://github.com/knorm/postgres/commit/035c5b5)), closes [/github.com/brianc/node-postgres/issues/1745#issuecomment-469703239](https://github.com//github.com/brianc/node-postgres/issues/1745/issues/issuecomment-469703239)
+
 ## [2.0.1](https://github.com/knorm/postgres/compare/v2.0.0...v2.0.1) (2019-02-19)
 
 
