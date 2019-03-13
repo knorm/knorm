@@ -74,6 +74,48 @@ describe('Transaction', () => {
       expect(User.prototype.transaction, 'to be null');
       expect(User.Query.prototype.transaction, 'to be null');
     });
+
+    it('enables access to the transaction instance via `super`', async () => {
+      let employeeTested = false;
+      let internTested = false;
+
+      class Employee extends User {
+        async test() {
+          await expect(this.transaction, 'to be', transaction);
+          employeeTested = true;
+        }
+      }
+
+      class Intern extends Employee {
+        async test() {
+          await expect(this.transaction, 'to be', transaction);
+          internTested = true;
+          return super.test();
+        }
+      }
+
+      Employee.table = 'employee';
+      Intern.table = 'intern';
+
+      const transaction = new Transaction();
+
+      await expect(
+        new Intern().test(),
+        'to be rejected with error satisfying',
+        // unexpected thinks Transaction is Promise since it's a thenable
+        'expected null to be Promise'
+      );
+
+      // because the test failed, the assignments were never reached
+      await expect(employeeTested, 'to be false');
+      await expect(internTested, 'to be false');
+
+      const TransactionIntern = transaction.models.Intern;
+
+      await expect(new TransactionIntern().test(), 'to be fulfilled');
+      await expect(employeeTested, 'to be true');
+      await expect(internTested, 'to be true');
+    });
   });
 
   describe('Transaction.prototype.connect', () => {
