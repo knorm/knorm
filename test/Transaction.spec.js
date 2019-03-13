@@ -13,7 +13,6 @@ describe('Transaction', () => {
   let Connection;
   let Transaction;
   let TransactionError;
-  let User;
 
   before(() => {
     const knorm = new Knorm();
@@ -26,12 +25,16 @@ describe('Transaction', () => {
   });
 
   describe('constructor', () => {
-    it('creates scoped models', () => {
+    let User;
+
+    before(() => {
       User = class extends Model {};
       User.table = 'user';
       User.fields = { name: { type: 'string', primary: true } };
       User.Query = class UserQuery extends User.Query {};
+    });
 
+    it('creates scoped models', () => {
       const transaction = new Transaction();
       const TransactionUser = transaction.models.User;
 
@@ -60,6 +63,16 @@ describe('Transaction', () => {
 
       expect(TransactionUser.prototype.transaction, 'to be', transaction);
       expect(TransactionUser.Query.prototype.transaction, 'to be', transaction);
+    });
+
+    it('does not add an accessor to the parent models and queries', () => {
+      new Transaction(); // eslint-disable-line no-new
+
+      expect(User.transaction, 'to be null');
+      expect(User.Query.transaction, 'to be null');
+
+      expect(User.prototype.transaction, 'to be null');
+      expect(User.Query.prototype.transaction, 'to be null');
     });
   });
 
