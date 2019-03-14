@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/knorm/knorm/compare/v2.1.0...v2.1.1) (2019-03-14)
+
+
+### Bug Fixes
+
+* **Model:** skip virtuals without setters in `setData` ([f32f637](https://github.com/knorm/knorm/commit/f32f637))
+
 # [2.1.0](https://github.com/knorm/knorm/compare/v2.0.0...v2.1.0) (2019-03-13)
 
 
