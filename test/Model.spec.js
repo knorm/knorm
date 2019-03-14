@@ -227,27 +227,6 @@ describe('Model', () => {
       expect(foo.bar, 'to equal', 1);
     });
 
-    it('throws if a virtual provided in the object has no setter', () => {
-      class Foo extends Model {}
-
-      Foo.virtuals = {
-        bar: {
-          get() {}
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(foo.bar, 'to be undefined');
-      expect(
-        () => foo.setData({ bar: 1 }),
-        'to throw',
-        new TypeError(
-          'Cannot set property bar of #<Foo> which has only a getter'
-        )
-      );
-    });
-
     it("calls the virtual's setter with this set to the model instance", () => {
       class Foo extends Model {}
 
@@ -277,6 +256,27 @@ describe('Model', () => {
       const foo = new Foo();
 
       expect(foo.setData({ foo: 'foo' }), 'to satisfy', foo);
+    });
+
+    // https://github.com/knorm/knorm/issues/239
+    it('ignores virtuals in the object that have no setters', () => {
+      class Foo extends Model {}
+
+      Foo.virtuals = {
+        bar: {
+          get() {
+            return 'bar';
+          }
+        }
+      };
+
+      const foo = new Foo();
+
+      expect(foo.bar, 'to be', 'bar');
+
+      foo.setData({ bar: 1 });
+
+      expect(foo.bar, 'to be', 'bar');
     });
 
     it('filters out `undefined` values from the data', () => {
