@@ -1,14 +1,27 @@
 language: node_js
 
-script:
-  - npm run lint
-  - npm run coverage
-
-after_success:
-  - npm run coveralls
-
-deploy:
-  provider: script
-  skip_cleanup: true
-  script:
-    - npx semantic-release
+jobs:
+  include:
+    - stage: test
+      name: "Node.js 10"
+      node_js: "10"
+      script:
+        - npm run lint
+        - npm run coverage
+      after_success:
+        - npm run coveralls
+    - stage: test
+      name: "Node.js 8"
+      node_js: "8"
+      script:
+        - npm run test
+    - stage: release
+      node_js: "10"
+      script: skip
+      branches:
+        only:
+          - master
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script: npx semantic-release
