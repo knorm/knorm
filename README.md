@@ -42,7 +42,7 @@ These environments are currently supported:
 
 | Environment | Value           | Description                                                                 |
 | ----------- | --------------- | --------------------------------------------------------------------------- |
-| Node.js     | Version >= 7.6. | Knorm uses `async/await`                                                    |
+| Node.js     | Version >= 8    | Knorm uses `async/await`                                                    |
 | Databases   | PostgreSQL      | via the [@knorm/postgres](https://www.npmjs.com/package/@knorm/postgres) plugin |
 
 ## [Get started](https://knorm.netlify.com/getting-started.html)
