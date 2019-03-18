@@ -789,6 +789,33 @@ describe('Query', () => {
           });
         });
       });
+
+      describe('when a transaction is ended while running a query', () => {
+        let query;
+
+        beforeEach(() => {
+          query = new Query(User);
+          const originalQuery = query.query;
+          query.query = async function(sql) {
+            await this.transaction.rollback();
+            return originalQuery.call(this, sql);
+          };
+        });
+
+        it('does not disconnect via Query.prototype.disconnect', async () => {
+          const disconnect = sinon.spy(query, 'disconnect');
+          await query.execute('select now()');
+          await expect(disconnect, 'was not called');
+        });
+
+        it('disconnects via Transaction.prototype.disconnect', async () => {
+          const disconnect = sinon.spy(transaction, 'disconnect');
+          await query.execute('select now()');
+          await expect(disconnect, 'to have calls satisfying', () =>
+            disconnect()
+          );
+        });
+      });
     });
   });
 
