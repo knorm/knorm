@@ -1,3 +1,10 @@
+## [2.1.2](https://github.com/knorm/knorm/compare/v2.1.1...v2.1.2) (2019-03-18)
+
+
+### Bug Fixes
+
+* **Query:** handle transactions ending while running queries ([2315ff2](https://github.com/knorm/knorm/commit/2315ff2))
+
 ## [2.1.1](https://github.com/knorm/knorm/compare/v2.1.0...v2.1.1) (2019-03-14)
 
 
