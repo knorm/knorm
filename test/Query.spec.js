@@ -132,19 +132,99 @@ describe('Query', () => {
     });
   });
 
-  describe('Query.prototype.setOptions', () => {
-    it('throws an error if passed an option that is not a Query method', () => {
+  describe('Query.prototype.getOption', () => {
+    it('returns query-option values set via via Query.prototype.setOption(s)', () => {
+      const query = new Query(User);
+      query.setOptions({ limit: 1 });
+      expect(query.getOption('limit'), 'to be', 1);
+      query.setOption('require', true);
+      expect(query.getOption('require'), 'to be true');
+    });
+  });
+
+  describe('Query.prototype.setOption', () => {
+    it('sets the query option value for booleans', () => {
+      const query = new Query(User);
+      query.setOption('require', false);
+      expect(query.getOption('require'), 'to be false');
+    });
+
+    it('sets the query option value for integers', () => {
+      const query = new Query(User);
+      query.setOption('limit', 1);
+      expect(query.getOption('limit'), 'to be', 1);
+    });
+
+    it('appends the query option value for arrays', () => {
+      const query = new Query(User);
+      query.setOption('fields', ['id', 'name']);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name']);
+      query.setOption('fields', ['age']);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name', 'age']);
+    });
+
+    it('unsets the query option value if passed `null`', () => {
+      const query = new Query(User);
+      query.setOption('fields', ['id', 'name']);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name']);
+      query.setOption('fields', null);
+      expect(query.getOption('fields'), 'to be null');
+    });
+
+    it('ignores `undefined` query option values', () => {
+      const query = new Query(User);
+      query.setOption('fields', ['id', 'name']);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name']);
+      query.setOption('fields', undefined);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name']);
+    });
+
+    it('allows chaining', () => {
+      const query = new Query(User);
+      expect(query.setOption('fields', ['id']), 'to be', query);
+      expect(query.setOption('fields', null), 'to be', query);
+      expect(query.setOption('fields', undefined), 'to be', query);
+    });
+
+    it('throws an error if the option is not a QueryOption method', () => {
       expect(
-        () => new Query(User).setOptions({ foo: 'bar' }),
+        () => new Query(User).setOption('foo', 'bar'),
         'to throw',
-        new QueryError('User: unknown option `foo`')
+        new QueryError('User: unknown query option `foo`')
       );
     });
 
-    it('supports query builder methods', () => {
+    it('throws an error if the option starts with an underscore', () => {
       expect(
-        () => new Query(User).setOptions({ where: { foo: 'bar' } }),
-        'not to throw'
+        () => new Query(User).setOption('_getArray', ['bar']),
+        'to throw',
+        new QueryError('User: invalid query option `_getArray`')
+      );
+    });
+  });
+
+  describe('Query.prototype.setOptions', () => {
+    it('sets query options via Query.prototype.setOption', () => {
+      const setOption = sinon.spy(Query.prototype, 'setOption');
+      const query = new Query(User);
+      query.setOptions({ limit: 1, require: true, fields: null });
+      expect(query.getOption('limit'), 'to be', 1);
+      expect(query.getOption('require'), 'to be true');
+      expect(query.getOption('fields'), 'to be null');
+      expect(setOption, 'to have calls satisfying', () => {
+        setOption('limit', 1);
+        setOption('require', true);
+        setOption('fields', null);
+      });
+      setOption.restore();
+    });
+
+    it('allows chaining', () => {
+      const query = new Query(User);
+      expect(
+        query.setOptions({ fields: ['id'], require: false }),
+        'to be',
+        query
       );
     });
   });
