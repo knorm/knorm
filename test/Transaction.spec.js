@@ -417,6 +417,30 @@ describe('Transaction', () => {
       await transaction.commit();
       await expect(transaction.started, 'to be true');
     });
+
+    describe('if the transaction is already ended', () => {
+      it('does not call Transaction.prototype._commit', async () => {
+        const _commit = sinon.spy(DummyTransaction.prototype, '_commit');
+        const transaction = new DummyTransaction();
+        await transaction.begin();
+        await transaction.commit();
+        await transaction.commit();
+        await expect(_commit, 'to have calls exhaustively satisfying', () =>
+          _commit()
+        );
+      });
+
+      describe('via Transaction.prototype.rollback', () => {
+        it('does not call Transaction.prototype._commit', async () => {
+          const _commit = sinon.spy(DummyTransaction.prototype, '_commit');
+          const transaction = new DummyTransaction();
+          await transaction.begin();
+          await transaction.rollback();
+          await transaction.commit();
+          await expect(_commit, 'was not called');
+        });
+      });
+    });
   });
 
   describe('Transaction.prototype.rollback', () => {
@@ -553,6 +577,30 @@ describe('Transaction', () => {
       await expect(transaction.rollback(), 'to be rejected');
       await expect(transaction.active, 'to be false');
       await expect(transaction.ended, 'to be true');
+    });
+
+    describe('if the transaction is already ended', () => {
+      it('does not call Transaction.prototype._rollback again', async () => {
+        const _rollback = sinon.spy(DummyTransaction.prototype, '_rollback');
+        const transaction = new DummyTransaction();
+        await transaction.begin();
+        await transaction.rollback();
+        await transaction.rollback();
+        await expect(_rollback, 'to have calls exhaustively satisfying', () =>
+          _rollback()
+        );
+      });
+
+      describe('via Transaction.prototype.commit', () => {
+        it('does not call Transaction.prototype._rollback', async () => {
+          const _rollback = sinon.spy(DummyTransaction.prototype, '_rollback');
+          const transaction = new DummyTransaction();
+          await transaction.begin();
+          await transaction.commit();
+          await transaction.rollback();
+          await expect(_rollback, 'was not called');
+        });
+      });
     });
   });
 
@@ -940,6 +988,20 @@ describe('Transaction', () => {
         });
         create.restore();
         query.restore();
+      });
+
+      it('allows Transaction.prototype.commit to be called within the callback', async () => {
+        await expect(
+          new Transaction(async transaction => transaction.commit()),
+          'to be fulfilled'
+        );
+      });
+
+      it('allows Transaction.prototype.rollback to be called within the callback', async () => {
+        await expect(
+          new Transaction(async transaction => transaction.rollback()),
+          'to be fulfilled'
+        );
       });
 
       it('closes the connection after runnning queries', async () => {
