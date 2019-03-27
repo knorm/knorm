@@ -1353,6 +1353,32 @@ describe('Query', () => {
         );
       });
 
+      it('supports field expression', async () => {
+        const query = new Query(User);
+        query.where(User.fields.id.notEqual(1));
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [new User({ id: 2, name: 'User 2' })]
+        );
+      });
+
+      it('supports multiple field expression', async () => {
+        const query = new Query(User);
+        const where = new Query.Where();
+        query.where(
+          where.or(User.fields.id.equal(1), User.fields.name.equal('User 2'))
+        );
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
       it('does nothing if no arguments are passed', async () => {
         const query = new Query(User);
         query.where();
