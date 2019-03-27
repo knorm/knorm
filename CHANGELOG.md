@@ -1,3 +1,10 @@
+## [2.1.3](https://github.com/knorm/knorm/compare/v2.1.2...v2.1.3) (2019-03-27)
+
+
+### Bug Fixes
+
+* **Transaction:** make Transaction.prototype.commit idempotent ([bcc16a1](https://github.com/knorm/knorm/commit/bcc16a1))
+
 ## [2.1.2](https://github.com/knorm/knorm/compare/v2.1.1...v2.1.2) (2019-03-18)
 
 
