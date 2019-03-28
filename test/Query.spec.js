@@ -133,16 +133,6 @@ describe('Query', () => {
     });
   });
 
-  describe('Query.prototype.getOption', () => {
-    it('returns query-option values set via Query.prototype.setOption(s)', () => {
-      const query = new Query(User);
-      query.setOptions({ limit: 1 });
-      expect(query.getOption('limit'), 'to be', 1);
-      query.setOption('require', true);
-      expect(query.getOption('require'), 'to be true');
-    });
-  });
-
   describe('Query.prototype.setOption', () => {
     it('sets the query option value for booleans', () => {
       const query = new Query(User);
