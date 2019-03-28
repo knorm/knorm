@@ -8,6 +8,7 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'));
 
 describe('Transaction', () => {
+  let knorm;
   let Model;
   let Query;
   let Connection;
@@ -15,7 +16,7 @@ describe('Transaction', () => {
   let TransactionError;
 
   before(() => {
-    const knorm = new Knorm();
+    knorm = new Knorm();
 
     Model = knorm.Model;
     Query = knorm.Query;
@@ -52,6 +53,39 @@ describe('Transaction', () => {
         'to be a',
         User
       );
+    });
+
+    it('creates scoped models for models added at runtime', () => {
+      class Student extends User {}
+
+      knorm.addModel(Student);
+
+      const transaction = new Transaction();
+      const TransactionStudent = transaction.models.Student;
+
+      expect(TransactionStudent.name, 'to be', 'Student');
+
+      expect(TransactionStudent.prototype, 'to be a', Student);
+      expect(TransactionStudent.models.Student, 'to be', TransactionStudent);
+      expect(
+        TransactionStudent.prototype.models.Student,
+        'to be',
+        TransactionStudent
+      );
+
+      expect(TransactionStudent.Query.prototype, 'to be a', Query);
+      expect(
+        TransactionStudent.Query.models.Student.prototype,
+        'to be a',
+        Student
+      );
+      expect(
+        TransactionStudent.Query.prototype.models.Student.prototype,
+        'to be a',
+        Student
+      );
+
+      knorm.removeModel(Student);
     });
 
     it('adds an accessor to the transaction instance', () => {
