@@ -68,7 +68,8 @@ describe('Query', () => {
             }
           }
         },
-        schema: {
+        // TODO: is this shape config even used?
+        shape: {
           type: 'array',
           maxLength: 2
         }
@@ -133,7 +134,7 @@ describe('Query', () => {
   });
 
   describe('Query.prototype.getOption', () => {
-    it('returns query-option values set via via Query.prototype.setOption(s)', () => {
+    it('returns query-option values set via Query.prototype.setOption(s)', () => {
       const query = new Query(User);
       query.setOptions({ limit: 1 });
       expect(query.getOption('limit'), 'to be', 1);
