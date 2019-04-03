@@ -1,20 +1,24 @@
-const Sql = require('../lib/Sql');
-const Raw = require('../lib/Raw');
-const Knorm = require('../lib/Knorm');
-const Condition = require('../lib/Condition');
-const Grouping = require('../lib/Grouping');
+const Knorm = require('../../../lib/Knorm');
 const expect = require('unexpected').clone();
 
 describe('Grouping', () => {
   let Model;
   let Query;
   let User;
+  let Sql;
+  let Raw;
+  let Condition;
+  let Grouping;
 
   before(() => {
     const orm = new Knorm({});
 
     Model = orm.Model;
     Query = orm.Query;
+    Sql = Query.Sql;
+    Raw = Query.Sql.Raw;
+    Condition = Query.Sql.Condition;
+    Grouping = Query.Sql.Grouping;
 
     User = class extends Model {};
     User.table = 'user';

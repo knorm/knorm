@@ -1,26 +1,31 @@
-const Sql = require('../lib/Sql');
-const Raw = require('../lib/Raw');
-const Condition = require('../lib/Condition');
-const Grouping = require('../lib/Grouping');
-const Knorm = require('../lib/Knorm');
+const Knorm = require('../../lib/Knorm');
 const expect = require('unexpected').clone();
 
 describe('Sql', () => {
   let Model;
   let Query;
   let User;
-
-  class QuotedSql extends Sql {
-    quote(identifier) {
-      return `"${identifier}"`;
-    }
-  }
+  let Sql;
+  let Raw;
+  let Condition;
+  let Grouping;
+  let QuotedSql;
 
   before(() => {
     const orm = new Knorm({});
 
     Model = orm.Model;
     Query = orm.Query;
+    Sql = Query.Sql;
+    Raw = Query.Sql.Raw;
+    Condition = Query.Sql.Condition;
+    Grouping = Query.Sql.Grouping;
+
+    QuotedSql = class extends Sql {
+      quote(identifier) {
+        return `"${identifier}"`;
+      }
+    };
 
     User = class extends Model {};
     User.table = 'user';
@@ -171,7 +176,7 @@ describe('Sql', () => {
     describe('with the `fields` query option not set', () => {
       it('returns empty columns, aliases and values', () => {
         expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: [],
+          columns: '',
           aliases: [],
           values: []
         });
@@ -182,7 +187,7 @@ describe('Sql', () => {
       it('supports strings', () => {
         query.setOption('fields', 'id');
         expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: ['"user"."id"'],
+          columns: '"user"."id"',
           aliases: ['id'],
           values: []
         });
@@ -191,7 +196,7 @@ describe('Sql', () => {
       it('supports objects with string values', () => {
         query.setOption('fields', { theId: 'id', theName: 'name' });
         expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: ['"user"."id"', '"user"."name"'],
+          columns: '"user"."id", "user"."name"',
           aliases: ['theId', 'theName'],
           values: []
         });
@@ -203,7 +208,7 @@ describe('Sql', () => {
           upperCaseFoo: new Raw({ sql: 'UPPER(?)', values: ['foo'] })
         });
         expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: ['COUNT(*)', 'UPPER(?)'],
+          columns: 'COUNT(*), UPPER(?)',
           aliases: ['count', 'upperCaseFoo'],
           values: ['foo']
         });
@@ -212,7 +217,7 @@ describe('Sql', () => {
       it('supports arrays of strings', () => {
         query.setOption('fields', ['id', 'name']);
         expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: ['"user"."id"', '"user"."name"'],
+          columns: '"user"."id", "user"."name"',
           aliases: ['id', 'name'],
           values: []
         });
@@ -225,7 +230,7 @@ describe('Sql', () => {
           { upperCaseFoo: new Raw({ sql: 'UPPER(?)', values: ['foo'] }) }
         ]);
         expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: ['"user"."id"', '"user"."name"', 'UPPER(?)'],
+          columns: '"user"."id", "user"."name", UPPER(?)',
           aliases: ['id', 'theName', 'upperCaseFoo'],
           values: ['foo']
         });
