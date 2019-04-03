@@ -48,7 +48,6 @@ const postgresPlugin = knorm => {
   knorm.updateQuery(QueryForTests);
 
   QueryForTests.prototype.sql = sqlBricksPostgres;
-  knorm.Query.Where.prototype.sql = sqlBricksPostgres;
 };
 
 postgresPlugin.pool = pool;

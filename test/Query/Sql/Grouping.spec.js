@@ -28,13 +28,13 @@ describe('Grouping', () => {
   let sql;
 
   beforeEach(() => {
-    sql = new Sql(new Query(User));
+    sql = new Sql(User);
   });
 
-  describe('Grouping.prototype.getWhere', () => {
+  describe('Grouping.prototype.formatWhere', () => {
     it('returns a correctly formatted clause for `AND` groupings', () => {
       const grouping = new Grouping({ type: 'and', value: [true, true] });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '(? AND ?)',
         values: [true, true]
       });
@@ -42,7 +42,7 @@ describe('Grouping', () => {
 
     it('returns a correctly formatted clause for `OR` groupings', () => {
       const grouping = new Grouping({ type: 'or', value: [true, false] });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '(? OR ?)',
         values: [true, false]
       });
@@ -50,7 +50,7 @@ describe('Grouping', () => {
 
     it('supports groupings of a single value', () => {
       const grouping = new Grouping({ type: 'and', value: true });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '?',
         values: [true]
       });
@@ -58,7 +58,7 @@ describe('Grouping', () => {
 
     it('supports groupings of array values', () => {
       const grouping = new Grouping({ type: 'or', value: [[1, 2], [3, 4]] });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '(? OR ?)',
         values: [[1, 2], [3, 4]]
       });
@@ -69,7 +69,7 @@ describe('Grouping', () => {
         type: 'and',
         value: [new Query(User), new Query(User)]
       });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '((SELECT FROM user) AND (SELECT FROM user))',
         values: []
       });
@@ -83,7 +83,7 @@ describe('Grouping', () => {
           new Query(User).setOptions({ field: 'name', where: { name: 'foo' } })
         ]
       });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: [
           '((SELECT user.id FROM user WHERE user.id = ?) AND ',
           '(SELECT user.name FROM user WHERE user.name = ?))'
@@ -100,7 +100,7 @@ describe('Grouping', () => {
           new Grouping({ type: 'and', value: [3, 4] })
         ]
       });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '((? AND ?) OR (? AND ?))',
         values: [1, 2, 3, 4]
       });
@@ -114,7 +114,7 @@ describe('Grouping', () => {
           new Condition({ type: 'like', field: 'name', value: 'foo' })
         ]
       });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '(user.id = ? AND user.name LIKE ?)',
         values: [10, 'foo']
       });
@@ -128,7 +128,7 @@ describe('Grouping', () => {
           new Raw({ sql: '(SELECT false)' })
         ]
       });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '((SELECT true) AND (SELECT false))',
         values: []
       });
@@ -142,7 +142,7 @@ describe('Grouping', () => {
           new Raw({ sql: 'LOWER(name) = ?', values: ['foo'] })
         ]
       });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '(UPPER(name) = ? AND LOWER(name) = ?)',
         values: ['FOO', 'foo']
       });
@@ -153,7 +153,7 @@ describe('Grouping', () => {
         type: 'and',
         value: { id: 1, name: 'foo' }
       });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where: '(user.id = ? AND user.name = ?)',
         values: [1, 'foo']
       });
@@ -164,7 +164,7 @@ describe('Grouping', () => {
         type: 'or',
         value: [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
       });
-      expect(grouping.getWhere(sql), 'to equal', {
+      expect(grouping.formatWhere(sql), 'to equal', {
         where:
           '((user.id = ? AND user.name = ?) OR (user.id = ? AND user.name = ?))',
         values: [1, 'foo', 2, 'bar']
@@ -180,7 +180,7 @@ describe('Grouping', () => {
 
       it('supports array object values', () => {
         grouping.value = { id: [1], name: ['foo'] };
-        expect(grouping.getWhere(sql), 'to equal', {
+        expect(grouping.formatWhere(sql), 'to equal', {
           where: '(user.id = ? AND user.name = ?)',
           values: [[1], ['foo']]
         });
@@ -194,7 +194,7 @@ describe('Grouping', () => {
             where: { name: 'foo' }
           })
         };
-        expect(grouping.getWhere(sql), 'to equal', {
+        expect(grouping.formatWhere(sql), 'to equal', {
           where: [
             '(user.id = (SELECT user.id FROM user WHERE user.id = ?) AND ',
             'user.name = (SELECT user.name FROM user WHERE user.name = ?))'
@@ -208,7 +208,7 @@ describe('Grouping', () => {
           id: new Grouping({ type: 'and', value: [1, 2] }),
           name: new Grouping({ type: 'and', value: ['foo', 'bar'] })
         };
-        expect(grouping.getWhere(sql), 'to equal', {
+        expect(grouping.formatWhere(sql), 'to equal', {
           where: '(user.id = (? AND ?) AND user.name = (? AND ?))',
           values: [1, 2, 'foo', 'bar']
         });
@@ -222,7 +222,7 @@ describe('Grouping', () => {
             value: new Raw({ sql: '(SELECT true)' })
           })
         };
-        expect(grouping.getWhere(sql), 'to equal', {
+        expect(grouping.formatWhere(sql), 'to equal', {
           where: '(user.id = NOT ? AND user.name = EXISTS (SELECT true))',
           values: [10]
         });
@@ -233,7 +233,7 @@ describe('Grouping', () => {
           id: new Raw({ sql: '(SELECT true)' }),
           name: new Raw({ sql: 'LOWER(?)', values: ['foo'] })
         };
-        expect(grouping.getWhere(sql), 'to equal', {
+        expect(grouping.formatWhere(sql), 'to equal', {
           where: '(user.id = (SELECT true) AND user.name = LOWER(?))',
           values: ['foo']
         });

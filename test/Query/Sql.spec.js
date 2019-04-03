@@ -30,106 +30,122 @@ describe('Sql', () => {
     User = class extends Model {};
     User.table = 'user';
     User.fields = {
-      // TODO: do not require primary field?
-      id: { type: 'integer', primary: true },
+      id: 'integer',
       name: 'string',
-      description: 'string',
-      age: 'integer',
+      description: 'text',
       confirmed: 'boolean'
     };
   });
 
-  let query;
-
-  beforeEach(() => {
-    query = new Query(User);
-  });
-
   describe('Sql.prototype.quote', () => {
     it('returns the identifier as is', () => {
-      expect(new Sql(query).quote('order'), 'to be', 'order');
+      expect(new Sql(User).quote('order'), 'to be', 'order');
     });
   });
 
-  describe('Sql.prototype.getDistinct', () => {
-    describe('with the `distinct` query option not set', () => {
-      it('returns an empty string', () => {
-        expect(new Sql(query).getDistinct(), 'to be', '');
+  describe('Sql.prototype.formatSchema', () => {
+    describe('with `Model.schema` not set', () => {
+      it('returns `undefined`', () => {
+        expect(new QuotedSql(User).formatSchema(), 'to be undefined');
       });
-    });
-
-    describe('with the `distinct` query option set', () => {
-      beforeEach(() => {
-        query.setOption('distinct', true);
-      });
-
-      it('returns `DISTINCT`', () => {
-        expect(new Sql(query).getDistinct(), 'to be', 'DISTINCT');
-      });
-    });
-  });
-
-  describe('Sql.prototype.getTable', () => {
-    it('returns a quoted `Model.table`', () => {
-      expect(new QuotedSql(query).getTable(), 'to be', '"user"');
     });
 
     describe('with `Model.schema` set', () => {
+      let OtherUser;
+
       beforeEach(() => {
-        class OtherUser extends User {}
+        OtherUser = class extends User {};
         OtherUser.schema = 'public';
-        query = new Query(OtherUser);
+      });
+
+      it('returns a quoted `Model.schema`', () => {
+        expect(new QuotedSql(OtherUser).formatSchema(), 'to be', '"public"');
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatTable', () => {
+    it('returns a quoted `Model.table`', () => {
+      expect(new QuotedSql(User).formatTable(), 'to be', '"user"');
+    });
+
+    describe('with `Model.schema` set', () => {
+      let OtherUser;
+
+      beforeEach(() => {
+        OtherUser = class extends User {};
+        OtherUser.schema = 'public';
       });
 
       it('returns a quoted `Model.schema` and `Model.table`', () => {
-        expect(new QuotedSql(query).getTable(), 'to be', '"public"."user"');
+        expect(
+          new QuotedSql(OtherUser).formatTable(),
+          'to be',
+          '"public"."user"'
+        );
       });
     });
   });
 
-  describe('Sql.prototype.getFrom', () => {
-    describe('with the `from` query option not set', () => {
-      it('returns a quoted `Model.table`', () => {
-        expect(new QuotedSql(query).getFrom(), 'to be', 'FROM "user"');
+  describe('Sql.prototype.formatDistinct', () => {
+    describe('with the `distinct` option not set', () => {
+      it('returns an empty string', () => {
+        expect(new QuotedSql(User).formatDistinct(), 'to be', '');
       });
+    });
 
-      describe('with `Model.schema` set', () => {
-        beforeEach(() => {
-          class OtherUser extends User {}
-          OtherUser.schema = 'public';
-          query = new Query(OtherUser);
-        });
-
-        it('returns a quoted `Model.schema` and `Model.table`', () => {
-          expect(
-            new QuotedSql(query).getFrom(),
-            'to be',
-            'FROM "public"."user"'
-          );
-        });
+    describe('with the `distinct` option set', () => {
+      it('returns a `DISTINCT` clause', () => {
+        expect(
+          new QuotedSql(User).formatDistinct({ distinct: true }),
+          'to be',
+          'DISTINCT'
+        );
       });
     });
   });
 
-  describe('Sql.prototype.getColumn', () => {
+  describe('Sql.prototype.formatFrom', () => {
+    it('returns a `FROM` clause with `Model.table`', () => {
+      expect(new QuotedSql(User).formatFrom(), 'to be', 'FROM "user"');
+    });
+
+    describe('with `Model.schema` set', () => {
+      let OtherUser;
+
+      beforeEach(() => {
+        OtherUser = class extends User {};
+        OtherUser.schema = 'public';
+      });
+
+      it('returns a `FROM` clause with `Model.schema` and `Model.table`', () => {
+        expect(
+          new QuotedSql(OtherUser).formatFrom(),
+          'to be',
+          'FROM "public"."user"'
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatColumn', () => {
     it('returns a quoted table-name-prefixed column and no values', () => {
-      expect(new QuotedSql(query).getColumn('id'), 'to equal', {
+      expect(new QuotedSql(User).formatColumn('id'), 'to equal', {
         column: '"user"."id"',
         values: []
       });
     });
 
-    describe('with custom columns set', () => {
+    describe('with custom columns configured', () => {
+      let OtherUser;
+
       beforeEach(() => {
-        class OtherUser extends User {}
-        OtherUser.fields = {
-          id: { type: 'integer', primary: true, column: 'ID' }
-        };
-        query = new Query(OtherUser);
+        OtherUser = class extends User {};
+        OtherUser.fields = { id: { type: 'integer', column: 'ID' } };
       });
 
-      it('uses the set columns', () => {
-        expect(new QuotedSql(query).getColumn('id'), 'to equal', {
+      it('uses the configured columns', () => {
+        expect(new QuotedSql(OtherUser).formatColumn('id'), 'to equal', {
           column: '"user"."ID"',
           values: []
         });
@@ -137,14 +153,15 @@ describe('Sql', () => {
     });
 
     describe('with `Model.schema` set', () => {
+      let OtherUser;
+
       beforeEach(() => {
-        class OtherUser extends User {}
+        OtherUser = class extends User {};
         OtherUser.schema = 'public';
-        query = new Query(OtherUser);
       });
 
       it('returns a schema and table-name prefixed column', () => {
-        expect(new QuotedSql(query).getColumn('id'), 'to equal', {
+        expect(new QuotedSql(OtherUser).formatColumn('id'), 'to equal', {
           column: '"public"."user"."id"',
           values: []
         });
@@ -152,17 +169,17 @@ describe('Sql', () => {
     });
 
     describe('with the field is a Raw instance', () => {
-      it('returns the instance `sql` as the column', () => {
+      it('returns `Raw.prototype.sql` as the column', () => {
         expect(
-          new QuotedSql(query).getColumn(new Raw({ sql: 'COUNT(*)' })),
+          new QuotedSql(User).formatColumn(new Raw({ sql: 'COUNT(*)' })),
           'to equal',
           { column: 'COUNT(*)', values: [] }
         );
       });
 
-      it('returns the instance `values` if set', () => {
+      it('returns `Raw.prototype.values` as values if set', () => {
         expect(
-          new QuotedSql(query).getColumn(
+          new QuotedSql(User).formatColumn(
             new Raw({ sql: 'UPPER(?)', values: ['foo'] })
           ),
           'to equal',
@@ -172,10 +189,10 @@ describe('Sql', () => {
     });
   });
 
-  describe('Sql.prototype.getColumns', () => {
-    describe('with the `fields` query option not set', () => {
+  describe('Sql.prototype.formatColumns', () => {
+    describe('with the `fields` option not set', () => {
       it('returns empty columns, aliases and values', () => {
-        expect(new QuotedSql(query).getColumns(), 'to equal', {
+        expect(new QuotedSql(User).formatColumns(), 'to equal', {
           columns: '',
           aliases: [],
           values: []
@@ -183,145 +200,171 @@ describe('Sql', () => {
       });
     });
 
-    describe('with the `fields` query option set', () => {
+    describe('with the `fields` option set', () => {
       it('supports strings', () => {
-        query.setOption('fields', 'id');
-        expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: '"user"."id"',
-          aliases: ['id'],
-          values: []
-        });
+        expect(
+          new QuotedSql(User).formatColumns({ fields: ['id'] }),
+          'to equal',
+          {
+            columns: '"user"."id"',
+            aliases: ['id'],
+            values: []
+          }
+        );
       });
 
       it('supports objects with string values', () => {
-        query.setOption('fields', { theId: 'id', theName: 'name' });
-        expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: '"user"."id", "user"."name"',
-          aliases: ['theId', 'theName'],
-          values: []
-        });
+        expect(
+          new QuotedSql(User).formatColumns({
+            fields: [{ theId: 'id', theName: 'name' }]
+          }),
+          'to equal',
+          {
+            columns: '"user"."id", "user"."name"',
+            aliases: ['theId', 'theName'],
+            values: []
+          }
+        );
       });
 
       it('supports objects with Raw-instance values', () => {
-        query.setOption('fields', {
-          count: new Raw({ sql: 'COUNT(*)' }),
-          upperCaseFoo: new Raw({ sql: 'UPPER(?)', values: ['foo'] })
-        });
-        expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: 'COUNT(*), UPPER(?)',
-          aliases: ['count', 'upperCaseFoo'],
-          values: ['foo']
-        });
-      });
-
-      it('supports arrays of strings', () => {
-        query.setOption('fields', ['id', 'name']);
-        expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: '"user"."id", "user"."name"',
-          aliases: ['id', 'name'],
-          values: []
-        });
-      });
-
-      it('supports', () => {
-        query.setOption('fields', [
-          'id',
-          { theName: 'name' },
-          { upperCaseFoo: new Raw({ sql: 'UPPER(?)', values: ['foo'] }) }
-        ]);
-        expect(new QuotedSql(query).getColumns(), 'to equal', {
-          columns: '"user"."id", "user"."name", UPPER(?)',
-          aliases: ['id', 'theName', 'upperCaseFoo'],
-          values: ['foo']
-        });
+        expect(
+          new QuotedSql(User).formatColumns({
+            fields: [
+              {
+                count: new Raw({ sql: 'COUNT(*)' }),
+                upperCaseFoo: new Raw({ sql: 'UPPER(?)', values: ['foo'] })
+              }
+            ]
+          }),
+          'to equal',
+          {
+            columns: 'COUNT(*), UPPER(?)',
+            aliases: ['count', 'upperCaseFoo'],
+            values: ['foo']
+          }
+        );
       });
     });
   });
 
-  describe('Sql.prototype.getWhere', () => {
-    describe('with the `where` query option not set', () => {
+  describe('Sql.prototype.formatWhere', () => {
+    describe('with the `where` option not set', () => {
       it('returns empty WHERE clause and values', () => {
-        expect(new QuotedSql(query).getWhere(), 'to equal', {
+        expect(new QuotedSql(User).formatWhere(), 'to equal', {
           where: '',
           values: []
         });
       });
     });
 
-    describe('with the `where` query option set', () => {
+    describe('with the `where` option set', () => {
       it('supports objects', () => {
-        query.setOption('where', { id: 1, name: 'Foo' });
-        expect(new QuotedSql(query).getWhere(), 'to equal', {
-          where: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
-          values: [1, 'Foo']
-        });
+        expect(
+          new QuotedSql(User).formatWhere({ where: { id: 1, name: 'Foo' } }),
+          'to equal',
+          {
+            where: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+            values: [1, 'Foo']
+          }
+        );
+      });
+
+      it('supports arrays of object', () => {
+        expect(
+          new QuotedSql(User).formatWhere({ where: [{ id: 1, name: 'Foo' }] }),
+          'to equal',
+          {
+            where: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+            values: [1, 'Foo']
+          }
+        );
       });
 
       it('supports Condition instances', () => {
-        query.setOption(
-          'where',
-          new Condition({ field: 'id', type: 'equalTo', value: 1 })
+        expect(
+          new QuotedSql(User).formatWhere({
+            where: new Condition({ field: 'id', type: 'equalTo', value: 1 })
+          }),
+          'to equal',
+          {
+            where: 'WHERE "user"."id" = ?',
+            values: [1]
+          }
         );
-        expect(new QuotedSql(query).getWhere(), 'to equal', {
-          where: 'WHERE "user"."id" = ?',
-          values: [1]
-        });
       });
 
       it('supports Condition instances with fields as Raw instances', () => {
-        query.setOption(
-          'where',
-          new Condition({
-            field: new Raw({ sql: 'LOWER(?)', values: ['FOO'] }),
-            type: 'equalTo',
-            value: 'foo'
-          })
+        expect(
+          new QuotedSql(User).formatWhere({
+            where: new Condition({
+              field: new Raw({ sql: 'LOWER(?)', values: ['FOO'] }),
+              type: 'equalTo',
+              value: 'foo'
+            })
+          }),
+          'to equal',
+          {
+            where: 'WHERE LOWER(?) = ?',
+            values: ['FOO', 'foo']
+          }
         );
-        expect(new QuotedSql(query).getWhere(), 'to equal', {
-          where: 'WHERE LOWER(?) = ?',
-          values: ['FOO', 'foo']
-        });
       });
 
       it('supports Grouping instances', () => {
-        query.setOption(
-          'where',
-          new Grouping({
-            type: 'and',
-            value: [
-              new Condition({ field: 'id', type: 'equalTo', value: 1 }),
-              new Condition({ field: 'name', type: 'equalTo', value: 'foo' })
-            ]
-          })
+        expect(
+          new QuotedSql(User).formatWhere({
+            where: new Grouping({
+              type: 'and',
+              value: [
+                new Condition({ field: 'id', type: 'equalTo', value: 1 }),
+                new Condition({ field: 'name', type: 'equalTo', value: 'foo' })
+              ]
+            })
+          }),
+          'to equal',
+          {
+            where: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+            values: [1, 'foo']
+          }
         );
-        expect(new QuotedSql(query).getWhere(), 'to equal', {
-          where: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
-          values: [1, 'foo']
-        });
       });
 
       it('supports Query instances', () => {
-        query.setOption('where', new Query(User));
-        expect(new QuotedSql(query).getWhere(), 'to equal', {
-          where: 'WHERE (SELECT FROM user)',
-          values: []
-        });
+        expect(
+          new QuotedSql(User).formatWhere({ where: new Query(User) }),
+          'to equal',
+          {
+            where: 'WHERE (SELECT FROM user)',
+            values: []
+          }
+        );
       });
 
       it('supports Raw instances', () => {
-        query.setOption('where', new Raw({ sql: '(SELECT true)' }));
-        expect(new QuotedSql(query).getWhere(), 'to equal', {
-          where: 'WHERE (SELECT true)',
-          values: []
-        });
+        expect(
+          new QuotedSql(User).formatWhere({
+            where: new Raw({ sql: '(SELECT true)' })
+          }),
+          'to equal',
+          {
+            where: 'WHERE (SELECT true)',
+            values: []
+          }
+        );
       });
 
       it('supports Raw instances with values', () => {
-        query.setOption('where', new Raw({ sql: 'LOWER(?)', values: ['FOO'] }));
-        expect(new QuotedSql(query).getWhere(), 'to equal', {
-          where: 'WHERE LOWER(?)',
-          values: ['FOO']
-        });
+        expect(
+          new QuotedSql(User).formatWhere({
+            where: new Raw({ sql: 'LOWER(?)', values: ['FOO'] })
+          }),
+          'to equal',
+          {
+            where: 'WHERE LOWER(?)',
+            values: ['FOO']
+          }
+        );
       });
     });
   });
