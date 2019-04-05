@@ -84,8 +84,6 @@ describe('Transaction', () => {
         'to be a',
         Student
       );
-
-      knorm.removeModel(Student);
     });
 
     it('adds an accessor to the transaction instance', () => {
