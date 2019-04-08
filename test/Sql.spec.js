@@ -1,7 +1,7 @@
-const Knorm = require('../../lib/Knorm');
+const Knorm = require('../lib/Knorm');
 const expect = require('unexpected').clone();
 
-describe('Sql', () => {
+describe.only('Sql', () => {
   let Model;
   let Query;
   let User;
@@ -16,13 +16,13 @@ describe('Sql', () => {
 
     Model = orm.Model;
     Query = orm.Query;
-    Sql = Query.Sql;
-    Raw = Query.Sql.Raw;
-    Condition = Query.Sql.Condition;
-    Grouping = Query.Sql.Grouping;
+    Sql = orm.Sql;
+    Raw = Sql.Raw;
+    Condition = Sql.Condition;
+    Grouping = Sql.Grouping;
 
     QuotedSql = class extends Sql {
-      quote(identifier) {
+      quoteIdentifier(identifier) {
         return `"${identifier}"`;
       }
     };
@@ -37,9 +37,9 @@ describe('Sql', () => {
     };
   });
 
-  describe('Sql.prototype.quote', () => {
+  describe('Sql.prototype.quoteIdentifier', () => {
     it('returns the identifier as is', () => {
-      expect(new Sql(User).quote('order'), 'to be', 'order');
+      expect(new Sql(User).quoteIdentifier('order'), 'to be', 'order');
     });
   });
 
@@ -59,14 +59,16 @@ describe('Sql', () => {
       });
 
       it('returns a quoted `Model.schema`', () => {
-        expect(new QuotedSql(OtherUser).formatSchema(), 'to be', '"public"');
+        expect(new QuotedSql(OtherUser).formatSchema(), 'to equal', {
+          sql: '"public"'
+        });
       });
     });
   });
 
   describe('Sql.prototype.formatTable', () => {
     it('returns a quoted `Model.table`', () => {
-      expect(new QuotedSql(User).formatTable(), 'to be', '"user"');
+      expect(new QuotedSql(User).formatTable(), 'to equal', { sql: '"user"' });
     });
 
     describe('with `Model.schema` set', () => {
@@ -78,19 +80,17 @@ describe('Sql', () => {
       });
 
       it('returns a quoted `Model.schema` and `Model.table`', () => {
-        expect(
-          new QuotedSql(OtherUser).formatTable(),
-          'to be',
-          '"public"."user"'
-        );
+        expect(new QuotedSql(OtherUser).formatTable(), 'to equal', {
+          sql: '"public"."user"'
+        });
       });
     });
   });
 
   describe('Sql.prototype.formatDistinct', () => {
     describe('with the `distinct` option not set', () => {
-      it('returns an empty string', () => {
-        expect(new QuotedSql(User).formatDistinct(), 'to be', '');
+      it('returns `undefined`', () => {
+        expect(new QuotedSql(User).formatDistinct(), 'to be undefined');
       });
     });
 
@@ -98,8 +98,8 @@ describe('Sql', () => {
       it('returns a `DISTINCT` clause', () => {
         expect(
           new QuotedSql(User).formatDistinct({ distinct: true }),
-          'to be',
-          'DISTINCT'
+          'to equal',
+          { sql: 'DISTINCT' }
         );
       });
     });
@@ -107,7 +107,9 @@ describe('Sql', () => {
 
   describe('Sql.prototype.formatFrom', () => {
     it('returns a `FROM` clause with `Model.table`', () => {
-      expect(new QuotedSql(User).formatFrom(), 'to be', 'FROM "user"');
+      expect(new QuotedSql(User).formatFrom(), 'to equal', {
+        sql: 'FROM "user"'
+      });
     });
 
     describe('with `Model.schema` set', () => {
@@ -119,20 +121,25 @@ describe('Sql', () => {
       });
 
       it('returns a `FROM` clause with `Model.schema` and `Model.table`', () => {
-        expect(
-          new QuotedSql(OtherUser).formatFrom(),
-          'to be',
-          'FROM "public"."user"'
-        );
+        expect(new QuotedSql(OtherUser).formatFrom(), 'to equal', {
+          sql: 'FROM "public"."user"'
+        });
+      });
+    });
+
+    describe('with the `alias` option set', () => {
+      it('returns an aliased table-name with the quoted alias', () => {
+        expect(new QuotedSql(User).formatFrom({ alias: 'user' }), 'to equal', {
+          sql: 'FROM "user" AS "user"'
+        });
       });
     });
   });
 
-  describe('Sql.prototype.formatColumn', () => {
+  describe('Sql.prototype.formatField', () => {
     it('returns a quoted table-name-prefixed column and no values', () => {
-      expect(new QuotedSql(User).formatColumn('id'), 'to equal', {
-        column: '"user"."id"',
-        values: []
+      expect(new QuotedSql(User).formatField('id'), 'to equal', {
+        sql: '"user"."id"'
       });
     });
 
@@ -145,9 +152,8 @@ describe('Sql', () => {
       });
 
       it('uses the configured columns', () => {
-        expect(new QuotedSql(OtherUser).formatColumn('id'), 'to equal', {
-          column: '"user"."ID"',
-          values: []
+        expect(new QuotedSql(OtherUser).formatField('id'), 'to equal', {
+          sql: '"user"."ID"'
         });
       });
     });
@@ -161,75 +167,68 @@ describe('Sql', () => {
       });
 
       it('returns a schema and table-name prefixed column', () => {
-        expect(new QuotedSql(OtherUser).formatColumn('id'), 'to equal', {
-          column: '"public"."user"."id"',
-          values: []
+        expect(new QuotedSql(OtherUser).formatField('id'), 'to equal', {
+          sql: '"public"."user"."id"'
         });
       });
     });
 
     describe('with the field is a Raw instance', () => {
-      it('returns `Raw.prototype.sql` as the column', () => {
+      it('returns `Raw.prototype.sql` as the sql', () => {
         expect(
-          new QuotedSql(User).formatColumn(new Raw({ sql: 'COUNT(*)' })),
+          new QuotedSql(User).formatField(new Raw({ sql: 'COUNT(*)' })),
           'to equal',
-          { column: 'COUNT(*)', values: [] }
+          { sql: 'COUNT(*)' }
         );
       });
 
       it('returns `Raw.prototype.values` as values if set', () => {
         expect(
-          new QuotedSql(User).formatColumn(
+          new QuotedSql(User).formatField(
             new Raw({ sql: 'UPPER(?)', values: ['foo'] })
           ),
           'to equal',
-          { column: 'UPPER(?)', values: ['foo'] }
+          { sql: 'UPPER(?)', values: ['foo'] }
         );
       });
     });
   });
 
-  describe('Sql.prototype.formatColumns', () => {
+  describe('Sql.prototype.formatFields', () => {
     describe('with the `fields` option not set', () => {
-      it('returns empty columns, aliases and values', () => {
-        expect(new QuotedSql(User).formatColumns(), 'to equal', {
-          columns: '',
-          aliases: [],
-          values: []
-        });
+      it('returns `undefined`', () => {
+        expect(new QuotedSql(User).formatFields(), 'to be undefined');
       });
     });
 
     describe('with the `fields` option set', () => {
       it('supports strings', () => {
         expect(
-          new QuotedSql(User).formatColumns({ fields: ['id'] }),
+          new QuotedSql(User).formatFields({ fields: ['id'] }),
           'to equal',
           {
-            columns: '"user"."id"',
-            aliases: ['id'],
-            values: []
+            sql: '"user"."id"',
+            aliases: ['id']
           }
         );
       });
 
       it('supports objects with string values', () => {
         expect(
-          new QuotedSql(User).formatColumns({
+          new QuotedSql(User).formatFields({
             fields: [{ theId: 'id', theName: 'name' }]
           }),
           'to equal',
           {
-            columns: '"user"."id", "user"."name"',
-            aliases: ['theId', 'theName'],
-            values: []
+            sql: '"user"."id", "user"."name"',
+            aliases: ['theId', 'theName']
           }
         );
       });
 
       it('supports objects with Raw-instance values', () => {
         expect(
-          new QuotedSql(User).formatColumns({
+          new QuotedSql(User).formatFields({
             fields: [
               {
                 count: new Raw({ sql: 'COUNT(*)' }),
@@ -239,7 +238,7 @@ describe('Sql', () => {
           }),
           'to equal',
           {
-            columns: 'COUNT(*), UPPER(?)',
+            sql: 'COUNT(*), UPPER(?)',
             aliases: ['count', 'upperCaseFoo'],
             values: ['foo']
           }
@@ -250,11 +249,8 @@ describe('Sql', () => {
 
   describe('Sql.prototype.formatWhere', () => {
     describe('with the `where` option not set', () => {
-      it('returns empty WHERE clause and values', () => {
-        expect(new QuotedSql(User).formatWhere(), 'to equal', {
-          where: '',
-          values: []
-        });
+      it('returns `undefined`', () => {
+        expect(new QuotedSql(User).formatWhere(), 'to be undefined');
       });
     });
 
@@ -264,7 +260,7 @@ describe('Sql', () => {
           new QuotedSql(User).formatWhere({ where: { id: 1, name: 'Foo' } }),
           'to equal',
           {
-            where: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+            sql: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
             values: [1, 'Foo']
           }
         );
@@ -275,7 +271,7 @@ describe('Sql', () => {
           new QuotedSql(User).formatWhere({ where: [{ id: 1, name: 'Foo' }] }),
           'to equal',
           {
-            where: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+            sql: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
             values: [1, 'Foo']
           }
         );
@@ -288,7 +284,7 @@ describe('Sql', () => {
           }),
           'to equal',
           {
-            where: 'WHERE "user"."id" = ?',
+            sql: 'WHERE "user"."id" = ?',
             values: [1]
           }
         );
@@ -305,7 +301,7 @@ describe('Sql', () => {
           }),
           'to equal',
           {
-            where: 'WHERE LOWER(?) = ?',
+            sql: 'WHERE LOWER(?) = ?',
             values: ['FOO', 'foo']
           }
         );
@@ -324,7 +320,7 @@ describe('Sql', () => {
           }),
           'to equal',
           {
-            where: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+            sql: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
             values: [1, 'foo']
           }
         );
@@ -334,10 +330,7 @@ describe('Sql', () => {
         expect(
           new QuotedSql(User).formatWhere({ where: new Query(User) }),
           'to equal',
-          {
-            where: 'WHERE (SELECT FROM user)',
-            values: []
-          }
+          { sql: 'WHERE (SELECT FROM user)' }
         );
       });
 
@@ -347,10 +340,7 @@ describe('Sql', () => {
             where: new Raw({ sql: '(SELECT true)' })
           }),
           'to equal',
-          {
-            where: 'WHERE (SELECT true)',
-            values: []
-          }
+          { sql: 'WHERE (SELECT true)' }
         );
       });
 
@@ -360,10 +350,7 @@ describe('Sql', () => {
             where: new Raw({ sql: 'LOWER(?)', values: ['FOO'] })
           }),
           'to equal',
-          {
-            where: 'WHERE LOWER(?)',
-            values: ['FOO']
-          }
+          { sql: 'WHERE LOWER(?)', values: ['FOO'] }
         );
       });
     });

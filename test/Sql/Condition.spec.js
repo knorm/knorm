@@ -1,7 +1,7 @@
-const Knorm = require('../../../lib/Knorm');
+const Knorm = require('../../lib/Knorm');
 const expect = require('unexpected').clone();
 
-describe('Condition', () => {
+describe.only('Condition', () => {
   let Model;
   let Query;
   let User;
@@ -15,10 +15,10 @@ describe('Condition', () => {
 
     Model = orm.Model;
     Query = orm.Query;
-    Sql = Query.Sql;
-    Raw = Query.Sql.Raw;
-    Condition = Query.Sql.Condition;
-    Grouping = Query.Sql.Grouping;
+    Sql = orm.Sql;
+    Raw = Sql.Raw;
+    Condition = Sql.Condition;
+    Grouping = Sql.Grouping;
 
     User = class extends Model {};
     User.table = 'user';
@@ -31,39 +31,7 @@ describe('Condition', () => {
     sql = new Sql(User);
   });
 
-  describe('Condition.prototype.formatColumn', () => {
-    let condition;
-
-    beforeEach(() => {
-      condition = new Condition({});
-    });
-
-    it('returns a formatted column via Sql.prototype.formatColumn', () => {
-      condition.field = 'id';
-      expect(condition.formatColumn(sql), 'to equal', {
-        column: 'user.id',
-        values: []
-      });
-    });
-
-    it('supports Raw instances', () => {
-      condition.field = new Raw({ sql: `lower('FOO')` });
-      expect(condition.formatColumn(sql), 'to equal', {
-        column: `lower('FOO')`,
-        values: []
-      });
-    });
-
-    it('supports Raw instances with values', () => {
-      condition.field = new Raw({ sql: 'lower(?)', values: ['FOO'] });
-      expect(condition.formatColumn(sql), 'to equal', {
-        column: 'lower(?)',
-        values: ['FOO']
-      });
-    });
-  });
-
-  describe('Condition.prototype.formatPlaceholder', () => {
+  describe('Condition.prototype.formatValue', () => {
     let condition;
 
     beforeEach(() => {
@@ -71,46 +39,44 @@ describe('Condition', () => {
     });
 
     describe('as a primitive', () => {
-      it('returns a correctly formatted placeholder and values', () => {
+      it('returns correctly formatted sql and values', () => {
         condition.value = 10;
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '?',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '?',
           values: [10]
         });
       });
     });
 
     describe('as an array', () => {
-      it('returns a correctly formatted placeholder and values', () => {
+      it('returns correctly formatted sql and values', () => {
         condition.value = [1, 2, 3];
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '?',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '?',
           values: [[1, 2, 3]]
         });
       });
     });
 
     describe('as a Query instance', () => {
-      it('returns a correctly formatted placeholder and values', () => {
+      it('returns correctly formatted sql and values', () => {
         condition.value = new Query(User);
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(SELECT FROM user)',
-          values: []
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(SELECT FROM user)'
         });
       });
 
       it('supports `fields` on the Query', () => {
         condition.value = new Query(User).setOption('field', 'name');
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(SELECT user.name FROM user)',
-          values: []
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(SELECT user.name FROM user)'
         });
       });
 
       it('supports `where` on the Query', () => {
         condition.value = new Query(User).setOption('where', { name: 'foo' });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(SELECT FROM user WHERE user.name = ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(SELECT FROM user WHERE user.name = ?)',
           values: ['foo']
         });
       });
@@ -141,8 +107,8 @@ describe('Condition', () => {
             ]
           })
         );
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder:
+        expect(condition.formatValue(sql), 'to equal', {
+          sql:
             '(SELECT FROM user WHERE (NOT ? OR (user.name = ? AND user.id = ANY (SELECT * FROM "bar"))))',
           values: [true, 'foo']
         });
@@ -151,19 +117,18 @@ describe('Condition', () => {
       it('supports `in` conditions', () => {
         condition.type = 'in';
         condition.value = new Query(User).setOption('where', { name: 'foo' });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(SELECT FROM user WHERE user.name = ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(SELECT FROM user WHERE user.name = ?)',
           values: ['foo']
         });
       });
     });
 
     describe('as a Raw instance', () => {
-      it('returns a correctly formatted placeholder', () => {
+      it('returns correctly formatted sql', () => {
         condition.value = new Raw({ sql: '(SELECT * FROM "user")' });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(SELECT * FROM "user")',
-          values: []
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(SELECT * FROM "user")'
         });
       });
 
@@ -172,8 +137,8 @@ describe('Condition', () => {
           sql: '(SELECT * FROM "user" WHERE ?)',
           values: [false]
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(SELECT * FROM "user" WHERE ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(SELECT * FROM "user" WHERE ?)',
           values: [false]
         });
       });
@@ -184,46 +149,38 @@ describe('Condition', () => {
           sql: '(SELECT ?)',
           values: [false]
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(SELECT ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(SELECT ?)',
           values: [false]
         });
       });
     });
 
     describe('as a Grouping instance', () => {
-      it('returns a correctly formatted placeholder', () => {
+      it('returns correctly formatted sql', () => {
         condition.value = new Grouping({
           type: 'or',
           value: [
-            new Condition({
-              type: 'lessThan',
-              field: 'id',
-              value: 10
-            }),
-            new Condition({
-              type: 'equalTo',
-              field: 'name',
-              value: 'bar'
-            })
+            new Condition({ type: 'lessThan', field: 'id', value: 10 }),
+            new Condition({ type: 'equalTo', field: 'name', value: 'bar' })
           ]
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(user.id < ? OR user.name = ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(user.id < ? OR user.name = ?)',
           values: [10, 'bar']
         });
       });
     });
 
     describe('as a Condition instance', () => {
-      it('returns a correctly formatted placeholder', () => {
+      it('returns correctly formatted sql', () => {
         condition.value = new Condition({
           type: 'notEqualTo',
           field: 'name',
           value: 'foo'
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: 'user.name <> ?',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: 'user.name <> ?',
           values: ['foo']
         });
       });
@@ -231,14 +188,10 @@ describe('Condition', () => {
       it('supports nested Condition instances', () => {
         condition.value = new Condition({
           type: 'not',
-          value: new Condition({
-            type: 'equalTo',
-            field: 'name',
-            value: 'foo'
-          })
+          value: new Condition({ type: 'equalTo', field: 'name', value: 'foo' })
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: 'NOT user.name = ?',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: 'NOT user.name = ?',
           values: ['foo']
         });
       });
@@ -248,9 +201,8 @@ describe('Condition', () => {
           type: 'not',
           value: new Query(User)
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: 'NOT (SELECT FROM user)',
-          values: []
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: 'NOT (SELECT FROM user)'
         });
       });
 
@@ -262,8 +214,8 @@ describe('Condition', () => {
             where: { name: 'foo' }
           })
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: 'NOT (SELECT user.name FROM user WHERE user.name = ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: 'NOT (SELECT user.name FROM user WHERE user.name = ?)',
           values: ['foo']
         });
       });
@@ -273,9 +225,8 @@ describe('Condition', () => {
           type: 'not',
           value: new Raw({ sql: '(SELECT name FROM user)' })
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: 'NOT (SELECT name FROM user)',
-          values: []
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: 'NOT (SELECT name FROM user)'
         });
       });
 
@@ -287,8 +238,8 @@ describe('Condition', () => {
             values: ['foo']
           })
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: 'NOT (SELECT name FROM user WHERE name = ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: 'NOT (SELECT name FROM user WHERE name = ?)',
           values: ['foo']
         });
       });
@@ -299,21 +250,13 @@ describe('Condition', () => {
           value: new Grouping({
             type: 'or',
             value: [
-              new Condition({
-                type: 'equalTo',
-                field: 'name',
-                value: 'foo'
-              }),
-              new Condition({
-                type: 'equalTo',
-                field: 'name',
-                value: 'bar'
-              })
+              new Condition({ type: 'equalTo', field: 'name', value: 'foo' }),
+              new Condition({ type: 'equalTo', field: 'name', value: 'bar' })
             ]
           })
         });
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: 'NOT (user.name = ? OR user.name = ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: 'NOT (user.name = ? OR user.name = ?)',
           values: ['foo', 'bar']
         });
       });
@@ -324,18 +267,18 @@ describe('Condition', () => {
         condition = new Condition({ type: 'between' });
       });
 
-      it('returns a correctly formatted placeholder and values', () => {
+      it('returns correctly formatted sql and values', () => {
         condition.value = [1, 2];
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '? AND ?',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '? AND ?',
           values: [1, 2]
         });
       });
 
       it('only returns the first two array values', () => {
         condition.value = [1, 2, 3];
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '? AND ?',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '? AND ?',
           values: [1, 2]
         });
       });
@@ -346,29 +289,29 @@ describe('Condition', () => {
         condition = new Condition({ type: 'in' });
       });
 
-      it('returns a correctly formatted placeholder and values', () => {
+      it('returns correctly formatted sql and values', () => {
         condition.value = [1, 2, 3];
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '(?, ?, ?)',
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(?, ?, ?)',
           values: [1, 2, 3]
         });
       });
 
-      it('converts the clause to a `WHERE false` if the array is empty', () => {
+      it('converts the clause to `IN (null)` if the array is empty', () => {
         condition.value = [];
-        expect(condition.formatPlaceholder(sql), 'to equal', {
-          placeholder: '?',
-          values: [false]
+        expect(condition.formatValue(sql), 'to equal', {
+          sql: '(?)',
+          values: [null]
         });
       });
     });
   });
 
-  describe('Condition.prototype.formatWhere', () => {
+  describe('Condition.prototype.formatCondition', () => {
     it('supports `NOT`', () => {
       const condition = new Condition({ type: 'not', value: true });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'NOT ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'NOT ?',
         values: [true]
       });
     });
@@ -381,8 +324,8 @@ describe('Condition', () => {
           where: { name: 'foo' }
         })
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'EXISTS (SELECT user.id FROM user WHERE user.name = ?)',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'EXISTS (SELECT user.id FROM user WHERE user.name = ?)',
         values: ['foo']
       });
     });
@@ -395,8 +338,22 @@ describe('Condition', () => {
           where: { name: 'foo' }
         })
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'ANY (SELECT user.id FROM user WHERE user.name = ?)',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'ANY (SELECT user.id FROM user WHERE user.name = ?)',
+        values: ['foo']
+      });
+    });
+
+    it('supports `SOME`', () => {
+      const condition = new Condition({
+        type: 'some',
+        value: new Query(User).setOptions({
+          field: 'id',
+          where: { name: 'foo' }
+        })
+      });
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'SOME (SELECT user.id FROM user WHERE user.name = ?)',
         values: ['foo']
       });
     });
@@ -409,8 +366,8 @@ describe('Condition', () => {
           where: { name: 'foo' }
         })
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'ALL (SELECT user.id FROM user WHERE user.name = ?)',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'ALL (SELECT user.id FROM user WHERE user.name = ?)',
         values: ['foo']
       });
     });
@@ -420,9 +377,8 @@ describe('Condition', () => {
         field: 'id',
         type: 'isNull'
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id IS NULL',
-        values: []
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id IS NULL'
       });
     });
 
@@ -431,9 +387,8 @@ describe('Condition', () => {
         field: 'id',
         type: 'isNotNull'
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id IS NOT NULL',
-        values: []
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id IS NOT NULL'
       });
     });
 
@@ -443,8 +398,8 @@ describe('Condition', () => {
         type: 'equalTo',
         value: 1
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id = ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id = ?',
         values: [1]
       });
     });
@@ -455,8 +410,8 @@ describe('Condition', () => {
         type: 'notEqualTo',
         value: 1
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id <> ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id <> ?',
         values: [1]
       });
     });
@@ -467,8 +422,8 @@ describe('Condition', () => {
         type: 'greaterThan',
         value: 1
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id > ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id > ?',
         values: [1]
       });
     });
@@ -479,8 +434,8 @@ describe('Condition', () => {
         type: 'greaterThanOrEqualTo',
         value: 1
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id >= ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id >= ?',
         values: [1]
       });
     });
@@ -491,8 +446,8 @@ describe('Condition', () => {
         type: 'lessThan',
         value: 1
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id < ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id < ?',
         values: [1]
       });
     });
@@ -503,8 +458,8 @@ describe('Condition', () => {
         type: 'lessThanOrEqualTo',
         value: 1
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id <= ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id <= ?',
         values: [1]
       });
     });
@@ -515,8 +470,8 @@ describe('Condition', () => {
         type: 'like',
         value: '%foo%'
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.name LIKE ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.name LIKE ?',
         values: ['%foo%']
       });
     });
@@ -527,8 +482,8 @@ describe('Condition', () => {
         type: 'between',
         value: [1, 2]
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id BETWEEN ? AND ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id BETWEEN ? AND ?',
         values: [1, 2]
       });
     });
@@ -539,8 +494,8 @@ describe('Condition', () => {
         type: 'in',
         value: [1, 2, 3]
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'user.id IN (?, ?, ?)',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'user.id IN (?, ?, ?)',
         values: [1, 2, 3]
       });
     });
@@ -551,8 +506,8 @@ describe('Condition', () => {
         type: 'equalTo',
         value: 'foo'
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: `lower('FOO') = ?`,
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: `lower('FOO') = ?`,
         values: ['foo']
       });
     });
@@ -563,8 +518,8 @@ describe('Condition', () => {
         type: 'equalTo',
         value: 'foo'
       });
-      expect(condition.formatWhere(sql), 'to equal', {
-        where: 'lower(?) = ?',
+      expect(condition.formatCondition(sql), 'to equal', {
+        sql: 'lower(?) = ?',
         values: ['FOO', 'foo']
       });
     });

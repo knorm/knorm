@@ -10,7 +10,7 @@ const Query = require('../lib/Query');
 const Connection = require('../lib/Connection');
 const Transaction = require('../lib/Transaction');
 
-describe('Knorm', () => {
+describe.only('Knorm', () => {
   it('exposes Field, Model, Query, Transaction as statics', () => {
     expect(Knorm.Field, 'to be', Field);
     expect(Knorm.Model, 'to be', Model);
@@ -329,6 +329,26 @@ describe('Knorm', () => {
     });
   });
 
+  describe('updateField', () => {
+    it('updates Knorm.prototype.Field', () => {
+      class Foo {}
+      const knorm = new Knorm().updateField(Foo);
+      expect(knorm.Field, 'to be', Foo);
+    });
+
+    it('updates Knorm.Model.Field', () => {
+      class Foo {}
+      const knorm = new Knorm().updateField(Foo);
+      expect(knorm.Model.Field, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateField(Foo), 'to be', knorm);
+    });
+  });
+
   describe('updateQuery', () => {
     it('updates Knorm.prototype.Query', () => {
       class Foo {}
@@ -349,23 +369,23 @@ describe('Knorm', () => {
     });
   });
 
-  describe('updateField', () => {
-    it('updates Knorm.prototype.Field', () => {
+  describe('updateSql', () => {
+    it('updates Knorm.prototype.Sql', () => {
       class Foo {}
-      const knorm = new Knorm().updateField(Foo);
-      expect(knorm.Field, 'to be', Foo);
+      const knorm = new Knorm().updateSql(Foo);
+      expect(knorm.Sql, 'to be', Foo);
     });
 
-    it('updates Knorm.Model.Field', () => {
+    it('updates Knorm.Model.Sql', () => {
       class Foo {}
-      const knorm = new Knorm().updateField(Foo);
-      expect(knorm.Model.Field, 'to be', Foo);
+      const knorm = new Knorm().updateSql(Foo);
+      expect(knorm.Model.Sql, 'to be', Foo);
     });
 
     it('allows chaining', () => {
       class Foo {}
       const knorm = new Knorm();
-      expect(knorm.updateField(Foo), 'to be', knorm);
+      expect(knorm.updateSql(Foo), 'to be', knorm);
     });
   });
 
