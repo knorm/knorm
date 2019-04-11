@@ -10,7 +10,7 @@ const Query = require('../lib/Query');
 const Connection = require('../lib/Connection');
 const Transaction = require('../lib/Transaction');
 
-describe.only('Knorm', () => {
+describe('Knorm', () => {
   it('exposes Field, Model, Query, Transaction as statics', () => {
     expect(Knorm.Field, 'to be', Field);
     expect(Knorm.Model, 'to be', Model);

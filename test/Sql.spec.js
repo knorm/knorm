@@ -7,9 +7,7 @@ describe.only('Sql', () => {
   let User;
   let Sql;
   let Raw;
-  let Condition;
-  let Grouping;
-  let QuotedSql;
+  let Expression;
   let UserWithSchema;
 
   before(() => {
@@ -19,14 +17,7 @@ describe.only('Sql', () => {
     Query = orm.Query;
     Sql = orm.Sql;
     Raw = Sql.Raw;
-    Condition = Sql.Condition;
-    Grouping = Sql.Grouping;
-
-    QuotedSql = class extends Sql {
-      quoteIdentifier(identifier) {
-        return `"${identifier}"`;
-      }
-    };
+    Expression = Sql.Expression;
 
     User = class extends Model {};
     User.table = 'user';
@@ -44,12 +35,12 @@ describe.only('Sql', () => {
   let sql;
 
   beforeEach(() => {
-    sql = new QuotedSql(User);
+    sql = new Sql(User);
   });
 
   describe('Sql.prototype.quoteIdentifier', () => {
     it('returns the identifier as is', () => {
-      expect(new Sql(User).quoteIdentifier('order'), 'to be', 'order');
+      expect(sql.quoteIdentifier('order'), 'to be', 'order');
     });
   });
 
@@ -62,8 +53,8 @@ describe.only('Sql', () => {
 
     describe('with `Model.schema` set', () => {
       it('returns a quoted `Model.schema`', () => {
-        expect(new QuotedSql(UserWithSchema).formatSchema(), 'to equal', {
-          sql: '"public"'
+        expect(new Sql(UserWithSchema).formatSchema(), 'to equal', {
+          sql: 'public'
         });
       });
     });
@@ -71,13 +62,13 @@ describe.only('Sql', () => {
 
   describe('Sql.prototype.formatTable', () => {
     it('returns a quoted `Model.table`', () => {
-      expect(sql.formatTable(), 'to equal', { sql: '"user"' });
+      expect(sql.formatTable(), 'to equal', { sql: 'user' });
     });
 
     describe('with `Model.schema` set', () => {
       it('returns a quoted `Model.schema` and `Model.table`', () => {
-        expect(new QuotedSql(UserWithSchema).formatTable(), 'to equal', {
-          sql: '"public"."user"'
+        expect(new Sql(UserWithSchema).formatTable(), 'to equal', {
+          sql: 'public.user'
         });
       });
     });
@@ -93,7 +84,30 @@ describe.only('Sql', () => {
     describe('with the `alias` option set', () => {
       it('returns a quoted alias', () => {
         expect(sql.formatAlias({ alias: 'foo' }), 'to equal', {
-          sql: '"foo"'
+          sql: 'foo'
+        });
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatField', () => {
+    it('returns a quoted unprefixed column', () => {
+      expect(sql.formatColumn('id'), 'to equal', {
+        sql: 'id'
+      });
+    });
+
+    describe('with custom columns configured', () => {
+      let OtherUser;
+
+      beforeEach(() => {
+        OtherUser = class extends User { };
+        OtherUser.fields = { id: { type: 'integer', column: 'ID' } };
+      });
+
+      it('uses the configured columns', () => {
+        expect(new Sql(OtherUser).formatColumn('id'), 'to equal', {
+          sql: 'ID'
         });
       });
     });
@@ -102,7 +116,13 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatField', () => {
     it('returns a quoted table-name-prefixed column and no values', () => {
       expect(sql.formatField('id'), 'to equal', {
-        sql: '"user"."id"'
+        sql: 'user.id'
+      });
+    });
+
+    it('propagates options', () => {
+      expect(sql.formatField('id', { alias: 'alias' }), 'to equal', {
+        sql: 'alias.id'
       });
     });
 
@@ -115,30 +135,32 @@ describe.only('Sql', () => {
       });
 
       it('uses the configured columns', () => {
-        expect(new QuotedSql(OtherUser).formatField('id'), 'to equal', {
-          sql: '"user"."ID"'
+        expect(new Sql(OtherUser).formatField('id'), 'to equal', {
+          sql: 'user.ID'
         });
       });
     });
 
     describe('with `Model.schema` set', () => {
       it('returns a schema and table-name prefixed column', () => {
-        expect(new QuotedSql(UserWithSchema).formatField('id'), 'to equal', {
-          sql: '"public"."user"."id"'
+        expect(new Sql(UserWithSchema).formatField('id'), 'to equal', {
+          sql: 'public.user.id'
         });
       });
     });
 
     describe('with the field is a Raw instance', () => {
       it('returns `Raw.prototype.sql` as the sql', () => {
-        expect(sql.formatField(new Raw({ sql: 'COUNT(*)' })), 'to equal', {
-          sql: 'COUNT(*)'
-        });
+        expect(
+          sql.formatField(new Raw(User, { sql: 'COUNT(*)' })),
+          'to equal',
+          { sql: 'COUNT(*)' }
+        );
       });
 
       it('returns `Raw.prototype.values` as values if set', () => {
         expect(
-          sql.formatField(new Raw({ sql: 'UPPER(?)', values: ['foo'] })),
+          sql.formatField(new Raw(User, { sql: 'UPPER(?)', values: ['foo'] })),
           'to equal',
           { sql: 'UPPER(?)', values: ['foo'] }
         );
@@ -156,20 +178,20 @@ describe.only('Sql', () => {
     describe('with the `fields` option set', () => {
       it('supports strings', () => {
         expect(sql.formatFields({ fields: ['id'] }), 'to equal', {
-          sql: '"user"."id"',
-          aliases: ['id']
+          sql: 'user.id',
+          aliases: ['id'],
+          values: []
         });
       });
 
       it('supports objects with string values', () => {
         expect(
-          sql.formatFields({
-            fields: [{ theId: 'id', theName: 'name' }]
-          }),
+          sql.formatFields({ fields: [{ theId: 'id', theName: 'name' }] }),
           'to equal',
           {
-            sql: '"user"."id", "user"."name"',
-            aliases: ['theId', 'theName']
+            sql: 'user.id, user.name',
+            aliases: ['theId', 'theName'],
+            values: []
           }
         );
       });
@@ -179,8 +201,11 @@ describe.only('Sql', () => {
           sql.formatFields({
             fields: [
               {
-                count: new Raw({ sql: 'COUNT(*)' }),
-                upperCaseFoo: new Raw({ sql: 'UPPER(?)', values: ['foo'] })
+                count: new Raw(User, { sql: 'COUNT(*)' }),
+                upperCaseFoo: new Raw(User, {
+                  sql: 'UPPER(?)',
+                  values: ['foo']
+                })
               }
             ]
           }),
@@ -189,6 +214,18 @@ describe.only('Sql', () => {
             sql: 'COUNT(*), UPPER(?)',
             aliases: ['count', 'upperCaseFoo'],
             values: ['foo']
+          }
+        );
+      });
+
+      it('propagates options', () => {
+        expect(
+          sql.formatFields({ fields: ['id'], alias: 'alias' }),
+          'to equal',
+          {
+            sql: 'alias.id',
+            aliases: ['id'],
+            values: []
           }
         );
       });
@@ -214,14 +251,14 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatFrom', () => {
     it('returns a `FROM` clause with `Model.table`', () => {
       expect(sql.formatFrom(), 'to equal', {
-        sql: 'FROM "user"'
+        sql: 'FROM user'
       });
     });
 
     describe('with `Model.schema` set', () => {
       it('returns a `FROM` clause with `Model.schema` and `Model.table`', () => {
-        expect(new QuotedSql(UserWithSchema).formatFrom(), 'to equal', {
-          sql: 'FROM "public"."user"'
+        expect(new Sql(UserWithSchema).formatFrom(), 'to equal', {
+          sql: 'FROM public.user'
         });
       });
     });
@@ -229,7 +266,7 @@ describe.only('Sql', () => {
     describe('with the `alias` option set', () => {
       it('returns an aliased table-name with the quoted alias', () => {
         expect(sql.formatFrom({ alias: 'user' }), 'to equal', {
-          sql: 'FROM "user" AS "user"'
+          sql: 'FROM user AS user'
         });
       });
     });
@@ -245,40 +282,44 @@ describe.only('Sql', () => {
     describe('with the `where` option set', () => {
       it('supports objects', () => {
         expect(sql.formatWhere({ where: { id: 1, name: 'Foo' } }), 'to equal', {
-          sql: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+          sql: 'WHERE (user.id = ? AND user.name = ?)',
           values: [1, 'Foo']
         });
       });
 
-      it('supports arrays of object', () => {
+      it('supports arrays of objects', () => {
         expect(
           sql.formatWhere({ where: [{ id: 1, name: 'Foo' }] }),
           'to equal',
           {
-            sql: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+            sql: 'WHERE (user.id = ? AND user.name = ?)',
             values: [1, 'Foo']
           }
         );
       });
 
-      it('supports Condition instances', () => {
+      it('supports Expression instances', () => {
         expect(
           sql.formatWhere({
-            where: new Condition({ field: 'id', type: 'equalTo', value: 1 })
+            where: new Expression(User, {
+              field: 'id',
+              type: 'equalTo',
+              value: 1
+            })
           }),
           'to equal',
           {
-            sql: 'WHERE "user"."id" = ?',
+            sql: 'WHERE user.id = ?',
             values: [1]
           }
         );
       });
 
-      it('supports Condition instances with fields as Raw instances', () => {
+      it('supports Expression instances with fields as Raw instances', () => {
         expect(
           sql.formatWhere({
-            where: new Condition({
-              field: new Raw({ sql: 'LOWER(?)', values: ['FOO'] }),
+            where: new Expression(User, {
+              field: new Raw(User, { sql: 'LOWER(?)', values: ['FOO'] }),
               type: 'equalTo',
               value: 'foo'
             })
@@ -291,20 +332,55 @@ describe.only('Sql', () => {
         );
       });
 
-      it('supports Grouping instances', () => {
+      it('supports `and` Expression instances', () => {
         expect(
           sql.formatWhere({
-            where: new Grouping({
+            where: new Expression(User, {
               type: 'and',
               value: [
-                new Condition({ field: 'id', type: 'equalTo', value: 1 }),
-                new Condition({ field: 'name', type: 'equalTo', value: 'foo' })
+                new Expression(User, {
+                  field: 'id',
+                  type: 'equalTo',
+                  value: 1
+                }),
+                new Expression(User, {
+                  field: 'name',
+                  type: 'equalTo',
+                  value: 'foo'
+                })
               ]
             })
           }),
           'to equal',
           {
-            sql: 'WHERE ("user"."id" = ? AND "user"."name" = ?)',
+            sql: 'WHERE (user.id = ? AND user.name = ?)',
+            values: [1, 'foo']
+          }
+        );
+      });
+
+      it('supports `or` Expression instances', () => {
+        expect(
+          sql.formatWhere({
+            where: new Expression(User, {
+              type: 'or',
+              value: [
+                new Expression(User, {
+                  field: 'id',
+                  type: 'equalTo',
+                  value: 1
+                }),
+                new Expression(User, {
+                  field: 'name',
+                  type: 'equalTo',
+                  value: 'foo'
+                })
+              ]
+            })
+          }),
+          'to equal',
+          {
+            sql: 'WHERE (user.id = ? OR user.name = ?)',
             values: [1, 'foo']
           }
         );
@@ -312,25 +388,171 @@ describe.only('Sql', () => {
 
       it('supports Query instances', () => {
         expect(sql.formatWhere({ where: new Query(User) }), 'to equal', {
-          sql: 'WHERE (SELECT FROM user)'
+          sql: 'WHERE (SELECT FROM user)',
+          values: []
         });
       });
 
       it('supports Raw instances', () => {
         expect(
-          sql.formatWhere({ where: new Raw({ sql: '(SELECT true)' }) }),
+          sql.formatWhere({ where: new Raw(User, { sql: '(SELECT true)' }) }),
           'to equal',
-          { sql: 'WHERE (SELECT true)' }
+          { sql: 'WHERE (SELECT true)', values: [] }
         );
       });
 
       it('supports Raw instances with values', () => {
         expect(
           sql.formatWhere({
-            where: new Raw({ sql: 'LOWER(?)', values: ['FOO'] })
+            where: new Raw(User, { sql: 'LOWER(?)', values: ['FOO'] })
           }),
           'to equal',
           { sql: 'WHERE LOWER(?)', values: ['FOO'] }
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatHaving', () => {
+    describe('with the `having` option not set', () => {
+      it('returns `undefined`', () => {
+        expect(sql.formatHaving(), 'to be undefined');
+      });
+    });
+
+    describe('with the `having` option set', () => {
+      it('supports objects', () => {
+        expect(
+          sql.formatHaving({ having: { id: 1, name: 'Foo' } }),
+          'to equal',
+          {
+            sql: 'HAVING (user.id = ? AND user.name = ?)',
+            values: [1, 'Foo']
+          }
+        );
+      });
+
+      it('supports arrays of objects', () => {
+        expect(
+          sql.formatHaving({ having: [{ id: 1, name: 'Foo' }] }),
+          'to equal',
+          {
+            sql: 'HAVING (user.id = ? AND user.name = ?)',
+            values: [1, 'Foo']
+          }
+        );
+      });
+
+      it('supports Expression instances', () => {
+        expect(
+          sql.formatHaving({
+            having: new Expression(User, {
+              field: 'id',
+              type: 'equalTo',
+              value: 1
+            })
+          }),
+          'to equal',
+          {
+            sql: 'HAVING user.id = ?',
+            values: [1]
+          }
+        );
+      });
+
+      it('supports Expression instances with fields as Raw instances', () => {
+        expect(
+          sql.formatHaving({
+            having: new Expression(User, {
+              field: new Raw(User, { sql: 'LOWER(?)', values: ['FOO'] }),
+              type: 'equalTo',
+              value: 'foo'
+            })
+          }),
+          'to equal',
+          {
+            sql: 'HAVING LOWER(?) = ?',
+            values: ['FOO', 'foo']
+          }
+        );
+      });
+
+      it('supports `and` Expression instances', () => {
+        expect(
+          sql.formatHaving({
+            having: new Expression(User, {
+              type: 'and',
+              value: [
+                new Expression(User, {
+                  field: 'id',
+                  type: 'equalTo',
+                  value: 1
+                }),
+                new Expression(User, {
+                  field: 'name',
+                  type: 'equalTo',
+                  value: 'foo'
+                })
+              ]
+            })
+          }),
+          'to equal',
+          {
+            sql: 'HAVING (user.id = ? AND user.name = ?)',
+            values: [1, 'foo']
+          }
+        );
+      });
+
+      it('supports `or` Expression instances', () => {
+        expect(
+          sql.formatHaving({
+            having: new Expression(User, {
+              type: 'or',
+              value: [
+                new Expression(User, {
+                  field: 'id',
+                  type: 'equalTo',
+                  value: 1
+                }),
+                new Expression(User, {
+                  field: 'name',
+                  type: 'equalTo',
+                  value: 'foo'
+                })
+              ]
+            })
+          }),
+          'to equal',
+          {
+            sql: 'HAVING (user.id = ? OR user.name = ?)',
+            values: [1, 'foo']
+          }
+        );
+      });
+
+      it('supports Query instances', () => {
+        expect(sql.formatHaving({ having: new Query(User) }), 'to equal', {
+          sql: 'HAVING (SELECT FROM user)',
+          values: []
+        });
+      });
+
+      it('supports Raw instances', () => {
+        expect(
+          sql.formatHaving({ having: new Raw(User, { sql: '(SELECT true)' }) }),
+          'to equal',
+          { sql: 'HAVING (SELECT true)', values: [] }
+        );
+      });
+
+      it('supports Raw instances with values', () => {
+        expect(
+          sql.formatHaving({
+            having: new Raw(User, { sql: 'LOWER(?)', values: ['FOO'] })
+          }),
+          'to equal',
+          { sql: 'HAVING LOWER(?)', values: ['FOO'] }
         );
       });
     });
