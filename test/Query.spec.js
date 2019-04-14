@@ -3787,7 +3787,6 @@ describe('Query', () => {
     it('allows chaining', () => {
       class Foo {}
       class FooQuery extends Query {}
-      FooQuery.updateQueryOptions(Foo);
       expect(FooQuery.updateQueryOptions(Foo), 'to be', FooQuery);
     });
   });

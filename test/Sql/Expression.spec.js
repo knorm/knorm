@@ -253,14 +253,14 @@ describe.only('Expression', () => {
       });
 
       it('does not propagate options to the (isolate) Query instance', () => {
-        const formatQuery = sinon.spy(Query.prototype, 'formatQuery');
+        const formatSelect = sinon.spy(Query.prototype, 'formatSelect');
         expect(
           expression.formatValue(new Query(User), { fields: ['id'] }),
           'to equal',
           { sql: '(SELECT FROM user)' }
         );
-        expect(formatQuery, 'to have calls satisfying', () => formatQuery());
-        formatQuery.restore();
+        expect(formatSelect, 'to have calls satisfying', () => formatSelect());
+        formatSelect.restore();
       });
     });
 
@@ -747,6 +747,28 @@ describe.only('Expression', () => {
   });
 
   describe('Expression.prototype.formatExpression', () => {
+    it('supports `AND`', () => {
+      const expression = new Expression(User, {
+        type: 'and',
+        value: [true, true]
+      });
+      expect(expression.formatExpression(), 'to equal', {
+        sql: '(? AND ?)',
+        values: [true, true]
+      });
+    });
+
+    it('supports `OR`', () => {
+      const expression = new Expression(User, {
+        type: 'or',
+        value: [true, false, true]
+      });
+      expect(expression.formatExpression(), 'to equal', {
+        sql: '(? OR ? OR ?)',
+        values: [true, false, true]
+      });
+    });
+
     it('supports `NOT`', () => {
       const expression = new Expression(User, { type: 'not', value: true });
       expect(expression.formatExpression(), 'to equal', {
@@ -807,6 +829,20 @@ describe.only('Expression', () => {
       });
       expect(expression.formatExpression(), 'to equal', {
         sql: 'ALL (SELECT user.id FROM user WHERE user.name = ?)',
+        values: ['foo']
+      });
+    });
+
+    it('supports `DISTINCT`', () => {
+      const expression = new Expression(User, {
+        type: 'distinct',
+        value: new Query(User).setOptions({
+          field: 'id',
+          where: { name: 'foo' }
+        })
+      });
+      expect(expression.formatExpression(), 'to equal', {
+        sql: 'DISTINCT (SELECT user.id FROM user WHERE user.name = ?)',
         values: ['foo']
       });
     });
