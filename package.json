@@ -34,7 +34,7 @@
     "prettier": "1.16.4"
   },
   "dependencies": {
-    "@knorm/knorm": "2.1.1",
+    "@knorm/knorm": "2.1.3",
     "@knorm/postgres": "2.0.2",
     "@knorm/relations": "2.0.0",
     "@knorm/timestamps": "2.0.0",
