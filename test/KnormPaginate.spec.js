@@ -202,12 +202,16 @@ describe('KnormPaginate', () => {
           await expect(
             new Query(User).count(),
             'to be rejected with error satisfying',
-            e => expect(e.stack, 'not to contain', 'test/KnormPaginate.spec.js')
+            expect.it('to satisfy', {
+              stack: expect.it('not to contain', 'test/KnormPaginate.spec.js')
+            })
           );
           await expect(
             new Query(User).debug(true).count(),
             'to be rejected with error satisfying',
-            e => expect(e.stack, 'to contain', 'test/KnormPaginate.spec.js')
+            expect.it('to satisfy', {
+              stack: expect.it('to contain', 'test/KnormPaginate.spec.js')
+            })
           );
           stub.restore();
         });
