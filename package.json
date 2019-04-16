@@ -25,7 +25,7 @@
     "eslint": "5.15.2",
     "eslint-config-ganintegrity": "3.1.4",
     "mocha": "5.2.0",
-    "nyc": "13.3.0",
+    "nyc": "14.0.0",
     "prettier": "1.16.4",
     "semantic-release": "15.13.3",
     "unexpected": "11.2.0"
