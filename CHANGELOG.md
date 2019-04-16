@@ -1,14 +1,8 @@
 # [3.0.0](https://github.com/knorm/paginate/compare/v2.0.0...v3.0.0) (2019-04-16)
 
+### REMOVED FROM NPM
 
-### Tests
-
-* use expect.it ([15b6c33](https://github.com/knorm/paginate/commit/15b6c33))
-
-
-### BREAKING CHANGES
-
-* introduced in unexpected v11
+This version was published erroneously and was therefore unpublished.
 
 # [2.0.0](https://github.com/knorm/paginate/compare/v1.2.0...v2.0.0) (2019-02-03)
 
