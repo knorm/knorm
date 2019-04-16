@@ -1353,30 +1353,106 @@ describe('Query', () => {
         );
       });
 
-      it('supports field expression', async () => {
-        const query = new Query(User);
-        query.where(User.fields.id.notEqual(1));
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows satisfying',
-          [new User({ id: 2, name: 'User 2' })]
-        );
-      });
+      describe('supports field expression', () => {
+        it('supports a single expression', async () => {
+          const query = new Query(User);
+          query.where(User.fields.id.notEqual(1));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
 
-      it('supports multiple field expression', async () => {
-        const query = new Query(User);
-        const where = new Query.Where();
-        query.where(
-          where.or(User.fields.id.equal(1), User.fields.name.equal('User 2'))
-        );
-        await expect(
-          query.fetch(),
-          'to be fulfilled with sorted rows satisfying',
-          [
-            new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
-          ]
-        );
+        it('supports multiple expression', async () => {
+          const query = new Query(User);
+          const where = new Query.Where();
+          query.where(
+            where.or(User.fields.id.equal(1), User.fields.name.equal('User 2'))
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('supports in with an array', async () => {
+          const query = new Query(User);
+          query.where(User.fields.id.in([1, 2]));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('supports in with variable arguments', async () => {
+          const query = new Query(User);
+          query.where(User.fields.id.in(1, 2));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('supports between with an array', async () => {
+          const query = new Query(User);
+          query.where(User.fields.id.between([1, 2]));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('supports between with variable arguments', async () => {
+          const query = new Query(User);
+          query.where(User.fields.id.between(1, 2));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('supports any option with raw sql', async () => {
+          const query = new Query(User);
+          query.where(User.fields.name.equal(query.sql(`trim('User 2')`)));
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 2, name: 'User 2' })]
+          );
+        });
+
+        it('supports any option with parameterized raw sql', async () => {
+          const query = new Query(User);
+          query.where(
+            User.fields.name.equal(query.sql(`trim('$1')`, `User 1`))
+          );
+          await expect(
+            query.fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new User({ id: 1, name: 'User 1' })]
+          );
+        });
       });
 
       it('does nothing if no arguments are passed', async () => {
