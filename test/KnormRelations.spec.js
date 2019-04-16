@@ -206,14 +206,20 @@ describe('KnormRelations', () => {
             {}
           );
           expect(Bar.config.referenceFunctions, 'to exhaustively satisfy', {
-            fooId() {
-              return Foo.fields.id;
-            }
+            fooId: expect.it(
+              'when passed as parameter to',
+              f => f.toString(),
+              'to contain',
+              'return Foo.fields.id;'
+            )
           });
           expect(Quux.config.referenceFunctions, 'to exhaustively satisfy', {
-            fooId() {
-              return Foo.fields.id2;
-            }
+            fooId: expect.it(
+              'when passed as parameter to',
+              f => f.toString(),
+              'to contain',
+              'return Foo.fields.id2;'
+            )
           });
         });
 
@@ -264,17 +270,26 @@ describe('KnormRelations', () => {
             {}
           );
           expect(Bar.config.referenceFunctions, 'to exhaustively satisfy', {
-            fooId() {
-              return Foo.fields.id;
-            }
+            fooId: expect.it(
+              'when passed as parameter to',
+              f => f.toString(),
+              'to contain',
+              'return Foo.fields.id;'
+            )
           });
           expect(Quux.config.referenceFunctions, 'to exhaustively satisfy', {
-            fooId() {
-              return Foo.fields.id;
-            },
-            fooId2() {
-              return Quux.fields.fooId2;
-            }
+            fooId: expect.it(
+              'when passed as parameter to',
+              f => f.toString(),
+              'to contain',
+              'return Foo.fields.id;'
+            ),
+            fooId2: expect.it(
+              'when passed as parameter to',
+              f => f.toString(),
+              'to contain',
+              'return Foo.fields.id2;'
+            )
           });
         });
       });
@@ -377,21 +392,19 @@ describe('KnormRelations', () => {
               .leftJoin(Image)
               .fetch(),
             'to be fulfilled with value satisfying',
-            rows =>
-              expect(
-                rows,
-                'when sorted by',
-                (a, b) => (a.name > b.name ? 1 : -1),
-                'to exhaustively satisfy',
-                [
-                  new User({
-                    id: 1,
-                    name: 'User 1',
-                    image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
-                  }),
-                  new User({ id: 2, name: 'User 2', image: [] })
-                ]
-              )
+            expect.it(
+              'when sorted by',
+              (a, b) => (a.name > b.name ? 1 : -1),
+              'to exhaustively satisfy',
+              [
+                new User({
+                  id: 1,
+                  name: 'User 1',
+                  image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
+                }),
+                new User({ id: 2, name: 'User 2', image: [] })
+              ]
+            )
           );
         });
 
