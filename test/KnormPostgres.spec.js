@@ -217,7 +217,9 @@ describe('KnormPostgres', () => {
               cast: { forSave }
             });
             field.cast(sql('foo'), 'a model instance', { forSave: true });
-            expect(forSave, 'was called with', sql('foo'));
+            expect(forSave, 'to have calls satisfying', () =>
+              forSave(sql('foo'), 'a model instance')
+            );
           });
         });
       });
@@ -543,7 +545,7 @@ describe('KnormPostgres', () => {
       await expect(
         new Query(User).returning('id').delete(),
         'to be fulfilled with value exhaustively satisfying',
-        [{ id: 1 }]
+        [new User({ id: 1 })]
       );
     });
 
@@ -1270,7 +1272,7 @@ describe('KnormPostgres', () => {
               .returning('id')
               .save([{ id: 1, name: 'foofoo' }, { name: 'bar' }]),
             'to be fulfilled with sorted rows exhaustively satisfying',
-            [{ id: 1 }, { id: 2 }]
+            [new User({ id: 1 }), new User({ id: 2 })]
           );
         });
 
