@@ -7,15 +7,11 @@ const expect = require('unexpected')
 describe.only('Sql', () => {
   let Model;
   let Query;
-  let User;
   let Sql;
-
-  let Raw;
-  let Select;
-  let Insert;
-  let Expression;
-
+  let SqlPart;
   let SqlError;
+
+  let User;
   let UserWithSchema;
 
   before(() => {
@@ -24,12 +20,7 @@ describe.only('Sql', () => {
     Model = orm.Model;
     Query = orm.Query;
     Sql = orm.Sql;
-
-    Raw = Sql.Raw;
-    Select = Sql.Select;
-    Insert = Sql.Insert;
-    Expression = Sql.Expression;
-
+    SqlPart = Sql.SqlPart;
     SqlError = Sql.SqlError;
 
     User = class extends Model {};
@@ -52,256 +43,698 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.raw', () => {
-    it('returns a new Raw instance', () => {
+    it('returns a new `raw` part', () => {
       expect(
-        sql.raw({ sql: 'SELECT ?', values: [1] }),
+        sql.raw({ sql: 'SELECT 1' }),
         'to equal',
-        new Raw(User, { sql: 'SELECT ?', values: [1] })
+        new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
       );
     });
-  });
 
-  describe('Sql.prototype.and', () => {
-    it('returns a new `and` Expression', () => {
+    it('supports raw SQL as a string', () => {
       expect(
-        sql.and([{ id: 1 }]),
+        sql.raw('SELECT 1'),
         'to equal',
-        new Expression(User, { type: 'and', value: [{ id: 1 }] })
+        new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
       );
     });
-  });
 
-  describe('Sql.prototype.or', () => {
-    it('returns a new `or` Expression', () => {
+    it('supports raw SQL fields and values', () => {
       expect(
-        sql.or([{ id: 1 }]),
+        sql.raw({ sql: 'SELECT ? AS foo', values: [1], fields: ['foo'] }),
         'to equal',
-        new Expression(User, { type: 'or', value: [{ id: 1 }] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.not', () => {
-    it('returns a new `not` Expression', () => {
-      expect(
-        sql.not(false),
-        'to equal',
-        new Expression(User, { type: 'not', value: false })
-      );
-    });
-  });
-
-  describe('Sql.prototype.any', () => {
-    it('returns a new `any` Expression', () => {
-      expect(
-        sql.any(new Query(User)),
-        'to equal',
-        new Expression(User, { type: 'any', value: new Query(User) })
-      );
-    });
-  });
-
-  describe('Sql.prototype.some', () => {
-    it('returns a new `some` Expression', () => {
-      expect(
-        sql.some(new Query(User)),
-        'to equal',
-        new Expression(User, { type: 'some', value: new Query(User) })
-      );
-    });
-  });
-
-  describe('Sql.prototype.all', () => {
-    it('returns a new `all` Expression', () => {
-      expect(
-        sql.all(new Raw('(SELECT 1)')),
-        'to equal',
-        new Expression(User, { type: 'all', value: new Raw('(SELECT 1)') })
+        new SqlPart({
+          type: 'raw',
+          value: { sql: 'SELECT ? AS foo', values: [1], fields: ['foo'] }
+        })
       );
     });
   });
 
   describe('Sql.prototype.distinct', () => {
-    it('returns a new `distinct` Expression', () => {
+    it('returns a new `distinct` part', () => {
       expect(
-        sql.distinct(new Raw('(SELECT 1)')),
+        sql.distinct(new Query(User)),
         'to equal',
-        new Expression(User, { type: 'distinct', value: new Raw('(SELECT 1)') })
+        new SqlPart({ type: 'distinct', value: new Query(User) })
+      );
+    });
+  });
+
+  describe('Sql.prototype.all', () => {
+    it('returns a new `all` part', () => {
+      expect(
+        sql.all(new Query(User)),
+        'to equal',
+        new SqlPart({ type: 'all', value: new Query(User) })
+      );
+    });
+  });
+
+  describe('Sql.prototype.fields', () => {
+    it('returns a new `fields` part', () => {
+      expect(
+        sql.fields(['id']),
+        'to equal',
+        new SqlPart({ type: 'fields', value: ['id'] })
+      );
+    });
+  });
+
+  describe('Sql.prototype.from', () => {
+    it('returns a new `from` part', () => {
+      expect(sql.from(), 'to equal', new SqlPart({ type: 'from' }));
+    });
+  });
+
+  describe('Sql.prototype.not', () => {
+    it('returns a new `not` part', () => {
+      expect(
+        sql.not(false),
+        'to equal',
+        new SqlPart({ type: 'not', value: false })
+      );
+    });
+  });
+
+  describe('Sql.prototype.any', () => {
+    it('returns a new `any` part', () => {
+      expect(
+        sql.any(new Query(User)),
+        'to equal',
+        new SqlPart({ type: 'any', value: new Query(User) })
+      );
+    });
+  });
+
+  describe('Sql.prototype.some', () => {
+    it('returns a new `some` part', () => {
+      expect(
+        sql.some(new Query(User)),
+        'to equal',
+        new SqlPart({ type: 'some', value: new Query(User) })
       );
     });
   });
 
   describe('Sql.prototype.exists', () => {
-    it('returns a new `exists` Expression', () => {
+    it('returns a new `exists` part', () => {
       expect(
-        sql.exists(new Raw('(SELECT 1)')),
+        sql.exists(new Query(User)),
         'to equal',
-        new Expression(User, { type: 'exists', value: new Raw('(SELECT 1)') })
-      );
-    });
-  });
-
-  describe('Sql.prototype.isNull', () => {
-    it('returns a new `isNull` Expression', () => {
-      expect(
-        sql.isNull('id'),
-        'to equal',
-        new Expression(User, { type: 'isNull', field: 'id' })
-      );
-    });
-  });
-
-  describe('Sql.prototype.isNotNull', () => {
-    it('returns a new `isNotNull` Expression', () => {
-      expect(
-        sql.isNotNull('name'),
-        'to equal',
-        new Expression(User, { type: 'isNotNull', field: 'name' })
+        new SqlPart({ type: 'exists', value: new Query(User) })
       );
     });
   });
 
   describe('Sql.prototype.equalTo', () => {
-    it('returns a new `equalTo` Expression', () => {
+    it('returns a new `equalTo` part', () => {
       expect(
         sql.equalTo('id', 1),
         'to equal',
-        new Expression(User, { type: 'equalTo', field: 'id', value: 1 })
+        new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
       );
     });
   });
 
   describe('Sql.prototype.notEqualTo', () => {
-    it('returns a new `notEqualTo` Expression', () => {
+    it('returns a new `notEqualTo` part', () => {
       expect(
         sql.notEqualTo('id', 1),
         'to equal',
-        new Expression(User, { type: 'notEqualTo', field: 'id', value: 1 })
+        new SqlPart({ type: 'notEqualTo', field: 'id', value: 1 })
       );
     });
   });
 
   describe('Sql.prototype.greaterThan', () => {
-    it('returns a new `greaterThan` Expression', () => {
+    it('returns a new `greaterThan` part', () => {
       expect(
         sql.greaterThan('id', 1),
         'to equal',
-        new Expression(User, { type: 'greaterThan', field: 'id', value: 1 })
+        new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
       );
     });
   });
 
   describe('Sql.prototype.greaterThanOrEqualTo', () => {
-    it('returns a new `greaterThanOrEqualTo` Expression', () => {
+    it('returns a new `greaterThanOrEqualTo` part', () => {
       expect(
         sql.greaterThanOrEqualTo('id', 1),
         'to equal',
-        new Expression(User, {
-          type: 'greaterThanOrEqualTo',
-          field: 'id',
-          value: 1
-        })
+        new SqlPart({ type: 'greaterThanOrEqualTo', field: 'id', value: 1 })
       );
     });
   });
 
   describe('Sql.prototype.lessThan', () => {
-    it('returns a new `lessThan` Expression', () => {
+    it('returns a new `lessThan` part', () => {
       expect(
         sql.lessThan('id', 1),
         'to equal',
-        new Expression(User, { type: 'lessThan', field: 'id', value: 1 })
+        new SqlPart({ type: 'lessThan', field: 'id', value: 1 })
       );
     });
   });
 
   describe('Sql.prototype.lessThanOrEqualTo', () => {
-    it('returns a new `lessThanOrEqualTo` Expression', () => {
+    it('returns a new `lessThanOrEqualTo` part', () => {
       expect(
         sql.lessThanOrEqualTo('id', 1),
         'to equal',
-        new Expression(User, {
-          type: 'lessThanOrEqualTo',
-          field: 'id',
-          value: 1
-        })
+        new SqlPart({ type: 'lessThanOrEqualTo', field: 'id', value: 1 })
+      );
+    });
+  });
+
+  describe('Sql.prototype.isNull', () => {
+    it('returns a new `isNull` part', () => {
+      expect(
+        sql.isNull('id'),
+        'to equal',
+        new SqlPart({ type: 'isNull', field: 'id' })
+      );
+    });
+  });
+
+  describe('Sql.prototype.isNotNull', () => {
+    it('returns a new `isNotNull` part', () => {
+      expect(
+        sql.isNotNull('id'),
+        'to equal',
+        new SqlPart({ type: 'isNotNull', field: 'id' })
       );
     });
   });
 
   describe('Sql.prototype.like', () => {
-    it('returns a new `like` Expression', () => {
+    it('returns a new `like` part', () => {
       expect(
         sql.like('name', 'foo'),
         'to equal',
-        new Expression(User, { type: 'like', field: 'name', value: 'foo' })
+        new SqlPart({ type: 'like', field: 'name', value: 'foo' })
       );
     });
   });
 
   describe('Sql.prototype.between', () => {
-    it('returns a new `between` Expression', () => {
+    it('returns a new `between` part', () => {
       expect(
-        sql.between('id', [1, 2]),
+        sql.between('id', [1, 3]),
         'to equal',
-        new Expression(User, { type: 'between', field: 'id', value: [1, 2] })
+        new SqlPart({ type: 'between', field: 'id', value: [1, 3] })
       );
     });
   });
 
   describe('Sql.prototype.in', () => {
-    it('returns a new `in` Expression', () => {
+    it('returns a new `in` part', () => {
       expect(
-        sql.in('id', [1, 2, 3]),
+        sql.in('name', ['foo', 'bar']),
         'to equal',
-        new Expression(User, { type: 'in', field: 'id', value: [1, 2, 3] })
+        new SqlPart({ type: 'in', field: 'name', value: ['foo', 'bar'] })
       );
     });
   });
 
-  describe('Sql.prototype.quoteIdentifier', () => {
-    it('returns the identifier as is', () => {
-      expect(sql.quoteIdentifier('order'), 'to be', 'order');
-    });
-  });
-
-  describe('Sql.prototype.throwSqlError', () => {
-    it('throws an SqlError', () => {
+  describe('Sql.prototype.and', () => {
+    it('returns a new `and` part', () => {
       expect(
-        () => sql.throwSqlError(),
-        'to throw',
-        expect.it('to be an', SqlError)
-      );
-    });
-
-    it('attaches the Sql instance to the error', () => {
-      expect(
-        () => sql.throwSqlError(),
-        'to throw',
-        expect.it('to satisfy', { sql })
+        sql.and([{ id: 1 }, { id: 2 }]),
+        'to equal',
+        new SqlPart({ type: 'and', value: [{ id: 1 }, { id: 2 }] })
       );
     });
   });
 
-  describe('Sql.prototype.formatSchema', () => {
-    describe('with `Model.schema` not set', () => {
-      it('returns `undefined`', () => {
-        expect(sql.formatSchema(), 'to be undefined');
+  describe('Sql.prototype.or', () => {
+    it('returns a new `or` part', () => {
+      expect(
+        sql.or([{ id: 1 }, { id: 2 }]),
+        'to equal',
+        new SqlPart({ type: 'or', value: [{ id: 1 }, { id: 2 }] })
+      );
+    });
+  });
+
+  describe('Sql.prototype.where', () => {
+    it('returns a new `where` part', () => {
+      expect(
+        sql.where({ id: 1 }),
+        'to equal',
+        new SqlPart({ type: 'where', value: { id: 1 } })
+      );
+    });
+  });
+
+  describe('Sql.prototype.having', () => {
+    it('returns a new `having` part', () => {
+      expect(
+        sql.having({ id: 1 }),
+        'to equal',
+        new SqlPart({ type: 'having', value: { id: 1 } })
+      );
+    });
+  });
+
+  describe('Sql.prototype.select', () => {
+    describe('with no options', () => {
+      it('returns a `select` part with only a `from` part', () => {
+        expect(
+          sql.select(),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
       });
     });
 
-    describe('with `Model.schema` configured', () => {
-      it('returns a quoted `Model.schema`', () => {
-        expect(new Sql(UserWithSchema).formatSchema(), 'to equal', {
-          sql: 'public'
+    describe('with the `distinct` option set', () => {
+      it('adds a `distinct` part', () => {
+        expect(
+          sql.select({ distinct: true }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.distinct(), sql.from()] })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          sql.select({ distinct: null }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          sql.select({ distinct: undefined }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
+      });
+    });
+
+    describe('with the `fields` option set', () => {
+      it('adds a `fields` part', () => {
+        expect(
+          sql.select({ fields: ['id'] }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [sql.fields(['id']), sql.from()]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          sql.select({ fields: null }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          sql.select({ fields: undefined }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
+      });
+    });
+
+    describe('with the `where` option set', () => {
+      it('adds a `where` part', () => {
+        expect(
+          sql.select({ where: { id: 1 } }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [sql.from(), sql.where({ id: 1 })]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          sql.select({ where: null }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          sql.select({ where: undefined }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
+      });
+
+      it('supports other falsy option values', () => {
+        expect(
+          sql.select({ where: false }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [sql.from(), sql.where(false)]
+          })
+        );
+      });
+    });
+
+    // TODO: add all `select` parts
+
+    describe('with the `having` option set', () => {
+      it('adds a `having` part', () => {
+        expect(
+          sql.select({ having: { id: 1 } }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [sql.from(), sql.having({ id: 1 })]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          sql.select({ having: null }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          sql.select({ having: undefined }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [sql.from()] })
+        );
+      });
+    });
+
+    describe('with all options set', () => {
+      // TODO: add all `select` parts
+      it('adds parts for each option in the right order', () => {
+        expect(
+          sql.select({
+            distinct: true,
+            fields: ['id'],
+            where: { id: 1 },
+            having: { id: 1 }
+          }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [
+              sql.distinct(),
+              sql.fields(['id']),
+              sql.from(),
+              sql.where({ id: 1 }),
+              sql.having({ id: 1 })
+            ]
+          })
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.into', () => {
+    it('returns a new `into` part', () => {
+      expect(sql.into(), 'to equal', new SqlPart({ type: 'into' }));
+    });
+  });
+
+  describe('Sql.prototype.columns', () => {
+    it('returns a new `columns` part', () => {
+      expect(
+        sql.columns(['id']),
+        'to equal',
+        new SqlPart({ type: 'columns', value: ['id'] })
+      );
+    });
+  });
+
+  describe('Sql.prototype.values', () => {
+    it('returns a new `values` part', () => {
+      expect(
+        sql.values([[1]]),
+        'to equal',
+        new SqlPart({ type: 'values', value: [[1]] })
+      );
+    });
+  });
+
+  describe('Sql.prototype.returning', () => {
+    it('returns a new `returning` part', () => {
+      expect(
+        sql.returning(['id']),
+        'to equal',
+        new SqlPart({ type: 'returning', value: ['id'] })
+      );
+    });
+  });
+
+  describe('Sql.prototype.insert', () => {
+    describe('with no options', () => {
+      it('returns a `insert` part with only an `into` part', () => {
+        expect(
+          sql.insert(),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [sql.into()] })
+        );
+      });
+    });
+
+    describe('with the `data` option set', () => {
+      describe('with `columns` set', () => {
+        it('adds a `columns` part', () => {
+          expect(
+            sql.insert({ data: { columns: ['id'] } }),
+            'to equal',
+            new SqlPart({
+              type: 'insert',
+              value: [sql.into(), sql.columns(['id'])]
+            })
+          );
         });
+      });
+
+      describe('with `values` set', () => {
+        it('adds a `values` part', () => {
+          expect(
+            sql.insert({ data: { values: [[1]] } }),
+            'to equal',
+            new SqlPart({
+              type: 'insert',
+              value: [sql.into(), sql.values([[1]])]
+            })
+          );
+        });
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          sql.insert({ data: null }),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [sql.into()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          sql.insert({ data: undefined }),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [sql.into()] })
+        );
+      });
+    });
+
+    describe('with the `fields` option set', () => {
+      it('adds a `returning` part', () => {
+        expect(
+          sql.insert({ fields: ['id'] }),
+          'to equal',
+          new SqlPart({
+            type: 'insert',
+            value: [sql.into(), sql.returning(['id'])]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          sql.insert({ fields: null }),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [sql.into()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          sql.insert({ fields: undefined }),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [sql.into()] })
+        );
+      });
+    });
+
+    describe('with all options set', () => {
+      it('adds parts for each option in the right order', () => {
+        expect(
+          sql.insert({
+            data: { columns: ['id'], values: [[1]] },
+            fields: ['id']
+          }),
+          'to equal',
+          new SqlPart({
+            type: 'insert',
+            value: [
+              sql.into(),
+              sql.columns(['id']),
+              sql.values([[1]]),
+              sql.returning(['id'])
+            ]
+          })
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.addValue', () => {
+    it('adds a value to the values array', () => {
+      sql.addValue('foo');
+      expect(sql.getValues(), 'to equal', ['foo']);
+    });
+
+    it('maintains the order of values', () => {
+      sql.addValue('foo');
+      sql.addValue('bar');
+      expect(sql.getValues(), 'to equal', ['foo', 'bar']);
+    });
+
+    it('allows chaining', () => {
+      expect(sql.addValue('foo'), 'to be', sql);
+    });
+  });
+
+  describe('Sql.prototype.addValues', () => {
+    it('adds multiple values to the values array', () => {
+      sql.addValues(['foo', 'bar']);
+      expect(sql.getValues(), 'to equal', ['foo', 'bar']);
+    });
+
+    it('maintains the order of values', () => {
+      sql.addValues(['foo', 'bar']);
+      sql.addValues(['baz', 'quux']);
+      expect(sql.getValues(), 'to equal', ['foo', 'bar', 'baz', 'quux']);
+    });
+
+    it('allows chaining', () => {
+      expect(sql.addValues(['foo']), 'to be', sql);
+    });
+  });
+
+  describe('Sql.prototype.getValues', () => {
+    it('returns the currently added values', () => {
+      expect(sql.getValues(), 'to equal', []);
+      sql.addValues(['foo', 'bar']);
+      expect(sql.getValues(), 'to equal', ['foo', 'bar']);
+    });
+  });
+
+  describe('Sql.prototype.addField', () => {
+    it('adds a field to the fields array', () => {
+      sql.addField('foo');
+      expect(sql.getFields(), 'to equal', ['foo']);
+    });
+
+    it('maintains the order of fields', () => {
+      sql.addField('foo');
+      sql.addField('bar');
+      expect(sql.getFields(), 'to equal', ['foo', 'bar']);
+    });
+
+    it('allows chaining', () => {
+      expect(sql.addField('foo'), 'to be', sql);
+    });
+  });
+
+  describe('Sql.prototype.addFields', () => {
+    it('adds multiple fields to the fields array', () => {
+      sql.addFields(['foo', 'bar']);
+      expect(sql.getFields(), 'to equal', ['foo', 'bar']);
+    });
+
+    it('maintains the order of fields', () => {
+      sql.addFields(['foo', 'bar']);
+      sql.addFields(['baz', 'quux']);
+      expect(sql.getFields(), 'to equal', ['foo', 'bar', 'baz', 'quux']);
+    });
+
+    it('allows chaining', () => {
+      expect(sql.addFields(['foo']), 'to be', sql);
+    });
+  });
+
+  describe('Sql.prototype.getFields', () => {
+    it('returns the currently added fields', () => {
+      expect(sql.getFields(), 'to equal', []);
+      sql.addFields(['foo', 'bar']);
+      expect(sql.getFields(), 'to equal', ['foo', 'bar']);
+    });
+  });
+
+  describe('Sql.prototype.setAlias', () => {
+    it('sets the alias', () => {
+      sql.setAlias('foo');
+      expect(sql.getAlias(), 'to be', 'foo');
+    });
+
+    it('overwrites the alias when called again', () => {
+      sql.setAlias('foo');
+      sql.setAlias('bar');
+      expect(sql.getAlias(), 'to be', 'bar');
+    });
+
+    it('allows chaining', () => {
+      expect(sql.setAlias('foo'), 'to be', sql);
+    });
+  });
+
+  describe('Sql.prototype.getAlias', () => {
+    it('returns the currently set alias', () => {
+      expect(sql.getAlias(), 'to be undefined');
+      sql.setAlias('foo');
+      expect(sql.getAlias(), 'to be', 'foo');
+    });
+  });
+
+  describe('Sql.prototype.formatIdentifier', () => {
+    it('quotes the identifier', () => {
+      expect(sql.formatIdentifier('order'), 'to be', '"order"');
+    });
+  });
+
+  describe('Sql.prototype.formatAlias', () => {
+    describe('with the alias not set', () => {
+      it('returns `undefined`', () => {
+        expect(sql.formatAlias(), 'to be undefined');
+      });
+    });
+
+    describe('with the alias set', () => {
+      it('returns a quoted alias', () => {
+        sql.setAlias('foo');
+        expect(sql.formatAlias(), 'to be', '"foo"');
       });
     });
   });
 
   describe('Sql.prototype.formatTable', () => {
     it('returns a quoted `Model.table`', () => {
-      expect(sql.formatTable(), 'to equal', { sql: 'user' });
+      expect(sql.formatTable(), 'to be', '"user"');
     });
 
     describe('with `Model.table` not configured', () => {
@@ -311,41 +744,39 @@ describe.only('Sql', () => {
         expect(
           () => sql.formatTable(),
           'to throw',
-          new SqlError({ message: 'Foo: `Foo.table` is not configured', sql })
+          new SqlError({ sql, message: '`Foo.table` is not configured' })
         );
       });
     });
 
     describe('with `Model.schema` configured', () => {
-      it('returns a quoted `Model.schema` and `Model.table`', () => {
-        expect(new Sql(UserWithSchema).formatTable(), 'to equal', {
-          sql: 'public.user'
-        });
-      });
-    });
-  });
-
-  describe('Sql.prototype.formatAlias', () => {
-    describe('with the `alias` option not set', () => {
-      it('returns `undefined`', () => {
-        expect(sql.formatAlias(), 'to be undefined');
+      it('returns a quoted `Model.schema`-qualified `Model.table`', () => {
+        expect(
+          new Sql(UserWithSchema).formatTable(),
+          'to be',
+          '"public"."user"'
+        );
       });
     });
 
-    describe('with the `alias` option set', () => {
-      it('returns a quoted alias', () => {
-        expect(sql.formatAlias({ alias: 'foo' }), 'to equal', {
-          sql: 'foo'
+    describe('with the alias set', () => {
+      it('returns an aliased table-name with the quoted alias', () => {
+        sql.setAlias('foo');
+        expect(sql.formatTable(), 'to be', '"user" AS "foo"');
+      });
+
+      describe('with `Model.schema` configured', () => {
+        it('returns a quoted and aliased schema-qualified table-name', () => {
+          const sql = new Sql(UserWithSchema).setAlias('foo');
+          expect(sql.formatTable(), 'to be', '"public"."user" AS "foo"');
         });
       });
     });
   });
 
   describe('Sql.prototype.formatColumn', () => {
-    it('returns a quoted unprefixed column', () => {
-      expect(sql.formatColumn('id'), 'to equal', {
-        sql: 'id'
-      });
+    it('returns a quoted non-qualified column', () => {
+      expect(sql.formatColumn('id'), 'to be', '"id"');
     });
 
     describe('with custom columns configured', () => {
@@ -357,9 +788,7 @@ describe.only('Sql', () => {
       });
 
       it('uses the configured columns', () => {
-        expect(new Sql(OtherUser).formatColumn('id'), 'to equal', {
-          sql: 'ID'
-        });
+        expect(new Sql(OtherUser).formatColumn('id'), 'to be', '"ID"');
       });
     });
 
@@ -369,8 +798,8 @@ describe.only('Sql', () => {
           () => sql.formatColumn({}),
           'to throw',
           new SqlError({
-            message: 'User: Unknown field `[object Object]`',
-            sql
+            sql,
+            message: 'unknown field `[object Object]`'
           })
         );
       });
@@ -378,703 +807,709 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.formatField', () => {
-    it('returns a quoted table-name-prefixed column and no values', () => {
-      expect(sql.formatField('id'), 'to equal', {
-        sql: 'user.id'
-      });
+    it('returns a quoted table-name-qualified column', () => {
+      expect(sql.formatField('id'), 'to be', '"user"."id"');
     });
 
-    it('propagates options', () => {
-      expect(sql.formatField('id', { alias: 'alias' }), 'to equal', {
-        sql: 'alias.id'
+    describe('with the alias set', () => {
+      it('qualifies the column-name with the alias instead', () => {
+        sql.setAlias('foo');
+        expect(sql.formatField('id'), 'to be', '"foo"."id"');
       });
     });
+  });
 
-    describe('with custom columns configured', () => {
-      let OtherUser;
-
-      beforeEach(() => {
-        OtherUser = class extends User {};
-        OtherUser.fields = { id: { type: 'integer', column: 'ID' } };
-      });
-
-      it('uses the configured columns', () => {
-        expect(new Sql(OtherUser).formatField('id'), 'to equal', {
-          sql: 'user.ID'
-        });
-      });
+  describe('Sql.prototype.formatQuery', () => {
+    it('returns a SELECT query wrapped in parentheses', () => {
+      expect(sql.formatQuery(new Query(User)), 'to be', '(SELECT FROM "user")');
     });
 
-    describe('with `Model.schema` configured', () => {
-      it('returns a schema and table-name prefixed column', () => {
-        expect(new Sql(UserWithSchema).formatField('id'), 'to equal', {
-          sql: 'public.user.id'
-        });
-      });
+    it('adds values from the query to its values array', () => {
+      sql.formatQuery(new Query(User).setOption('where', { id: 1 }));
+      expect(sql.getValues(), 'to equal', [1]);
     });
 
-    describe('with the field is a Raw instance', () => {
-      it('returns `Raw.prototype.sql` as the sql', () => {
+    it('adds fields from the query to its fields array', () => {
+      sql.formatQuery(new Query(User).setOption('fields', ['id', 'name']));
+      expect(sql.getFields(), 'to equal', ['id', 'name']);
+    });
+  });
+
+  describe('Sql.prototype.formatRaw', () => {
+    it("returns the part's SQL", () => {
+      expect(
+        sql.formatRaw(new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })),
+        'to be',
+        'SELECT 1'
+      );
+    });
+
+    it('adds values from the part to its values array', () => {
+      sql.formatRaw(
+        new SqlPart({ type: 'raw', value: { sql: 'SELECT ?', values: [1] } })
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+
+    it('adds fields from the part to its fields array', () => {
+      sql.formatRaw(
+        new SqlPart({
+          type: 'raw',
+          value: { sql: 'SELECT 1 AS foo', fields: ['foo'] }
+        })
+      );
+      expect(sql.getFields(), 'to equal', ['foo']);
+    });
+  });
+
+  describe('Sql.prototype.formatValue', () => {
+    it('returns a placeholder', () => {
+      expect(sql.formatValue(1), 'to be', '?');
+    });
+
+    it('adds the value to its values array', () => {
+      sql.formatValue(1);
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+
+    it('supports array values', () => {
+      expect(sql.formatValue([1]), 'to be', '?');
+      expect(sql.getValues(), 'to equal', [[1]]);
+    });
+
+    it('supports object values', () => {
+      expect(sql.formatValue({ foo: 'bar' }), 'to be', '?');
+      expect(sql.getValues(), 'to equal', [{ foo: 'bar' }]);
+    });
+
+    it('supports falsy values', () => {
+      expect(sql.formatValue(false), 'to be', '?');
+      expect(sql.getValues(), 'to equal', [false]);
+    });
+
+    it('throws an SqlError for `undefined`', () => {
+      expect(
+        () => sql.formatValue(),
+        'to throw',
+        new SqlError({
+          sql,
+          message: 'value is `undefined`'
+        })
+      );
+      expect(
+        () => sql.formatValue(undefined),
+        'to throw',
+        new SqlError({
+          sql,
+          message: 'value is `undefined`'
+        })
+      );
+    });
+
+    describe('for Query instances', () => {
+      it("returns the Query's SELECT query", () => {
         expect(
-          sql.formatField(new Raw(User, { sql: 'COUNT(*)' })),
-          'to equal',
-          { sql: 'COUNT(*)' }
+          sql.formatValue(new Query(User)),
+          'to be',
+          '(SELECT FROM "user")'
+        );
+      });
+    });
+
+    describe('for SqlPart instances', () => {
+      it("returns the part's SQL", () => {
+        expect(
+          sql.formatValue(
+            new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
+          ),
+          'to be',
+          'SELECT 1'
+        );
+      });
+    });
+
+    describe('with the `formatArray` formatter passed', () => {
+      it('calls the function with array values', () => {
+        const formatArray = sinon.spy();
+        sql.formatValue([1], { formatArray });
+        expect(formatArray, 'to have calls satisfying', () => formatArray([1]));
+      });
+
+      it("returns the function's return value", () => {
+        expect(
+          sql.formatValue([1], {
+            formatArray() {
+              return 'formatted value';
+            }
+          }),
+          'to be',
+          'formatted value'
+        );
+      });
+    });
+
+    describe('with the `formatObject` formatter passed', () => {
+      it('calls the function with array values', () => {
+        const formatObject = sinon.spy();
+        sql.formatValue({ foo: 'bar' }, { formatObject });
+        expect(formatObject, 'to have calls satisfying', () =>
+          formatObject({ foo: 'bar' })
         );
       });
 
-      it('returns `Raw.prototype.values` as values if set', () => {
+      it("returns the function's return value", () => {
         expect(
-          sql.formatField(new Raw(User, { sql: 'UPPER(?)', values: ['foo'] })),
-          'to equal',
-          { sql: 'UPPER(?)', values: ['foo'] }
+          sql.formatValue(
+            { foo: 'bar' },
+            {
+              formatObject() {
+                return 'formatted value';
+              }
+            }
+          ),
+          'to be',
+          'formatted value'
+        );
+      });
+
+      it('does not call the function with array values', () => {
+        const formatObject = sinon.spy();
+        sql.formatValue([1], { formatObject });
+        expect(formatObject, 'was not called');
+      });
+    });
+
+    describe('with the `formatValue` formatter passed', () => {
+      it('calls the function with the value', () => {
+        const formatValue = sinon.spy();
+        sql.formatValue(false, { formatValue });
+        expect(formatValue, 'to have calls satisfying', () =>
+          formatValue(false)
+        );
+      });
+
+      it('calls the function with object values', () => {
+        const formatValue = sinon.spy();
+        sql.formatValue({ foo: 'bar' }, { formatValue });
+        expect(formatValue, 'to have calls satisfying', () =>
+          formatValue({ foo: 'bar' })
+        );
+      });
+
+      it('calls the function with array values', () => {
+        const formatValue = sinon.spy();
+        sql.formatValue([1], { formatValue });
+        expect(formatValue, 'to have calls satisfying', () => formatValue([1]));
+      });
+
+      it('does not call the function for Query instances', () => {
+        const formatValue = sinon.spy();
+        sql.formatValue(new Query(User), { formatValue });
+        expect(formatValue, 'was not called');
+      });
+
+      it('does not call the function for SqlPart instances', () => {
+        const formatValue = sinon.spy();
+        sql.formatValue(
+          new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } }),
+          { formatValue }
+        );
+        expect(formatValue, 'was not called');
+      });
+
+      it("returns the function's return value", () => {
+        expect(
+          sql.formatValue(1, {
+            formatValue() {
+              return 'formatted value';
+            }
+          }),
+          'to be',
+          'formatted value'
         );
       });
     });
   });
 
   describe('Sql.prototype.formatFields', () => {
-    describe('with the `fields` option not set', () => {
-      it('returns `undefined`', () => {
-        expect(sql.formatFields(), 'to be undefined');
-      });
+    it('returns a comma-separated list of formatted columns', () => {
+      expect(
+        sql.formatFields(
+          new SqlPart({ type: 'fields', value: ['id', 'name'] })
+        ),
+        'to be',
+        '"user"."id", "user"."name"'
+      );
     });
 
-    describe('with the `fields` option set', () => {
-      it('supports strings', () => {
-        expect(sql.formatFields({ fields: ['id'] }), 'to equal', {
-          sql: 'user.id',
-          aliases: ['id'],
-          values: []
-        });
-      });
-
-      it('supports objects with string values', () => {
-        expect(
-          sql.formatFields({ fields: [{ theId: 'id', theName: 'name' }] }),
-          'to equal',
-          {
-            sql: 'user.id, user.name',
-            aliases: ['theId', 'theName'],
-            values: []
-          }
-        );
-      });
-
-      it('supports objects with Raw-instance values', () => {
-        expect(
-          sql.formatFields({
-            fields: [
-              {
-                count: new Raw(User, { sql: 'COUNT(*)' }),
-                upperCaseFoo: new Raw(User, {
-                  sql: 'UPPER(?)',
-                  values: ['foo']
-                })
-              }
-            ]
-          }),
-          'to equal',
-          {
-            sql: 'COUNT(*), UPPER(?)',
-            aliases: ['count', 'upperCaseFoo'],
-            values: ['foo']
-          }
-        );
-      });
-
-      it('propagates options', () => {
-        const formatAlias = sinon.spy(Sql.prototype, 'formatAlias');
-        expect(
-          sql.formatFields({ fields: ['id'], alias: 'alias' }),
-          'to equal',
-          { sql: 'alias.id', aliases: ['id'], values: [] }
-        );
-        expect(formatAlias, 'to have calls satisfying', () => {
-          formatAlias({ alias: 'alias' });
-        });
-        formatAlias.restore();
-      });
-    });
-  });
-
-  describe('Sql.prototype.formatReturning', () => {
-    describe('with the `fields` option not set', () => {
-      it('returns `undefined`', () => {
-        expect(sql.formatReturning(), 'to be undefined');
-      });
+    it('adds the field-names to its fields array', () => {
+      sql.formatFields(new SqlPart({ type: 'fields', value: ['id', 'name'] }));
+      expect(sql.getFields(), 'to equal', ['id', 'name']);
     });
 
-    describe('with the `fields` option set', () => {
-      it('returns a formatted `RETURNING` clause with values and aliases', () => {
+    it('supports Query instances', () => {
+      expect(
+        sql.formatFields(
+          new SqlPart({ type: 'fields', value: [new Query(User)] })
+        ),
+        'to be',
+        '(SELECT FROM "user")'
+      );
+    });
+
+    it('supports SqlPart instances', () => {
+      expect(
+        sql.formatFields(
+          new SqlPart({
+            type: 'fields',
+            value: [new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })]
+          })
+        ),
+        'to be',
+        'SELECT 1'
+      );
+    });
+
+    describe('for objects', () => {
+      it("returns a comma-separated list of formatted columns from the object's keys", () => {
         expect(
-          sql.formatReturning({
-            fields: [
-              'id',
-              { theName: 'name' },
-              { upper: new Raw(User, { sql: 'UPPER(?)', values: ['foo'] }) }
-            ]
-          }),
-          'to equal',
-          {
-            sql: 'RETURNING user.id, user.name, UPPER(?)',
-            aliases: ['id', 'theName', 'upper'],
-            values: ['foo']
-          }
+          sql.formatFields(
+            new SqlPart({
+              type: 'fields',
+              value: [{ idAlias: 'id', nameAlias: 'name' }]
+            })
+          ),
+          'to be',
+          '"user"."id", "user"."name"'
         );
       });
 
-      it('propagates options', () => {
-        const formatFields = sinon.spy(Sql.prototype, 'formatFields');
-        expect(
-          sql.formatReturning({ fields: ['id'], alias: 'alias' }),
-          'to equal',
-          { sql: 'RETURNING alias.id', aliases: ['id'], values: [] }
+      it("adds the object's keys to its fields array", () => {
+        sql.formatFields(
+          new SqlPart({
+            type: 'fields',
+            value: [{ idAlias: 'id', nameAlias: 'name' }]
+          })
         );
-        expect(formatFields, 'to have calls satisfying', () => {
-          formatFields({ alias: 'alias' });
-        });
-        formatFields.restore();
+        expect(sql.getFields(), 'to equal', ['idAlias', 'nameAlias']);
       });
     });
   });
 
   describe('Sql.prototype.formatDistinct', () => {
-    describe('with the `distinct` option not set', () => {
-      it('returns `undefined`', () => {
-        expect(sql.formatDistinct(), 'to be undefined');
-      });
+    it('returns a DISTINCT clause', () => {
+      expect(
+        sql.formatDistinct(new SqlPart({ type: 'distinct' })),
+        'to be',
+        'DISTINCT'
+      );
     });
 
-    describe('with the `distinct` option set', () => {
-      it('returns a `DISTINCT` clause', () => {
-        expect(sql.formatDistinct({ distinct: true }), 'to equal', {
-          sql: 'DISTINCT'
-        });
+    describe('with a part value set', () => {
+      it('returns a DISTINCT clause with a formatted value', () => {
+        expect(
+          sql.formatDistinct(
+            new SqlPart({
+              type: 'distinct',
+              value: new SqlPart({ type: 'fields', value: ['id', 'name'] })
+            })
+          ),
+          'to be',
+          'DISTINCT "user"."id", "user"."name"'
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatAll', () => {
+    it('returns a ALL clause', () => {
+      expect(sql.formatAll(new SqlPart({ type: 'all' })), 'to be', 'ALL');
+    });
+
+    describe('with a part value set', () => {
+      it('returns a ALL clause with a formatted value', () => {
+        expect(
+          sql.formatAll(
+            new SqlPart({
+              type: 'all',
+              value: new SqlPart({ type: 'fields', value: ['id', 'name'] })
+            })
+          ),
+          'to be',
+          'ALL "user"."id", "user"."name"'
+        );
       });
     });
   });
 
   describe('Sql.prototype.formatFrom', () => {
-    it('returns a `FROM` clause with `Model.table`', () => {
-      expect(sql.formatFrom(), 'to equal', {
-        sql: 'FROM user'
-      });
+    it('returns a `FROM` clause with a formatted table-name', () => {
+      expect(sql.formatFrom(), 'to be', 'FROM "user"');
+    });
+  });
+
+  describe('Sql.prototype.formatNot', () => {
+    it('returns a `NOT` clause with a formatted value', () => {
+      expect(
+        sql.formatNot(new SqlPart({ type: 'not', value: true })),
+        'to be',
+        'NOT ?'
+      );
+      expect(sql.getValues(), 'to equal', [true]);
+    });
+  });
+
+  describe('Sql.prototype.formatAny', () => {
+    it('returns an `ANY` clause with a formatted value', () => {
+      expect(
+        sql.formatAny(new SqlPart({ type: 'any', value: new Query(User) })),
+        'to be',
+        'ANY (SELECT FROM "user")'
+      );
+      expect(sql.getValues(), 'to equal', []);
+    });
+  });
+
+  describe('Sql.prototype.formatSome', () => {
+    it('returns a `SOME` clause with a formatted value', () => {
+      expect(
+        sql.formatSome(new SqlPart({ type: 'some', value: new Query(User) })),
+        'to be',
+        'SOME (SELECT FROM "user")'
+      );
+      expect(sql.getValues(), 'to equal', []);
+    });
+  });
+
+  describe('Sql.prototype.formatExists', () => {
+    it('returns an `EXISTS` clause with a formatted value', () => {
+      expect(
+        sql.formatExists(
+          new SqlPart({ type: 'exists', value: new Query(User) })
+        ),
+        'to be',
+        'EXISTS (SELECT FROM "user")'
+      );
+      expect(sql.getValues(), 'to equal', []);
+    });
+  });
+
+  describe('Sql.prototype.formatEqualTo', () => {
+    it('returns an `=` condition with a formatted field and value', () => {
+      expect(
+        sql.formatEqualTo(
+          new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
+        ),
+        'to be',
+        '"user"."id" = ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+  });
+
+  describe('Sql.prototype.formatNotEqualTo', () => {
+    it('returns a `<>` condition with a formatted field and value', () => {
+      expect(
+        sql.formatNotEqualTo(
+          new SqlPart({ type: 'notEqualTo', field: 'id', value: 1 })
+        ),
+        'to be',
+        '"user"."id" <> ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+  });
+
+  describe('Sql.prototype.formatGreaterThan', () => {
+    it('returns a `>` condition with a formatted field and value', () => {
+      expect(
+        sql.formatGreaterThan(
+          new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
+        ),
+        'to be',
+        '"user"."id" > ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+  });
+
+  describe('Sql.prototype.formatGreaterThanOrEqualTo', () => {
+    it('returns a `>=` condition with a formatted field and value', () => {
+      expect(
+        sql.formatGreaterThanOrEqualTo(
+          new SqlPart({ type: 'greaterThanOrEqualTo', field: 'id', value: 1 })
+        ),
+        'to be',
+        '"user"."id" >= ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+  });
+
+  describe('Sql.prototype.formatLessThan', () => {
+    it('returns a `<` condition with a formatted field and value', () => {
+      expect(
+        sql.formatLessThan(
+          new SqlPart({ type: 'lessThan', field: 'id', value: 1 })
+        ),
+        'to be',
+        '"user"."id" < ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+  });
+
+  describe('Sql.prototype.formatLessThanOrEqualTo', () => {
+    it('returns a `<=` condition with a formatted field and value', () => {
+      expect(
+        sql.formatLessThanOrEqualTo(
+          new SqlPart({ type: 'lessThanOrEqualTo', field: 'id', value: 1 })
+        ),
+        'to be',
+        '"user"."id" <= ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+  });
+
+  describe('Sql.prototype.formatIsNull', () => {
+    it('returns an `IS NULL` condition with a formatted field', () => {
+      expect(
+        sql.formatIsNull(new SqlPart({ type: 'isNull', field: 'id' })),
+        'to be',
+        '"user"."id" IS NULL'
+      );
+      expect(sql.getValues(), 'to equal', []);
+    });
+  });
+
+  describe('Sql.prototype.formatIsNotNull', () => {
+    it('returns an `IS NOT NULL` condition with a formatted field', () => {
+      expect(
+        sql.formatIsNotNull(new SqlPart({ type: 'isNotNull', field: 'id' })),
+        'to be',
+        '"user"."id" IS NOT NULL'
+      );
+      expect(sql.getValues(), 'to equal', []);
+    });
+  });
+
+  describe('Sql.prototype.formatLike', () => {
+    it('returns an `LIKE` condition with a formatted field and value', () => {
+      expect(
+        sql.formatLike(
+          new SqlPart({ type: 'like', field: 'name', value: 'foo' })
+        ),
+        'to be',
+        '"user"."name" LIKE ?'
+      );
+      expect(sql.getValues(), 'to equal', ['foo']);
+    });
+  });
+
+  describe('Sql.prototype.formatBetween', () => {
+    it('returns an `BETWEEN` condition with a formatted field and value', () => {
+      expect(
+        sql.formatBetween(
+          new SqlPart({ type: 'between', field: 'id', value: [1, 2] })
+        ),
+        'to be',
+        '"user"."id" BETWEEN ? AND ?'
+      );
+      expect(sql.getValues(), 'to equal', [1, 2]);
+    });
+  });
+
+  describe('Sql.prototype.formatIn', () => {
+    it('returns an `IN` condition with a formatted field and value', () => {
+      expect(
+        sql.formatIn(
+          new SqlPart({ type: 'in', field: 'id', value: [1, 2, 3] })
+        ),
+        'to be',
+        '"user"."id" IN (?, ?, ?)'
+      );
+      expect(sql.getValues(), 'to equal', [1, 2, 3]);
     });
 
-    describe('with `Model.schema` configured', () => {
-      it('returns a `FROM` clause with `Model.schema` and `Model.table`', () => {
-        expect(new Sql(UserWithSchema).formatFrom(), 'to equal', {
-          sql: 'FROM public.user'
-        });
-      });
+    it('converts the clause to `IN (null)` for empty arrays', () => {
+      expect(
+        sql.formatIn(new SqlPart({ type: 'in', field: 'id', value: [] })),
+        'to be',
+        '"user"."id" IN (?)'
+      );
+      expect(sql.getValues(), 'to equal', [null]);
+    });
+  });
+
+  describe('Sql.prototype.formatAndOrOr', () => {
+    it('supports `AND` clauses', () => {
+      expect(
+        sql.formatAndOrOr(new SqlPart({ type: 'and', value: [true, true] })),
+        'to be',
+        '(? AND ?)'
+      );
+      expect(sql.getValues(), 'to equal', [true, true]);
     });
 
-    describe('with the `alias` option set', () => {
-      it('returns an aliased table-name with the quoted alias', () => {
-        expect(sql.formatFrom({ alias: 'user' }), 'to equal', {
-          sql: 'FROM user AS user'
-        });
+    it('supports `OR` clauses', () => {
+      expect(
+        sql.formatAndOrOr(new SqlPart({ type: 'or', value: [true, false] })),
+        'to be',
+        '(? OR ?)'
+      );
+      expect(sql.getValues(), 'to equal', [true, false]);
+    });
+
+    it('supports non-array values', () => {
+      expect(
+        sql.formatAndOrOr(new SqlPart({ type: 'or', value: true })),
+        'to be',
+        '?'
+      );
+      expect(sql.getValues(), 'to equal', [true]);
+    });
+
+    describe('for object values', () => {
+      it('returns an `AND` clause for all the object entries', () => {
+        expect(
+          sql.formatAndOrOr(
+            new SqlPart({
+              type: 'or',
+              value: [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+            })
+          ),
+          'to be',
+          [
+            '(("user"."id" = ? AND "user"."name" = ?) OR ',
+            '("user"."id" = ? AND "user"."name" = ?))'
+          ].join('')
+        );
+        expect(sql.getValues(), 'to equal', [1, 'foo', 2, 'bar']);
       });
+    });
+  });
+
+  describe('Sql.prototype.formatAnd', () => {
+    it('returns an `AND` clause with formatted values', () => {
+      expect(
+        sql.formatAnd(new SqlPart({ type: 'and', value: [true, true] })),
+        'to be',
+        '(? AND ?)'
+      );
+      expect(sql.getValues(), 'to equal', [true, true]);
+    });
+  });
+
+  describe('Sql.prototype.formatOr', () => {
+    it('returns an `OR` clause with formatted values', () => {
+      expect(
+        sql.formatOr(new SqlPart({ type: 'or', value: [true, false] })),
+        'to be',
+        '(? OR ?)'
+      );
+      expect(sql.getValues(), 'to equal', [true, false]);
     });
   });
 
   describe('Sql.prototype.formatWhere', () => {
-    describe('with the `where` option not set', () => {
-      it('returns `undefined`', () => {
-        expect(sql.formatWhere(), 'to be undefined');
-      });
+    it('returns a `WHERE` clause with formatted fields and values', () => {
+      expect(
+        sql.formatWhere(
+          new SqlPart({
+            type: 'where',
+            value: new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
+          })
+        ),
+        'to be',
+        'WHERE "user"."id" = ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
     });
 
-    describe('with the `where` option set', () => {
-      it('supports objects', () => {
-        expect(sql.formatWhere({ where: { id: 1, name: 'Foo' } }), 'to equal', {
-          sql: 'WHERE (user.id = ? AND user.name = ?)',
-          values: [1, 'Foo']
-        });
-      });
+    it('supports non-SqlPart values', () => {
+      expect(
+        sql.formatWhere(new SqlPart({ type: 'where', value: false })),
+        'to be',
+        'WHERE ?'
+      );
+      expect(sql.getValues(), 'to equal', [false]);
+    });
 
-      it('supports arrays of objects', () => {
-        expect(
-          sql.formatWhere({ where: [{ id: 1, name: 'Foo' }] }),
-          'to equal',
-          {
-            sql: 'WHERE (user.id = ? AND user.name = ?)',
-            values: [1, 'Foo']
-          }
-        );
-      });
-
-      it('supports Expression instances', () => {
-        expect(
-          sql.formatWhere({
-            where: new Expression(User, {
-              field: 'id',
-              type: 'equalTo',
-              value: 1
-            })
-          }),
-          'to equal',
-          {
-            sql: 'WHERE user.id = ?',
-            values: [1]
-          }
-        );
-      });
-
-      it('supports Expression instances with fields as Raw instances', () => {
-        expect(
-          sql.formatWhere({
-            where: new Expression(User, {
-              field: new Raw(User, { sql: 'LOWER(?)', values: ['FOO'] }),
-              type: 'equalTo',
-              value: 'foo'
-            })
-          }),
-          'to equal',
-          {
-            sql: 'WHERE LOWER(?) = ?',
-            values: ['FOO', 'foo']
-          }
-        );
-      });
-
-      it('supports `and` Expression instances', () => {
-        expect(
-          sql.formatWhere({
-            where: new Expression(User, {
-              type: 'and',
-              value: [
-                new Expression(User, {
-                  field: 'id',
-                  type: 'equalTo',
-                  value: 1
-                }),
-                new Expression(User, {
-                  field: 'name',
-                  type: 'equalTo',
-                  value: 'foo'
+    it('supports Query instances', () => {
+      expect(
+        sql.formatWhere(
+          new SqlPart({
+            type: 'where',
+            value: new Query(User).setOptions({
+              fields: [
+                new SqlPart({
+                  type: 'raw',
+                  value: { sql: '?', values: [true] }
                 })
               ]
             })
-          }),
-          'to equal',
-          {
-            sql: 'WHERE (user.id = ? AND user.name = ?)',
-            values: [1, 'foo']
-          }
-        );
-      });
-
-      it('supports `or` Expression instances', () => {
-        expect(
-          sql.formatWhere({
-            where: new Expression(User, {
-              type: 'or',
-              value: [
-                new Expression(User, {
-                  field: 'id',
-                  type: 'equalTo',
-                  value: 1
-                }),
-                new Expression(User, {
-                  field: 'name',
-                  type: 'equalTo',
-                  value: 'foo'
-                })
-              ]
-            })
-          }),
-          'to equal',
-          {
-            sql: 'WHERE (user.id = ? OR user.name = ?)',
-            values: [1, 'foo']
-          }
-        );
-      });
-
-      it('supports Query instances', () => {
-        expect(sql.formatWhere({ where: new Query(User) }), 'to equal', {
-          sql: 'WHERE (SELECT FROM user)',
-          values: []
-        });
-      });
-
-      it('supports Raw instances', () => {
-        expect(
-          sql.formatWhere({ where: new Raw(User, { sql: '(SELECT true)' }) }),
-          'to equal',
-          { sql: 'WHERE (SELECT true)', values: [] }
-        );
-      });
-
-      it('supports Raw instances with values', () => {
-        expect(
-          sql.formatWhere({
-            where: new Raw(User, { sql: 'LOWER(?)', values: ['FOO'] })
-          }),
-          'to equal',
-          { sql: 'WHERE LOWER(?)', values: ['FOO'] }
-        );
-      });
-    });
-  });
-
-  describe('Sql.prototype.formatHaving', () => {
-    describe('with the `having` option not set', () => {
-      it('returns `undefined`', () => {
-        expect(sql.formatHaving(), 'to be undefined');
-      });
-    });
-
-    describe('with the `having` option set', () => {
-      it('supports objects', () => {
-        expect(
-          sql.formatHaving({ having: { id: 1, name: 'Foo' } }),
-          'to equal',
-          {
-            sql: 'HAVING (user.id = ? AND user.name = ?)',
-            values: [1, 'Foo']
-          }
-        );
-      });
-
-      it('supports arrays of objects', () => {
-        expect(
-          sql.formatHaving({ having: [{ id: 1, name: 'Foo' }] }),
-          'to equal',
-          {
-            sql: 'HAVING (user.id = ? AND user.name = ?)',
-            values: [1, 'Foo']
-          }
-        );
-      });
-
-      it('supports Expression instances', () => {
-        expect(
-          sql.formatHaving({
-            having: new Expression(User, {
-              field: 'id',
-              type: 'equalTo',
-              value: 1
-            })
-          }),
-          'to equal',
-          {
-            sql: 'HAVING user.id = ?',
-            values: [1]
-          }
-        );
-      });
-
-      it('supports Expression instances with fields as Raw instances', () => {
-        expect(
-          sql.formatHaving({
-            having: new Expression(User, {
-              field: new Raw(User, { sql: 'LOWER(?)', values: ['FOO'] }),
-              type: 'equalTo',
-              value: 'foo'
-            })
-          }),
-          'to equal',
-          {
-            sql: 'HAVING LOWER(?) = ?',
-            values: ['FOO', 'foo']
-          }
-        );
-      });
-
-      it('supports `and` Expression instances', () => {
-        expect(
-          sql.formatHaving({
-            having: new Expression(User, {
-              type: 'and',
-              value: [
-                new Expression(User, {
-                  field: 'id',
-                  type: 'equalTo',
-                  value: 1
-                }),
-                new Expression(User, {
-                  field: 'name',
-                  type: 'equalTo',
-                  value: 'foo'
-                })
-              ]
-            })
-          }),
-          'to equal',
-          {
-            sql: 'HAVING (user.id = ? AND user.name = ?)',
-            values: [1, 'foo']
-          }
-        );
-      });
-
-      it('supports `or` Expression instances', () => {
-        expect(
-          sql.formatHaving({
-            having: new Expression(User, {
-              type: 'or',
-              value: [
-                new Expression(User, {
-                  field: 'id',
-                  type: 'equalTo',
-                  value: 1
-                }),
-                new Expression(User, {
-                  field: 'name',
-                  type: 'equalTo',
-                  value: 'foo'
-                })
-              ]
-            })
-          }),
-          'to equal',
-          {
-            sql: 'HAVING (user.id = ? OR user.name = ?)',
-            values: [1, 'foo']
-          }
-        );
-      });
-
-      it('supports Query instances', () => {
-        expect(sql.formatHaving({ having: new Query(User) }), 'to equal', {
-          sql: 'HAVING (SELECT FROM user)',
-          values: []
-        });
-      });
-
-      it('supports Raw instances', () => {
-        expect(
-          sql.formatHaving({ having: new Raw(User, { sql: '(SELECT true)' }) }),
-          'to equal',
-          { sql: 'HAVING (SELECT true)', values: [] }
-        );
-      });
-
-      it('supports Raw instances with values', () => {
-        expect(
-          sql.formatHaving({
-            having: new Raw(User, { sql: 'LOWER(?)', values: ['FOO'] })
-          }),
-          'to equal',
-          { sql: 'HAVING LOWER(?)', values: ['FOO'] }
-        );
-      });
-    });
-  });
-
-  describe('Sql.prototype.formatParts', () => {
-    it('returns formatted parts joined by a space', () => {
-      expect(
-        sql.formatParts([{ sql: 'part 1' }, { sql: 'part 2' }]),
-        'to equal',
-        { sql: 'part 1 part 2' }
+          })
+        ),
+        'to be',
+        'WHERE (SELECT ? FROM "user")'
       );
+      expect(sql.getValues(), 'to equal', [true]);
     });
 
-    it('returns values if a part contains them', () => {
+    it('formats array values with an `AND` clause', () => {
       expect(
-        sql.formatParts([
-          { sql: 'part 1', values: ['foo'] },
-          { sql: 'part 2' }
-        ]),
-        'to equal',
-        { sql: 'part 1 part 2', values: ['foo'] }
+        sql.formatWhere(
+          new SqlPart({
+            type: 'where',
+            value: [
+              true,
+              new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
+            ]
+          })
+        ),
+        'to be',
+        'WHERE (? AND "user"."id" = ?)'
       );
-    });
-
-    it('merges values from multiple parts into one array', () => {
-      expect(
-        sql.formatParts([
-          { sql: 'part 1', values: ['foo'] },
-          { sql: 'part 2', values: ['bar'] }
-        ]),
-        'to equal',
-        { sql: 'part 1 part 2', values: ['foo', 'bar'] }
-      );
-    });
-
-    it('returns aliases if a part contains them', () => {
-      expect(
-        sql.formatParts([
-          { sql: 'part 1', aliases: ['foo'] },
-          { sql: 'part 2' }
-        ]),
-        'to equal',
-        { sql: 'part 1 part 2', aliases: ['foo'] }
-      );
-    });
-
-    it('merges aliases from multiple parts into one array', () => {
-      expect(
-        sql.formatParts([
-          { sql: 'part 1', aliases: ['foo'] },
-          { sql: 'part 2', aliases: ['bar'] }
-        ]),
-        'to equal',
-        { sql: 'part 1 part 2', aliases: ['foo', 'bar'] }
-      );
+      expect(sql.getValues(), 'to equal', [true, 1]);
     });
   });
 
   describe('Sql.prototype.formatSelect', () => {
-    it('returns a formatted `SELECT` clause with values and aliases', () => {
+    it('returns a formatted `SELECT` clause with values and fields', () => {
+      // TODO: add all `select` parts
       expect(
-        sql.formatSelect({
-          fields: ['id'],
-          where: { name: 'foo' }
-        }),
+        sql.formatSelect(
+          new SqlPart({
+            type: 'select',
+            value: [
+              new SqlPart({
+                type: 'fields',
+                value: [
+                  'id',
+                  new SqlPart({
+                    type: 'raw',
+                    value: { sql: 'COUNT(*)', fields: ['count'] }
+                  })
+                ]
+              }),
+              new SqlPart({ type: 'from' }),
+              new SqlPart({
+                type: 'where',
+                value: [
+                  new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
+                ]
+              })
+            ]
+          })
+        ),
         'to equal',
         {
-          sql: 'SELECT user.id FROM user WHERE user.name = ?',
-          aliases: ['id'],
-          values: ['foo']
+          sql: 'SELECT "user"."id", COUNT(*) FROM "user" WHERE "user"."id" > ?',
+          values: [1],
+          fields: ['id', 'count']
         }
       );
-    });
-
-    it('propagates options', () => {
-      const formatSelect = sinon.spy(Select.prototype, 'formatSelect');
-      expect(sql.formatSelect({ fields: ['id'], alias: 'alias' }), 'to equal', {
-        sql: 'SELECT alias.id FROM user AS alias',
-        aliases: ['id']
-      });
-      expect(formatSelect, 'to have calls satisfying', () => {
-        formatSelect({ fields: ['id'], alias: 'alias' });
-      });
-      formatSelect.restore();
-    });
-  });
-
-  describe('Sql.prototype.formatInsert', () => {
-    it('returns a formatted `INSERT` clause with values and aliases', () => {
-      expect(
-        sql.formatInsert({ data: [{ id: 1 }], fields: ['id'] }),
-        'to equal',
-        {
-          sql: 'INSERT INTO user (id) VALUES (?) RETURNING user.id',
-          aliases: ['id'],
-          values: [1]
-        }
-      );
-    });
-
-    it('propagates options', () => {
-      const formatInsert = sinon.spy(Insert.prototype, 'formatInsert');
-      expect(
-        sql.formatInsert({ data: [{ id: 1 }], fields: ['id'] }),
-        'to equal',
-        {
-          sql: 'INSERT INTO user (id) VALUES (?) RETURNING user.id',
-          aliases: ['id'],
-          values: [1]
-        }
-      );
-      expect(formatInsert, 'to have calls satisfying', () => {
-        formatInsert({ data: [{ id: 1 }], fields: ['id'] });
-      });
-      formatInsert.restore();
-    });
-  });
-
-  describe('Sql.updateRaw', () => {
-    let Foo;
-    let FooSql;
-
-    before(() => {
-      Foo = class {};
-      FooSql = class extends Sql {};
-    });
-
-    it('updates Sql.Raw', () => {
-      FooSql.updateRaw(Foo);
-      expect(FooSql.Raw, 'to be', Foo);
-      expect(Sql.Raw, 'not to be', Foo);
-    });
-
-    it('allows chaining', () => {
-      expect(FooSql.updateRaw(Foo), 'to be', FooSql);
-    });
-  });
-
-  describe('Sql.updateExpression', () => {
-    let Foo;
-    let FooSql;
-
-    before(() => {
-      Foo = class {};
-      FooSql = class extends Sql {};
-    });
-
-    it('updates Sql.Expression', () => {
-      FooSql.updateExpression(Foo);
-      expect(FooSql.Expression, 'to be', Foo);
-      expect(Sql.Expression, 'not to be', Foo);
-    });
-
-    it('allows chaining', () => {
-      expect(FooSql.updateExpression(Foo), 'to be', FooSql);
-    });
-  });
-
-  describe('Sql.updateSelect', () => {
-    let Foo;
-    let FooSql;
-
-    before(() => {
-      Foo = class {};
-      FooSql = class extends Sql {};
-    });
-
-    it('updates Sql.Select', () => {
-      FooSql.updateSelect(Foo);
-      expect(FooSql.Select, 'to be', Foo);
-      expect(Sql.Select, 'not to be', Foo);
-    });
-
-    it('allows chaining', () => {
-      expect(FooSql.updateSelect(Foo), 'to be', FooSql);
-    });
-  });
-
-  describe('Sql.updateInsert', () => {
-    let Foo;
-    let FooSql;
-
-    before(() => {
-      Foo = class {};
-      FooSql = class extends Sql {};
-    });
-
-    it('updates Sql.Insert', () => {
-      FooSql.updateInsert(Foo);
-      expect(FooSql.Insert, 'to be', Foo);
-      expect(Sql.Insert, 'not to be', Foo);
-    });
-
-    it('allows chaining', () => {
-      expect(FooSql.updateSelect(Foo), 'to be', FooSql);
-    });
-  });
-
-  describe('Sql.updateSqlError', () => {
-    let Foo;
-    let FooSql;
-
-    before(() => {
-      Foo = class {};
-      FooSql = class extends Sql {};
-    });
-
-    it('updates Sql.SqlError', () => {
-      FooSql.updateSqlError(Foo);
-      expect(FooSql.SqlError, 'to be', Foo);
-      expect(Sql.SqlError, 'not to be', Foo);
-    });
-
-    it('allows chaining', () => {
-      expect(FooSql.updateSqlError(Foo), 'to be', FooSql);
     });
   });
 });
