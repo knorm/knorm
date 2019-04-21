@@ -42,566 +42,6 @@ describe.only('Sql', () => {
     sql = new Sql(User);
   });
 
-  describe('Sql.prototype.raw', () => {
-    it('returns a new `raw` part', () => {
-      expect(
-        sql.raw({ sql: 'SELECT 1' }),
-        'to equal',
-        new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
-      );
-    });
-
-    it('supports raw SQL as a string', () => {
-      expect(
-        sql.raw('SELECT 1'),
-        'to equal',
-        new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
-      );
-    });
-
-    it('supports raw SQL fields and values', () => {
-      expect(
-        sql.raw({ sql: 'SELECT ? AS foo', values: [1], fields: ['foo'] }),
-        'to equal',
-        new SqlPart({
-          type: 'raw',
-          value: { sql: 'SELECT ? AS foo', values: [1], fields: ['foo'] }
-        })
-      );
-    });
-  });
-
-  describe('Sql.prototype.distinct', () => {
-    it('returns a new `distinct` part', () => {
-      expect(
-        sql.distinct(new Query(User)),
-        'to equal',
-        new SqlPart({ type: 'distinct', value: new Query(User) })
-      );
-    });
-  });
-
-  describe('Sql.prototype.all', () => {
-    it('returns a new `all` part', () => {
-      expect(
-        sql.all(new Query(User)),
-        'to equal',
-        new SqlPart({ type: 'all', value: new Query(User) })
-      );
-    });
-  });
-
-  describe('Sql.prototype.fields', () => {
-    it('returns a new `fields` part', () => {
-      expect(
-        sql.fields(['id']),
-        'to equal',
-        new SqlPart({ type: 'fields', value: ['id'] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.from', () => {
-    it('returns a new `from` part', () => {
-      expect(sql.from(), 'to equal', new SqlPart({ type: 'from' }));
-    });
-  });
-
-  describe('Sql.prototype.not', () => {
-    it('returns a new `not` part', () => {
-      expect(
-        sql.not(false),
-        'to equal',
-        new SqlPart({ type: 'not', value: false })
-      );
-    });
-  });
-
-  describe('Sql.prototype.any', () => {
-    it('returns a new `any` part', () => {
-      expect(
-        sql.any(new Query(User)),
-        'to equal',
-        new SqlPart({ type: 'any', value: new Query(User) })
-      );
-    });
-  });
-
-  describe('Sql.prototype.some', () => {
-    it('returns a new `some` part', () => {
-      expect(
-        sql.some(new Query(User)),
-        'to equal',
-        new SqlPart({ type: 'some', value: new Query(User) })
-      );
-    });
-  });
-
-  describe('Sql.prototype.exists', () => {
-    it('returns a new `exists` part', () => {
-      expect(
-        sql.exists(new Query(User)),
-        'to equal',
-        new SqlPart({ type: 'exists', value: new Query(User) })
-      );
-    });
-  });
-
-  describe('Sql.prototype.equalTo', () => {
-    it('returns a new `equalTo` part', () => {
-      expect(
-        sql.equalTo('id', 1),
-        'to equal',
-        new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
-      );
-    });
-  });
-
-  describe('Sql.prototype.notEqualTo', () => {
-    it('returns a new `notEqualTo` part', () => {
-      expect(
-        sql.notEqualTo('id', 1),
-        'to equal',
-        new SqlPart({ type: 'notEqualTo', field: 'id', value: 1 })
-      );
-    });
-  });
-
-  describe('Sql.prototype.greaterThan', () => {
-    it('returns a new `greaterThan` part', () => {
-      expect(
-        sql.greaterThan('id', 1),
-        'to equal',
-        new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
-      );
-    });
-  });
-
-  describe('Sql.prototype.greaterThanOrEqualTo', () => {
-    it('returns a new `greaterThanOrEqualTo` part', () => {
-      expect(
-        sql.greaterThanOrEqualTo('id', 1),
-        'to equal',
-        new SqlPart({ type: 'greaterThanOrEqualTo', field: 'id', value: 1 })
-      );
-    });
-  });
-
-  describe('Sql.prototype.lessThan', () => {
-    it('returns a new `lessThan` part', () => {
-      expect(
-        sql.lessThan('id', 1),
-        'to equal',
-        new SqlPart({ type: 'lessThan', field: 'id', value: 1 })
-      );
-    });
-  });
-
-  describe('Sql.prototype.lessThanOrEqualTo', () => {
-    it('returns a new `lessThanOrEqualTo` part', () => {
-      expect(
-        sql.lessThanOrEqualTo('id', 1),
-        'to equal',
-        new SqlPart({ type: 'lessThanOrEqualTo', field: 'id', value: 1 })
-      );
-    });
-  });
-
-  describe('Sql.prototype.isNull', () => {
-    it('returns a new `isNull` part', () => {
-      expect(
-        sql.isNull('id'),
-        'to equal',
-        new SqlPart({ type: 'isNull', field: 'id' })
-      );
-    });
-  });
-
-  describe('Sql.prototype.isNotNull', () => {
-    it('returns a new `isNotNull` part', () => {
-      expect(
-        sql.isNotNull('id'),
-        'to equal',
-        new SqlPart({ type: 'isNotNull', field: 'id' })
-      );
-    });
-  });
-
-  describe('Sql.prototype.like', () => {
-    it('returns a new `like` part', () => {
-      expect(
-        sql.like('name', 'foo'),
-        'to equal',
-        new SqlPart({ type: 'like', field: 'name', value: 'foo' })
-      );
-    });
-  });
-
-  describe('Sql.prototype.between', () => {
-    it('returns a new `between` part', () => {
-      expect(
-        sql.between('id', [1, 3]),
-        'to equal',
-        new SqlPart({ type: 'between', field: 'id', value: [1, 3] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.in', () => {
-    it('returns a new `in` part', () => {
-      expect(
-        sql.in('name', ['foo', 'bar']),
-        'to equal',
-        new SqlPart({ type: 'in', field: 'name', value: ['foo', 'bar'] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.and', () => {
-    it('returns a new `and` part', () => {
-      expect(
-        sql.and([{ id: 1 }, { id: 2 }]),
-        'to equal',
-        new SqlPart({ type: 'and', value: [{ id: 1 }, { id: 2 }] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.or', () => {
-    it('returns a new `or` part', () => {
-      expect(
-        sql.or([{ id: 1 }, { id: 2 }]),
-        'to equal',
-        new SqlPart({ type: 'or', value: [{ id: 1 }, { id: 2 }] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.where', () => {
-    it('returns a new `where` part', () => {
-      expect(
-        sql.where({ id: 1 }),
-        'to equal',
-        new SqlPart({ type: 'where', value: { id: 1 } })
-      );
-    });
-  });
-
-  describe('Sql.prototype.having', () => {
-    it('returns a new `having` part', () => {
-      expect(
-        sql.having({ id: 1 }),
-        'to equal',
-        new SqlPart({ type: 'having', value: { id: 1 } })
-      );
-    });
-  });
-
-  describe('Sql.prototype.select', () => {
-    describe('with no options', () => {
-      it('returns a `select` part with only a `from` part', () => {
-        expect(
-          sql.select(),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-    });
-
-    describe('with the `distinct` option set', () => {
-      it('adds a `distinct` part', () => {
-        expect(
-          sql.select({ distinct: true }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.distinct(), sql.from()] })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          sql.select({ distinct: null }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          sql.select({ distinct: undefined }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-    });
-
-    describe('with the `fields` option set', () => {
-      it('adds a `fields` part', () => {
-        expect(
-          sql.select({ fields: ['id'] }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [sql.fields(['id']), sql.from()]
-          })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          sql.select({ fields: null }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          sql.select({ fields: undefined }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-    });
-
-    describe('with the `where` option set', () => {
-      it('adds a `where` part', () => {
-        expect(
-          sql.select({ where: { id: 1 } }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [sql.from(), sql.where({ id: 1 })]
-          })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          sql.select({ where: null }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          sql.select({ where: undefined }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-
-      it('supports other falsy option values', () => {
-        expect(
-          sql.select({ where: false }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [sql.from(), sql.where(false)]
-          })
-        );
-      });
-    });
-
-    // TODO: add all `select` parts
-
-    describe('with the `having` option set', () => {
-      it('adds a `having` part', () => {
-        expect(
-          sql.select({ having: { id: 1 } }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [sql.from(), sql.having({ id: 1 })]
-          })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          sql.select({ having: null }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          sql.select({ having: undefined }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [sql.from()] })
-        );
-      });
-    });
-
-    describe('with all options set', () => {
-      // TODO: add all `select` parts
-      it('adds parts for each option in the right order', () => {
-        expect(
-          sql.select({
-            distinct: true,
-            fields: ['id'],
-            where: { id: 1 },
-            having: { id: 1 }
-          }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [
-              sql.distinct(),
-              sql.fields(['id']),
-              sql.from(),
-              sql.where({ id: 1 }),
-              sql.having({ id: 1 })
-            ]
-          })
-        );
-      });
-    });
-  });
-
-  describe('Sql.prototype.into', () => {
-    it('returns a new `into` part', () => {
-      expect(sql.into(), 'to equal', new SqlPart({ type: 'into' }));
-    });
-  });
-
-  describe('Sql.prototype.columns', () => {
-    it('returns a new `columns` part', () => {
-      expect(
-        sql.columns(['id']),
-        'to equal',
-        new SqlPart({ type: 'columns', value: ['id'] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.values', () => {
-    it('returns a new `values` part', () => {
-      expect(
-        sql.values([[1]]),
-        'to equal',
-        new SqlPart({ type: 'values', value: [[1]] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.returning', () => {
-    it('returns a new `returning` part', () => {
-      expect(
-        sql.returning(['id']),
-        'to equal',
-        new SqlPart({ type: 'returning', value: ['id'] })
-      );
-    });
-  });
-
-  describe('Sql.prototype.insert', () => {
-    describe('with no options', () => {
-      it('returns a `insert` part with only an `into` part', () => {
-        expect(
-          sql.insert(),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [sql.into()] })
-        );
-      });
-    });
-
-    describe('with the `data` option set', () => {
-      describe('with `columns` set', () => {
-        it('adds a `columns` part', () => {
-          expect(
-            sql.insert({ data: { columns: ['id'] } }),
-            'to equal',
-            new SqlPart({
-              type: 'insert',
-              value: [sql.into(), sql.columns(['id'])]
-            })
-          );
-        });
-      });
-
-      describe('with `values` set', () => {
-        it('adds a `values` part', () => {
-          expect(
-            sql.insert({ data: { values: [[1]] } }),
-            'to equal',
-            new SqlPart({
-              type: 'insert',
-              value: [sql.into(), sql.values([[1]])]
-            })
-          );
-        });
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          sql.insert({ data: null }),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [sql.into()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          sql.insert({ data: undefined }),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [sql.into()] })
-        );
-      });
-    });
-
-    describe('with the `fields` option set', () => {
-      it('adds a `returning` part', () => {
-        expect(
-          sql.insert({ fields: ['id'] }),
-          'to equal',
-          new SqlPart({
-            type: 'insert',
-            value: [sql.into(), sql.returning(['id'])]
-          })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          sql.insert({ fields: null }),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [sql.into()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          sql.insert({ fields: undefined }),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [sql.into()] })
-        );
-      });
-    });
-
-    describe('with all options set', () => {
-      it('adds parts for each option in the right order', () => {
-        expect(
-          sql.insert({
-            data: { columns: ['id'], values: [[1]] },
-            fields: ['id']
-          }),
-          'to equal',
-          new SqlPart({
-            type: 'insert',
-            value: [
-              sql.into(),
-              sql.columns(['id']),
-              sql.values([[1]]),
-              sql.returning(['id'])
-            ]
-          })
-        );
-      });
-    });
-  });
-
   describe('Sql.prototype.addValue', () => {
     it('adds a value to the values array', () => {
       sql.addValue('foo');
@@ -839,6 +279,14 @@ describe.only('Sql', () => {
     it("returns the part's SQL", () => {
       expect(
         sql.formatRaw(new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })),
+        'to be',
+        'SELECT 1'
+      );
+    });
+
+    it('supports raw SQL as a string', () => {
+      expect(
+        sql.formatRaw(new SqlPart({ type: 'raw', value: 'SELECT 1' })),
         'to be',
         'SELECT 1'
       );
@@ -1510,6 +958,547 @@ describe.only('Sql', () => {
           fields: ['id', 'count']
         }
       );
+    });
+  });
+
+  describe('Sql.raw', () => {
+    it('returns a new `raw` part', () => {
+      expect(
+        Sql.raw({ sql: 'SELECT 1' }),
+        'to equal',
+        new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
+      );
+    });
+  });
+
+  describe('Sql.distinct', () => {
+    it('returns a new `distinct` part', () => {
+      expect(
+        Sql.distinct(new Query(User)),
+        'to equal',
+        new SqlPart({ type: 'distinct', value: new Query(User) })
+      );
+    });
+  });
+
+  describe('Sql.all', () => {
+    it('returns a new `all` part', () => {
+      expect(
+        Sql.all(new Query(User)),
+        'to equal',
+        new SqlPart({ type: 'all', value: new Query(User) })
+      );
+    });
+  });
+
+  describe('Sql.fields', () => {
+    it('returns a new `fields` part', () => {
+      expect(
+        Sql.fields(['id']),
+        'to equal',
+        new SqlPart({ type: 'fields', value: ['id'] })
+      );
+    });
+  });
+
+  describe('Sql.from', () => {
+    it('returns a new `from` part', () => {
+      expect(Sql.from(), 'to equal', new SqlPart({ type: 'from' }));
+    });
+  });
+
+  describe('Sql.not', () => {
+    it('returns a new `not` part', () => {
+      expect(
+        Sql.not(false),
+        'to equal',
+        new SqlPart({ type: 'not', value: false })
+      );
+    });
+  });
+
+  describe('Sql.any', () => {
+    it('returns a new `any` part', () => {
+      expect(
+        Sql.any(new Query(User)),
+        'to equal',
+        new SqlPart({ type: 'any', value: new Query(User) })
+      );
+    });
+  });
+
+  describe('Sql.some', () => {
+    it('returns a new `some` part', () => {
+      expect(
+        Sql.some(new Query(User)),
+        'to equal',
+        new SqlPart({ type: 'some', value: new Query(User) })
+      );
+    });
+  });
+
+  describe('Sql.exists', () => {
+    it('returns a new `exists` part', () => {
+      expect(
+        Sql.exists(new Query(User)),
+        'to equal',
+        new SqlPart({ type: 'exists', value: new Query(User) })
+      );
+    });
+  });
+
+  describe('Sql.equalTo', () => {
+    it('returns a new `equalTo` part', () => {
+      expect(
+        Sql.equalTo('id', 1),
+        'to equal',
+        new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
+      );
+    });
+  });
+
+  describe('Sql.notEqualTo', () => {
+    it('returns a new `notEqualTo` part', () => {
+      expect(
+        Sql.notEqualTo('id', 1),
+        'to equal',
+        new SqlPart({ type: 'notEqualTo', field: 'id', value: 1 })
+      );
+    });
+  });
+
+  describe('Sql.greaterThan', () => {
+    it('returns a new `greaterThan` part', () => {
+      expect(
+        Sql.greaterThan('id', 1),
+        'to equal',
+        new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
+      );
+    });
+  });
+
+  describe('Sql.greaterThanOrEqualTo', () => {
+    it('returns a new `greaterThanOrEqualTo` part', () => {
+      expect(
+        Sql.greaterThanOrEqualTo('id', 1),
+        'to equal',
+        new SqlPart({ type: 'greaterThanOrEqualTo', field: 'id', value: 1 })
+      );
+    });
+  });
+
+  describe('Sql.lessThan', () => {
+    it('returns a new `lessThan` part', () => {
+      expect(
+        Sql.lessThan('id', 1),
+        'to equal',
+        new SqlPart({ type: 'lessThan', field: 'id', value: 1 })
+      );
+    });
+  });
+
+  describe('Sql.lessThanOrEqualTo', () => {
+    it('returns a new `lessThanOrEqualTo` part', () => {
+      expect(
+        Sql.lessThanOrEqualTo('id', 1),
+        'to equal',
+        new SqlPart({ type: 'lessThanOrEqualTo', field: 'id', value: 1 })
+      );
+    });
+  });
+
+  describe('Sql.isNull', () => {
+    it('returns a new `isNull` part', () => {
+      expect(
+        Sql.isNull('id'),
+        'to equal',
+        new SqlPart({ type: 'isNull', field: 'id' })
+      );
+    });
+  });
+
+  describe('Sql.isNotNull', () => {
+    it('returns a new `isNotNull` part', () => {
+      expect(
+        Sql.isNotNull('id'),
+        'to equal',
+        new SqlPart({ type: 'isNotNull', field: 'id' })
+      );
+    });
+  });
+
+  describe('Sql.like', () => {
+    it('returns a new `like` part', () => {
+      expect(
+        Sql.like('name', 'foo'),
+        'to equal',
+        new SqlPart({ type: 'like', field: 'name', value: 'foo' })
+      );
+    });
+  });
+
+  describe('Sql.between', () => {
+    it('returns a new `between` part', () => {
+      expect(
+        Sql.between('id', [1, 3]),
+        'to equal',
+        new SqlPart({ type: 'between', field: 'id', value: [1, 3] })
+      );
+    });
+  });
+
+  describe('Sql.in', () => {
+    it('returns a new `in` part', () => {
+      expect(
+        Sql.in('name', ['foo', 'bar']),
+        'to equal',
+        new SqlPart({ type: 'in', field: 'name', value: ['foo', 'bar'] })
+      );
+    });
+  });
+
+  describe('Sql.and', () => {
+    it('returns a new `and` part', () => {
+      expect(
+        Sql.and([{ id: 1 }, { id: 2 }]),
+        'to equal',
+        new SqlPart({ type: 'and', value: [{ id: 1 }, { id: 2 }] })
+      );
+    });
+  });
+
+  describe('Sql.or', () => {
+    it('returns a new `or` part', () => {
+      expect(
+        Sql.or([{ id: 1 }, { id: 2 }]),
+        'to equal',
+        new SqlPart({ type: 'or', value: [{ id: 1 }, { id: 2 }] })
+      );
+    });
+  });
+
+  describe('Sql.where', () => {
+    it('returns a new `where` part', () => {
+      expect(
+        Sql.where({ id: 1 }),
+        'to equal',
+        new SqlPart({ type: 'where', value: { id: 1 } })
+      );
+    });
+  });
+
+  describe('Sql.having', () => {
+    it('returns a new `having` part', () => {
+      expect(
+        Sql.having({ id: 1 }),
+        'to equal',
+        new SqlPart({ type: 'having', value: { id: 1 } })
+      );
+    });
+  });
+
+  describe('Sql.select', () => {
+    describe('with no options', () => {
+      it('returns a `select` part with only a `from` part', () => {
+        expect(
+          Sql.select(),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+    });
+
+    describe('with the `distinct` option set', () => {
+      it('adds a `distinct` part', () => {
+        expect(
+          Sql.select({ distinct: true }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.distinct(), Sql.from()] })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          Sql.select({ distinct: null }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          Sql.select({ distinct: undefined }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+    });
+
+    describe('with the `fields` option set', () => {
+      it('adds a `fields` part', () => {
+        expect(
+          Sql.select({ fields: ['id'] }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [Sql.fields(['id']), Sql.from()]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          Sql.select({ fields: null }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          Sql.select({ fields: undefined }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+    });
+
+    describe('with the `where` option set', () => {
+      it('adds a `where` part', () => {
+        expect(
+          Sql.select({ where: { id: 1 } }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [Sql.from(), Sql.where({ id: 1 })]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          Sql.select({ where: null }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          Sql.select({ where: undefined }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+
+      it('supports other falsy option values', () => {
+        expect(
+          Sql.select({ where: false }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [Sql.from(), Sql.where(false)]
+          })
+        );
+      });
+    });
+
+    // TODO: add all `select` parts
+
+    describe('with the `having` option set', () => {
+      it('adds a `having` part', () => {
+        expect(
+          Sql.select({ having: { id: 1 } }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [Sql.from(), Sql.having({ id: 1 })]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          Sql.select({ having: null }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          Sql.select({ having: undefined }),
+          'to equal',
+          new SqlPart({ type: 'select', value: [Sql.from()] })
+        );
+      });
+    });
+
+    describe('with all options set', () => {
+      // TODO: add all `select` parts
+      it('adds parts for each option in the right order', () => {
+        expect(
+          Sql.select({
+            distinct: true,
+            fields: ['id'],
+            where: { id: 1 },
+            having: { id: 1 }
+          }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [
+              Sql.distinct(),
+              Sql.fields(['id']),
+              Sql.from(),
+              Sql.where({ id: 1 }),
+              Sql.having({ id: 1 })
+            ]
+          })
+        );
+      });
+    });
+  });
+
+  describe('Sql.into', () => {
+    it('returns a new `into` part', () => {
+      expect(Sql.into(), 'to equal', new SqlPart({ type: 'into' }));
+    });
+  });
+
+  describe('Sql.columns', () => {
+    it('returns a new `columns` part', () => {
+      expect(
+        Sql.columns(['id']),
+        'to equal',
+        new SqlPart({ type: 'columns', value: ['id'] })
+      );
+    });
+  });
+
+  describe('Sql.values', () => {
+    it('returns a new `values` part', () => {
+      expect(
+        Sql.values([[1]]),
+        'to equal',
+        new SqlPart({ type: 'values', value: [[1]] })
+      );
+    });
+  });
+
+  describe('Sql.returning', () => {
+    it('returns a new `returning` part', () => {
+      expect(
+        Sql.returning(['id']),
+        'to equal',
+        new SqlPart({ type: 'returning', value: ['id'] })
+      );
+    });
+  });
+
+  describe('Sql.insert', () => {
+    describe('with no options', () => {
+      it('returns a `insert` part with only an `into` part', () => {
+        expect(
+          Sql.insert(),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [Sql.into()] })
+        );
+      });
+    });
+
+    describe('with the `data` option set', () => {
+      describe('with `columns` set', () => {
+        it('adds a `columns` part', () => {
+          expect(
+            Sql.insert({ data: { columns: ['id'] } }),
+            'to equal',
+            new SqlPart({
+              type: 'insert',
+              value: [Sql.into(), Sql.columns(['id'])]
+            })
+          );
+        });
+      });
+
+      describe('with `values` set', () => {
+        it('adds a `values` part', () => {
+          expect(
+            Sql.insert({ data: { values: [[1]] } }),
+            'to equal',
+            new SqlPart({
+              type: 'insert',
+              value: [Sql.into(), Sql.values([[1]])]
+            })
+          );
+        });
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          Sql.insert({ data: null }),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [Sql.into()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          Sql.insert({ data: undefined }),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [Sql.into()] })
+        );
+      });
+    });
+
+    describe('with the `fields` option set', () => {
+      it('adds a `returning` part', () => {
+        expect(
+          Sql.insert({ fields: ['id'] }),
+          'to equal',
+          new SqlPart({
+            type: 'insert',
+            value: [Sql.into(), Sql.returning(['id'])]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          Sql.insert({ fields: null }),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [Sql.into()] })
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          Sql.insert({ fields: undefined }),
+          'to equal',
+          new SqlPart({ type: 'insert', value: [Sql.into()] })
+        );
+      });
+    });
+
+    describe('with all options set', () => {
+      it('adds parts for each option in the right order', () => {
+        expect(
+          Sql.insert({
+            data: { columns: ['id'], values: [[1]] },
+            fields: ['id']
+          }),
+          'to equal',
+          new SqlPart({
+            type: 'insert',
+            value: [
+              Sql.into(),
+              Sql.columns(['id']),
+              Sql.values([[1]]),
+              Sql.returning(['id'])
+            ]
+          })
+        );
+      });
     });
   });
 });
