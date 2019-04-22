@@ -8,11 +8,13 @@ const expect = require('unexpected')
   .use(require('unexpected-sinon'))
   .use(require('unexpected-knex'));
 
-describe('Query', () => {
+describe.only('Query', () => {
   let Model;
   let Query;
   let Transaction;
   let Connection;
+  let Sql;
+  let SqlPart;
   let QueryError;
   let User;
 
@@ -23,6 +25,8 @@ describe('Query', () => {
     Query = orm.Query;
     Transaction = orm.Transaction;
     Connection = orm.Connection;
+    Sql = orm.Sql;
+    SqlPart = Sql.SqlPart;
     QueryError = Query.QueryError;
 
     Model.fields = {
@@ -104,6 +108,12 @@ describe('Query', () => {
   );
 
   after(async () => knex.schema.dropTable(User.table));
+
+  let query;
+
+  beforeEach(() => {
+    query = new Query(User);
+  });
 
   describe('constructor', () => {
     it('throws an error if not passed a model', () => {
@@ -888,6 +898,264 @@ describe('Query', () => {
             disconnect()
           );
         });
+      });
+    });
+  });
+
+  describe.only('Query.prototype.prepareSelect', () => {
+    describe('with no options', () => {
+      it('returns a `select` part with only a `from` part', () => {
+        expect(query.prepareSelect({}), 'to equal', Sql.select([Sql.from()]));
+      });
+    });
+
+    describe('with the `distinct` option set', () => {
+      it('adds a `distinct` part', () => {
+        expect(
+          query.prepareSelect({ distinct: true }),
+          'to equal',
+          Sql.select([Sql.distinct(), Sql.from()])
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareSelect({ distinct: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ distinct: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `fields` option set', () => {
+      it('adds a `fields` part', () => {
+        expect(
+          query.prepareSelect({ fields: ['id'] }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [Sql.fields(['id']), Sql.from()]
+          })
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareSelect({ fields: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ fields: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `where` option set', () => {
+      it('adds a `where` part', () => {
+        expect(
+          query.prepareSelect({ where: [{ id: 1 }] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.where([{ id: 1 }])])
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareSelect({ where: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ where: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('supports other falsy option values', () => {
+        expect(
+          query.prepareSelect({ where: [false] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.where([false])])
+        );
+      });
+    });
+
+    describe('with the `groupBy` option set', () => {
+      it('adds a `groupBy` part', () => {
+        expect(
+          query.prepareSelect({ groupBy: ['id'] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.groupBy(['id'])])
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareSelect({ groupBy: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ groupBy: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    // TODO: add all `select` parts
+
+    describe('with the `having` option set', () => {
+      it('adds a `having` part', () => {
+        expect(
+          query.prepareSelect({ having: [{ id: 1 }] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.having([{ id: 1 }])])
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareSelect({ having: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ having: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `orderBy` option set', () => {
+      it('adds a `orderBy` part', () => {
+        expect(
+          query.prepareSelect({ orderBy: ['id'] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.orderBy(['id'])])
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareSelect({ orderBy: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ orderBy: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `limit` option set', () => {
+      it('adds a `limit` part', () => {
+        expect(
+          query.prepareSelect({ limit: 10 }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.limit(10)])
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareSelect({ limit: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ limit: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `offset` option set', () => {
+      it('adds a `offset` part', () => {
+        expect(
+          query.prepareSelect({ offset: 10 }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.offset(10)])
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareSelect({ offset: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ offset: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with all options set', () => {
+      it('adds parts for each option in the right order', () => {
+        expect(
+          query.prepareSelect({
+            distinct: true,
+            fields: ['id', Sql.raw({ sql: 'COUNT(*)', fields: ['count'] })],
+            where: [{ id: 1 }],
+            groupBy: ['id'],
+            having: [Sql.greaterThan(Sql.raw({ sql: 'COUNT(*)' }), 1)],
+            orderBy: ['id'],
+            limit: 10,
+            offset: 0
+          }),
+          'to equal',
+          Sql.select([
+            Sql.distinct(),
+            Sql.fields(['id', Sql.raw({ sql: 'COUNT(*)', fields: ['count'] })]),
+            Sql.from(),
+            Sql.where([{ id: 1 }]),
+            Sql.groupBy(['id']),
+            Sql.having([Sql.greaterThan(Sql.raw({ sql: 'COUNT(*)' }), 1)]),
+            Sql.orderBy(['id']),
+            Sql.limit(10),
+            Sql.offset(0)
+          ])
+        );
       });
     });
   });
@@ -2229,6 +2497,96 @@ describe('Query', () => {
           { stack: expect.it('to contain', 'test/Query.spec.js') }
         );
         stub.restore();
+      });
+    });
+  });
+
+  describe.only('Query.prototype.prepareInsert', () => {
+    describe('with no options', () => {
+      it('returns a `insert` part with only an `into` part', () => {
+        expect(query.prepareInsert({}), 'to equal', Sql.insert([Sql.into()]));
+      });
+    });
+
+    describe('with the `data` option set', () => {
+      describe('with `columns` set', () => {
+        it('adds a `columns` part', () => {
+          expect(
+            query.prepareInsert({ data: { columns: ['id'] } }),
+            'to equal',
+            Sql.insert([Sql.into(), Sql.columns(['id'])])
+          );
+        });
+      });
+
+      describe('with `values` set', () => {
+        it('adds a `values` part', () => {
+          expect(
+            query.prepareInsert({ data: { values: [[1]] } }),
+            'to equal',
+            Sql.insert([Sql.into(), Sql.values([[1]])])
+          );
+        });
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareInsert({ data: null }),
+          'to equal',
+          Sql.insert([Sql.into()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareInsert({ data: undefined }),
+          'to equal',
+          Sql.insert([Sql.into()])
+        );
+      });
+    });
+
+    describe('with the `fields` option set', () => {
+      it('adds a `returning` part', () => {
+        expect(
+          query.prepareInsert({ fields: ['id'] }),
+          'to equal',
+          Sql.insert([Sql.into(), Sql.returning(['id'])])
+        );
+      });
+
+      it('skips `null` option values', () => {
+        expect(
+          query.prepareInsert({ fields: null }),
+          'to equal',
+          Sql.insert([Sql.into()])
+        );
+      });
+
+      it('skips `undefined` option values', () => {
+        expect(
+          query.prepareInsert({ fields: undefined }),
+          'to equal',
+          Sql.insert([Sql.into()])
+        );
+      });
+    });
+
+    describe('with all options set', () => {
+      it('adds parts for each option in the right order', () => {
+        expect(
+          query.prepareInsert({
+            data: { columns: ['id'], values: [[1]] },
+            fields: ['id']
+          }),
+          'to equal',
+          Sql.insert([
+            Sql.into(),
+            Sql.columns(['id']),
+            Sql.values([[1]]),
+            Sql.returning(['id'])
+          ])
+        );
       });
     });
   });

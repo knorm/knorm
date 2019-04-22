@@ -246,19 +246,6 @@ describe.only('Sql', () => {
     });
   });
 
-  describe('Sql.prototype.formatField', () => {
-    it('returns a quoted table-name-qualified column', () => {
-      expect(sql.formatField('id'), 'to be', '"user"."id"');
-    });
-
-    describe('with the alias set', () => {
-      it('qualifies the column-name with the alias instead', () => {
-        sql.setAlias('foo');
-        expect(sql.formatField('id'), 'to be', '"foo"."id"');
-      });
-    });
-  });
-
   describe('Sql.prototype.formatQuery', () => {
     it('returns a SELECT query wrapped in parentheses', () => {
       expect(sql.formatQuery(new Query(User)), 'to be', '(SELECT FROM "user")');
@@ -479,6 +466,133 @@ describe.only('Sql', () => {
     });
   });
 
+  describe('Sql.prototype.formatField', () => {
+    it('returns a quoted table-name-qualified column', () => {
+      expect(sql.formatField('id'), 'to be', '"user"."id"');
+    });
+
+    it('supports SqlPart instances', () => {
+      expect(
+        sql.formatField(
+          new SqlPart({
+            type: 'raw',
+            value: { sql: 'COUNT(*)', fields: ['count'] }
+          })
+        ),
+        'to be',
+        'COUNT(*)'
+      );
+      expect(sql.getFields(), 'to equal', ['count']);
+    });
+
+    describe('with the alias set', () => {
+      it('qualifies the column-name with the alias instead', () => {
+        sql.setAlias('foo');
+        expect(sql.formatField('id'), 'to be', '"foo"."id"');
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatSelect', () => {
+    it('returns a formatted `SELECT` clause with values and fields', () => {
+      expect(
+        sql.formatSelect(
+          new SqlPart({
+            type: 'select',
+            value: [
+              new SqlPart({
+                type: 'fields',
+                value: [
+                  'id',
+                  new SqlPart({
+                    type: 'raw',
+                    value: { sql: 'COUNT(*)', fields: ['count'] }
+                  })
+                ]
+              }),
+              new SqlPart({ type: 'from' }),
+              new SqlPart({
+                type: 'where',
+                value: [{ id: 1 }]
+              }),
+              new SqlPart({ type: 'groupBy', value: ['id'] }),
+              new SqlPart({
+                type: 'having',
+                value: [
+                  new SqlPart({
+                    type: 'greaterThan',
+                    field: new SqlPart({
+                      type: 'raw',
+                      value: { sql: 'COUNT(*)' }
+                    }),
+                    value: 1
+                  })
+                ]
+              }),
+              new SqlPart({ type: 'orderBy', value: ['id'] }),
+              new SqlPart({ type: 'limit', value: 10 }),
+              new SqlPart({ type: 'offset', value: 0 })
+            ]
+          })
+        ),
+        'to be',
+        [
+          'SELECT "user"."id", COUNT(*) FROM "user" WHERE "user"."id" = ? ',
+          'GROUP BY "user"."id" HAVING COUNT(*) > ? ORDER BY "user"."id" ',
+          'LIMIT 10 OFFSET 0'
+        ].join('')
+      );
+      expect(sql.getValues(), 'to equal', [1, 1]);
+      expect(sql.getFields(), 'to equal', ['id', 'count']);
+    });
+  });
+
+  describe('Sql.prototype.formatDistinct', () => {
+    it('returns a `DISTINCT` clause', () => {
+      expect(
+        sql.formatDistinct(new SqlPart({ type: 'distinct' })),
+        'to be',
+        'DISTINCT'
+      );
+    });
+
+    describe('with a part value set', () => {
+      it('returns a `DISTINCT` clause with a formatted value', () => {
+        expect(
+          sql.formatDistinct(
+            new SqlPart({
+              type: 'distinct',
+              value: new SqlPart({ type: 'fields', value: ['id', 'name'] })
+            })
+          ),
+          'to be',
+          'DISTINCT "user"."id", "user"."name"'
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatAll', () => {
+    it('returns an `ALL` clause', () => {
+      expect(sql.formatAll(new SqlPart({ type: 'all' })), 'to be', 'ALL');
+    });
+
+    describe('with a part value set', () => {
+      it('returns an `ALL` clause with a formatted value', () => {
+        expect(
+          sql.formatAll(
+            new SqlPart({
+              type: 'all',
+              value: new SqlPart({ type: 'fields', value: ['id', 'name'] })
+            })
+          ),
+          'to be',
+          'ALL "user"."id", "user"."name"'
+        );
+      });
+    });
+  });
+
   describe('Sql.prototype.formatFields', () => {
     it('returns a comma-separated list of formatted columns', () => {
       expect(
@@ -544,55 +658,74 @@ describe.only('Sql', () => {
     });
   });
 
-  describe('Sql.prototype.formatDistinct', () => {
-    it('returns a DISTINCT clause', () => {
-      expect(
-        sql.formatDistinct(new SqlPart({ type: 'distinct' })),
-        'to be',
-        'DISTINCT'
-      );
-    });
-
-    describe('with a part value set', () => {
-      it('returns a DISTINCT clause with a formatted value', () => {
-        expect(
-          sql.formatDistinct(
-            new SqlPart({
-              type: 'distinct',
-              value: new SqlPart({ type: 'fields', value: ['id', 'name'] })
-            })
-          ),
-          'to be',
-          'DISTINCT "user"."id", "user"."name"'
-        );
-      });
-    });
-  });
-
-  describe('Sql.prototype.formatAll', () => {
-    it('returns a ALL clause', () => {
-      expect(sql.formatAll(new SqlPart({ type: 'all' })), 'to be', 'ALL');
-    });
-
-    describe('with a part value set', () => {
-      it('returns a ALL clause with a formatted value', () => {
-        expect(
-          sql.formatAll(
-            new SqlPart({
-              type: 'all',
-              value: new SqlPart({ type: 'fields', value: ['id', 'name'] })
-            })
-          ),
-          'to be',
-          'ALL "user"."id", "user"."name"'
-        );
-      });
-    });
-  });
-
   describe('Sql.prototype.formatFrom', () => {
     it('returns a `FROM` clause with a formatted table-name', () => {
       expect(sql.formatFrom(), 'to be', 'FROM "user"');
+    });
+  });
+
+  describe('Sql.prototype.formatWhere', () => {
+    it('returns a `WHERE` clause with formatted fields and values', () => {
+      expect(
+        sql.formatWhere(
+          new SqlPart({
+            type: 'where',
+            value: [new SqlPart({ type: 'equalTo', field: 'id', value: 1 })]
+          })
+        ),
+        'to be',
+        'WHERE "user"."id" = ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+
+    it('formats multiple values with an `AND` clause', () => {
+      expect(
+        sql.formatWhere(
+          new SqlPart({
+            type: 'where',
+            value: [
+              true,
+              new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
+            ]
+          })
+        ),
+        'to be',
+        'WHERE (? AND "user"."id" = ?)'
+      );
+      expect(sql.getValues(), 'to equal', [true, 1]);
+    });
+
+    it('supports falsy values', () => {
+      expect(
+        sql.formatWhere(new SqlPart({ type: 'where', value: [false] })),
+        'to be',
+        'WHERE ?'
+      );
+      expect(sql.getValues(), 'to equal', [false]);
+    });
+
+    it('supports Query instance values', () => {
+      expect(
+        sql.formatWhere(
+          new SqlPart({
+            type: 'where',
+            value: [
+              new Query(User).setOptions({
+                fields: [
+                  new SqlPart({
+                    type: 'raw',
+                    value: { sql: '?', values: [true] }
+                  })
+                ]
+              })
+            ]
+          })
+        ),
+        'to be',
+        'WHERE (SELECT ? FROM "user")'
+      );
+      expect(sql.getValues(), 'to equal', [true]);
     });
   });
 
@@ -791,7 +924,7 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.formatAndOrOr', () => {
-    it('supports `AND` clauses', () => {
+    it('returns an `AND` clause for `and` parts', () => {
       expect(
         sql.formatAndOrOr(new SqlPart({ type: 'and', value: [true, true] })),
         'to be',
@@ -800,7 +933,7 @@ describe.only('Sql', () => {
       expect(sql.getValues(), 'to equal', [true, true]);
     });
 
-    it('supports `OR` clauses', () => {
+    it('returns an `OR` clause for `or` parts', () => {
       expect(
         sql.formatAndOrOr(new SqlPart({ type: 'or', value: [true, false] })),
         'to be',
@@ -860,103 +993,307 @@ describe.only('Sql', () => {
     });
   });
 
-  describe('Sql.prototype.formatWhere', () => {
-    it('returns a `WHERE` clause with formatted fields and values', () => {
+  describe('Sql.prototype.formatGroupBy', () => {
+    it('returns a `GROUP BY` clause with a formatted field', () => {
       expect(
-        sql.formatWhere(
+        sql.formatGroupBy(new SqlPart({ type: 'groupBy', value: ['id'] })),
+        'to be',
+        'GROUP BY "user"."id"'
+      );
+    });
+
+    it('returns a list of formatted fields for multiple fields', () => {
+      expect(
+        sql.formatGroupBy(
+          new SqlPart({ type: 'where', value: ['id', 'name'] })
+        ),
+        'to be',
+        'GROUP BY "user"."id", "user"."name"'
+      );
+    });
+  });
+
+  describe('Sql.prototype.formatHaving', () => {
+    it('returns a `HAVING` clause with formatted fields and values', () => {
+      expect(
+        sql.formatHaving(
           new SqlPart({
-            type: 'where',
-            value: new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
+            type: 'having',
+            value: new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
           })
         ),
         'to be',
-        'WHERE "user"."id" = ?'
+        'HAVING "user"."id" > ?'
       );
       expect(sql.getValues(), 'to equal', [1]);
     });
 
-    it('supports non-SqlPart values', () => {
-      expect(
-        sql.formatWhere(new SqlPart({ type: 'where', value: false })),
-        'to be',
-        'WHERE ?'
-      );
-      expect(sql.getValues(), 'to equal', [false]);
-    });
-
-    it('supports Query instances', () => {
-      expect(
-        sql.formatWhere(
-          new SqlPart({
-            type: 'where',
-            value: new Query(User).setOptions({
-              fields: [
-                new SqlPart({
-                  type: 'raw',
-                  value: { sql: '?', values: [true] }
-                })
-              ]
-            })
-          })
-        ),
-        'to be',
-        'WHERE (SELECT ? FROM "user")'
-      );
-      expect(sql.getValues(), 'to equal', [true]);
-    });
-
     it('formats array values with an `AND` clause', () => {
       expect(
-        sql.formatWhere(
+        sql.formatHaving(
           new SqlPart({
-            type: 'where',
+            type: 'having',
             value: [
-              true,
-              new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
-            ]
-          })
-        ),
-        'to be',
-        'WHERE (? AND "user"."id" = ?)'
-      );
-      expect(sql.getValues(), 'to equal', [true, 1]);
-    });
-  });
-
-  describe('Sql.prototype.formatSelect', () => {
-    it('returns a formatted `SELECT` clause with values and fields', () => {
-      // TODO: add all `select` parts
-      expect(
-        sql.formatSelect(
-          new SqlPart({
-            type: 'select',
-            value: [
+              new SqlPart({ type: 'equalTo', field: 'id', value: 1 }),
               new SqlPart({
-                type: 'fields',
-                value: [
-                  'id',
-                  new SqlPart({
-                    type: 'raw',
-                    value: { sql: 'COUNT(*)', fields: ['count'] }
-                  })
-                ]
-              }),
-              new SqlPart({ type: 'from' }),
-              new SqlPart({
-                type: 'where',
-                value: [
-                  new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
-                ]
+                type: 'greaterThan',
+                field: new SqlPart({ type: 'raw', value: { sql: 'COUNT(*)' } }),
+                value: 1
               })
             ]
           })
         ),
-        'to equal',
-        {
-          sql: 'SELECT "user"."id", COUNT(*) FROM "user" WHERE "user"."id" > ?',
-          values: [1],
-          fields: ['id', 'count']
-        }
+        'to be',
+        'HAVING ("user"."id" = ? AND COUNT(*) > ?)'
+      );
+      expect(sql.getValues(), 'to equal', [1, 1]);
+    });
+  });
+
+  describe('Sql.prototype.formatOrderBy', () => {
+    it('returns a `ORDER BY` clause with a formatted field', () => {
+      expect(
+        sql.formatOrderBy(new SqlPart({ type: 'orderBy', value: ['id'] })),
+        'to be',
+        'ORDER BY "user"."id"'
+      );
+    });
+
+    it('returns a list of formatted fields for array values', () => {
+      expect(
+        sql.formatOrderBy(
+          new SqlPart({ type: 'orderBy', value: ['id', 'name'] })
+        ),
+        'to be',
+        'ORDER BY "user"."id", "user"."name"'
+      );
+    });
+
+    it('supports ordering by a column reference', () => {
+      expect(
+        sql.formatOrderBy(new SqlPart({ type: 'orderBy', value: [1] })),
+        'to be',
+        'ORDER BY ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+
+    describe('for object values', () => {
+      it('formats a 1 object value into an `ASC` clause', () => {
+        expect(
+          sql.formatOrderBy(
+            new SqlPart({ type: 'orderBy', value: [{ id: 1 }] })
+          ),
+          'to be',
+          'ORDER BY "user"."id" ASC'
+        );
+      });
+
+      it('formats a -1 object value into an `DESC` clause', () => {
+        expect(
+          sql.formatOrderBy(
+            new SqlPart({ type: 'orderBy', value: [{ id: -1 }] })
+          ),
+          'to be',
+          'ORDER BY "user"."id" DESC'
+        );
+      });
+
+      it("formats an 'asc' object value into an `ASC` clause", () => {
+        expect(
+          sql.formatOrderBy(
+            new SqlPart({ type: 'orderBy', value: [{ id: 'asc' }] })
+          ),
+          'to be',
+          'ORDER BY "user"."id" ASC'
+        );
+      });
+
+      it("formats a 'DESC' object value into an `DESC` clause", () => {
+        expect(
+          sql.formatOrderBy(
+            new SqlPart({ type: 'orderBy', value: [{ id: 'DESC' }] })
+          ),
+          'to be',
+          'ORDER BY "user"."id" DESC'
+        );
+      });
+
+      it("formats an 'asc' object value into an `ASC` clause", () => {
+        expect(
+          sql.formatOrderBy(
+            new SqlPart({ type: 'orderBy', value: [{ id: 'asc' }] })
+          ),
+          'to be',
+          'ORDER BY "user"."id" ASC'
+        );
+      });
+
+      it("formats a 'DESC' object value into an `DESC` clause", () => {
+        expect(
+          sql.formatOrderBy(
+            new SqlPart({ type: 'orderBy', value: [{ id: 'DESC' }] })
+          ),
+          'to be',
+          'ORDER BY "user"."id" DESC'
+        );
+      });
+
+      it('supports SqlPart values', () => {
+        expect(
+          sql.formatOrderBy(
+            new SqlPart({
+              type: 'orderBy',
+              value: [
+                {
+                  id: new SqlPart({
+                    type: 'asc',
+                    value: new SqlPart({
+                      type: 'nulls',
+                      value: new SqlPart({ type: 'last' })
+                    })
+                  })
+                }
+              ]
+            })
+          ),
+          'to be',
+          'ORDER BY "user"."id" ASC NULLS LAST'
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatAsc', () => {
+    it('returns an `ASC` clause', () => {
+      expect(sql.formatAsc(new SqlPart({ type: 'asc' })), 'to be', 'ASC');
+    });
+
+    describe('with a part value set', () => {
+      it('returns an `ASC` clause with a formatted value', () => {
+        expect(
+          sql.formatAsc(
+            new SqlPart({
+              type: 'asc',
+              value: new SqlPart({ type: 'raw', value: { sql: 'NULLS FIRST' } })
+            })
+          ),
+          'to be',
+          'ASC NULLS FIRST'
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatDesc', () => {
+    it('returns a `DESC` clause', () => {
+      expect(sql.formatDesc(new SqlPart({ type: 'desc' })), 'to be', 'DESC');
+    });
+
+    describe('with a part value set', () => {
+      it('returns a `DESC` clause with a formatted value', () => {
+        expect(
+          sql.formatDesc(
+            new SqlPart({
+              type: 'desc',
+              value: new SqlPart({ type: 'raw', value: { sql: 'NULLS LAST' } })
+            })
+          ),
+          'to be',
+          'DESC NULLS LAST'
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatNulls', () => {
+    it('returns a `NULLS` clause', () => {
+      expect(
+        sql.formatNulls(
+          new SqlPart({ type: 'nulls', value: new SqlPart({ type: 'first' }) })
+        ),
+        'to be',
+        'NULLS FIRST'
+      );
+    });
+  });
+
+  describe('Sql.prototype.formatFirst', () => {
+    it('returns a `FIRST` clause', () => {
+      expect(sql.formatFirst(new SqlPart({ type: 'first' })), 'to be', 'FIRST');
+    });
+  });
+
+  describe('Sql.prototype.formatLast', () => {
+    it('returns a `LAST` clause', () => {
+      expect(sql.formatLast(new SqlPart({ type: 'last' })), 'to be', 'LAST');
+    });
+  });
+
+  describe('Sql.prototype.formatLimitOrOffset', () => {
+    it('returns a `LIMIT` clause for `limit` parts', () => {
+      expect(
+        sql.formatLimitOrOffset(new SqlPart({ type: 'limit', value: 10 })),
+        'to be',
+        'LIMIT 10'
+      );
+    });
+
+    it('returns a `OFFSET` clause for `offset` parts', () => {
+      expect(
+        sql.formatLimitOrOffset(new SqlPart({ type: 'offset', value: 10 })),
+        'to be',
+        'OFFSET 10'
+      );
+    });
+
+    it('supports `0`', () => {
+      expect(
+        sql.formatLimitOrOffset(new SqlPart({ type: 'offset', value: 0 })),
+        'to be',
+        'OFFSET 0'
+      );
+    });
+
+    it('casts string values to integers', () => {
+      expect(
+        sql.formatLimitOrOffset(new SqlPart({ type: 'limit', value: '10' })),
+        'to be',
+        'LIMIT 10'
+      );
+    });
+
+    it('throws an SqlError if the value is not (or cannot be cast to) an integer', () => {
+      expect(
+        () =>
+          sql.formatLimitOrOffset(
+            new SqlPart({ type: 'offset', value: 'foo' })
+          ),
+        'to throw',
+        new SqlError({
+          sql,
+          message: 'value for OFFSET should be an integer'
+        })
+      );
+    });
+  });
+
+  describe('Sql.prototype.formatLimit', () => {
+    it('returns a `LIMIT` clause', () => {
+      expect(
+        sql.formatLimit(new SqlPart({ type: 'limit', value: 10 })),
+        'to be',
+        'LIMIT 10'
+      );
+    });
+  });
+
+  describe('Sql.prototype.formatOffset', () => {
+    it('returns a `OFFSET` clause', () => {
+      expect(
+        sql.formatOffset(new SqlPart({ type: 'offset', value: 10 })),
+        'to be',
+        'OFFSET 10'
       );
     });
   });
@@ -967,6 +1304,16 @@ describe.only('Sql', () => {
         Sql.raw({ sql: 'SELECT 1' }),
         'to equal',
         new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
+      );
+    });
+  });
+
+  describe('Sql.select', () => {
+    it('returns a `select` part', () => {
+      expect(
+        Sql.select([new SqlPart({ type: 'from' })]),
+        'to equal',
+        new SqlPart({ type: 'select', value: [new SqlPart({ type: 'from' })] })
       );
     });
   });
@@ -1004,6 +1351,16 @@ describe.only('Sql', () => {
   describe('Sql.from', () => {
     it('returns a new `from` part', () => {
       expect(Sql.from(), 'to equal', new SqlPart({ type: 'from' }));
+    });
+  });
+
+  describe('Sql.where', () => {
+    it('returns a new `where` part', () => {
+      expect(
+        Sql.where({ id: 1 }),
+        'to equal',
+        new SqlPart({ type: 'where', value: { id: 1 } })
+      );
     });
   });
 
@@ -1177,12 +1534,12 @@ describe.only('Sql', () => {
     });
   });
 
-  describe('Sql.where', () => {
-    it('returns a new `where` part', () => {
+  describe('Sql.groupBy', () => {
+    it('returns a new `groupBy` part', () => {
       expect(
-        Sql.where({ id: 1 }),
+        Sql.groupBy(['id']),
         'to equal',
-        new SqlPart({ type: 'where', value: { id: 1 } })
+        new SqlPart({ type: 'groupBy', value: ['id'] })
       );
     });
   });
@@ -1197,166 +1554,73 @@ describe.only('Sql', () => {
     });
   });
 
-  describe('Sql.select', () => {
-    describe('with no options', () => {
-      it('returns a `select` part with only a `from` part', () => {
-        expect(
-          Sql.select(),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
+  describe('Sql.orderBy', () => {
+    it('returns a new `orderBy` part', () => {
+      expect(
+        Sql.orderBy(['id']),
+        'to equal',
+        new SqlPart({ type: 'orderBy', value: ['id'] })
+      );
     });
+  });
 
-    describe('with the `distinct` option set', () => {
-      it('adds a `distinct` part', () => {
-        expect(
-          Sql.select({ distinct: true }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.distinct(), Sql.from()] })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          Sql.select({ distinct: null }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          Sql.select({ distinct: undefined }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
+  describe('Sql.asc', () => {
+    it('returns a new `asc` part', () => {
+      expect(Sql.asc(), 'to equal', new SqlPart({ type: 'asc' }));
     });
+  });
 
-    describe('with the `fields` option set', () => {
-      it('adds a `fields` part', () => {
-        expect(
-          Sql.select({ fields: ['id'] }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [Sql.fields(['id']), Sql.from()]
-          })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          Sql.select({ fields: null }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          Sql.select({ fields: undefined }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
+  describe('Sql.desc', () => {
+    it('returns a new `desc` part', () => {
+      expect(Sql.desc(), 'to equal', new SqlPart({ type: 'desc' }));
     });
+  });
 
-    describe('with the `where` option set', () => {
-      it('adds a `where` part', () => {
-        expect(
-          Sql.select({ where: { id: 1 } }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [Sql.from(), Sql.where({ id: 1 })]
-          })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          Sql.select({ where: null }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          Sql.select({ where: undefined }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
-
-      it('supports other falsy option values', () => {
-        expect(
-          Sql.select({ where: false }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [Sql.from(), Sql.where(false)]
-          })
-        );
-      });
+  describe('Sql.nulls', () => {
+    it('returns a new `nulls` part', () => {
+      expect(Sql.nulls(), 'to equal', new SqlPart({ type: 'nulls' }));
     });
+  });
 
-    // TODO: add all `select` parts
-
-    describe('with the `having` option set', () => {
-      it('adds a `having` part', () => {
-        expect(
-          Sql.select({ having: { id: 1 } }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [Sql.from(), Sql.having({ id: 1 })]
-          })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          Sql.select({ having: null }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          Sql.select({ having: undefined }),
-          'to equal',
-          new SqlPart({ type: 'select', value: [Sql.from()] })
-        );
-      });
+  describe('Sql.first', () => {
+    it('returns a new `first` part', () => {
+      expect(Sql.first(), 'to equal', new SqlPart({ type: 'first' }));
     });
+  });
 
-    describe('with all options set', () => {
-      // TODO: add all `select` parts
-      it('adds parts for each option in the right order', () => {
-        expect(
-          Sql.select({
-            distinct: true,
-            fields: ['id'],
-            where: { id: 1 },
-            having: { id: 1 }
-          }),
-          'to equal',
-          new SqlPart({
-            type: 'select',
-            value: [
-              Sql.distinct(),
-              Sql.fields(['id']),
-              Sql.from(),
-              Sql.where({ id: 1 }),
-              Sql.having({ id: 1 })
-            ]
-          })
-        );
-      });
+  describe('Sql.last', () => {
+    it('returns a new `last` part', () => {
+      expect(Sql.last(), 'to equal', new SqlPart({ type: 'last' }));
+    });
+  });
+
+  describe('Sql.limit', () => {
+    it('returns a new `limit` part', () => {
+      expect(
+        Sql.limit(10),
+        'to equal',
+        new SqlPart({ type: 'limit', value: 10 })
+      );
+    });
+  });
+
+  describe('Sql.offset', () => {
+    it('returns a new `offset` part', () => {
+      expect(
+        Sql.offset(10),
+        'to equal',
+        new SqlPart({ type: 'offset', value: 10 })
+      );
+    });
+  });
+
+  describe('Sql.insert', () => {
+    it('returns a `insert` part', () => {
+      expect(
+        Sql.insert([new SqlPart({ type: 'into' })]),
+        'to equal',
+        new SqlPart({ type: 'insert', value: [new SqlPart({ type: 'into' })] })
+      );
     });
   });
 
@@ -1393,112 +1657,6 @@ describe.only('Sql', () => {
         'to equal',
         new SqlPart({ type: 'returning', value: ['id'] })
       );
-    });
-  });
-
-  describe('Sql.insert', () => {
-    describe('with no options', () => {
-      it('returns a `insert` part with only an `into` part', () => {
-        expect(
-          Sql.insert(),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [Sql.into()] })
-        );
-      });
-    });
-
-    describe('with the `data` option set', () => {
-      describe('with `columns` set', () => {
-        it('adds a `columns` part', () => {
-          expect(
-            Sql.insert({ data: { columns: ['id'] } }),
-            'to equal',
-            new SqlPart({
-              type: 'insert',
-              value: [Sql.into(), Sql.columns(['id'])]
-            })
-          );
-        });
-      });
-
-      describe('with `values` set', () => {
-        it('adds a `values` part', () => {
-          expect(
-            Sql.insert({ data: { values: [[1]] } }),
-            'to equal',
-            new SqlPart({
-              type: 'insert',
-              value: [Sql.into(), Sql.values([[1]])]
-            })
-          );
-        });
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          Sql.insert({ data: null }),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [Sql.into()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          Sql.insert({ data: undefined }),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [Sql.into()] })
-        );
-      });
-    });
-
-    describe('with the `fields` option set', () => {
-      it('adds a `returning` part', () => {
-        expect(
-          Sql.insert({ fields: ['id'] }),
-          'to equal',
-          new SqlPart({
-            type: 'insert',
-            value: [Sql.into(), Sql.returning(['id'])]
-          })
-        );
-      });
-
-      it('skips `null` option values', () => {
-        expect(
-          Sql.insert({ fields: null }),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [Sql.into()] })
-        );
-      });
-
-      it('skips `undefined` option values', () => {
-        expect(
-          Sql.insert({ fields: undefined }),
-          'to equal',
-          new SqlPart({ type: 'insert', value: [Sql.into()] })
-        );
-      });
-    });
-
-    describe('with all options set', () => {
-      it('adds parts for each option in the right order', () => {
-        expect(
-          Sql.insert({
-            data: { columns: ['id'], values: [[1]] },
-            fields: ['id']
-          }),
-          'to equal',
-          new SqlPart({
-            type: 'insert',
-            value: [
-              Sql.into(),
-              Sql.columns(['id']),
-              Sql.values([[1]]),
-              Sql.returning(['id'])
-            ]
-          })
-        );
-      });
     });
   });
 });
