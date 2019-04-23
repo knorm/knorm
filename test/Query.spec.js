@@ -918,7 +918,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareSelect({ distinct: null }),
           'to equal',
@@ -926,7 +926,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareSelect({ distinct: undefined }),
           'to equal',
@@ -947,7 +947,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareSelect({ fields: null }),
           'to equal',
@@ -955,7 +955,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareSelect({ fields: undefined }),
           'to equal',
@@ -973,7 +973,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareSelect({ where: null }),
           'to equal',
@@ -981,7 +981,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareSelect({ where: undefined }),
           'to equal',
@@ -1007,7 +1007,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareSelect({ groupBy: null }),
           'to equal',
@@ -1015,7 +1015,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareSelect({ groupBy: undefined }),
           'to equal',
@@ -1023,8 +1023,6 @@ describe.only('Query', () => {
         );
       });
     });
-
-    // TODO: add all `select` parts
 
     describe('with the `having` option set', () => {
       it('adds a `having` part', () => {
@@ -1035,7 +1033,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareSelect({ having: null }),
           'to equal',
@@ -1043,7 +1041,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareSelect({ having: undefined }),
           'to equal',
@@ -1053,7 +1051,7 @@ describe.only('Query', () => {
     });
 
     describe('with the `orderBy` option set', () => {
-      it('adds a `orderBy` part', () => {
+      it('adds an `orderBy` part', () => {
         expect(
           query.prepareSelect({ orderBy: ['id'] }),
           'to equal',
@@ -1061,7 +1059,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareSelect({ orderBy: null }),
           'to equal',
@@ -1069,7 +1067,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareSelect({ orderBy: undefined }),
           'to equal',
@@ -1087,7 +1085,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareSelect({ limit: null }),
           'to equal',
@@ -1095,7 +1093,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareSelect({ limit: undefined }),
           'to equal',
@@ -1105,7 +1103,7 @@ describe.only('Query', () => {
     });
 
     describe('with the `offset` option set', () => {
-      it('adds a `offset` part', () => {
+      it('adds an `offset` part', () => {
         expect(
           query.prepareSelect({ offset: 10 }),
           'to equal',
@@ -1113,7 +1111,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareSelect({ offset: null }),
           'to equal',
@@ -1121,9 +1119,205 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareSelect({ offset: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `forUpdate` option set', () => {
+      it('adds a `forUpdate` part', () => {
+        expect(
+          query.prepareSelect({ forUpdate: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.forUpdate()])
+        );
+      });
+
+      it('ignores `false` option values', () => {
+        expect(
+          query.prepareSelect({ forUpdate: false }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `null` option values', () => {
+        expect(
+          query.prepareSelect({ forUpdate: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ forUpdate: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `forShare` option set', () => {
+      it('adds a `forShare` part', () => {
+        expect(
+          query.prepareSelect({ forShare: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.forShare()])
+        );
+      });
+
+      it('ignores `false` option values', () => {
+        expect(
+          query.prepareSelect({ forShare: false }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `null` option values', () => {
+        expect(
+          query.prepareSelect({ forShare: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ forShare: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with both the `forUpdate` and `forShare` options set', () => {
+      it('adds only a `forUpdate` part', () => {
+        expect(
+          query.prepareSelect({ forUpdate: true, forShare: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.forUpdate()])
+        );
+      });
+
+      it('ignores `forUpdate` if it is set to `null`', () => {
+        expect(
+          query.prepareSelect({ forUpdate: null, forShare: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.forShare()])
+        );
+      });
+
+      it('ignores `forUpdate` if it is set to `undefined`', () => {
+        expect(
+          query.prepareSelect({ forUpdate: undefined, forShare: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.forShare()])
+        );
+      });
+
+      it('ignores `forUpdate` if it is set to `false`', () => {
+        expect(
+          query.prepareSelect({ forUpdate: false, forShare: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.forShare()])
+        );
+      });
+    });
+
+    describe('with the `of` option set', () => {
+      it('adds an `of` part', () => {
+        expect(
+          query.prepareSelect({ of: ['id'] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.of(['id'])])
+        );
+      });
+
+      it('ignores `null` option values', () => {
+        expect(
+          query.prepareSelect({ of: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ of: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `noWait` option set', () => {
+      it('adds a `noWait` part', () => {
+        expect(
+          query.prepareSelect({ noWait: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.noWait()])
+        );
+      });
+
+      it('ignores `false` option values', () => {
+        expect(
+          query.prepareSelect({ noWait: false }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `null` option values', () => {
+        expect(
+          query.prepareSelect({ noWait: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ noWait: undefined }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `skipLocked` option set', () => {
+      it('adds a `skipLocked` part', () => {
+        expect(
+          query.prepareSelect({ skipLocked: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.skipLocked()])
+        );
+      });
+
+      it('ignores `false` option values', () => {
+        expect(
+          query.prepareSelect({ skipLocked: false }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `null` option values', () => {
+        expect(
+          query.prepareSelect({ skipLocked: null }),
+          'to equal',
+          Sql.select([Sql.from()])
+        );
+      });
+
+      it('ignores `undefined` option values', () => {
+        expect(
+          query.prepareSelect({ skipLocked: undefined }),
           'to equal',
           Sql.select([Sql.from()])
         );
@@ -2529,7 +2723,7 @@ describe.only('Query', () => {
         });
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareInsert({ data: null }),
           'to equal',
@@ -2537,7 +2731,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareInsert({ data: undefined }),
           'to equal',
@@ -2555,7 +2749,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `null` option values', () => {
+      it('ignores `null` option values', () => {
         expect(
           query.prepareInsert({ fields: null }),
           'to equal',
@@ -2563,7 +2757,7 @@ describe.only('Query', () => {
         );
       });
 
-      it('skips `undefined` option values', () => {
+      it('ignores `undefined` option values', () => {
         expect(
           query.prepareInsert({ fields: undefined }),
           'to equal',

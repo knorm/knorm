@@ -265,7 +265,9 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatRaw', () => {
     it("returns the part's SQL", () => {
       expect(
-        sql.formatRaw(new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })),
+        sql.formatRaw(
+          new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })
+        ),
         'to be',
         'SELECT 1'
       );
@@ -281,7 +283,7 @@ describe.only('Sql', () => {
 
     it('adds values from the part to its values array', () => {
       sql.formatRaw(
-        new SqlPart({ type: 'raw', value: { sql: 'SELECT ?', values: [1] } })
+        new SqlPart({ type: 'raw', value: { text: 'SELECT ?', values: [1] } })
       );
       expect(sql.getValues(), 'to equal', [1]);
     });
@@ -290,7 +292,7 @@ describe.only('Sql', () => {
       sql.formatRaw(
         new SqlPart({
           type: 'raw',
-          value: { sql: 'SELECT 1 AS foo', fields: ['foo'] }
+          value: { text: 'SELECT 1 AS foo', fields: ['foo'] }
         })
       );
       expect(sql.getFields(), 'to equal', ['foo']);
@@ -355,7 +357,7 @@ describe.only('Sql', () => {
       it("returns the part's SQL", () => {
         expect(
           sql.formatValue(
-            new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
+            new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })
           ),
           'to be',
           'SELECT 1'
@@ -446,7 +448,7 @@ describe.only('Sql', () => {
       it('does not call the function for SqlPart instances', () => {
         const formatValue = sinon.spy();
         sql.formatValue(
-          new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } }),
+          new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } }),
           { formatValue }
         );
         expect(formatValue, 'was not called');
@@ -476,7 +478,7 @@ describe.only('Sql', () => {
         sql.formatField(
           new SqlPart({
             type: 'raw',
-            value: { sql: 'COUNT(*)', fields: ['count'] }
+            value: { text: 'COUNT(*)', fields: ['count'] }
           })
         ),
         'to be',
@@ -506,7 +508,7 @@ describe.only('Sql', () => {
                   'id',
                   new SqlPart({
                     type: 'raw',
-                    value: { sql: 'COUNT(*)', fields: ['count'] }
+                    value: { text: 'COUNT(*)', fields: ['count'] }
                   })
                 ]
               }),
@@ -523,7 +525,7 @@ describe.only('Sql', () => {
                     type: 'greaterThan',
                     field: new SqlPart({
                       type: 'raw',
-                      value: { sql: 'COUNT(*)' }
+                      value: { text: 'COUNT(*)' }
                     }),
                     value: 1
                   })
@@ -594,7 +596,7 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.formatFields', () => {
-    it('returns a comma-separated list of formatted columns', () => {
+    it('returns a comma-separated list of formatted fields', () => {
       expect(
         sql.formatFields(
           new SqlPart({ type: 'fields', value: ['id', 'name'] })
@@ -624,7 +626,7 @@ describe.only('Sql', () => {
         sql.formatFields(
           new SqlPart({
             type: 'fields',
-            value: [new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })]
+            value: [new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })]
           })
         ),
         'to be',
@@ -633,7 +635,7 @@ describe.only('Sql', () => {
     });
 
     describe('for objects', () => {
-      it("returns a comma-separated list of formatted columns from the object's keys", () => {
+      it("returns a list of formatted fields from the object's keys", () => {
         expect(
           sql.formatFields(
             new SqlPart({
@@ -715,7 +717,7 @@ describe.only('Sql', () => {
                 fields: [
                   new SqlPart({
                     type: 'raw',
-                    value: { sql: '?', values: [true] }
+                    value: { text: '?', values: [true] }
                   })
                 ]
               })
@@ -1011,6 +1013,15 @@ describe.only('Sql', () => {
         'GROUP BY "user"."id", "user"."name"'
       );
     });
+
+    it('supports grouping by a column reference (integer)', () => {
+      expect(
+        sql.formatGroupBy(new SqlPart({ type: 'groupBy', value: [1] })),
+        'to be',
+        'GROUP BY ?'
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
   });
 
   describe('Sql.prototype.formatHaving', () => {
@@ -1037,7 +1048,10 @@ describe.only('Sql', () => {
               new SqlPart({ type: 'equalTo', field: 'id', value: 1 }),
               new SqlPart({
                 type: 'greaterThan',
-                field: new SqlPart({ type: 'raw', value: { sql: 'COUNT(*)' } }),
+                field: new SqlPart({
+                  type: 'raw',
+                  value: { text: 'COUNT(*)' }
+                }),
                 value: 1
               })
             ]
@@ -1069,7 +1083,7 @@ describe.only('Sql', () => {
       );
     });
 
-    it('supports ordering by a column reference', () => {
+    it('supports ordering by a column reference (integer)', () => {
       expect(
         sql.formatOrderBy(new SqlPart({ type: 'orderBy', value: [1] })),
         'to be',
@@ -1148,10 +1162,7 @@ describe.only('Sql', () => {
                 {
                   id: new SqlPart({
                     type: 'asc',
-                    value: new SqlPart({
-                      type: 'nulls',
-                      value: new SqlPart({ type: 'last' })
-                    })
+                    value: new SqlPart({ type: 'nullsLast' })
                   })
                 }
               ]
@@ -1175,7 +1186,10 @@ describe.only('Sql', () => {
           sql.formatAsc(
             new SqlPart({
               type: 'asc',
-              value: new SqlPart({ type: 'raw', value: { sql: 'NULLS FIRST' } })
+              value: new SqlPart({
+                type: 'raw',
+                value: { text: 'NULLS FIRST' }
+              })
             })
           ),
           'to be',
@@ -1196,7 +1210,7 @@ describe.only('Sql', () => {
           sql.formatDesc(
             new SqlPart({
               type: 'desc',
-              value: new SqlPart({ type: 'raw', value: { sql: 'NULLS LAST' } })
+              value: new SqlPart({ type: 'raw', value: { text: 'NULLS LAST' } })
             })
           ),
           'to be',
@@ -1206,27 +1220,23 @@ describe.only('Sql', () => {
     });
   });
 
-  describe('Sql.prototype.formatNulls', () => {
-    it('returns a `NULLS` clause', () => {
+  describe('Sql.prototype.formatNullsFirst', () => {
+    it('returns a `NULLS FIRST` clause', () => {
       expect(
-        sql.formatNulls(
-          new SqlPart({ type: 'nulls', value: new SqlPart({ type: 'first' }) })
-        ),
+        sql.formatNullsFirst(new SqlPart({ type: 'nullsFirst' })),
         'to be',
         'NULLS FIRST'
       );
     });
   });
 
-  describe('Sql.prototype.formatFirst', () => {
-    it('returns a `FIRST` clause', () => {
-      expect(sql.formatFirst(new SqlPart({ type: 'first' })), 'to be', 'FIRST');
-    });
-  });
-
-  describe('Sql.prototype.formatLast', () => {
-    it('returns a `LAST` clause', () => {
-      expect(sql.formatLast(new SqlPart({ type: 'last' })), 'to be', 'LAST');
+  describe('Sql.prototype.formatNullsLast', () => {
+    it('returns a `NULLS LAST` clause', () => {
+      expect(
+        sql.formatNullsLast(new SqlPart({ type: 'nullsLast' })),
+        'to be',
+        'NULLS LAST'
+      );
     });
   });
 
@@ -1298,12 +1308,62 @@ describe.only('Sql', () => {
     });
   });
 
+  describe('Sql.prototype.formatForUpdate', () => {
+    it('returns a `FOR UPDATE` clause', () => {
+      expect(
+        sql.formatForUpdate(new SqlPart({ type: 'forUpdate' })),
+        'to be',
+        'FOR UPDATE'
+      );
+    });
+  });
+
+  describe('Sql.prototype.formatForShare', () => {
+    it('returns a `FOR SHARE` clause', () => {
+      expect(
+        sql.formatForShare(new SqlPart({ type: 'forShare' })),
+        'to be',
+        'FOR SHARE'
+      );
+    });
+  });
+
+  describe('Sql.prototype.formatOf', () => {
+    it('returns an `OF` clause with a list of formatted fields', () => {
+      expect(
+        sql.formatOf(new SqlPart({ type: 'of', value: ['id', 'name'] })),
+        'to be',
+        'OF "user"."id", "user"."name"'
+      );
+    });
+  });
+
+  describe('Sql.prototype.formatNoWait', () => {
+    it('returns a `NOWAIT` clause', () => {
+      expect(
+        sql.formatNoWait(new SqlPart({ type: 'noWait' })),
+        'to be',
+        'NOWAIT'
+      );
+    });
+  });
+
+  describe('Sql.prototype.formatSkipLocked', () => {
+    it('returns a `SKIP LOCKED` clause', () => {
+      expect(
+        sql.formatSkipLocked(new SqlPart({ type: 'skipLocked' })),
+        'to be',
+        'SKIP LOCKED'
+      );
+    });
+  });
+
   describe('Sql.raw', () => {
     it('returns a new `raw` part', () => {
       expect(
-        Sql.raw({ sql: 'SELECT 1' }),
+        Sql.raw({ text: 'SELECT 1' }),
         'to equal',
-        new SqlPart({ type: 'raw', value: { sql: 'SELECT 1' } })
+        new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })
       );
     });
   });
@@ -1576,21 +1636,15 @@ describe.only('Sql', () => {
     });
   });
 
-  describe('Sql.nulls', () => {
-    it('returns a new `nulls` part', () => {
-      expect(Sql.nulls(), 'to equal', new SqlPart({ type: 'nulls' }));
+  describe('Sql.nullsFirst', () => {
+    it('returns a new `nullsFirst` part', () => {
+      expect(Sql.nullsFirst(), 'to equal', new SqlPart({ type: 'nullsFirst' }));
     });
   });
 
-  describe('Sql.first', () => {
-    it('returns a new `first` part', () => {
-      expect(Sql.first(), 'to equal', new SqlPart({ type: 'first' }));
-    });
-  });
-
-  describe('Sql.last', () => {
-    it('returns a new `last` part', () => {
-      expect(Sql.last(), 'to equal', new SqlPart({ type: 'last' }));
+  describe('Sql.nullsLast', () => {
+    it('returns a new `nullsLast` part', () => {
+      expect(Sql.nullsLast(), 'to equal', new SqlPart({ type: 'nullsLast' }));
     });
   });
 
@@ -1611,6 +1665,40 @@ describe.only('Sql', () => {
         'to equal',
         new SqlPart({ type: 'offset', value: 10 })
       );
+    });
+  });
+
+  describe('Sql.forUpdate', () => {
+    it('returns a new `forUpdate` part', () => {
+      expect(Sql.forUpdate(), 'to equal', new SqlPart({ type: 'forUpdate' }));
+    });
+  });
+
+  describe('Sql.forShare', () => {
+    it('returns a new `forShare` part', () => {
+      expect(Sql.forShare(), 'to equal', new SqlPart({ type: 'forShare' }));
+    });
+  });
+
+  describe('Sql.of', () => {
+    it('returns a new `of` part', () => {
+      expect(
+        Sql.of(['id']),
+        'to equal',
+        new SqlPart({ type: 'of', value: ['id'] })
+      );
+    });
+  });
+
+  describe('Sql.noWait', () => {
+    it('returns a new `noWait` part', () => {
+      expect(Sql.noWait(), 'to equal', new SqlPart({ type: 'noWait' }));
+    });
+  });
+
+  describe('Sql.skipLocked', () => {
+    it('returns a new `skipLocked` part', () => {
+      expect(Sql.skipLocked(), 'to equal', new SqlPart({ type: 'skipLocked' }));
     });
   });
 
