@@ -1196,40 +1196,6 @@ describe.only('Query', () => {
       });
     });
 
-    describe('with both the `forUpdate` and `forShare` options set', () => {
-      it('adds only a `forUpdate` part', () => {
-        expect(
-          query.prepareSelect({ forUpdate: true, forShare: true }),
-          'to equal',
-          Sql.select([Sql.from(), Sql.forUpdate()])
-        );
-      });
-
-      it('ignores `forUpdate` if it is set to `null`', () => {
-        expect(
-          query.prepareSelect({ forUpdate: null, forShare: true }),
-          'to equal',
-          Sql.select([Sql.from(), Sql.forShare()])
-        );
-      });
-
-      it('ignores `forUpdate` if it is set to `undefined`', () => {
-        expect(
-          query.prepareSelect({ forUpdate: undefined, forShare: true }),
-          'to equal',
-          Sql.select([Sql.from(), Sql.forShare()])
-        );
-      });
-
-      it('ignores `forUpdate` if it is set to `false`', () => {
-        expect(
-          query.prepareSelect({ forUpdate: false, forShare: true }),
-          'to equal',
-          Sql.select([Sql.from(), Sql.forShare()])
-        );
-      });
-    });
-
     describe('with the `of` option set', () => {
       it('adds an `of` part', () => {
         expect(
@@ -1333,9 +1299,12 @@ describe.only('Query', () => {
             where: [{ id: 1 }],
             groupBy: ['id'],
             having: [Sql.greaterThan(Sql.raw({ sql: 'COUNT(*)' }), 1)],
-            orderBy: ['id'],
+            orderBy: [{ id: Sql.asc(Sql.nullsLast()) }],
             limit: 10,
-            offset: 0
+            offset: 0,
+            forUpdate: true,
+            of: ['id', 'name'],
+            skipLocked: true
           }),
           'to equal',
           Sql.select([
@@ -1345,9 +1314,12 @@ describe.only('Query', () => {
             Sql.where([{ id: 1 }]),
             Sql.groupBy(['id']),
             Sql.having([Sql.greaterThan(Sql.raw({ sql: 'COUNT(*)' }), 1)]),
-            Sql.orderBy(['id']),
+            Sql.orderBy([{ id: Sql.asc(Sql.nullsLast()) }]),
             Sql.limit(10),
-            Sql.offset(0)
+            Sql.offset(0),
+            Sql.forUpdate(true),
+            Sql.of(['id', 'name']),
+            Sql.skipLocked(true)
           ])
         );
       });
