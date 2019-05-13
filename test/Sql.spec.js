@@ -633,11 +633,11 @@ describe.only('Sql', () => {
           'WHERE "user"."id" = ? ',
           'GROUP BY "user"."id" HAVING COUNT(*) > ? ',
           'ORDER BY "user"."id" ASC NULLS LAST ',
-          'LIMIT 10 OFFSET 0 ',
+          'LIMIT ? OFFSET ? ',
           'FOR UPDATE OF "user"."id" SKIP LOCKED'
         ].join('')
       );
-      expect(sql.getValues(), 'to equal', [1, 1]);
+      expect(sql.getValues(), 'to equal', [1, 1, 10, 0]);
       expect(sql.getFields(), 'to equal', ['id', 'count']);
     });
   });
@@ -1330,32 +1330,36 @@ describe.only('Sql', () => {
       expect(
         sql.formatLimitOrOffset(new SqlPart({ type: 'limit', value: 10 })),
         'to be',
-        'LIMIT 10'
+        'LIMIT ?'
       );
+      expect(sql.getValues(), 'to equal', [10]);
     });
 
     it('returns a `OFFSET` clause for `offset` parts', () => {
       expect(
         sql.formatLimitOrOffset(new SqlPart({ type: 'offset', value: 10 })),
         'to be',
-        'OFFSET 10'
+        'OFFSET ?'
       );
+      expect(sql.getValues(), 'to equal', [10]);
     });
 
     it('supports `0`', () => {
       expect(
         sql.formatLimitOrOffset(new SqlPart({ type: 'offset', value: 0 })),
         'to be',
-        'OFFSET 0'
+        'OFFSET ?'
       );
+      expect(sql.getValues(), 'to equal', [0]);
     });
 
     it('casts string values to integers', () => {
       expect(
         sql.formatLimitOrOffset(new SqlPart({ type: 'limit', value: '10' })),
         'to be',
-        'LIMIT 10'
+        'LIMIT ?'
       );
+      expect(sql.getValues(), 'to equal', [10]);
     });
 
     it('throws an SqlError if the value is not (or cannot be cast to) an integer', () => {
@@ -1378,8 +1382,9 @@ describe.only('Sql', () => {
       expect(
         sql.formatLimit(new SqlPart({ type: 'limit', value: 10 })),
         'to be',
-        'LIMIT 10'
+        'LIMIT ?'
       );
+      expect(sql.getValues(), 'to equal', [10]);
     });
   });
 
@@ -1388,8 +1393,9 @@ describe.only('Sql', () => {
       expect(
         sql.formatOffset(new SqlPart({ type: 'offset', value: 10 })),
         'to be',
-        'OFFSET 10'
+        'OFFSET ?'
       );
+      expect(sql.getValues(), 'to equal', [10]);
     });
   });
 
@@ -1745,16 +1751,18 @@ describe.only('Sql', () => {
       expect(
         sql.formatSqlPart(new SqlPart({ type: 'limit', value: 10 })),
         'to be',
-        'LIMIT 10'
+        'LIMIT ?'
       );
+      expect(sql.getValues(), 'to equal', [10]);
     });
 
     it('formats `offset` parts', () => {
       expect(
         sql.formatSqlPart(new SqlPart({ type: 'offset', value: 10 })),
         'to be',
-        'OFFSET 10'
+        'OFFSET ?'
       );
+      expect(sql.getValues(), 'to equal', [10]);
     });
 
     it('formats `forUpdate` parts', () => {
