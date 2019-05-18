@@ -560,50 +560,50 @@ describe('Model', () => {
       await foo.getVirtualData();
       await expect(spy, 'was called once').and('was called on', foo);
     });
-  });
 
-  describe('with a `virtuals` option', () => {
-    it('only includes the requested virtuals', async () => {
-      class Foo extends Model {}
+    describe('with a `virtuals` option', () => {
+      it('only includes the requested virtuals', async () => {
+        class Foo extends Model {}
 
-      Foo.virtuals = {
-        bar: {
-          get() {
-            return 'bar';
+        Foo.virtuals = {
+          bar: {
+            get() {
+              return 'bar';
+            }
+          },
+          quux: {
+            get() {
+              return 'quux';
+            }
           }
-        },
-        quux: {
-          get() {
-            return 'quux';
+        };
+
+        const foo = new Foo();
+
+        await expect(
+          foo.getVirtualData({ virtuals: ['bar'] }),
+          'to be fulfilled with value exhaustively satisfying',
+          { bar: 'bar' }
+        );
+      });
+
+      it('rejects with an error if a requested virtual has no getter', async () => {
+        class Foo extends Model {}
+
+        Foo.virtuals = {
+          bar: {
+            set() {}
           }
-        }
-      };
+        };
 
-      const foo = new Foo();
+        const foo = new Foo();
 
-      await expect(
-        foo.getVirtualData({ virtuals: ['bar'] }),
-        'to be fulfilled with value exhaustively satisfying',
-        { bar: 'bar' }
-      );
-    });
-
-    it('rejects with an error if a requested virtual has no getter', async () => {
-      class Foo extends Model {}
-
-      Foo.virtuals = {
-        bar: {
-          set() {}
-        }
-      };
-
-      const foo = new Foo();
-
-      await expect(
-        foo.getVirtualData({ virtuals: ['bar'] }),
-        'to be rejected with',
-        new Error("Virtual 'Foo.bar' has no getter")
-      );
+        await expect(
+          foo.getVirtualData({ virtuals: ['bar'] }),
+          'to be rejected with',
+          new Error("Virtual 'Foo.bar' has no getter")
+        );
+      });
     });
   });
 
@@ -1168,20 +1168,26 @@ describe('Model', () => {
   });
 
   describe('Model.prototype.getQuery', () => {
-    const { Model, Query } = new Knorm();
+    let Foo;
+    let Query;
 
-    class Foo extends Model {}
+    before(() => {
+      const orm = new Knorm();
 
-    Foo.table = 'foo';
-    Foo.fields = {
-      id: {
-        type: 'integer',
-        primary: true
-      },
-      name: {
-        type: 'string'
-      }
-    };
+      Query = orm.Query;
+      Foo = class extends orm.Model {};
+
+      Foo.table = 'foo';
+      Foo.fields = {
+        id: {
+          type: 'integer',
+          primary: true
+        },
+        name: {
+          type: 'string'
+        }
+      };
+    });
 
     it('passes any options passed to Query.prototype.setOptions', () => {
       const setOptions = sinon
@@ -1241,23 +1247,27 @@ describe('Model', () => {
     });
 
     describe('with unique fields configured', () => {
-      class Foo extends Model {}
+      let Foo;
 
-      Foo.table = 'foo';
-      Foo.fields = {
-        id: {
-          type: 'integer',
-          primary: true
-        },
-        name: {
-          type: 'string',
-          unique: true
-        },
-        number: {
-          type: 'integer',
-          unique: true
-        }
-      };
+      before(() => {
+        Foo = class extends Model {};
+
+        Foo.table = 'foo';
+        Foo.fields = {
+          id: {
+            type: 'integer',
+            primary: true
+          },
+          name: {
+            type: 'string',
+            unique: true
+          },
+          number: {
+            type: 'integer',
+            unique: true
+          }
+        };
+      });
 
       let whereStub;
 
@@ -1317,6 +1327,39 @@ describe('Model', () => {
         expect(where, 'was not called');
         where.restore();
       });
+    });
+  });
+
+  describe('Model.createField', () => {
+    let User;
+
+    before(() => {
+      User = class extends Model {};
+    });
+
+    it('returns a Field instance', () => {
+      expect(
+        User.createField({ name: 'id', type: 'integer' }),
+        'to be a',
+        Field
+      );
+    });
+
+    it('binds the field to the model', () => {
+      expect(User.createField({ name: 'id', type: 'integer' }), 'to satisfy', {
+        model: User
+      });
+    });
+
+    it("allows overriding the model's Field class", () => {
+      class Student extends User {}
+      Student.Field = sinon.spy();
+      Student.createField({ name: 'id', type: 'integer' });
+      expect(
+        Student.Field,
+        'to have calls satisfying',
+        () => new Student.Field({ name: 'id', type: 'integer', model: Student })
+      );
     });
   });
 
