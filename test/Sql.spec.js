@@ -23,14 +23,14 @@ describe.only('Sql', () => {
     SqlPart = Sql.SqlPart;
     SqlError = Sql.SqlError;
 
-    User = class extends Model {};
-    User.table = 'user';
-    User.fields = {
-      id: 'integer',
-      name: 'string',
-      description: 'text',
-      confirmed: 'boolean'
+    User = class extends Model {
+      static addField(config) {
+        return super.addField({ column: config.name, ...config });
+      }
     };
+
+    User.table = 'user';
+    User.fields = ['id', 'name', 'description', 'confirmed'];
 
     UserWithSchema = class extends User {};
     UserWithSchema.schema = 'public';
@@ -184,7 +184,7 @@ describe.only('Sql', () => {
         expect(
           () => sql.formatTable(),
           'to throw',
-          new SqlError({ sql, message: '`Foo.table` is not configured' })
+          new SqlError({ sql, message: 'table not configured' })
         );
       });
     });
@@ -232,14 +232,14 @@ describe.only('Sql', () => {
       });
     });
 
-    describe('with an unknown field-name', () => {
+    describe('with no `column` configured for a field', () => {
       it('throws an SqlError', () => {
         expect(
-          () => sql.formatColumn({}),
+          () => sql.formatColumn('foo'),
           'to throw',
           new SqlError({
             sql,
-            message: 'unknown field `[object Object]`'
+            message: "column not configured for field 'foo'"
           })
         );
       });
@@ -1809,7 +1809,7 @@ describe.only('Sql', () => {
       expect(
         () => sql.formatSqlPart(new SqlPart({ type: 'foo' })),
         'to throw',
-        new SqlError({ sql, message: 'unsupported SqlPart type `foo`' })
+        new SqlError({ sql, message: "unsupported SqlPart type 'foo'" })
       );
     });
 
@@ -1817,7 +1817,7 @@ describe.only('Sql', () => {
       expect(
         () => sql.formatSqlPart('SELECT'),
         'to throw',
-        new SqlError({ sql, message: 'unsupported SqlPart type `undefined`' })
+        new SqlError({ sql, message: 'unsupported SqlPart type undefined' })
       );
     });
   });

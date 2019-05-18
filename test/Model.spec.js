@@ -1638,8 +1638,9 @@ describe.only('Model', () => {
     });
 
     it('sets configured default query options on the instance', () => {
-      expect(User.query, 'to satisfy', {
-        options: { fields: { id: 'id' }, where: [[{ id: 1 }]] }
+      expect(User.query.getOptions(), 'to satisfy', {
+        fields: ['id'],
+        where: [{ id: 1 }]
       });
     });
   });

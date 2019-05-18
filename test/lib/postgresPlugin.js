@@ -14,8 +14,12 @@ const postgresPlugin = knorm => {
         this.client = await pool.connect();
       }
 
-      async query(sql) {
-        const { rows } = await this.client.query(sql);
+      async query({ text, values }) {
+        const { rows } = await this.client.query({
+          text,
+          values,
+          rowMode: 'array'
+        });
         return rows;
       }
 
