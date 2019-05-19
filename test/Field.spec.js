@@ -274,51 +274,6 @@ describe('Field', function() {
         });
       });
     });
-
-    describe('for fields fo type `virtual`', () => {
-      it('throws an error if the field config has no `get` or `set` function', function() {
-        expect(
-          () =>
-            new Field({
-              name: 'bar',
-              type: 'virtual',
-              model: Foo
-            }),
-          'to throw',
-          new Error('Virtual field `Foo.bar` has no `get` or `set` function')
-        );
-      });
-
-      it("throws an error if the virtual's getter is not a function", function() {
-        class Foo extends Model {}
-        expect(
-          () =>
-            new Field({
-              name: 'bar',
-              type: 'virtual',
-              model: Foo,
-              get: 'foo'
-            }),
-          'to throw',
-          new Error('Getter for virtual field `Foo.bar` is not a function')
-        );
-      });
-
-      it("throws an error if the virtual's setter is not a function", function() {
-        class Foo extends Model {}
-        expect(
-          () =>
-            new Field({
-              name: 'bar',
-              type: 'virtual',
-              model: Foo,
-              set: 'foo'
-            }),
-          'to throw',
-          new Error('Setter for virtual field `Foo.bar` is not a function')
-        );
-      });
-    });
   });
 
   describe('Field.prototype.getColumnName', function() {

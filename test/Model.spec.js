@@ -1,6 +1,7 @@
 const Knorm = require('../lib/Knorm');
 const postgresPlugin = require('./lib/postgresPlugin');
 const knex = require('./lib/knex');
+const util = require('util');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
@@ -8,750 +9,457 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'))
   .use(require('./lib/unexpected-workaround'));
 
-describe('Model', () => {
+describe.only('Model', () => {
   let Model;
   let Query;
   let Field;
+  let ModelError;
 
   before(() => {
     ({ Model, Query, Field } = new Knorm());
+    ModelError = Model.ModelError;
   });
 
-  describe('constructor', () => {
-    describe('when the model has virtuals', () => {
-      it("adds virtual's getters on the instance", () => {
-        class Foo extends Model {}
+  describe.only('constructor', () => {
+    let User;
 
-        Foo.virtuals = {
-          foo: {
-            get() {
-              return 'foo';
-            }
-          }
-        };
+    beforeEach(() => {
+      User = class extends Model {};
+      User.fields = { id: 'integer' };
+    });
 
-        const foo = new Foo();
+    it('creates a $values object', () => {
+      const user = new User();
+      expect(user.$values, 'not to be', User.prototype.$values);
+    });
 
-        expect(foo.foo, 'to be', 'foo');
-      });
+    it('re-creates $values per instance', () => {
+      expect(new User().$values, 'not to be', new User().$values);
+    });
 
-      it('adds the getters with the correct scope', () => {
-        class Foo extends Model {}
+    it('does not allow overwriting $values', () => {
+      const user = new User();
+      user.$values = { id: 1 };
+      expect(user.$values, 'to equal', {});
+    });
 
-        Foo.virtuals = {
-          foo: {
-            get() {
-              return this.theValue;
-            }
-          }
-        };
+    it("adds a $config reference to the Model's config", () => {
+      const user = new User();
+      expect(user.$config, 'to be', User.config);
+    });
 
-        const foo = new Foo();
-        foo.theValue = 'bar';
+    it('does not allow overwriting $config', () => {
+      const user = new User();
+      user.$config = { id: 1 };
+      expect(user.$config, 'to be', User.config);
+    });
 
-        expect(foo.foo, 'to be', 'bar');
-      });
-
-      it("adds virtual's setters on the instance with the correct scope", () => {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          foo: {
-            set(value) {
-              this.theValue = value;
-            }
-          }
-        };
-
-        const foo = new Foo();
-        foo.foo = 'bar';
-
-        expect(foo.theValue, 'to be', 'bar');
+    it('creates field setters and getters', () => {
+      expect(Object.getOwnPropertyDescriptor(new User(), 'id'), 'to satisfy', {
+        get: expect.it('to be a function'),
+        set: expect.it('to be a function')
       });
     });
 
-    describe('with data provided', () => {
-      it('calls Model.prototype.setData to populate the instance with the data', () => {
-        class Foo extends Model {}
+    describe('for non-virtual fields', () => {
+      let user;
 
-        Foo.fields = {
-          id: {
-            type: 'integer'
-          }
-        };
+      beforeEach(() => {
+        user = new User();
+      });
 
-        const spy = sinon.spy(Foo.prototype, 'setData');
-        // eslint-disable-next-line no-unused-vars
-        const field = new Foo({ id: 1 });
+      it('enables setting and getting field values', () => {
+        user.id = 1;
+        expect(user.id, 'to be', 1);
+      });
 
-        expect(spy, 'to have calls satisfying', () => {
-          spy({
-            id: 1
-          });
+      it('stores values in $values', () => {
+        user.id = 1;
+        expect(user.$values, 'to exhaustively satisfy', { id: 1 });
+      });
+
+      it('stores instance values separately', () => {
+        const otherUser = new User();
+        user.id = 1;
+        otherUser.id = 2;
+        expect(user.id, 'to be', 1);
+        expect(otherUser.id, 'to be', 2);
+      });
+
+      describe('with field `setValue` and `getValue` functions set', () => {
+        let getValue;
+        let setValue;
+
+        beforeEach(() => {
+          getValue = sinon.spy().named('getValue');
+          setValue = sinon.spy().named('setValue');
+          User.fields = { confirmed: { type: 'boolean', getValue, setValue } };
+          user = new User();
         });
 
-        spy.restore();
+        it("ignores the field's `setValue` and `getValue`", () => {
+          user.confirmed = false;
+          expect(user.confirmed, 'to be false');
+          expect(setValue, 'was not called');
+          expect(getValue, 'was not called');
+        });
+      });
+    });
+
+    describe('for virtual fields', () => {
+      let user;
+      let getValue;
+      let setValue;
+
+      beforeEach(() => {
+        getValue = sinon.spy().named('getValue');
+        setValue = sinon.spy().named('setValue');
+        User.fields = { name: { type: 'virtual', getValue, setValue } };
+        user = new User();
+      });
+
+      it("calls the field's `setValue` function to set data", () => {
+        user.name = 'foo';
+        expect(setValue, 'was called');
+      });
+
+      it("calls the field's `getValue` function to set data", () => {
+        user.name; // eslint-disable-line no-unused-expressions
+        expect(getValue, 'was called');
+      });
+
+      it('calls `setValue` with the Model instance and value', () => {
+        user.name = 'foo';
+        expect(setValue, 'to have calls satisfying', () =>
+          setValue(user, 'foo')
+        );
+      });
+
+      it('calls `getValue` with the Model instance', () => {
+        user.name; // eslint-disable-line no-unused-expressions
+        expect(getValue, 'to have calls satisfying', () => getValue(user));
+      });
+
+      describe('with no field `setValue` or `getValue` functions', () => {
+        beforeEach(() => {
+          User.fields = { confirmed: { type: 'boolean', virtual: true } };
+          user = new User();
+        });
+
+        it('does nothing when the field value is set', () => {
+          expect(() => (user.confirmed = false), 'not to throw');
+        });
+
+        it('returns `undefined` when the field value is accessed', () => {
+          user.confirmed = false;
+          expect(user.confirmed, 'to be undefined');
+        });
+      });
+    });
+
+    describe('if passed data', () => {
+      it('calls Model.prototype.setData with the data', () => {
+        const setData = sinon.spy(User.prototype, 'setData');
+        new User({ id: 1 }); // eslint-disable-line no-new
+        expect(setData, 'to have calls satisfying', () => setData({ id: 1 }));
+        setData.restore();
       });
     });
   });
 
-  describe('Model.prototype.getField', () => {
-    it('returns the field requested', () => {
-      class Foo extends Model {}
+  describe.only('Model.prototype.setData', () => {
+    let User;
+    let user;
 
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getField('foo'), 'to equal', Foo.fields.foo);
-    });
-  });
-
-  describe('Model.prototype.getFields', () => {
-    it("returns all the model's fields if called with no arguments", () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getFields(), 'to equal', [Foo.fields.foo]);
-    });
-
-    it('returns an array of `Field` instances', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getFields(['foo']), 'to satisfy', [
-        expect.it('to be a', Field)
-      ]);
-    });
-
-    it('returns the correct fields', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getFields(['bar', 'foo']), 'to satisfy', [
-        Foo.fields.bar,
-        Foo.fields.foo
-      ]);
-    });
-
-    it('returns the same fields if passed an array of field instances', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-      expect(foo.getFields([Foo.fields.bar, Foo.fields.foo]), 'to satisfy', [
-        Foo.fields.bar,
-        Foo.fields.foo
-      ]);
-    });
-  });
-
-  describe('Model.prototype.setData', () => {
-    it('populates the instance with the data with the passed object', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string'
-        },
-        bar: {
-          type: 'integer'
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(foo.foo, 'to be undefined');
-      expect(foo.bar, 'to be undefined');
-      foo.setData({
-        foo: 'foo',
-        bar: 1
-      });
-      expect(foo.foo, 'to equal', 'foo');
-      expect(foo.bar, 'to equal', 1);
-    });
-
-    it('populates virtuals if provided in the object', () => {
-      class Foo extends Model {}
-
-      Foo.virtuals = {
-        bar: {
-          get() {
-            return this.setVirtualBarValue;
+    beforeEach(() => {
+      User = class extends Model {};
+      User.fields = {
+        firstName: 'string',
+        lastName: 'string',
+        fullName: {
+          type: 'virtual',
+          getValue(model) {
+            return `${model.firstName} ${model.lastName}`;
           },
-          set(value) {
-            this.setVirtualBarValue = value;
+          setValue(model, fullName) {
+            fullName = fullName.split(' ');
+            model.firstName = fullName[0];
+            model.lastName = fullName[1];
+          }
+        },
+        initials: {
+          type: 'virtual',
+          getValue(model) {
+            return model.firstName[0] + model.lastName[0];
           }
         }
       };
-
-      const foo = new Foo();
-
-      expect(foo.bar, 'to be undefined');
-      foo.setData({
-        bar: 1
-      });
-      expect(foo.bar, 'to equal', 1);
+      user = new User();
     });
 
-    it("calls the virtual's setter with this set to the model instance", () => {
-      class Foo extends Model {}
-
-      const spy = sinon.spy();
-      Foo.virtuals = {
-        bar: {
-          set: spy
-        }
-      };
-
-      const foo = new Foo();
-
-      foo.setData({ bar: 1 });
-      expect(spy, 'was called once').and('was called on', foo);
+    it('sets values for database fields', () => {
+      user.setData({ firstName: 'foo', lastName: 'bar' });
+      expect(user.firstName, 'to be', 'foo');
+      expect(user.lastName, 'to be', 'bar');
     });
 
-    it('returns the model instance to allow chaining', () => {
-      class Foo extends Model {}
+    it('sets values for virtual fields', () => {
+      user.setData({ fullName: 'foo bar' });
+      expect(user.firstName, 'to be', 'foo');
+      expect(user.lastName, 'to be', 'bar');
+    });
 
-      Foo.fields = {
-        foo: {
-          required: true,
-          type: 'string'
-        }
-      };
+    it('sets values for arbitrary fields', () => {
+      user.setData({ foo: 'foo' });
+      expect(user.foo, 'to be', 'foo');
+    });
 
-      const foo = new Foo();
+    it('returns the Model instance', () => {
+      expect(user.setData({ firstName: 1 }), 'to be', user);
+    });
 
-      expect(foo.setData({ foo: 'foo' }), 'to satisfy', foo);
+    it('does not set `undefined` values', () => {
+      user.setData({ firstName: 'foo' });
+      user.setData({ firstName: undefined });
+      expect(user.firstName, 'to be', 'foo');
     });
 
     // https://github.com/knorm/knorm/issues/239
-    it('ignores virtuals in the object that have no setters', () => {
-      class Foo extends Model {}
-
-      Foo.virtuals = {
-        bar: {
-          get() {
-            return 'bar';
-          }
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(foo.bar, 'to be', 'bar');
-
-      foo.setData({ bar: 1 });
-
-      expect(foo.bar, 'to be', 'bar');
+    it('does not set virtuals with no `setValue` function', () => {
+      user.setData({ firstName: 'foo', lastName: 'bar' });
+      expect(user.initials, 'to be', 'fb');
+      user.setData({ initials: 'foo' });
+      expect(user.initials, 'to be', 'fb');
     });
 
-    it('filters out `undefined` values from the data', () => {
-      class Foo extends Model {}
-
-      Foo.virtuals = {
-        foo: {
-          set(value) {
-            if (value === undefined) {
-              throw new Error('wat');
-            }
-          }
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(() => foo.setData({ foo: undefined }), 'not to throw');
-    });
-  });
-
-  describe('Model.prototype.setDefaults', () => {
-    it('populates all configured fields with the configured default value', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string',
-          default: 'foo'
-        },
-        bar: {
-          type: 'string',
-          default: 'bar'
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(foo.foo, 'to be undefined');
-      expect(foo.bar, 'to be undefined');
-      foo.setDefaults();
-      expect(foo.foo, 'to equal', 'foo');
-      expect(foo.bar, 'to equal', 'bar');
-    });
-
-    it('accepts a list of fields to populate with the configured default value', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string',
-          default: 'foo'
-        },
-        bar: {
-          type: 'string',
-          default: 'bar'
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(foo.foo, 'to be undefined');
-      expect(foo.bar, 'to be undefined');
-      foo.setDefaults({ fields: ['bar'] });
-      expect(foo.foo, 'to be undefined');
-      expect(foo.bar, 'to equal', 'bar');
-    });
-
-    it("doesn't overwrite values that have already been set", () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string',
-          default: 'foo'
-        }
-      };
-
-      const foo = new Foo();
-
-      foo.foo = 'dont change me';
-      expect(foo.foo, 'to be', 'dont change me');
-      foo.setDefaults();
-      expect(foo.foo, 'to be', 'dont change me');
-    });
-
-    describe("when a field's default value is a function", () => {
-      it('calls the function and populates the field with the return value', () => {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: 'string',
-            default() {
-              return 'foo';
-            }
-          }
-        };
-
-        const foo = new Foo();
-
-        expect(foo.foo, 'to be undefined');
-        foo.setDefaults();
-        expect(foo.foo, 'to be', 'foo');
-      });
-
-      it('calls the function with the model instance as a parameter', () => {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            type: 'string',
-            required: true
-          },
-          bar: {
-            type: 'string',
-            required: true
-          },
-          computed: {
-            type: 'string',
-            default(model) {
-              return model.foo + model.bar;
-            }
-          }
-        };
-
-        const foo = new Foo();
-
-        foo.foo = 'foo';
-        foo.bar = 'bar';
-        expect(foo.computed, 'to be undefined');
-        foo.setDefaults();
-        expect(foo.computed, 'to be', 'foobar');
-      });
-    });
-
-    it('returns the model instance to allow chaining', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        foo: {
-          type: 'string',
-          default: true
-        }
-      };
-
-      const foo = new Foo();
-
-      expect(foo.setDefaults(), 'to satisfy', foo);
-    });
-  });
-
-  describe('Model.prototype.getFieldData', () => {
-    let Foo;
-
-    before(() => {
-      Foo = class extends Model {};
-      Foo.fields = { foo: 'string', bar: 'string' };
-    });
-
-    it('returns an object mapping fields to their values', () => {
-      const foo = new Foo();
-
-      foo.foo = 'foo';
-      foo.bar = null;
-
-      expect(foo.getFieldData(), 'to equal', {
-        foo: 'foo',
-        bar: null
-      });
-    });
-
-    it('does not include fields whose value has not been set', () => {
-      const foo = new Foo();
-
-      foo.foo = 'foo';
-
-      expect(foo.getFieldData(), 'to equal', {
-        foo: 'foo',
-        bar: undefined
-      });
-    });
-
-    it('does not include properties set on the model that are not fields', () => {
-      const foo = new Foo();
-
-      foo.foo = 'foo';
-      foo.quux = 'quux';
-
-      expect(foo.getFieldData(), 'to equal', {
-        foo: 'foo',
-        quux: undefined
-      });
-    });
-
-    describe('with a `fields` option', () => {
-      it('only returns data for the requested fields', () => {
-        const foo = new Foo();
-
-        foo.foo = 'foo';
-        foo.bar = 'bar';
-
-        expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {
-          bar: 'bar'
-        });
-      });
-
-      it('does not include a field without a value even if it has been requested', () => {
-        const foo = new Foo();
-
-        foo.foo = 'foo';
-
-        expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {});
-      });
-    });
-  });
-
-  describe('Model.prototype.getVirtualData', () => {
-    it('resolves with an object with virtuals and their data', async () => {
-      class Foo extends Model {}
-
-      Foo.virtuals = {
-        bar() {
-          return 'bar';
-        }
-      };
-
-      const foo = new Foo();
-
-      await expect(
-        foo.getVirtualData(),
-        'to be fulfilled with value exhaustively satisfying',
-        { bar: 'bar' }
+    it('does not allow overwriting $values', () => {
+      expect(
+        () => user.setData({ $values: { firstName: 'foo', lastName: 'bar' } }),
+        'to throw',
+        new TypeError(
+          `Cannot assign to read only property '$values' of object '#<User>'`
+        )
       );
     });
 
-    it('resolves with data from async virtuals (that return a Promise)', async () => {
-      class Foo extends Model {}
-
-      Foo.virtuals = {
-        bar() {
-          return Promise.resolve('bar');
-        }
-      };
-
-      const foo = new Foo();
-
-      await expect(
-        foo.getVirtualData(),
-        'to be fulfilled with value exhaustively satisfying',
-        { bar: 'bar' }
+    it('does not allow overwriting $config', () => {
+      expect(
+        () => user.setData({ $config: { foo: 'bar' } }),
+        'to throw',
+        new TypeError(
+          `Cannot assign to read only property '$config' of object '#<User>'`
+        )
       );
     });
+  });
 
-    it('skips virtuals that have no getters', async () => {
-      class Foo extends Model {}
+  describe.only('Model.prototype.getData', () => {
+    let User;
+    let user;
 
-      Foo.virtuals = {
-        quux: {
-          set() {}
-        }
-      };
-
-      const foo = new Foo();
-
-      await expect(
-        foo.getVirtualData(),
-        'to be fulfilled with value exhaustively satisfying',
-        { quux: undefined }
-      );
-    });
-
-    it("calls the virtuals' getters with this set to the model instance", async () => {
-      class Foo extends Model {}
-
-      const spy = sinon.spy();
-
-      Foo.virtuals = { bar: { get: spy } };
-
-      const foo = new Foo();
-
-      await foo.getVirtualData();
-      await expect(spy, 'was called once').and('was called on', foo);
-    });
-
-    describe('with a `virtuals` option', () => {
-      it('only includes the requested virtuals', async () => {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar: {
-            get() {
-              return 'bar';
-            }
-          },
-          quux: {
-            get() {
-              return 'quux';
-            }
+    beforeEach(() => {
+      User = class extends Model {};
+      User.fields = {
+        firstName: 'string',
+        lastName: 'string',
+        fullName: {
+          type: 'virtual',
+          setValue(model, fullName) {
+            fullName = fullName.split(' ');
+            model.firstName = fullName[0];
+            model.lastName = fullName[1];
           }
-        };
-
-        const foo = new Foo();
-
-        await expect(
-          foo.getVirtualData({ virtuals: ['bar'] }),
-          'to be fulfilled with value exhaustively satisfying',
-          { bar: 'bar' }
-        );
-      });
-
-      it('rejects with an error if a requested virtual has no getter', async () => {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar: {
-            set() {}
+        },
+        initials: {
+          type: 'virtual',
+          getValue(model) {
+            return model.firstName[0] + model.lastName[0];
           }
+        }
+      };
+      user = new User();
+      user.setData({ firstName: 'foo', lastName: 'bar' });
+    });
+
+    it('returns values for database fields', () => {
+      expect(user.getData(), 'to satisfy', {
+        firstName: 'foo',
+        lastName: 'bar'
+      });
+    });
+
+    it('returns values for virtual fields', () => {
+      expect(user.getData(), 'to satisfy', { initials: 'fb' });
+    });
+
+    it('returns values for arbitrary fields', () => {
+      user.setData({ foo: 'foo' });
+      expect(user.getData(), 'to satisfy', { foo: 'foo' });
+    });
+
+    it('allows specifying fields whose values to return', () => {
+      expect(user.getData({ fields: ['firstName', 'initials'] }), 'to equal', {
+        firstName: 'foo',
+        initials: 'fb'
+      });
+    });
+
+    it('returns values for directly assigned fields', () => {
+      user.foo = 'foo';
+      expect(user.getData(), 'to satisfy', { foo: 'foo' });
+    });
+
+    it('does not return `undefined` values', () => {
+      user.foo = undefined;
+      expect(user.getData(), 'not to have key', 'foo');
+    });
+
+    it('does not return values for virtuals with no `getValue` function', () => {
+      expect(user.getData(), 'not to have key', 'fullName');
+    });
+
+    it('does not include $values', () => {
+      expect(user.getData(), 'not to have key', '$values');
+    });
+
+    it('does not include $config', () => {
+      expect(user.getData(), 'not to have key', '$config');
+    });
+  });
+
+  describe.only('Model.prototype.setDefaults', () => {
+    let User;
+    let user;
+
+    beforeEach(() => {
+      User = class extends Model {};
+      User.fields = {
+        id: 'integer',
+        name: { type: 'string', default: 'foo' },
+        confirmed: { type: 'boolean', default: false }
+      };
+      user = new User();
+    });
+
+    it('sets values for fields with defaults configured', () => {
+      user.setDefaults();
+      expect(user.name, 'to be', 'foo');
+    });
+
+    it('sets values for fields configured with falsy defaults', () => {
+      user.setDefaults();
+      expect(user.confirmed, 'to be false');
+    });
+
+    it('does not set values for fields with no defaults configured', () => {
+      user.setDefaults();
+      expect(user.id, 'to be undefined');
+    });
+
+    it('does not overwrite fields with values already set', () => {
+      user.name = 'bar';
+      user.setDefaults();
+      expect(user.name, 'to be', 'bar');
+    });
+
+    it('returns the Model instance', () => {
+      expect(user.setDefaults(), 'to be', user);
+    });
+
+    describe('when passed a list of fields to set defaults for', () => {
+      it('sets defaults for only those fields', () => {
+        user.setDefaults({ fields: ['name'] });
+        expect(user, 'to satisfy', { name: 'foo', confirmed: undefined });
+      });
+
+      it('skips fields with no default values configured', () => {
+        user.setDefaults({ fields: ['id', 'name'] });
+        expect(user, 'to satisfy', { id: undefined, name: 'foo' });
+      });
+    });
+
+    describe('for fields configured with a default-value function', () => {
+      let User;
+      let user;
+
+      beforeEach(() => {
+        User = class extends Model {};
+        User.fields = {
+          name: { type: 'string', default: () => 'foo' },
+          initials: { type: 'boolean', default: model => model.name[0] }
         };
+        user = new User();
+      });
 
-        const foo = new Foo();
+      it("sets the field value from the function's return value", () => {
+        user.setDefaults();
+        expect(user.name, 'to be', 'foo');
+      });
 
-        await expect(
-          foo.getVirtualData({ virtuals: ['bar'] }),
-          'to be rejected with',
-          new Error("Virtual 'Foo.bar' has no getter")
-        );
+      it("passes the Model instance as the function's first parameter", () => {
+        user.setDefaults();
+        expect(user.initials, 'to be', 'f');
       });
     });
   });
 
-  describe('Model.prototype.getVirtualDataSync', () => {
-    let Foo;
+  describe.only('Model.prototpye[util.inspect.custom]', () => {
+    let User;
+    let user;
 
-    before(() => {
-      Foo = class extends Model {};
-      Foo.virtuals = {
-        foo() {
-          return 'foo';
-        },
-        async bar() {
-          return 'bar';
+    beforeEach(() => {
+      User = class extends Model {};
+      User.fields = {
+        id: 'integer',
+        firstName: 'string',
+        lastName: 'string',
+        fullName: {
+          type: 'virtual',
+          getValue(model) {
+            if (!model.firstName && !model.lastName) {
+              return;
+            }
+
+            return `${model.firstName} ${model.lastName}`;
+          }
         }
       };
+      user = new User();
     });
 
-    it('returns virtual data without async virtuals', () => {
-      const foo = new Foo();
-      expect(foo.getVirtualDataSync(), 'to equal', { foo: 'foo' });
+    it('inspects instances with no data', () => {
+      expect(user[util.inspect.custom](2, {}), 'to be', 'User {}');
     });
 
-    describe('with a `virtuals` option', () => {
-      it('does not include async virtuals even if requested', async () => {
-        const foo = new Foo();
-
-        expect(foo.getVirtualDataSync({ virtuals: ['bar'] }), 'to equal', {});
-      });
-    });
-  });
-
-  describe('Model.prototype.getData', () => {
-    let Foo;
-
-    before(() => {
-      Foo = class extends Model {};
-      Foo.fields = { foo: 'string', bar: 'string' };
-      Foo.virtuals = {
-        baz() {
-          return 'baz';
-        },
-        async quux() {
-          return 'quux';
-        }
-      };
-    });
-
-    it('resolves with an object with field and virtual field data', async () => {
-      const foo = new Foo();
-
-      foo.foo = 'foo';
-      foo.bar = 'bar';
-
-      await expect(
-        foo.getData(),
-        'to be fulfilled with value exhaustively satisfying',
-        { foo: 'foo', bar: 'bar', baz: 'baz', quux: 'quux' }
+    it('inspects instances with field data', () => {
+      user.setData({ id: 1, firstName: 'foo', lastName: 'bar' });
+      expect(
+        user[util.inspect.custom](2, {}),
+        'to be',
+        "User { id: 1, firstName: 'foo', lastName: 'bar', fullName: 'foo bar' }"
       );
     });
 
-    describe('with a `fields` option', () => {
-      it('only includes the requested fields', async () => {
-        const foo = new Foo();
-
-        foo.foo = 'foo';
-        foo.bar = 'bar';
-
-        await expect(
-          foo.getData({ fields: ['bar'] }),
-          'to be fulfilled with value exhaustively satisfying',
-          { bar: 'bar', baz: 'baz', quux: 'quux' }
-        );
-      });
+    it('inspects instances with custom data', () => {
+      user.setData({ foo: 'bar' });
+      expect(user[util.inspect.custom](2, {}), 'to be', "User { foo: 'bar' }");
     });
 
-    describe('with a `virtuals` option', () => {
-      it('only includes the requested virtuals', async () => {
-        const foo = new Foo();
-
-        foo.foo = 'foo';
-        foo.bar = 'bar';
-
-        await expect(
-          foo.getData({ virtuals: ['baz'] }),
-          'to be fulfilled with value exhaustively satisfying',
-          { foo: 'foo', bar: 'bar', baz: 'baz' }
-        );
-      });
-    });
-  });
-
-  describe('Model.prototype.getDataSync', () => {
-    let Foo;
-
-    before(() => {
-      Foo = class extends Model {};
-      Foo.fields = { foo: 'string', bar: 'string' };
-      Foo.virtuals = {
-        baz() {
-          return 'baz';
-        },
-        async quux() {
-          return 'quux';
-        }
-      };
+    it('supports `depth < 0`', () => {
+      user.setData({ id: 1, firstName: 'foo', lastName: 'bar' });
+      expect(user[util.inspect.custom](-1, {}), 'to be', 'User {}');
     });
 
-    it('returns an object with field and only sync virtual field data', () => {
-      const foo = new Foo();
-
-      foo.foo = 'foo';
-      foo.bar = 'bar';
-
-      expect(foo.getDataSync(), 'to equal', {
-        foo: 'foo',
-        bar: 'bar',
-        baz: 'baz'
-      });
-    });
-
-    describe('with a `fields` option', () => {
-      it('only includes the requested fields', () => {
-        const foo = new Foo();
-
-        foo.foo = 'foo';
-        foo.bar = 'bar';
-
-        expect(foo.getDataSync({ fields: ['bar'] }), 'to equal', {
-          bar: 'bar',
-          baz: 'baz'
-        });
-      });
-    });
-
-    describe('with a `virtuals` option', () => {
-      it('only includes the requested sync virtuals', () => {
-        const foo = new Foo();
-
-        foo.foo = 'foo';
-        foo.bar = 'bar';
-
-        expect(foo.getDataSync({ virtuals: ['baz'] }), 'to equal', {
-          foo: 'foo',
-          bar: 'bar',
-          baz: 'baz'
-        });
-      });
+    it('supports `colors`', () => {
+      user.setData({ id: 1, firstName: 'foo', lastName: 'bar' });
+      expect(
+        user[util.inspect.custom](2, {
+          colors: true,
+          stylize: value => `${value}+color`
+        }),
+        'to start with',
+        'User+color'
+      );
     });
   });
 
@@ -1330,10 +1038,26 @@ describe('Model', () => {
     });
   });
 
-  describe('Model.createField', () => {
+  describe.only('Model.throwModelError', () => {
     let User;
 
-    before(() => {
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it('throws a ModelError', () => {
+      expect(
+        () => User.throwModelError('foo'),
+        'to throw',
+        new ModelError({ Model: User, message: 'foo' })
+      );
+    });
+  });
+
+  describe.only('Model.createField', () => {
+    let User;
+
+    beforeEach(() => {
       User = class extends Model {};
     });
 
@@ -1345,1118 +1069,805 @@ describe('Model', () => {
       );
     });
 
-    it('binds the field to the model', () => {
+    it('binds the field to the Model', () => {
       expect(User.createField({ name: 'id', type: 'integer' }), 'to satisfy', {
-        model: User
+        Model: User
       });
     });
 
-    it("allows overriding the model's Field class", () => {
-      class Student extends User {}
-      Student.Field = sinon.spy();
-      Student.createField({ name: 'id', type: 'integer' });
+    it('supports an overriden Model.Field class', () => {
+      User.Field = sinon.spy();
+      User.createField({ name: 'id', type: 'integer' });
       expect(
-        Student.Field,
+        User.Field,
         'to have calls satisfying',
-        () => new Student.Field({ name: 'id', type: 'integer', model: Student })
+        () => new User.Field(User, { name: 'id', type: 'integer' })
       );
     });
-  });
 
-  describe('Model.config', () => {
-    describe('as a setter', () => {
-      it("adds the model to the Knorm instances' models", () => {
-        const knorm = new Knorm();
-        class Foo extends knorm.Model {}
-
-        expect(knorm.models.Foo, 'to be undefined');
-
-        Foo.config = {};
-
-        expect(knorm.models.Foo, 'to be', Foo);
-      });
-    });
-
-    describe('when a model is subclassed', () => {
-      it("adds the subclassed model to the Knorm instances' models", () => {
-        const knorm = new Knorm();
-        class Foo extends knorm.Model {}
-
-        Foo.config = {};
-
-        expect(knorm.models.Foo, 'to be', Foo);
-
-        class Bar extends Foo {}
-
-        Bar.config = {};
-
-        expect(knorm.models.Foo, 'to be', Foo);
-        expect(knorm.models.Bar, 'to be', Bar);
-      });
-    });
-  });
-
-  describe('Model.schema', () => {
-    describe('as a setter', () => {
-      it("sets the model's schema", () => {
-        class Foo extends Model {}
-        Foo.schema = 'foo';
-        expect(Foo.config.schema, 'to be', 'foo');
-      });
-    });
-
-    describe('when a model is subclassed', () => {
-      it("inherits the parent's schema", () => {
-        class Foo extends Model {}
-        Foo.schema = 'foo';
-
-        class Bar extends Foo {}
-
-        expect(Foo.schema, 'to be', 'foo');
-        expect(Bar.schema, 'to be', 'foo');
-      });
-
-      it("inherits the parent's schema when other configs are set", function() {
-        class Foo extends Model {}
-        Foo.schema = 'foo';
-
-        class Bar extends Foo {}
-        Bar.table = 'bar';
-
-        expect(Foo.schema, 'to be', 'foo');
-        expect(Bar.schema, 'to be', 'foo');
-      });
-
-      it("allows overwriting the parent's schema", () => {
-        class Foo extends Model {}
-        Foo.schema = 'foo';
-
-        class Bar extends Foo {}
-
-        Bar.schema = 'bar';
-
-        expect(Foo.schema, 'to be', 'foo');
-        expect(Bar.schema, 'to be', 'bar');
-      });
-    });
-  });
-
-  describe('Model.table', () => {
-    describe('as a setter', () => {
-      it("sets the model's table", () => {
-        class Foo extends Model {}
-        Foo.table = 'foo';
-        expect(Foo.config.table, 'to be', 'foo');
-      });
-    });
-
-    describe('when a model is subclassed', () => {
-      it("inherits the parent's table", () => {
-        class Foo extends Model {}
-        Foo.table = 'foo';
-
-        class Bar extends Foo {}
-
-        expect(Foo.table, 'to be', 'foo');
-        expect(Bar.table, 'to be', 'foo');
-      });
-
-      it("inherits the parent's table when other configs are set", function() {
-        class Foo extends Model {}
-        Foo.table = 'foo';
-
-        class Bar extends Foo {}
-        Bar.fields = { bar: 'string' };
-
-        expect(Foo.table, 'to be', 'foo');
-        expect(Bar.table, 'to be', 'foo');
-      });
-
-      it("allows overwriting the parent's table", () => {
-        class Foo extends Model {}
-        class Bar extends Foo {}
-
-        Foo.table = 'foo';
-        Bar.table = 'bar';
-
-        expect(Foo.table, 'to be', 'foo');
-        expect(Bar.table, 'to be', 'bar');
-      });
-    });
-  });
-
-  describe('Model.fields', () => {
-    describe('as a getter', () => {
-      it('returns added fields', () => {
-        class User extends Model {}
-        User.fields = {
-          firstName: {
-            type: 'string'
-          }
-        };
-
-        expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
-        });
-      });
-    });
-
-    describe('as a setter', () => {
-      it("adds the passed fields to the model's fields", () => {
-        class User extends Model {}
-        User.fields = {
-          firstName: {
-            type: 'string'
-          }
-        };
-
-        expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
-        });
-      });
-
-      it("allows adding fields via the `fieldName: 'type'` shorthand", () => {
-        class User extends Model {}
-        User.fields = { firstName: 'string' };
-
-        expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
-        });
-      });
-
-      it('throws if the field-name is already assigned to an instance property', () => {
-        class Foo extends Model {
-          bar() {}
-        }
-
+    describe('for field configs with `type` as `virtual`', () => {
+      it('sets `virtual` to `true` for the field', () => {
         expect(
-          () =>
-            (Foo.fields = {
-              bar: {
-                type: 'string'
-              }
-            }),
-          'to throw',
-          new Error(
-            'Foo: cannot add field `bar` (`Foo.prototype.bar` is already assigned)'
-          )
+          User.createField({ name: 'id', type: 'virtual' }),
+          'to satisfy',
+          { virtual: true }
         );
       });
-
-      it('throws if the field-name is already added as a virtual', () => {
-        class Foo extends Model {}
-
-        Foo.virtuals = {
-          bar: {
-            get() {}
-          }
-        };
-
-        expect(
-          () =>
-            (Foo.fields = {
-              bar: {
-                type: 'string'
-              }
-            }),
-          'to throw',
-          new Error('Foo: cannot add field `bar` (`bar` is a virtual)')
-        );
-      });
-
-      describe('when a model is subclassed', () => {
-        it('allows overwriting fields defined in the parent', () => {
-          class User extends Model {}
-          User.fields = {
-            id: {
-              type: 'string'
-            }
-          };
-
-          expect(User.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: User,
-                type: 'string'
-              })
-            )
-          });
-
-          class OtherUser extends User {}
-          OtherUser.fields = {
-            id: {
-              type: 'text'
-            }
-          };
-
-          expect(OtherUser.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: OtherUser,
-                type: 'text'
-              })
-            )
-          });
-        });
-
-        it('does not duplicate fieldNames when a field is overwritten', () => {
-          class User extends Model {}
-          User.fields = {
-            id: {
-              type: 'string'
-            }
-          };
-
-          expect(User.config.fieldNames, 'to equal', ['id']);
-
-          class OtherUser extends User {}
-          OtherUser.fields = {
-            id: {
-              type: 'text'
-            }
-          };
-
-          expect(User.config.fieldNames, 'to equal', ['id']);
-          expect(OtherUser.config.fieldNames, 'to equal', ['id']);
-        });
-
-        it("updates the child's fields' model class", () => {
-          class User extends Model {}
-          User.fields = {
-            firstName: {
-              type: 'string'
-            }
-          };
-
-          expect(User.fields, 'to satisfy', {
-            firstName: expect.it(
-              'to be field',
-              new Field({
-                name: 'firstName',
-                model: User,
-                type: 'string'
-              })
-            )
-          });
-
-          class Student extends User {}
-          Student.fields = {
-            studentId: {
-              type: 'integer'
-            }
-          };
-
-          expect(Student.fields, 'to satisfy', {
-            firstName: expect.it(
-              'to be field',
-              new Field({
-                name: 'firstName',
-                model: Student,
-                type: 'string'
-              })
-            )
-          });
-        });
-
-        it("doesn't interfere with the parent's fields", () => {
-          class User extends Model {}
-
-          User.fields = {
-            id: {
-              type: 'integer',
-              required: true
-            }
-          };
-
-          expect(User.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: User,
-                required: true,
-                type: 'integer'
-              })
-            )
-          });
-
-          class OtherUser extends User {}
-          OtherUser.fields = {
-            firstName: {
-              type: 'string'
-            }
-          };
-
-          expect(User.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: User,
-                required: true,
-                type: 'integer'
-              })
-            )
-          });
-          expect(OtherUser.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: OtherUser,
-                required: true,
-                type: 'integer'
-              })
-            ),
-            firstName: expect.it(
-              'to be field',
-              new Field({
-                name: 'firstName',
-                model: OtherUser,
-                type: 'string'
-              })
-            )
-          });
-        });
-      });
-
-      describe('with `methods` configured on a field', () => {
-        it('adds `ByField` methods', () => {
-          class User extends Model {}
-
-          User.fields = {
-            id: {
-              type: 'string',
-              methods: true
-            }
-          };
-
-          expect(User.fetchById, 'to be a function');
-          expect(User.updateById, 'to be a function');
-          expect(User.deleteById, 'to be a function');
-        });
-
-        it('adds the correct names for camelCased field names', () => {
-          class User extends Model {}
-
-          User.fields = {
-            someFieldName: {
-              type: 'string',
-              unique: true,
-              methods: true
-            }
-          };
-
-          expect(User.fetchBySomeFieldName, 'to be a function');
-          expect(User.updateBySomeFieldName, 'to be a function');
-          expect(User.deleteBySomeFieldName, 'to be a function');
-        });
-
-        it('inherits `ByField` methods', () => {
-          class User extends Model {}
-          class OtherUser extends User {}
-
-          User.fields = {
-            id: {
-              type: 'string',
-              primary: true,
-              methods: true
-            }
-          };
-
-          expect(OtherUser.fetchById, 'to be a function');
-          expect(OtherUser.updateById, 'to be a function');
-          expect(OtherUser.deleteById, 'to be a function');
-        });
-      });
-    });
-
-    describe('with a getter function', () => {
-      let User;
-
-      before(() => {
-        User = class extends Model {
-          static get fields() {
-            this.config = { fields: { firstName: { type: 'string' } } };
-            return this.config.fields;
-          }
-        };
-      });
-
-      it('returns fields added via the `Model.config` setter', () => {
-        expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
-        });
-      });
-
-      it('supports field inheritance', () => {
-        class Student extends User {
-          static get fields() {
-            this.config = { fields: { studentId: { type: 'integer' } } };
-            return this.config.fields;
-          }
-        }
-
-        expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
-        });
-
-        expect(Student.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: Student,
-              type: 'string'
-            })
-          ),
-          studentId: expect.it(
-            'to be field',
-            new Field({
-              name: 'studentId',
-              model: Student,
-              type: 'integer'
-            })
-          )
-        });
-      });
     });
   });
 
-  describe('Model.virtuals', () => {
-    describe('as a setter', () => {
-      it("adds the virtuals to the model's virtuals", () => {
-        class User extends Model {}
-
-        User.virtuals = {
-          firstName: {
-            get() {},
-            set() {}
-          }
-        };
-
-        expect(User.virtuals, 'to exhaustively satisfy', {
-          firstName: new Virtual({
-            name: 'firstName',
-            model: User,
-            descriptor: {
-              get() {},
-              set() {}
-            }
-          })
-        });
-      });
-
-      it('throws if the virtual-name is already assigned to an instance property', () => {
-        class Foo extends Model {
-          bar() {}
-        }
-
-        expect(
-          () =>
-            (Foo.virtuals = {
-              bar: {
-                get() {}
-              }
-            }),
-          'to throw',
-          new Error(
-            'Foo: cannot add virtual `bar` (`Foo.prototype.bar` is already assigned)'
-          )
-        );
-      });
-
-      it('throws if the virtual-name is already added as a field', () => {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          bar: {
-            type: 'string'
-          }
-        };
-
-        expect(
-          () =>
-            (Foo.virtuals = {
-              bar: {
-                get() {}
-              }
-            }),
-          'to throw',
-          new Error('Foo: cannot add virtual `bar` (`bar` is a field)')
-        );
-      });
-
-      describe('when a model is subclassed', () => {
-        it('allows overwriting the virtuals defined in the parent', () => {
-          class User extends Model {}
-          User.virtuals = {
-            firstName: {
-              get() {
-                return 'foo';
-              }
-            }
-          };
-
-          expect(User.virtuals, 'to exhaustively satisfy', {
-            firstName: new Virtual({
-              name: 'firstName',
-              model: User,
-              descriptor: {
-                get() {
-                  return 'foo';
-                }
-              }
-            })
-          });
-
-          class OtherUser extends User {}
-          OtherUser.virtuals = {
-            firstName: {
-              get() {
-                return 'bar';
-              }
-            }
-          };
-
-          expect(OtherUser.virtuals, 'to satisfy', {
-            firstName: new Virtual({
-              name: 'firstName',
-              model: OtherUser,
-              descriptor: {
-                get() {
-                  return 'bar';
-                }
-              }
-            })
-          });
-        });
-
-        it("updates the child's virtuals' model class", () => {
-          class User extends Model {}
-          User.virtuals = {
-            firstName: {
-              get() {
-                return 'foo';
-              }
-            }
-          };
-
-          expect(User.virtuals, 'to satisfy', {
-            firstName: new Virtual({
-              name: 'firstName',
-              model: User,
-              descriptor: {
-                get() {
-                  return 'foo';
-                }
-              }
-            })
-          });
-
-          class Student extends User {}
-          Student.virtuals = {
-            lastName: {
-              get() {
-                return 'bar';
-              }
-            }
-          };
-
-          expect(Student.virtuals, 'to satisfy', {
-            firstName: new Virtual({
-              name: 'firstName',
-              model: Student,
-              descriptor: {
-                get() {
-                  return 'foo';
-                }
-              }
-            })
-          });
-        });
-
-        it("doesn't interfere with the parent's virtuals", () => {
-          class User extends Model {}
-
-          User.virtuals = {
-            firstName: {
-              get() {
-                return 'foo';
-              }
-            }
-          };
-
-          expect(User.virtuals, 'to exhaustively satisfy', {
-            firstName: new Virtual({
-              name: 'firstName',
-              model: User,
-              descriptor: {
-                get() {
-                  return 'foo';
-                }
-              }
-            })
-          });
-
-          class OtherUser extends User {}
-          OtherUser.virtuals = {
-            lastName: {
-              get() {
-                return 'bar';
-              }
-            }
-          };
-
-          expect(User.virtuals, 'to exhaustively satisfy', {
-            firstName: new Virtual({
-              name: 'firstName',
-              model: User,
-              descriptor: {
-                get() {
-                  return 'foo';
-                }
-              }
-            })
-          });
-          expect(OtherUser.virtuals, 'to exhaustively satisfy', {
-            firstName: new Virtual({
-              name: 'firstName',
-              model: OtherUser,
-              descriptor: {
-                get() {
-                  return 'foo';
-                }
-              }
-            }),
-            lastName: new Virtual({
-              name: 'lastName',
-              model: OtherUser,
-              descriptor: {
-                get() {
-                  return 'bar';
-                }
-              }
-            })
-          });
-        });
-      });
-    });
-
-    describe('as a getter', () => {
-      it('returns the virtuals added to the model', () => {
-        class User extends Model {}
-
-        User.virtuals = {
-          firstName: {
-            get() {
-              return 'foo';
-            }
-          }
-        };
-
-        expect(User.virtuals, 'to exhaustively satisfy', {
-          firstName: new Virtual({
-            name: 'firstName',
-            model: User,
-            descriptor: {
-              get() {
-                return 'foo';
-              }
-            }
-          })
-        });
-      });
-    });
-  });
-
-  describe('Model.options', () => {
-    describe('as a getter', () => {
-      it('returns added options', () => {
-        class User extends Model {}
-        User.options = {
-          query: { where: { id: 1 } },
-          plugins: { toJSON: { exclude: 'id' } }
-        };
-
-        expect(User.options, 'to exhaustively satisfy', {
-          query: { where: { id: 1 } },
-          plugins: { toJSON: { exclude: 'id' } }
-        });
-      });
-    });
-
-    describe('as a setter', () => {
-      it("adds the passed options to the model's options", () => {
-        class User extends Model {}
-        User.options = {
-          query: { where: { id: 1 } },
-          plugins: { toJSON: { exclude: 'id' } }
-        };
-
-        expect(User.options, 'to exhaustively satisfy', {
-          query: { where: { id: 1 } },
-          plugins: { toJSON: { exclude: 'id' } }
-        });
-      });
-
-      describe('when a model is subclassed', () => {
-        it("merges the child's options into the parent's options", () => {
-          class User extends Model {}
-          User.options = {
-            query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: 'id' } }
-          };
-
-          expect(User.options, 'to exhaustively satisfy', {
-            query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: 'id' } }
-          });
-
-          class OtherUser extends User {}
-          OtherUser.options = {
-            query: { fields: ['id'] },
-            plugins: { timestamps: { createdAt: true } }
-          };
-
-          expect(OtherUser.options, 'to exhaustively satisfy', {
-            query: { where: { id: 1 }, fields: ['id'] },
-            plugins: {
-              toJSON: { exclude: 'id' },
-              timestamps: { createdAt: true }
-            }
-          });
-        });
-
-        it('allows overwriting options defined in the parent', () => {
-          class User extends Model {}
-          User.options = {
-            query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
-          };
-
-          expect(User.options, 'to exhaustively satisfy', {
-            query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
-          });
-
-          class OtherUser extends User {}
-          OtherUser.options = {
-            query: { where: { id: 2 } },
-            plugins: { toJSON: { exclude: ['name'] } }
-          };
-
-          expect(OtherUser.options, 'to exhaustively satisfy', {
-            query: { where: { id: 2 } },
-            plugins: { toJSON: { exclude: ['name'] } }
-          });
-        });
-
-        it("doesn't interfere with the parent's options", () => {
-          class User extends Model {}
-          User.options = {
-            query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
-          };
-
-          expect(User.options, 'to exhaustively satisfy', {
-            query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
-          });
-
-          class OtherUser extends User {}
-          OtherUser.options = {
-            query: { where: { id: 2 } },
-            plugins: { toJSON: { exclude: 'name' } }
-          };
-
-          expect(User.options, 'to exhaustively satisfy', {
-            query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
-          });
-
-          expect(OtherUser.options, 'to exhaustively satisfy', {
-            query: { where: { id: 2 } },
-            plugins: { toJSON: { exclude: 'name' } }
-          });
-        });
-      });
-    });
-  });
-
-  describe('Model.config.primary', () => {
-    describe('as a getter', () => {
-      it('throws an error of the model has no primary field', () => {
-        class Foo extends Model {}
-
-        Foo.fields = { foo: 'string' };
-
-        expect(
-          () => Foo.config.primary,
-          'to throw',
-          new Error('`Foo` has no primary field')
-        );
-      });
-
-      it("returns the field-name of the model's primary field", () => {
-        class Foo extends Model {}
-
-        Foo.fields = { id: { type: 'integer', primary: true } };
-
-        expect(Foo.config.primary, 'to equal', 'id');
-      });
-
-      describe('when a model is subclassed', () => {
-        it("inherits the parent's primary field", () => {
-          class Foo extends Model {}
-          class Bar extends Foo {}
-
-          Foo.fields = { id: { type: 'integer', primary: true } };
-
-          expect(Foo.config.primary, 'to equal', 'id');
-          expect(Bar.config.primary, 'to equal', 'id');
-        });
-
-        it("allows overwriting the parent's primary field", () => {
-          class Foo extends Model {}
-          class Bar extends Foo {}
-
-          Foo.fields = { id: { type: 'integer', primary: true } };
-          Bar.fields = { uuid: { type: 'uuid', primary: true } };
-
-          expect(Foo.config.primary, 'to equal', 'id');
-          expect(Bar.config.primary, 'to equal', 'uuid');
-        });
-
-        it("allows unsetting the parent's primary field", () => {
-          class Foo extends Model {}
-          class Bar extends Foo {}
-
-          Foo.fields = { id: { type: 'integer', primary: true } };
-          Bar.fields = { id: { type: 'uuid', primary: false } };
-
-          expect(Foo.config.primary, 'to equal', 'id');
-          expect(
-            () => Bar.config.primary,
-            'to throw',
-            new Error('`Bar` has no primary field')
-          );
-        });
-      });
-    });
-  });
-
-  describe('Model.config.notUpdated', () => {
-    describe('as a getter', () => {
-      it('returns field-names that should not be updated', () => {
-        class Foo extends Model {}
-
-        Foo.fields = { id: { type: 'integer', updated: false } };
-
-        expect(Foo.config.notUpdated, 'to equal', ['id']);
-      });
-
-      describe('when a model is subclassed', () => {
-        it("inherits the parent's notUpdated fields", () => {
-          class Foo extends Model {}
-          class Bar extends Foo {}
-
-          Foo.fields = { id: { type: 'integer', updated: false } };
-
-          expect(Foo.config.notUpdated, 'to equal', ['id']);
-          expect(Bar.config.notUpdated, 'to equal', ['id']);
-        });
-
-        it("allows overwriting the parent's notUpdated fields", () => {
-          class Foo extends Model {}
-          class Bar extends Foo {}
-
-          Foo.fields = { id: { type: 'integer', updated: false } };
-          Bar.fields = { id: { type: 'integer', updated: true } };
-
-          expect(Foo.config.notUpdated, 'to equal', ['id']);
-          expect(Bar.config.notUpdated, 'to equal', []);
-        });
-      });
-    });
-  });
-
-  describe('Model.config.unique', () => {
-    describe('as a getter', () => {
-      it('returns field-names of unique fields', () => {
-        class Foo extends Model {}
-
-        Foo.fields = { id: { type: 'integer', unique: true } };
-
-        expect(Foo.config.unique, 'to equal', ['id']);
-      });
-
-      describe('when a model is subclassed', () => {
-        it("inherits the parent's unique fields", () => {
-          class Foo extends Model {}
-          class Bar extends Foo {}
-
-          Foo.fields = { id: { type: 'integer', unique: true } };
-
-          expect(Foo.config.unique, 'to equal', ['id']);
-          expect(Bar.config.unique, 'to equal', ['id']);
-        });
-
-        it("allows overwriting the parent's unique fields", () => {
-          class Foo extends Model {}
-          class Bar extends Foo {}
-
-          Foo.fields = { id: { type: 'integer', unique: true } };
-          Bar.fields = { id: { type: 'integer', unique: false } };
-
-          expect(Foo.config.unique, 'to equal', ['id']);
-          expect(Bar.config.unique, 'to equal', []);
-        });
-      });
-    });
-  });
-
-  describe('Model.removeField', () => {
-    it('removes a field', () => {
-      class Foo extends Model {}
-
-      Foo.fields = { id: 'integer' };
-      expect(Foo.config.fields, 'to have key', 'id');
-
-      Foo.removeField(Foo.fields.id);
-      expect(Foo.config.fields, 'to equal', {});
-    });
-
-    it("removes a field's field-column mappings", () => {
-      class Foo extends Model {}
-
-      Foo.fields = { id: 'integer' };
-      expect(Foo.config.fieldsToColumns, 'to have key', 'id');
-
-      Foo.removeField(Foo.fields.id);
-      expect(Foo.config.fieldsToColumns, 'to equal', {});
-    });
-
-    it("removes the field from the model's field names", () => {
-      class Foo extends Model {}
-
-      Foo.fields = { id: { type: 'integer' } };
-      expect(Foo.config.fieldNames, 'to contain', 'id');
-
-      Foo.removeField(Foo.fields.id);
-      expect(Foo.config.fieldNames, 'to equal', []);
-    });
-
-    it("removes the field from the model's not-updated fields", () => {
-      class Foo extends Model {}
-
-      Foo.fields = { id: { type: 'integer', updated: false } };
-      expect(Foo.config.notUpdated, 'to contain', 'id');
-
-      Foo.removeField(Foo.fields.id);
-      expect(Foo.config.notUpdated, 'to equal', []);
-    });
-
-    it("removes the field from the model's unique fields", () => {
-      class Foo extends Model {}
-
-      Foo.fields = { id: { type: 'integer', unique: true } };
-      expect(Foo.config.unique, 'to contain', 'id');
-
-      Foo.removeField(Foo.fields.id);
-      expect(Foo.config.unique, 'to equal', []);
-    });
-
-    it("removes the field from the model's primary field", () => {
-      class Foo extends Model {}
-
-      Foo.fields = { id: { type: 'integer', primary: true } };
-      expect(Foo.config.primary, 'to be', 'id');
-
-      Foo.removeField(Foo.fields.id);
-      expect(() => Foo.config.primary, 'to throw');
-    });
-
-    it('removes *ByField methods from the model', () => {
-      class Foo extends Model {}
-
-      Foo.fields = { id: { type: 'integer', primary: true, methods: true } };
-      expect(Foo.updateById, 'to be a function');
-
-      Foo.removeField(Foo.fields.id);
-      expect(Foo.updateById, 'to be undefined');
-    });
-  });
-
-  describe('Model.query', () => {
+  describe.only('Model.getGeneratedMethodName', () => {
     let User;
 
-    before(() => {
+    beforeEach(() => {
       User = class extends Model {};
+    });
+
+    it('returns an upper camel-cased method name', () => {
+      const field = new Field(User, { name: 'firstName', type: 'integer' });
+      expect(User.getGeneratedMethodName(field), 'to be', 'FirstName');
+    });
+
+    it('handles underscores, hyphens and spaces in the field-name', () => {
+      const field = new Field(User, {
+        name: '__internal-group id',
+        type: 'integer'
+      });
+      expect(User.getGeneratedMethodName(field), 'to be', 'InternalGroupId');
+    });
+  });
+
+  describe.only('Model.getGeneratedMethodQuery', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+      Object.defineProperty(User, 'query', {
+        value: {
+          setOption: sinon.spy().named('setOption'),
+          setOptions: sinon.spy().named('setOptions')
+        }
+      });
+    });
+
+    it('sets the `where` option', () => {
+      const id = new Field(User, { name: 'id', type: 'integer' });
+      User.getGeneratedMethodQuery(id, 1);
+      expect(User.query.setOption, 'to have calls satisfying', () =>
+        User.query.setOption('where', { id: 1 })
+      );
+    });
+
+    it('sets the `first` and `require` options for primary fields', () => {
+      const id = new Field(User, {
+        name: 'id',
+        type: 'integer',
+        primary: true
+      });
+      User.getGeneratedMethodQuery(id, 1);
+      expect(User.query.setOptions, 'to have calls satisfying', () =>
+        User.query.setOptions({ first: true, require: true })
+      );
+    });
+
+    it('sets the `first` and `require` options for unique fields', () => {
+      const id = new Field(User, { name: 'id', type: 'integer', unique: true });
+      User.getGeneratedMethodQuery(id, 1);
+      expect(User.query.setOptions, 'to have calls satisfying', () =>
+        User.query.setOptions({ first: true, require: true })
+      );
+    });
+
+    it('allows overriding the `first` and `require` options', () => {
+      const id = new Field(User, {
+        name: 'id',
+        type: 'integer',
+        primary: true
+      });
+      User.getGeneratedMethodQuery(id, 1, { first: false, require: false });
+      expect(User.query.setOptions, 'to have calls satisfying', () => {
+        User.query.setOptions({ first: true, require: true });
+        User.query.setOptions({ first: false, require: false });
+      });
+    });
+  });
+
+  describe.only('Model.addGeneratedMethods', () => {
+    let User;
+    let id;
+
+    beforeEach(() => {
+      User = class extends Model {};
+      id = new Field(User, { name: 'id', type: 'integer' });
+    });
+
+    it('adds a `fetchByField` static method', () => {
+      User.addGeneratedMethods(id);
+      expect(User.fetchById, 'to be a function');
+    });
+
+    it('adds a `updateByField` static method', () => {
+      User.addGeneratedMethods(id);
+      expect(User.updateById, 'to be a function');
+    });
+
+    it('adds a `deleteByField` static method', () => {
+      User.addGeneratedMethods(id);
+      expect(User.deleteById, 'to be a function');
+    });
+  });
+
+  describe.only('Model.addField', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it('throws if the field-name is Model.prototype property', () => {
+      expect(
+        () =>
+          User.addField(new Field(User, { name: 'getData', type: 'string' })),
+        'to throw',
+        new ModelError({
+          Model: User,
+          message: 'field `getData` conflicts with `User.prototype.getData`'
+        })
+      );
+    });
+
+    it('throws if the field-name is user-added Model.prototype property', () => {
+      User = class extends Model {
+        id() {}
+      };
+      expect(
+        () => User.addField(new Field(User, { name: 'id', type: 'string' })),
+        'to throw',
+        new ModelError({
+          Model: User,
+          message: 'field `id` conflicts with `User.prototype.id`'
+        })
+      );
+    });
+
+    it('throws if the field-name is `$values`', () => {
+      expect(
+        () =>
+          User.addField(new Field(User, { name: '$values', type: 'string' })),
+        'to throw',
+        new ModelError({
+          Model: User,
+          message: 'field `$values` conflicts with `User.prototype.$values`'
+        })
+      );
+    });
+
+    it('throws if the field-name is `$config`', () => {
+      expect(
+        () =>
+          User.addField(new Field(User, { name: '$config', type: 'string' })),
+        'to throw',
+        new ModelError({
+          Model: User,
+          message: 'field `$config` conflicts with `User.prototype.$config`'
+        })
+      );
+    });
+
+    it("adds the field to the Model's fields", () => {
+      User.addField(new Field(User, { name: 'id', type: 'integer' }));
+      expect(User.fields, 'to equal', {
+        id: new Field(User, { name: 'id', type: 'integer' })
+      });
+    });
+
+    it("adds the field's to the Model's field-names", () => {
+      User.addField(new Field(User, { name: 'id', type: 'integer' }));
+      expect(User.config.fieldNames, 'to equal', ['id']);
+    });
+
+    describe('if the field is non-virtual', () => {
+      it("adds it to the Model's columns", () => {
+        User.addField(
+          new Field(User, {
+            name: 'id',
+            type: 'integer',
+            virtual: false,
+            column: '_id'
+          })
+        );
+        expect(User.config.columns, 'to equal', { id: '_id' });
+      });
+    });
+
+    describe('if the field is virtual', () => {
+      it("does not add it to the Model's columns", () => {
+        User.addField(
+          new Field(User, {
+            name: 'id',
+            type: 'integer',
+            virtual: true,
+            column: '_id'
+          })
+        );
+        expect(User.config.columns, 'to be empty');
+      });
+    });
+
+    describe('if the field is primary', () => {
+      it("sets it as the Model's primary field", () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', primary: true })
+        );
+        expect(User.config.primary, 'to be', 'id');
+      });
+    });
+
+    describe('if the field is non-primary', () => {
+      it("does not set it as the Model's primary field", () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', primary: false })
+        );
+        expect(User.config.primary, 'to be undefined');
+      });
+    });
+
+    describe('if the field is not updated', () => {
+      it("adds it to the Model's not-updated fields", () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', updated: false })
+        );
+        expect(User.config.notUpdated, 'to equal', ['id']);
+      });
+    });
+
+    describe('if the field is updated', () => {
+      it("does not add it to the Model's not-updated fields", () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', updated: true })
+        );
+        expect(User.config.notUpdated, 'to be empty');
+      });
+    });
+
+    describe('if the field is unique', () => {
+      it("adds it to the Model's unique fields", () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', unique: true })
+        );
+        expect(User.config.unique, 'to equal', ['id']);
+      });
+    });
+
+    describe('if the field is not unique', () => {
+      it("does not add it to the Model's unique fields", () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', unique: false })
+        );
+        expect(User.config.unique, 'to be empty');
+      });
+    });
+
+    describe('if the field has a default', () => {
+      it("adds it to the Model's default fields", () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', default: 0 })
+        );
+        expect(User.config.defaults, 'to equal', ['id']);
+      });
+    });
+
+    describe('if the field has no default', () => {
+      it("does not add it to the Model's default fields", () => {
+        User.addField(new Field(User, { name: 'id', type: 'integer' }));
+        expect(User.config.defaults, 'to be empty');
+      });
+    });
+
+    describe('if the field enables generated methods', () => {
+      it('adds generated methods to the Model', () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', methods: true })
+        );
+        expect(User.fetchById, 'to be a function');
+        expect(User.updateById, 'to be a function');
+        expect(User.deleteById, 'to be a function');
+      });
+    });
+
+    describe('if the field does not enable generated methods', () => {
+      it('does not add generated methods to the Model', () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', methods: false })
+        );
+        expect(User.fetchById, 'to be undefined');
+        expect(User.updateById, 'to be undefined');
+        expect(User.deleteById, 'to be undefined');
+      });
+    });
+  });
+
+  describe.only('Model.removeGeneratedMethods', () => {
+    let User;
+    let id;
+
+    beforeEach(() => {
+      User = class extends Model {};
+      id = new Field(User, { name: 'id', type: 'integer' });
+      User.addGeneratedMethods(id);
+    });
+
+    it('removes the `fetchByField` static method', () => {
+      User.removeGeneratedMethods(id);
+      expect(User.fetchById, 'to be undefined');
+    });
+
+    it('removes the `updateByField` static method', () => {
+      User.removeGeneratedMethods(id);
+      expect(User.updateById, 'to be undefined');
+    });
+
+    it('removes the `deleteByField` static method', () => {
+      User.removeGeneratedMethods(id);
+      expect(User.deleteById, 'to be undefined');
+    });
+  });
+
+  describe.only('Model.removeField', () => {
+    let User;
+    let id;
+
+    beforeEach(() => {
+      User = class extends Model {};
+      id = new Field(User, { name: 'id', type: 'integer' });
+    });
+
+    it('throws if the field does not exist on the Model', () => {
+      expect(
+        () => User.removeField(id),
+        'to throw',
+        new ModelError({ Model: User, message: 'unkown field `id`' })
+      );
+    });
+
+    it('throws if a different field by the same name is passed', () => {
+      User.addField(id);
+      expect(
+        () =>
+          User.removeField(new Field(User, { name: 'id', type: 'integer' })),
+        'to throw',
+        new ModelError({ Model: User, message: 'unkown field `id`' })
+      );
+    });
+
+    it("removes the field from the Model's fields", () => {
+      User.addField(id);
+      User.removeField(id);
+      expect(User.fields, 'to be empty');
+    });
+
+    it("removes the field from the Model's field-names", () => {
+      User.addField(id);
+      User.removeField(id);
+      expect(User.config.fieldNames, 'to be empty');
+    });
+
+    describe('if the field is non-virtual', () => {
+      beforeEach(() => {
+        id = new Field(User, {
+          name: 'id',
+          type: 'integer',
+          virtual: false,
+          column: '_id'
+        });
+      });
+
+      it("removes it from the Model's columns", () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.columns, 'to be empty');
+      });
+    });
+
+    describe('if the field is primary', () => {
+      beforeEach(() => {
+        id = new Field(User, { name: 'id', type: 'integer', primary: true });
+      });
+
+      it("unsets it as the Model's primary field", () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.primary, 'to be undefined');
+      });
+    });
+
+    describe('if the field is not updated', () => {
+      beforeEach(() => {
+        id = new Field(User, { name: 'id', type: 'integer', updated: false });
+      });
+
+      it("removes it from the Model's not-updated fields", () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.notUpdated, 'to be empty');
+      });
+    });
+
+    describe('if the field is unique', () => {
+      beforeEach(() => {
+        id = new Field(User, { name: 'id', type: 'integer', unique: true });
+      });
+
+      it("removes it from the Model's unique fields", () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.unique, 'to be empty');
+      });
+    });
+
+    describe('if the field has a default', () => {
+      beforeEach(() => {
+        id = new Field(User, { name: 'id', type: 'integer', default: 1 });
+      });
+
+      it("removes it from the Model's default fields", () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.defaults, 'to be empty');
+      });
+    });
+
+    describe('if the field enables generated methods', () => {
+      beforeEach(() => {
+        id = new Field(User, { name: 'id', type: 'integer', methods: true });
+      });
+      it('removes generated methods from the Model', () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.fetchById, 'to be undefined');
+        expect(User.updateById, 'to be undefined');
+        expect(User.deleteById, 'to be undefined');
+      });
+    });
+  });
+
+  describe.only('Model.getDefaultConfig', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it('returns the Model', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { Model: User });
+    });
+
+    it('returns default options', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', {
+        options: { query: { debug: undefined } }
+      });
+    });
+
+    it('returns empty fields', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { fields: {} });
+    });
+
+    it('returns empty field-names', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { fieldNames: [] });
+    });
+
+    it('returns empty columns', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { columns: {} });
+    });
+
+    it('returns no primary field', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { primary: undefined });
+    });
+
+    it('returns empty unique fields', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { unique: [] });
+    });
+
+    it('returns empty not-updated fields', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { notUpdated: [] });
+    });
+
+    it('returns empty default fields', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { defaults: {} });
+    });
+  });
+
+  describe.only('Model.setupConfig', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it("sets the Model's default config", () => {
+      User.setupConfig();
+      expect(User._config, 'to satisfy', User.getDefaultConfig());
+    });
+
+    describe('when a Model is subclassed', () => {
+      let Student;
+
+      beforeEach(() => {
+        User.schema = 'users';
+        User.table = 'user';
+        User.fields = { id: 'integer' };
+        User.options = { query: { field: 'id' } };
+        Student = class extends User {};
+        Student.setupConfig();
+      });
+
+      it('inherits `schema`', () => {
+        expect(Student._config.schema, 'to be', 'users');
+      });
+
+      it('inherits `table`', () => {
+        expect(Student._config.table, 'to be', 'user');
+      });
+
+      it('inherits `fields`', () => {
+        expect(Student._config.fields, 'to satisfy', {
+          id: new Field(Student, { name: 'id', type: 'integer' })
+        });
+      });
+
+      it('inherits `options`', () => {
+        expect(Student._config.options, 'to equal', {
+          query: { debug: undefined, field: 'id' }
+        });
+      });
+
+      it('does not inherit `Model`', () => {
+        expect(Student._config.Model, 'to be', Student);
+      });
+
+      it('leaves the parent config as is', () => {
+        expect(User._config, 'to satisfy', {
+          Model: User,
+          schema: 'users',
+          table: 'user',
+          fields: { id: new Field(User, { name: 'id', type: 'integer' }) },
+          options: { query: { debug: undefined, field: 'id' } }
+        });
+      });
+    });
+  });
+
+  describe.only('Model.config', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    describe('if the Model is not configured', () => {
+      it('returns the default config', () => {
+        expect(User.config, 'to satisfy', User.getDefaultConfig());
+      });
+    });
+
+    describe('if the Model is configured', () => {
+      it("returns the set Model's config", () => {
+        User.table = 'user';
+        expect(
+          User.config,
+          'to exhaustively satisfy',
+          Object.assign(User.getDefaultConfig(), { table: 'user' })
+        );
+      });
+    });
+  });
+
+  describe.only('Model.schema', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it('returns `undefined`', () => {
+      expect(User.schema, 'to be undefined');
+    });
+
+    it('allows setting and getting `schema`', () => {
+      User.schema = 'users';
+      expect(User.schema, 'to be', 'users');
+    });
+
+    it('allows ovewriting `schema`', () => {
+      User.schema = 'users';
+      User.schema = 'foo';
+      expect(User.schema, 'to be', 'foo');
+    });
+  });
+
+  describe.only('Model.table', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it('returns `undefined`', () => {
+      expect(User.table, 'to be undefined');
+    });
+
+    it('allows setting and getting `table`', () => {
+      User.table = 'user';
+      expect(User.table, 'to be', 'user');
+    });
+
+    it('allows ovewriting `table`', () => {
+      User.table = 'user';
       User.table = 'foo';
+      expect(User.table, 'to be', 'foo');
+    });
+  });
+
+  describe.only('Model.options', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it('returns the default options', () => {
+      expect(User.options, 'to equal', { query: { debug: undefined } });
+    });
+
+    it('allows adding `query` options', () => {
+      User.options = { query: { field: 'id' } };
+      expect(User.options, 'to equal', {
+        query: { debug: undefined, field: 'id' }
+      });
+      User.options = { query: { where: { id: 1 } } };
+      expect(User.options, 'to equal', {
+        query: { debug: undefined, field: 'id', where: { id: 1 } }
+      });
+    });
+
+    it('allows adding `plugins` options', () => {
+      User.options = { plugins: { toJSON: { exclude: ['id'] } } };
+      expect(User.options, 'to equal', {
+        query: { debug: undefined },
+        plugins: { toJSON: { exclude: ['id'] } }
+      });
+    });
+
+    it('merges options', () => {
+      User.options = { query: { where: { id: 1 } } };
+      expect(User.options, 'to equal', {
+        query: { debug: undefined, where: { id: 1 } }
+      });
+      User.options = {
+        query: { where: { name: 'foo' } }
+      };
+      expect(User.options, 'to equal', {
+        query: { debug: undefined, where: { id: 1, name: 'foo' } }
+      });
+    });
+
+    it('does not modify the object passed', () => {
+      const options = { query: { where: { id: 1 } } };
+      User.options = options;
+      expect(User.options, 'to equal', {
+        query: { debug: undefined, where: { id: 1 } }
+      });
+      expect(options, 'to equal', { query: { where: { id: 1 } } });
+    });
+
+    it('allows overwriting options', () => {
+      User.options = { query: { where: { id: 1 } } };
+      expect(User.options, 'to equal', {
+        query: { debug: undefined, where: { id: 1 } }
+      });
+      User.options = {
+        query: { where: { id: [1] } }
+      };
+      expect(User.options, 'to equal', {
+        query: { debug: undefined, where: { id: [1] } }
+      });
+    });
+  });
+
+  describe.only('Model.fields', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it('returns an empty object', () => {
+      expect(User.fields, 'to equal', {});
+    });
+
+    it('allows setting and getting `fields`', () => {
+      User.fields = { id: { type: 'integer' } };
+      expect(User.fields, 'to equal', {
+        id: new Field(User, { name: 'id', type: 'integer' })
+      });
+    });
+
+    it('allows setting fields via the `type` shorthand', () => {
+      User.fields = { id: 'integer' };
+      expect(User.fields, 'to equal', {
+        id: new Field(User, { name: 'id', type: 'integer' })
+      });
+    });
+
+    it('allows setting fields via Field instances', () => {
+      User.fields = { id: new Field(User, { name: 'id', type: 'integer' }) };
+      expect(User.fields, 'to equal', {
+        id: new Field(User, { name: 'id', type: 'integer' })
+      });
+    });
+
+    it('overwrites the `name` property in a field config', () => {
+      User.fields = { id: { type: 'integer', name: 'foo' } };
+      expect(User.fields, 'to equal', {
+        id: new Field(User, { name: 'id', type: 'integer' })
+      });
+    });
+
+    it('allows adding fields', () => {
+      User.fields = { id: 'integer' };
+      expect(User.fields, 'to satisfy', {
+        id: new Field(User, { name: 'id', type: 'integer' })
+      });
+      User.fields = { name: 'string' };
+      expect(User.fields, 'to satisfy', {
+        id: new Field(User, { name: 'id', type: 'integer' }),
+        name: new Field(User, { name: 'name', type: 'string' })
+      });
+    });
+
+    it('allows overwriting fields', () => {
       User.fields = { id: { type: 'integer', primary: true } };
+      expect(User.config, 'to satisfy', {
+        fields: {
+          id: new Field(User, { name: 'id', type: 'integer', primary: true })
+        },
+        primary: 'id',
+        fieldNames: ['id']
+      });
+      User.fields = { id: { type: 'string' } };
+      expect(User.config, 'to satisfy', {
+        fields: { id: new Field(User, { name: 'id', type: 'string' }) },
+        primary: undefined,
+        fieldNames: ['id']
+      });
+    });
+  });
+
+  describe.only('Model.query', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
       User.options = { query: { fields: ['id'], where: { id: 1 } } };
     });
 
-    describe('as a getter', () => {
-      it('returns a Query instance', () => {
-        expect(User.query, 'to be a', Query);
-      });
+    it('returns a Query instance', () => {
+      expect(User.query, 'to be a', Query);
+    });
 
-      it('configures the Query instance with the model', () => {
-        const spy = sinon.spy(User, 'Query');
-        // eslint-disable-next-line no-unused-expressions
-        User.query;
-        expect(User.Query, 'to have calls satisfying', () => {
-          // eslint-disable-next-line no-new
-          new User.Query(expect.it('to be model class', User));
-        });
-        spy.restore();
+    it('configures the Query instance with the model', () => {
+      User.Query = sinon.stub().returns({ setOptions() {} });
+      // eslint-disable-next-line no-unused-expressions
+      User.query;
+      expect(User.Query, 'to have calls satisfying', () => {
+        // eslint-disable-next-line no-new
+        new User.Query(expect.it('to be model class', User));
       });
+    });
 
-      it('sets configured default query options on the instance', () => {
-        expect(User.query, 'to satisfy', {
-          options: { fields: { id: 'id' }, where: [[{ id: 1 }]] }
-        });
+    it('sets configured default query options on the instance', () => {
+      expect(User.query, 'to satisfy', {
+        options: { fields: { id: 'id' }, where: [[{ id: 1 }]] }
       });
     });
   });
@@ -2474,23 +1885,29 @@ describe('Model', () => {
   });
 
   describe('for db operations', () => {
-    const { Model, Query } = new Knorm().use(postgresPlugin);
+    let Model;
+    let Query;
+    let User;
 
-    class User extends Model {}
+    before(() => {
+      ({ Model, Query } = new Knorm().use(postgresPlugin));
 
-    User.table = 'user';
-    User.fields = {
-      id: {
-        type: 'integer',
-        required: true,
-        primary: true,
-        methods: true
-      },
-      name: {
-        type: 'string',
-        required: true
-      }
-    };
+      User = class extends Model {};
+
+      User.table = 'user';
+      User.fields = {
+        id: {
+          type: 'integer',
+          required: true,
+          primary: true,
+          methods: true
+        },
+        name: {
+          type: 'string',
+          required: true
+        }
+      };
+    });
 
     before(async () => knex.schema.dropTableIfExists(User.table));
 

@@ -3,12 +3,19 @@ const NoRowsError = require('../lib/NoRowsError');
 const KnormError = require('../lib/KnormError');
 const Knorm = require('../lib/Knorm');
 
-const { Query, Model } = new Knorm();
-class User extends Model {}
-User.table = 'user';
-User.fields = { id: { type: 'integer', primary: true } };
-
 describe('NoRowsError', () => {
+  let Query;
+  let Model;
+  let User;
+
+  before(() => {
+    ({ Query, Model } = new Knorm());
+
+    User = class extends Model {};
+    User.table = 'user';
+    User.fields = { id: { type: 'integer', primary: true } };
+  });
+
   it('extends KnormError', () => {
     expect(NoRowsError.prototype, 'to be a', KnormError);
   });
