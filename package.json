@@ -28,7 +28,7 @@
     "nyc": "14.0.0",
     "prettier": "1.17.0",
     "semantic-release": "15.13.3",
-    "unexpected": "11.2.0"
+    "unexpected": "11.6.0"
   },
   "directories": {
     "lib": "lib",
