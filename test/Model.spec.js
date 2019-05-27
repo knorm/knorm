@@ -9,7 +9,7 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'))
   .use(require('./lib/unexpected-workaround'));
 
-describe.only('Model', () => {
+describe.skip('Model', () => {
   let Model;
   let Query;
   let Field;
