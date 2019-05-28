@@ -9,7 +9,7 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'))
   .use(require('./lib/unexpected-workaround'));
 
-describe.skip('Model', () => {
+describe.only('Model', () => {
   let Model;
   let Query;
   let Field;
@@ -1211,7 +1211,7 @@ describe.skip('Model', () => {
         'to throw',
         new ModelError({
           Model: User,
-          message: 'field `getData` conflicts with `User.prototype.getData`'
+          message: "field 'getData' conflicts with User.prototype.getData"
         })
       );
     });
@@ -1225,7 +1225,7 @@ describe.skip('Model', () => {
         'to throw',
         new ModelError({
           Model: User,
-          message: 'field `id` conflicts with `User.prototype.id`'
+          message: "field 'id' conflicts with User.prototype.id"
         })
       );
     });
@@ -1237,7 +1237,7 @@ describe.skip('Model', () => {
         'to throw',
         new ModelError({
           Model: User,
-          message: 'field `$values` conflicts with `User.prototype.$values`'
+          message: "field '$values' conflicts with User.prototype.$values"
         })
       );
     });
@@ -1249,7 +1249,7 @@ describe.skip('Model', () => {
         'to throw',
         new ModelError({
           Model: User,
-          message: 'field `$config` conflicts with `User.prototype.$config`'
+          message: "field '$config' conflicts with User.prototype.$config"
         })
       );
     });
@@ -1426,7 +1426,7 @@ describe.skip('Model', () => {
       expect(
         () => User.removeField(id),
         'to throw',
-        new ModelError({ Model: User, message: 'unkown field `id`' })
+        new ModelError({ Model: User, message: "unkown field 'id'" })
       );
     });
 
@@ -1436,7 +1436,7 @@ describe.skip('Model', () => {
         () =>
           User.removeField(new Field(User, { name: 'id', type: 'integer' })),
         'to throw',
-        new ModelError({ Model: User, message: 'unkown field `id`' })
+        new ModelError({ Model: User, message: "unkown field 'id'" })
       );
     });
 
