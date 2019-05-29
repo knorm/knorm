@@ -463,168 +463,69 @@ describe.only('Model', () => {
     });
   });
 
-  describe('Model.prototype.validate', () => {
-    it('validates all the fields by default', async () => {
-      class Foo extends Model {}
+  describe.only('Model.prototype.validate', () => {
+    let User;
+    let user;
 
-      Foo.fields = {
-        foo: {
-          required: true,
-          type: 'string'
-        },
-        bar: {
-          required: true,
-          type: 'string'
-        }
+    beforeEach(() => {
+      User = class extends Model {};
+      User.fields = {
+        id: { type: 'integer', validate: 'integer' },
+        name: { type: 'string', validate: 'string', default: 'foo' },
+        confirmed: { type: 'boolean', default: false }
       };
-
-      const fooValidationSpy = sinon.spy(Foo.fields.foo, 'validate');
-      const barValidationSpy = sinon.spy(Foo.fields.bar, 'validate');
-
-      const foo = new Foo();
-
-      await expect(foo.validate(), 'to be rejected with', {
-        name: 'ValidationError',
-        type: 'RequiredError'
-      });
-
-      await expect(fooValidationSpy, 'was called once');
-      await expect(barValidationSpy, 'was called once');
-
-      fooValidationSpy.restore();
-      barValidationSpy.restore();
+      user = new User();
     });
 
-    describe("with a 'fields' option", () => {
-      it('validates only the fields passed', async () => {
-        class Foo extends Model {}
+    it('validates all fields with a validation spec', async () => {
+      user.setData({ id: 1, name: 'foo', confirmed: false });
+      const Validate = sinon.spy(User, 'Validate');
+      const validate = sinon.spy(User.Validate.prototype, 'validate');
+      await user.validate();
+      await expect(Validate, 'to have calls satisfying', () => {
+        new Validate(user, User.fields.id); // eslint-disable-line no-new
+        new Validate(user, User.fields.name); // eslint-disable-line no-new
+      });
+      await expect(validate, 'to have calls satisfying', () => {
+        validate(1, 'integer');
+        validate('foo', 'string');
+      });
+      Validate.restore();
+      validate.restore();
+    });
 
-        Foo.fields = {
-          foo: {
-            required: true,
-            type: 'string'
-          },
-          bar: {
-            required: true,
-            type: 'string'
-          }
-        };
+    it('rejects with the first validation error', async () => {
+      user.setData({ id: 'foo', name: 1 });
+      await expect(
+        user.validate(),
+        'to be rejected with error satisfying',
+        'User.fields.id: expected an integer value'
+      );
+    });
 
-        const fooValidationSpy = sinon.spy(Foo.fields.foo, 'validate');
-        const barValidationSpy = sinon.spy(Foo.fields.bar, 'validate');
+    it('resolves with the Model instance', async () => {
+      await expect(user.validate(), 'to be fulfilled with', user);
+    });
 
-        const foo = new Foo();
-
-        await expect(foo.validate({ fields: ['bar'] }), 'to be rejected with', {
-          name: 'ValidationError',
-          type: 'RequiredError'
-        });
-
-        await expect(fooValidationSpy, 'was not called');
-        await expect(barValidationSpy, 'was called once');
-
-        fooValidationSpy.restore();
-        barValidationSpy.restore();
+    describe('when passed a list of fields to validate', () => {
+      beforeEach(() => {
+        user.setData({ id: 'foo', name: 1, confirmed: 'foo' });
       });
 
-      it('accepts a list of field objects', async () => {
-        class Foo extends Model {}
-
-        Foo.fields = {
-          foo: {
-            required: true,
-            type: 'string'
-          },
-          bar: {
-            required: true,
-            type: 'string'
-          }
-        };
-
-        const fooValidationSpy = sinon.spy(Foo.fields.foo, 'validate');
-        const barValidationSpy = sinon.spy(Foo.fields.bar, 'validate');
-
-        const foo = new Foo();
-
+      it('validates only those fields', async () => {
         await expect(
-          foo.validate({ fields: [Foo.fields.bar] }),
-          'to be rejected with',
-          {
-            name: 'ValidationError',
-            type: 'RequiredError'
-          }
+          user.validate({ fields: ['name'] }),
+          'to be rejected with error satisfying',
+          'User.fields.name: expected a string value'
         );
-
-        await expect(fooValidationSpy, 'was not called');
-        await expect(barValidationSpy, 'was called once');
-
-        fooValidationSpy.restore();
-        barValidationSpy.restore();
-      });
-    });
-
-    it('calls the validator with the set value and the model instance', async () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        bar: {
-          type: 'string'
-        }
-      };
-
-      const barValidationSpy = sinon.spy(Foo.fields.bar, 'validate');
-
-      const foo = new Foo();
-      foo.bar = 'bar';
-
-      await foo.validate({ fields: ['bar'] });
-      await expect(barValidationSpy, 'to have calls satisfying', () => {
-        barValidationSpy('bar', foo);
       });
 
-      barValidationSpy.restore();
-    });
-
-    it('rejects with the error from Field.prototype.validate', async () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        bar: {
-          type: 'string'
-        }
-      };
-
-      const barValidationStub = sinon.stub(Foo.fields.bar, 'validate');
-      barValidationStub.returns(Promise.reject(new Error('foo happens')));
-
-      const foo = new Foo();
-
-      await expect(
-        foo.validate({ fields: ['bar'] }),
-        'to be rejected with',
-        new Error('foo happens')
-      );
-
-      barValidationStub.restore();
-    });
-
-    it('resolves with the model instance to allow chaining', async () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        bar: {
-          default: true,
-          type: 'string'
-        }
-      };
-
-      const foo = new Foo();
-
-      await expect(
-        foo.validate({ fields: ['bar'] }),
-        'to be fulfilled with',
-        foo
-      );
+      it('skips fields with no default values configured', async () => {
+        await expect(
+          user.validate({ fields: ['confirmed'] }),
+          'to be fulfilled'
+        );
+      });
     });
   });
 
@@ -1266,6 +1167,22 @@ describe.only('Model', () => {
       expect(User.config.fieldNames, 'to equal', ['id']);
     });
 
+    describe('if the field is has validation', () => {
+      it("adds it to the Model's validated fields", () => {
+        User.addField(
+          new Field(User, { name: 'id', type: 'integer', validate: 'integer' })
+        );
+        expect(User.config.validated, 'to equal', ['id']);
+      });
+    });
+
+    describe('if the field has no validation', () => {
+      it("does not add it to the Model's validated fields", () => {
+        User.addField(new Field(User, { name: 'id', type: 'integer' }));
+        expect(User.config.validated, 'to be empty');
+      });
+    });
+
     describe('if the field is non-virtual', () => {
       it("adds it to the Model's columns", () => {
         User.addField(
@@ -1450,6 +1367,22 @@ describe.only('Model', () => {
       User.addField(id);
       User.removeField(id);
       expect(User.config.fieldNames, 'to be empty');
+    });
+
+    describe('if the field has validation', () => {
+      beforeEach(() => {
+        id = new Field(User, {
+          name: 'id',
+          type: 'integer',
+          validate: 'integer'
+        });
+      });
+
+      it("removes it from the Model's validated fields", () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.validated, 'to be empty');
+      });
     });
 
     describe('if the field is non-virtual', () => {
