@@ -51,47 +51,14 @@ describe('Field', function() {
       );
     });
 
-    describe('with a column name configured', function() {
-      it("sets the field's column name from configured value", function() {
-        const field = new Field({
-          name: 'bar',
-          model: Foo,
-          type: 'string',
-          column: 'the column name'
-        });
-        expect(field.column, 'to be', 'the column name');
+    it("sets the field's column", function() {
+      const field = new Field({
+        name: 'bar',
+        model: Foo,
+        type: 'string',
+        column: 'the column name'
       });
-
-      it('does not call getColumnName', function() {
-        const spy = sinon.spy(Field.prototype, 'getColumnName');
-        // eslint-disable-next-line no-unused-vars
-        const field = new Field({
-          name: 'bar',
-          model: Foo,
-          type: 'string',
-          column: 'bar'
-        });
-        expect(spy, 'was not called');
-        spy.restore();
-      });
-    });
-
-    describe('without a column name configured', function() {
-      it("calls getColumnName to set the field's column name", function() {
-        const stub = sinon
-          .stub(Field.prototype, 'getColumnName')
-          .returns('the column name');
-        const field = new Field({
-          name: 'bar',
-          model: Foo,
-          type: 'string'
-        });
-        expect(stub, 'to have calls satisfying', () => {
-          stub('bar');
-        });
-        expect(field.column, 'to be', 'the column name');
-        stub.restore();
-      });
+      expect(field.column, 'to be', 'the column name');
     });
 
     describe('with `cast` options', function() {
@@ -130,18 +97,6 @@ describe('Field', function() {
           )
         );
       });
-    });
-  });
-
-  describe('Field.prototype.getColumnName', function() {
-    it('returns the field name passed as is', function() {
-      class Foo extends Model {}
-      const field = new Field({
-        name: 'firstName',
-        model: Foo,
-        type: 'string'
-      });
-      expect(field.getColumnName('firstName'), 'to be', 'firstName');
     });
   });
 

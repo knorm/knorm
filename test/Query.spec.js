@@ -1,7 +1,7 @@
-const { snakeCase: fieldToColumn } = require('lodash');
 const Knorm = require('../lib/Knorm');
 const knex = require('./lib/knex');
 const postgresPlugin = require('./lib/postgresPlugin');
+const fieldToColumnPlugin = require('./lib/fieldToColumnPlugin');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
@@ -17,7 +17,7 @@ describe('Query', () => {
   let User;
 
   before(() => {
-    const orm = new Knorm({ fieldToColumn }).use(postgresPlugin);
+    const orm = new Knorm().use(postgresPlugin).use(fieldToColumnPlugin);
 
     Model = orm.Model;
     Query = orm.Query;
