@@ -471,8 +471,8 @@ describe.only('Model', () => {
       User = class extends Model {};
       User.fields = {
         id: { type: 'integer', validate: 'integer' },
-        name: { type: 'string', validate: 'string', default: 'foo' },
-        confirmed: { type: 'boolean', default: false }
+        name: { type: 'string', validate: 'string' },
+        confirmed: { type: 'boolean' }
       };
       user = new User();
     });
@@ -529,250 +529,143 @@ describe.only('Model', () => {
     });
   });
 
-  describe('Model.prototype.cast', () => {
-    it('casts all the fields that have cast functions and a value set', async () => {
-      class Foo extends Model {}
+  describe.only('Model.prototype.castValuesBeforeSave', () => {
+    let User;
+    let user;
+    let castIdBeforeSave;
+    let castNameBeforeSave;
 
-      const fooSaveCast = sinon.spy();
-
-      Foo.fields = {
-        foo: {
-          required: true,
-          type: 'string',
-          cast: {
-            forSave: fooSaveCast
-          }
-        },
-        bar: {
-          required: true,
-          type: 'string'
-        }
+    beforeEach(() => {
+      castIdBeforeSave = sinon.stub().returns(10);
+      castNameBeforeSave = sinon.stub();
+      User = class extends Model {};
+      User.fields = {
+        id: { type: 'integer', castValueBeforeSave: castIdBeforeSave },
+        name: { type: 'string', castValueBeforeSave: castNameBeforeSave },
+        confirmed: { type: 'boolean' }
       };
-
-      const foo = new Foo();
-      foo.foo = 'foo';
-      foo.bar = 'bar';
-      foo.cast({ forSave: true });
-
-      await expect(fooSaveCast, 'was called once');
+      user = new User({ id: 1, name: 'foo', confirmed: false });
     });
 
-    describe("with a 'fields' option", () => {
-      it('casts only the fields passed', async () => {
-        class Foo extends Model {}
+    it('updates field values with the values returned by cast methods', () => {
+      user.castValuesBeforeSave();
+      expect(user.id, 'to be', 10);
+    });
 
-        const fooSaveCast = sinon.spy();
-        const barSaveCast = sinon.spy();
+    it('does not cast `undefined` values', () => {
+      user.id = undefined;
+      user.castValuesBeforeSave();
+      expect(user.id, 'to be undefined');
+    });
 
-        Foo.fields = {
-          foo: {
-            required: true,
-            type: 'string',
-            cast: {
-              forSave: fooSaveCast
-            }
-          },
-          bar: {
-            required: true,
-            type: 'string',
-            cast: {
-              forSave: barSaveCast
-            }
-          }
-        };
+    it('does not update a field value if a cast function returns `undefined`', () => {
+      user.castValuesBeforeSave();
+      expect(user.name, 'to be', 'foo');
+    });
 
-        const foo = new Foo();
-        foo.foo = 'foo';
-        foo.bar = 'bar';
-        foo.cast({ fields: ['bar'], forSave: true });
-
-        await expect(fooSaveCast, 'was not called');
-        await expect(barSaveCast, 'was called once');
-      });
-
-      it('accepts a list of field objects', async () => {
-        class Foo extends Model {}
-
-        const fooSaveCast = sinon.spy();
-        const barSaveCast = sinon.spy();
-
-        Foo.fields = {
-          foo: {
-            required: true,
-            type: 'string',
-            cast: {
-              forSave: fooSaveCast
-            }
-          },
-          bar: {
-            required: true,
-            type: 'string',
-            cast: {
-              forSave: barSaveCast
-            }
-          }
-        };
-
-        const foo = new Foo();
-        foo.foo = 'foo';
-        foo.bar = 'bar';
-        foo.cast({ fields: [Foo.fields.foo, Foo.fields.bar], forSave: true });
-
-        await expect(fooSaveCast, 'was called once');
-        await expect(barSaveCast, 'was called once');
+    it('calls the cast function with the model instance and the field value', () => {
+      user.castValuesBeforeSave();
+      expect(castIdBeforeSave, 'to have calls satisfying', () => {
+        castIdBeforeSave(user, 1);
       });
     });
 
-    it('calls Field.prototype.cast with the set value, the model instance and options passed', () => {
-      class Foo extends Model {}
+    it('casts all fields with a before-save cast function', () => {
+      user.setData({ id: 1, name: 'foo', confirmed: false });
+      user.castValuesBeforeSave();
+      expect(castIdBeforeSave, 'to have calls satisfying', () => {
+        castIdBeforeSave(user, 1);
+      });
+      expect(castNameBeforeSave, 'to have calls satisfying', () => {
+        castNameBeforeSave(user, 'foo');
+      });
+    });
 
-      Foo.fields = {
-        bar: {
-          required: true,
-          type: 'string',
-          cast: {
-            forSave() {}
-          }
-        }
-      };
+    it('resolves with the Model instance', () => {
+      expect(user.castValuesBeforeSave(), 'to be', user);
+    });
 
-      const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
-
-      const foo = new Foo();
-      foo.bar = 'bar';
-      foo.cast({ fields: ['bar'], forSave: true });
-
-      expect(barCastSpy, 'to have calls satisfying', () => {
-        barCastSpy('bar', foo, { forSave: true, forFetch: undefined });
+    describe('when passed a list of fields to cast', () => {
+      it('casts only those fields', () => {
+        user.castValuesBeforeSave({ fields: ['id'] });
+        expect(user, 'to satisfy', { id: 10, name: 'foo', confirmed: false });
+        expect(castNameBeforeSave, 'was not called');
       });
 
-      barCastSpy.restore();
+      it('skips fields with no before-save cast function configured', () => {
+        user.castValuesBeforeSave({ fields: ['confirmed'] });
+        expect(user, 'to satisfy', { id: 1, name: 'foo', confirmed: false });
+      });
+    });
+  });
+
+  describe.only('Model.prototype.castValuesAfterFetch', () => {
+    let User;
+    let user;
+    let castIdAfterFetch;
+    let castNameAfterFetch;
+
+    beforeEach(() => {
+      castIdAfterFetch = sinon.stub().returns(10);
+      castNameAfterFetch = sinon.stub();
+      User = class extends Model {};
+      User.fields = {
+        id: { type: 'integer', castValueAfterFetch: castIdAfterFetch },
+        name: { type: 'string', castValueAfterFetch: castNameAfterFetch },
+        confirmed: { type: 'boolean' }
+      };
+      user = new User({ id: 1, name: 'foo', confirmed: false });
     });
 
-    it('does not call Field.prototype.cast if the field has no value set', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        bar: {
-          required: true,
-          type: 'string',
-          cast: {
-            forSave() {}
-          }
-        }
-      };
-
-      const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
-      const foo = new Foo();
-
-      foo.cast({ fields: ['bar'], forSave: true });
-      expect(barCastSpy, 'was not called');
-
-      barCastSpy.restore();
+    it('updates field values with the values returned by cast methods', () => {
+      user.castValuesAfterFetch();
+      expect(user.id, 'to be', 10);
     });
 
-    it("calls Field.prototype.cast if the field's value is `null`", () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        bar: {
-          required: true,
-          type: 'string',
-          cast: {
-            forSave() {}
-          }
-        }
-      };
-
-      const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
-      const foo = new Foo();
-      foo.bar = null;
-      foo.cast({ fields: ['bar'], forSave: true });
-      expect(barCastSpy, 'was called once');
-
-      barCastSpy.restore();
+    it('does not cast `undefined` values', () => {
+      user.id = undefined;
+      user.castValuesAfterFetch();
+      expect(user.id, 'to be undefined');
     });
 
-    it('updates the set value with the value from the cast function', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        bar: {
-          required: true,
-          type: 'string',
-          cast: {
-            forSave() {
-              return 'new value';
-            }
-          }
-        }
-      };
-
-      const foo = new Foo();
-      foo.bar = 'bar';
-      foo.cast({ fields: ['bar'], forSave: true });
-
-      expect(foo.bar, 'to be', 'new value');
+    it('does not update a field value if a cast function returns `undefined`', () => {
+      user.castValuesAfterFetch();
+      expect(user.name, 'to be', 'foo');
     });
 
-    it('does not update the set value if the cast function returns `undefined`', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        bar: {
-          required: true,
-          type: 'string',
-          cast: {
-            forSave() {}
-          }
-        }
-      };
-
-      const foo = new Foo();
-      foo.bar = 'bar';
-      foo.cast({ fields: ['bar'], forSave: true });
-
-      expect(foo.bar, 'to be', 'bar');
+    it('calls the cast function with the model instance and the field value', () => {
+      user.castValuesAfterFetch();
+      expect(castIdAfterFetch, 'to have calls satisfying', () => {
+        castIdAfterFetch(user, 1);
+      });
     });
 
-    it('updates the set value if the cast function returns `null`', () => {
-      class Foo extends Model {}
-
-      Foo.fields = {
-        bar: {
-          required: true,
-          type: 'string',
-          cast: {
-            forSave() {
-              return null;
-            }
-          }
-        }
-      };
-
-      const foo = new Foo();
-      foo.bar = 'bar';
-      foo.cast({ fields: ['bar'], forSave: true });
-
-      expect(foo.bar, 'to be', null);
+    it('casts all fields with a before-save cast function', () => {
+      user.setData({ id: 1, name: 'foo', confirmed: false });
+      user.castValuesAfterFetch();
+      expect(castIdAfterFetch, 'to have calls satisfying', () => {
+        castIdAfterFetch(user, 1);
+      });
+      expect(castNameAfterFetch, 'to have calls satisfying', () => {
+        castNameAfterFetch(user, 'foo');
+      });
     });
 
-    it('returns the model instance to allow chaining', () => {
-      class Foo extends Model {}
+    it('resolves with the Model instance', () => {
+      expect(user.castValuesAfterFetch(), 'to be', user);
+    });
 
-      Foo.fields = {
-        bar: {
-          default: true,
-          type: 'string',
-          cast: {
-            forSave() {}
-          }
-        }
-      };
+    describe('when passed a list of fields to cast', () => {
+      it('casts only those fields', () => {
+        user.castValuesAfterFetch({ fields: ['id'] });
+        expect(user, 'to satisfy', { id: 10, name: 'foo', confirmed: false });
+        expect(castNameAfterFetch, 'was not called');
+      });
 
-      const foo = new Foo();
-
-      expect(foo.cast({ fields: ['bar'] }, { forSave: true }), 'to be', foo);
+      it('skips fields with no before-save cast function configured', () => {
+        user.castValuesAfterFetch({ fields: ['confirmed'] });
+        expect(user, 'to satisfy', { id: 1, name: 'foo', confirmed: false });
+      });
     });
   });
 
@@ -1268,6 +1161,13 @@ describe.only('Model', () => {
     describe('if the field has a default', () => {
       it("adds it to the Model's default fields", () => {
         User.addField(
+          new Field(User, { name: 'id', type: 'integer', default: 1 })
+        );
+        expect(User.config.defaults, 'to equal', ['id']);
+      });
+
+      it('supports falsy defaults', () => {
+        User.addField(
           new Field(User, { name: 'id', type: 'integer', default: 0 })
         );
         expect(User.config.defaults, 'to equal', ['id']);
@@ -1278,6 +1178,46 @@ describe.only('Model', () => {
       it("does not add it to the Model's default fields", () => {
         User.addField(new Field(User, { name: 'id', type: 'integer' }));
         expect(User.config.defaults, 'to be empty');
+      });
+    });
+
+    describe('if the field has a before-save cast function', () => {
+      it('adds it to the fields with before-save cast functions', () => {
+        User.addField(
+          new Field(User, {
+            name: 'id',
+            type: 'integer',
+            castValueBeforeSave: () => {}
+          })
+        );
+        expect(User.config.castBeforeSave, 'to equal', ['id']);
+      });
+    });
+
+    describe('if the field has no before-save cast function', () => {
+      it('does not add it to the fields with before-save cast functions', () => {
+        User.addField(new Field(User, { name: 'id', type: 'integer' }));
+        expect(User.config.castBeforeSave, 'to be empty');
+      });
+    });
+
+    describe('if the field has an after-fetch cast function', () => {
+      it('adds it to the fields with after-fetch cast functions', () => {
+        User.addField(
+          new Field(User, {
+            name: 'id',
+            type: 'integer',
+            castValueAfterFetch: () => {}
+          })
+        );
+        expect(User.config.castAfterFetch, 'to equal', ['id']);
+      });
+    });
+
+    describe('if the field has no after-fetch cast function', () => {
+      it('does not add it to the fields with after-fetch cast functions', () => {
+        User.addField(new Field(User, { name: 'id', type: 'integer' }));
+        expect(User.config.castAfterFetch, 'to be empty');
       });
     });
 
@@ -1448,6 +1388,45 @@ describe.only('Model', () => {
         User.removeField(id);
         expect(User.config.defaults, 'to be empty');
       });
+
+      it('supports falsy defaults', () => {
+        id = new Field(User, { name: 'id', type: 'integer', default: 0 });
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.defaults, 'to be empty');
+      });
+    });
+
+    describe('if the field has a before-save cast function', () => {
+      beforeEach(() => {
+        id = new Field(User, {
+          name: 'id',
+          type: 'integer',
+          castValueBeforeSave: () => {}
+        });
+      });
+
+      it('removes it from the fields with before-save cast functions', () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.castBeforeSave, 'to be empty');
+      });
+    });
+
+    describe('if the field has an after-fetch cast function', () => {
+      beforeEach(() => {
+        id = new Field(User, {
+          name: 'id',
+          type: 'integer',
+          castValueAfterFetch: () => {}
+        });
+      });
+
+      it('removes it from the fields with after-fetch cast functions', () => {
+        User.addField(id);
+        User.removeField(id);
+        expect(User.config.castAfterFetch, 'to be empty');
+      });
     });
 
     describe('if the field enables generated methods', () => {
@@ -1506,7 +1485,15 @@ describe.only('Model', () => {
     });
 
     it('returns empty default fields', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { defaults: {} });
+      expect(User.getDefaultConfig(), 'to satisfy', { defaults: [] });
+    });
+
+    it('returns empty fields with before-save cast functions', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { castBeforeSave: [] });
+    });
+
+    it('returns empty fields with after-fetch cast functions', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { castAfterFetch: [] });
     });
   });
 
