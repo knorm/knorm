@@ -73,38 +73,6 @@ describe('Knorm', () => {
       const secondOrm = new Knorm();
       expect(firstOrm.Query, 'not to be', secondOrm.Query);
     });
-
-    describe('with the `fieldToColumn` option provided', () => {
-      it('configures it as the field-to-column-name mapping function', () => {
-        const { Model } = new Knorm({
-          fieldToColumn(field) {
-            return field.toLowerCase();
-          }
-        });
-        Model.fields = { firstName: { type: 'string' } };
-        expect(Model.fields.firstName.column, 'to be', 'firstname');
-      });
-
-      it('calls it with `this` set to the field instance', () => {
-        let wasCalled;
-        const { Model } = new Knorm({
-          fieldToColumn() {
-            wasCalled = true;
-            expect(this.constructor.name, 'to be', 'Field');
-          }
-        });
-        Model.fields = { firstName: { type: 'string' } };
-        expect(wasCalled, 'to be true');
-      });
-    });
-
-    describe('with no `fieldToColumn` option provided', () => {
-      it('does not configure a field-to-column-name mapping function', () => {
-        const { Model } = new Knorm();
-        Model.fields = { firstName: { type: 'string' } };
-        expect(Model.fields.firstName.column, 'to be', 'firstName');
-      });
-    });
   });
 
   describe('use', () => {
