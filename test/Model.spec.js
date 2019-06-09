@@ -17,6 +17,7 @@ describe.only('Model', () => {
 
   before(() => {
     ({ Model, Query, Field } = new Knorm());
+
     ModelError = Model.ModelError;
   });
 
@@ -25,7 +26,7 @@ describe.only('Model', () => {
 
     beforeEach(() => {
       User = class extends Model {};
-      User.fields = { id: 'integer' };
+      User.fields = ['id'];
     });
 
     it('creates a $values object', () => {
@@ -93,7 +94,7 @@ describe.only('Model', () => {
         beforeEach(() => {
           getValue = sinon.spy().named('getValue');
           setValue = sinon.spy().named('setValue');
-          User.fields = { confirmed: { type: 'boolean', getValue, setValue } };
+          User.fields = { confirmed: { getValue, setValue } };
           user = new User();
         });
 
@@ -114,7 +115,7 @@ describe.only('Model', () => {
       beforeEach(() => {
         getValue = sinon.spy().named('getValue');
         setValue = sinon.spy().named('setValue');
-        User.fields = { name: { type: 'virtual', getValue, setValue } };
+        User.fields = { name: { virtual: true, getValue, setValue } };
         user = new User();
       });
 
@@ -142,7 +143,7 @@ describe.only('Model', () => {
 
       describe('with no field `setValue` or `getValue` functions', () => {
         beforeEach(() => {
-          User.fields = { confirmed: { type: 'boolean', virtual: true } };
+          User.fields = { confirmed: { virtual: true } };
           user = new User();
         });
 
@@ -174,10 +175,10 @@ describe.only('Model', () => {
     beforeEach(() => {
       User = class extends Model {};
       User.fields = {
-        firstName: 'string',
-        lastName: 'string',
+        firstName: {},
+        lastName: {},
         fullName: {
-          type: 'virtual',
+          virtual: true,
           getValue(model) {
             return `${model.firstName} ${model.lastName}`;
           },
@@ -188,7 +189,7 @@ describe.only('Model', () => {
           }
         },
         initials: {
-          type: 'virtual',
+          virtual: true,
           getValue(model) {
             return model.firstName[0] + model.lastName[0];
           }
@@ -260,10 +261,10 @@ describe.only('Model', () => {
     beforeEach(() => {
       User = class extends Model {};
       User.fields = {
-        firstName: 'string',
-        lastName: 'string',
+        firstName: {},
+        lastName: {},
         fullName: {
-          type: 'virtual',
+          virtual: true,
           setValue(model, fullName) {
             fullName = fullName.split(' ');
             model.firstName = fullName[0];
@@ -271,7 +272,7 @@ describe.only('Model', () => {
           }
         },
         initials: {
-          type: 'virtual',
+          virtual: true,
           getValue(model) {
             return model.firstName[0] + model.lastName[0];
           }
@@ -334,9 +335,9 @@ describe.only('Model', () => {
     beforeEach(() => {
       User = class extends Model {};
       User.fields = {
-        id: 'integer',
-        name: { type: 'string', default: 'foo' },
-        confirmed: { type: 'boolean', default: false }
+        id: {},
+        name: { default: 'foo' },
+        confirmed: { default: false }
       };
       user = new User();
     });
@@ -385,8 +386,8 @@ describe.only('Model', () => {
       beforeEach(() => {
         User = class extends Model {};
         User.fields = {
-          name: { type: 'string', default: () => 'foo' },
-          initials: { type: 'boolean', default: model => model.name[0] }
+          name: { default: () => 'foo' },
+          initials: { default: model => model.name[0] }
         };
         user = new User();
       });
@@ -410,11 +411,11 @@ describe.only('Model', () => {
     beforeEach(() => {
       User = class extends Model {};
       User.fields = {
-        id: 'integer',
-        firstName: 'string',
-        lastName: 'string',
+        id: {},
+        firstName: {},
+        lastName: {},
         fullName: {
-          type: 'virtual',
+          virtual: true,
           getValue(model) {
             if (!model.firstName && !model.lastName) {
               return;
@@ -470,9 +471,9 @@ describe.only('Model', () => {
     beforeEach(() => {
       User = class extends Model {};
       User.fields = {
-        id: { type: 'integer', validate: 'integer' },
-        name: { type: 'string', validate: 'string' },
-        confirmed: { type: 'boolean' }
+        id: { validate: 'integer' },
+        name: { validate: 'string' },
+        confirmed: {}
       };
       user = new User();
     });
@@ -540,9 +541,9 @@ describe.only('Model', () => {
       castNameBeforeSave = sinon.stub();
       User = class extends Model {};
       User.fields = {
-        id: { type: 'integer', castValueBeforeSave: castIdBeforeSave },
-        name: { type: 'string', castValueBeforeSave: castNameBeforeSave },
-        confirmed: { type: 'boolean' }
+        id: { castValueBeforeSave: castIdBeforeSave },
+        name: { castValueBeforeSave: castNameBeforeSave },
+        confirmed: {}
       };
       user = new User({ id: 1, name: 'foo', confirmed: false });
     });
@@ -610,9 +611,9 @@ describe.only('Model', () => {
       castNameAfterFetch = sinon.stub();
       User = class extends Model {};
       User.fields = {
-        id: { type: 'integer', castValueAfterFetch: castIdAfterFetch },
-        name: { type: 'string', castValueAfterFetch: castNameAfterFetch },
-        confirmed: { type: 'boolean' }
+        id: { castValueAfterFetch: castIdAfterFetch },
+        name: { castValueAfterFetch: castNameAfterFetch },
+        confirmed: {}
       };
       user = new User({ id: 1, name: 'foo', confirmed: false });
     });
@@ -680,15 +681,7 @@ describe.only('Model', () => {
       Foo = class extends orm.Model {};
 
       Foo.table = 'foo';
-      Foo.fields = {
-        id: {
-          type: 'integer',
-          primary: true
-        },
-        name: {
-          type: 'string'
-        }
-      };
+      Foo.fields = { id: { primary: true }, name: {} };
     });
 
     it('passes any options passed to Query.prototype.setOptions', () => {
@@ -756,18 +749,9 @@ describe.only('Model', () => {
 
         Foo.table = 'foo';
         Foo.fields = {
-          id: {
-            type: 'integer',
-            primary: true
-          },
-          name: {
-            type: 'string',
-            unique: true
-          },
-          number: {
-            type: 'integer',
-            unique: true
-          }
+          id: { primary: true },
+          name: { unique: true },
+          number: { unique: true }
         };
       });
 
@@ -848,48 +832,6 @@ describe.only('Model', () => {
     });
   });
 
-  describe.only('Model.createField', () => {
-    let User;
-
-    beforeEach(() => {
-      User = class extends Model {};
-    });
-
-    it('returns a Field instance', () => {
-      expect(
-        User.createField({ name: 'id', type: 'integer' }),
-        'to be a',
-        Field
-      );
-    });
-
-    it('binds the field to the Model', () => {
-      expect(User.createField({ name: 'id', type: 'integer' }), 'to satisfy', {
-        Model: User
-      });
-    });
-
-    it('supports an overriden Model.Field class', () => {
-      User.Field = sinon.spy();
-      User.createField({ name: 'id', type: 'integer' });
-      expect(
-        User.Field,
-        'to have calls satisfying',
-        () => new User.Field(User, { name: 'id', type: 'integer' })
-      );
-    });
-
-    describe('for field configs with `type` as `virtual`', () => {
-      it('sets `virtual` to `true` for the field', () => {
-        expect(
-          User.createField({ name: 'id', type: 'virtual' }),
-          'to satisfy',
-          { virtual: true }
-        );
-      });
-    });
-  });
-
   describe.only('Model.getGeneratedMethodName', () => {
     let User;
 
@@ -898,15 +840,12 @@ describe.only('Model', () => {
     });
 
     it('returns an upper camel-cased method name', () => {
-      const field = new Field(User, { name: 'firstName', type: 'integer' });
+      const field = new Field(User, { name: 'firstName' });
       expect(User.getGeneratedMethodName(field), 'to be', 'FirstName');
     });
 
     it('handles underscores, hyphens and spaces in the field-name', () => {
-      const field = new Field(User, {
-        name: '__internal-group id',
-        type: 'integer'
-      });
+      const field = new Field(User, { name: '__internal-group id' });
       expect(User.getGeneratedMethodName(field), 'to be', 'InternalGroupId');
     });
   });
@@ -925,7 +864,7 @@ describe.only('Model', () => {
     });
 
     it('sets the `where` option', () => {
-      const id = new Field(User, { name: 'id', type: 'integer' });
+      const id = new Field(User, { name: 'id' });
       User.getGeneratedMethodQuery(id, 1);
       expect(User.query.setOption, 'to have calls satisfying', () =>
         User.query.setOption('where', { id: 1 })
@@ -933,11 +872,7 @@ describe.only('Model', () => {
     });
 
     it('sets the `first` and `require` options for primary fields', () => {
-      const id = new Field(User, {
-        name: 'id',
-        type: 'integer',
-        primary: true
-      });
+      const id = new Field(User, { name: 'id', primary: true });
       User.getGeneratedMethodQuery(id, 1);
       expect(User.query.setOptions, 'to have calls satisfying', () =>
         User.query.setOptions({ first: true, require: true })
@@ -945,7 +880,7 @@ describe.only('Model', () => {
     });
 
     it('sets the `first` and `require` options for unique fields', () => {
-      const id = new Field(User, { name: 'id', type: 'integer', unique: true });
+      const id = new Field(User, { name: 'id', unique: true });
       User.getGeneratedMethodQuery(id, 1);
       expect(User.query.setOptions, 'to have calls satisfying', () =>
         User.query.setOptions({ first: true, require: true })
@@ -953,11 +888,7 @@ describe.only('Model', () => {
     });
 
     it('allows overriding the `first` and `require` options', () => {
-      const id = new Field(User, {
-        name: 'id',
-        type: 'integer',
-        primary: true
-      });
+      const id = new Field(User, { name: 'id', primary: true });
       User.getGeneratedMethodQuery(id, 1, { first: false, require: false });
       expect(User.query.setOptions, 'to have calls satisfying', () => {
         User.query.setOptions({ first: true, require: true });
@@ -972,7 +903,7 @@ describe.only('Model', () => {
 
     beforeEach(() => {
       User = class extends Model {};
-      id = new Field(User, { name: 'id', type: 'integer' });
+      id = new Field(User, { name: 'id' });
     });
 
     it('adds a `fetchByField` static method', () => {
@@ -1000,8 +931,7 @@ describe.only('Model', () => {
 
     it('throws if the field-name is Model.prototype property', () => {
       expect(
-        () =>
-          User.addField(new Field(User, { name: 'getData', type: 'string' })),
+        () => User.addField({ name: 'getData' }),
         'to throw',
         new ModelError({
           Model: User,
@@ -1015,7 +945,7 @@ describe.only('Model', () => {
         id() {}
       };
       expect(
-        () => User.addField(new Field(User, { name: 'id', type: 'string' })),
+        () => User.addField({ name: 'id' }),
         'to throw',
         new ModelError({
           Model: User,
@@ -1026,8 +956,7 @@ describe.only('Model', () => {
 
     it('throws if the field-name is `$values`', () => {
       expect(
-        () =>
-          User.addField(new Field(User, { name: '$values', type: 'string' })),
+        () => User.addField({ name: '$values' }),
         'to throw',
         new ModelError({
           Model: User,
@@ -1038,8 +967,7 @@ describe.only('Model', () => {
 
     it('throws if the field-name is `$config`', () => {
       expect(
-        () =>
-          User.addField(new Field(User, { name: '$config', type: 'string' })),
+        () => User.addField({ name: '$config' }),
         'to throw',
         new ModelError({
           Model: User,
@@ -1049,183 +977,145 @@ describe.only('Model', () => {
     });
 
     it("adds the field to the Model's fields", () => {
-      User.addField(new Field(User, { name: 'id', type: 'integer' }));
-      expect(User.fields, 'to equal', {
-        id: new Field(User, { name: 'id', type: 'integer' })
-      });
+      User.addField({ name: 'id' });
+      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
+    });
+
+    it('supports an overriden Model.Field class', () => {
+      User.Field = sinon.spy();
+      User.addField({ name: 'id' });
+      expect(
+        User.Field,
+        'to have calls satisfying',
+        () => new User.Field(User, { name: 'id' })
+      );
     });
 
     it("adds the field's to the Model's field-names", () => {
-      User.addField(new Field(User, { name: 'id', type: 'integer' }));
+      User.addField({ name: 'id' });
       expect(User.config.fieldNames, 'to equal', ['id']);
     });
 
     describe('if the field is has validation', () => {
       it("adds it to the Model's validated fields", () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', validate: 'integer' })
-        );
+        User.addField({ name: 'id', validate: 'integer' });
         expect(User.config.validated, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no validation', () => {
       it("does not add it to the Model's validated fields", () => {
-        User.addField(new Field(User, { name: 'id', type: 'integer' }));
+        User.addField({ name: 'id' });
         expect(User.config.validated, 'to be empty');
       });
     });
 
     describe('if the field is non-virtual', () => {
       it("adds it to the Model's columns", () => {
-        User.addField(
-          new Field(User, {
-            name: 'id',
-            type: 'integer',
-            virtual: false,
-            column: '_id'
-          })
-        );
+        User.addField({ name: 'id', virtual: false, column: '_id' });
         expect(User.config.columns, 'to equal', { id: '_id' });
       });
     });
 
     describe('if the field is virtual', () => {
       it("does not add it to the Model's columns", () => {
-        User.addField(
-          new Field(User, {
-            name: 'id',
-            type: 'integer',
-            virtual: true,
-            column: '_id'
-          })
-        );
+        User.addField({ name: 'id', virtual: true, column: '_id' });
         expect(User.config.columns, 'to be empty');
       });
     });
 
     describe('if the field is primary', () => {
       it("sets it as the Model's primary field", () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', primary: true })
-        );
+        User.addField({ name: 'id', primary: true });
         expect(User.config.primary, 'to be', 'id');
       });
     });
 
     describe('if the field is non-primary', () => {
       it("does not set it as the Model's primary field", () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', primary: false })
-        );
+        User.addField({ name: 'id', primary: false });
         expect(User.config.primary, 'to be undefined');
       });
     });
 
     describe('if the field is not updated', () => {
       it("adds it to the Model's not-updated fields", () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', updated: false })
-        );
+        User.addField({ name: 'id', updated: false });
         expect(User.config.notUpdated, 'to equal', ['id']);
       });
     });
 
     describe('if the field is updated', () => {
       it("does not add it to the Model's not-updated fields", () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', updated: true })
-        );
+        User.addField({ name: 'id', updated: true });
         expect(User.config.notUpdated, 'to be empty');
       });
     });
 
     describe('if the field is unique', () => {
       it("adds it to the Model's unique fields", () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', unique: true })
-        );
+        User.addField({ name: 'id', unique: true });
         expect(User.config.unique, 'to equal', ['id']);
       });
     });
 
     describe('if the field is not unique', () => {
       it("does not add it to the Model's unique fields", () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', unique: false })
-        );
+        User.addField({ name: 'id', unique: false });
         expect(User.config.unique, 'to be empty');
       });
     });
 
     describe('if the field has a default', () => {
       it("adds it to the Model's default fields", () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', default: 1 })
-        );
+        User.addField({ name: 'id', default: 1 });
         expect(User.config.defaults, 'to equal', ['id']);
       });
 
       it('supports falsy defaults', () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', default: 0 })
-        );
+        User.addField({ name: 'id', default: 0 });
         expect(User.config.defaults, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no default', () => {
       it("does not add it to the Model's default fields", () => {
-        User.addField(new Field(User, { name: 'id', type: 'integer' }));
+        User.addField({ name: 'id' });
         expect(User.config.defaults, 'to be empty');
       });
     });
 
     describe('if the field has a before-save cast function', () => {
       it('adds it to the fields with before-save cast functions', () => {
-        User.addField(
-          new Field(User, {
-            name: 'id',
-            type: 'integer',
-            castValueBeforeSave: () => {}
-          })
-        );
+        User.addField({ name: 'id', castValueBeforeSave: () => {} });
         expect(User.config.castBeforeSave, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no before-save cast function', () => {
       it('does not add it to the fields with before-save cast functions', () => {
-        User.addField(new Field(User, { name: 'id', type: 'integer' }));
+        User.addField({ name: 'id' });
         expect(User.config.castBeforeSave, 'to be empty');
       });
     });
 
     describe('if the field has an after-fetch cast function', () => {
       it('adds it to the fields with after-fetch cast functions', () => {
-        User.addField(
-          new Field(User, {
-            name: 'id',
-            type: 'integer',
-            castValueAfterFetch: () => {}
-          })
-        );
+        User.addField({ name: 'id', castValueAfterFetch: () => {} });
         expect(User.config.castAfterFetch, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no after-fetch cast function', () => {
       it('does not add it to the fields with after-fetch cast functions', () => {
-        User.addField(new Field(User, { name: 'id', type: 'integer' }));
+        User.addField({ name: 'id' });
         expect(User.config.castAfterFetch, 'to be empty');
       });
     });
 
     describe('if the field enables generated methods', () => {
       it('adds generated methods to the Model', () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', methods: true })
-        );
+        User.addField({ name: 'id', methods: true });
         expect(User.fetchById, 'to be a function');
         expect(User.updateById, 'to be a function');
         expect(User.deleteById, 'to be a function');
@@ -1234,9 +1124,7 @@ describe.only('Model', () => {
 
     describe('if the field does not enable generated methods', () => {
       it('does not add generated methods to the Model', () => {
-        User.addField(
-          new Field(User, { name: 'id', type: 'integer', methods: false })
-        );
+        User.addField({ name: 'id', methods: false });
         expect(User.fetchById, 'to be undefined');
         expect(User.updateById, 'to be undefined');
         expect(User.deleteById, 'to be undefined');
@@ -1250,7 +1138,7 @@ describe.only('Model', () => {
 
     beforeEach(() => {
       User = class extends Model {};
-      id = new Field(User, { name: 'id', type: 'integer' });
+      id = new Field(User, { name: 'id' });
       User.addGeneratedMethods(id);
     });
 
@@ -1272,54 +1160,48 @@ describe.only('Model', () => {
 
   describe.only('Model.removeField', () => {
     let User;
+    let idFieldConfig;
     let id;
 
     beforeEach(() => {
+      idFieldConfig = { name: 'id' };
       User = class extends Model {};
-      id = new Field(User, { name: 'id', type: 'integer' });
+      User.addField(idFieldConfig);
+      id = User.fields.id;
     });
 
     it('throws if the field does not exist on the Model', () => {
       expect(
-        () => User.removeField(id),
+        () => User.removeField(new Field(User, { name: 'name' })),
         'to throw',
-        new ModelError({ Model: User, message: "unkown field 'id'" })
+        new ModelError({ Model: User, message: "unkown field 'name'" })
       );
     });
 
     it('throws if a different field by the same name is passed', () => {
-      User.addField(id);
       expect(
-        () =>
-          User.removeField(new Field(User, { name: 'id', type: 'integer' })),
+        () => User.removeField(new Field(User, { name: 'id' })),
         'to throw',
         new ModelError({ Model: User, message: "unkown field 'id'" })
       );
     });
 
     it("removes the field from the Model's fields", () => {
-      User.addField(id);
       User.removeField(id);
       expect(User.fields, 'to be empty');
     });
 
     it("removes the field from the Model's field-names", () => {
-      User.addField(id);
       User.removeField(id);
       expect(User.config.fieldNames, 'to be empty');
     });
 
     describe('if the field has validation', () => {
       beforeEach(() => {
-        id = new Field(User, {
-          name: 'id',
-          type: 'integer',
-          validate: 'integer'
-        });
+        idFieldConfig = { name: 'id', validate: 'integer' };
       });
 
       it("removes it from the Model's validated fields", () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.config.validated, 'to be empty');
       });
@@ -1327,16 +1209,10 @@ describe.only('Model', () => {
 
     describe('if the field is non-virtual', () => {
       beforeEach(() => {
-        id = new Field(User, {
-          name: 'id',
-          type: 'integer',
-          virtual: false,
-          column: '_id'
-        });
+        idFieldConfig = { name: 'id', virtual: false, column: '_id' };
       });
 
       it("removes it from the Model's columns", () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.config.columns, 'to be empty');
       });
@@ -1344,11 +1220,10 @@ describe.only('Model', () => {
 
     describe('if the field is primary', () => {
       beforeEach(() => {
-        id = new Field(User, { name: 'id', type: 'integer', primary: true });
+        idFieldConfig = { name: 'id', primary: true };
       });
 
       it("unsets it as the Model's primary field", () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.config.primary, 'to be undefined');
       });
@@ -1356,11 +1231,10 @@ describe.only('Model', () => {
 
     describe('if the field is not updated', () => {
       beforeEach(() => {
-        id = new Field(User, { name: 'id', type: 'integer', updated: false });
+        idFieldConfig = { name: 'id', updated: false };
       });
 
       it("removes it from the Model's not-updated fields", () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.config.notUpdated, 'to be empty');
       });
@@ -1368,11 +1242,10 @@ describe.only('Model', () => {
 
     describe('if the field is unique', () => {
       beforeEach(() => {
-        id = new Field(User, { name: 'id', type: 'integer', unique: true });
+        idFieldConfig = { name: 'id', unique: true };
       });
 
       it("removes it from the Model's unique fields", () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.config.unique, 'to be empty');
       });
@@ -1380,34 +1253,28 @@ describe.only('Model', () => {
 
     describe('if the field has a default', () => {
       beforeEach(() => {
-        id = new Field(User, { name: 'id', type: 'integer', default: 1 });
+        idFieldConfig = { name: 'id', default: 1 };
       });
 
       it("removes it from the Model's default fields", () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.config.defaults, 'to be empty');
       });
 
       it('supports falsy defaults', () => {
-        id = new Field(User, { name: 'id', type: 'integer', default: 0 });
-        User.addField(id);
-        User.removeField(id);
+        User.addField({ name: 'name', default: '' });
+        const name = User.fields.name;
+        User.removeField(name);
         expect(User.config.defaults, 'to be empty');
       });
     });
 
     describe('if the field has a before-save cast function', () => {
       beforeEach(() => {
-        id = new Field(User, {
-          name: 'id',
-          type: 'integer',
-          castValueBeforeSave: () => {}
-        });
+        idFieldConfig = { name: 'id', castValueBeforeSave: () => {} };
       });
 
       it('removes it from the fields with before-save cast functions', () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.config.castBeforeSave, 'to be empty');
       });
@@ -1415,15 +1282,10 @@ describe.only('Model', () => {
 
     describe('if the field has an after-fetch cast function', () => {
       beforeEach(() => {
-        id = new Field(User, {
-          name: 'id',
-          type: 'integer',
-          castValueAfterFetch: () => {}
-        });
+        idFieldConfig = { name: 'id', castValueAfterFetch: () => {} };
       });
 
       it('removes it from the fields with after-fetch cast functions', () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.config.castAfterFetch, 'to be empty');
       });
@@ -1431,10 +1293,10 @@ describe.only('Model', () => {
 
     describe('if the field enables generated methods', () => {
       beforeEach(() => {
-        id = new Field(User, { name: 'id', type: 'integer', methods: true });
+        idFieldConfig = { name: 'id', methods: true };
       });
+
       it('removes generated methods from the Model', () => {
-        User.addField(id);
         User.removeField(id);
         expect(User.fetchById, 'to be undefined');
         expect(User.updateById, 'to be undefined');
@@ -1515,7 +1377,7 @@ describe.only('Model', () => {
       beforeEach(() => {
         User.schema = 'users';
         User.table = 'user';
-        User.fields = { id: 'integer' };
+        User.fields = ['id'];
         User.options = { query: { field: 'id' } };
         Student = class extends User {};
         Student.setupConfig();
@@ -1531,7 +1393,7 @@ describe.only('Model', () => {
 
       it('inherits `fields`', () => {
         expect(Student._config.fields, 'to satisfy', {
-          id: new Field(Student, { name: 'id', type: 'integer' })
+          id: new Field(Student, { name: 'id' })
         });
       });
 
@@ -1550,7 +1412,7 @@ describe.only('Model', () => {
           Model: User,
           schema: 'users',
           table: 'user',
-          fields: { id: new Field(User, { name: 'id', type: 'integer' }) },
+          fields: { id: new Field(User, { name: 'id' }) },
           options: { query: { debug: undefined, field: 'id' } }
         });
       });
@@ -1706,57 +1568,47 @@ describe.only('Model', () => {
     });
 
     it('allows setting and getting `fields`', () => {
-      User.fields = { id: { type: 'integer' } };
-      expect(User.fields, 'to equal', {
-        id: new Field(User, { name: 'id', type: 'integer' })
-      });
+      User.fields = { id: {} };
+      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
     });
 
-    it('allows setting fields via the `type` shorthand', () => {
-      User.fields = { id: 'integer' };
-      expect(User.fields, 'to equal', {
-        id: new Field(User, { name: 'id', type: 'integer' })
-      });
+    it('allows setting fields via an array', () => {
+      User.fields = ['id'];
+      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
     });
 
     it('allows setting fields via Field instances', () => {
-      User.fields = { id: new Field(User, { name: 'id', type: 'integer' }) };
-      expect(User.fields, 'to equal', {
-        id: new Field(User, { name: 'id', type: 'integer' })
-      });
+      User.fields = { id: new Field(User, { name: 'id' }) };
+      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
     });
 
     it('overwrites the `name` property in a field config', () => {
-      User.fields = { id: { type: 'integer', name: 'foo' } };
-      expect(User.fields, 'to equal', {
-        id: new Field(User, { name: 'id', type: 'integer' })
-      });
+      User.fields = { id: { name: 'foo' } };
+      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
     });
 
     it('allows adding fields', () => {
-      User.fields = { id: 'integer' };
+      User.fields = ['id'];
       expect(User.fields, 'to satisfy', {
-        id: new Field(User, { name: 'id', type: 'integer' })
+        id: new Field(User, { name: 'id' })
       });
-      User.fields = { name: 'string' };
+      User.fields = ['name'];
       expect(User.fields, 'to satisfy', {
-        id: new Field(User, { name: 'id', type: 'integer' }),
-        name: new Field(User, { name: 'name', type: 'string' })
+        id: new Field(User, { name: 'id' }),
+        name: new Field(User, { name: 'name' })
       });
     });
 
     it('allows overwriting fields', () => {
-      User.fields = { id: { type: 'integer', primary: true } };
+      User.fields = { id: { primary: true } };
       expect(User.config, 'to satisfy', {
-        fields: {
-          id: new Field(User, { name: 'id', type: 'integer', primary: true })
-        },
+        fields: { id: new Field(User, { name: 'id', primary: true }) },
         primary: 'id',
         fieldNames: ['id']
       });
-      User.fields = { id: { type: 'string' } };
+      User.fields = { id: {} };
       expect(User.config, 'to satisfy', {
-        fields: { id: new Field(User, { name: 'id', type: 'string' }) },
+        fields: { id: new Field(User, { name: 'id' }) },
         primary: undefined,
         fieldNames: ['id']
       });
@@ -1817,13 +1669,11 @@ describe.only('Model', () => {
       User.table = 'user';
       User.fields = {
         id: {
-          type: 'integer',
           required: true,
           primary: true,
           methods: true
         },
         name: {
-          type: 'string',
           required: true
         }
       };
@@ -1935,7 +1785,6 @@ describe.only('Model', () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           name: {
-            type: 'string',
             cast: {
               forFetch() {
                 return 'cast name';
@@ -1994,7 +1843,6 @@ describe.only('Model', () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           name: {
-            type: 'string',
             cast: {
               forFetch() {
                 return 'cast name';
@@ -2037,7 +1885,6 @@ describe.only('Model', () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           name: {
-            type: 'string',
             cast: {
               forFetch() {
                 return 'cast name';
@@ -2079,7 +1926,6 @@ describe.only('Model', () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           name: {
-            type: 'string',
             cast: {
               forFetch() {
                 return 'cast name';

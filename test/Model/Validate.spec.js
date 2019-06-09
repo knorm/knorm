@@ -21,7 +21,7 @@ describe.only('Validate', () => {
     ValidateError = Validate.ValidateError;
 
     User = class extends Model {};
-    User.fields = { id: 'integer' };
+    User.fields = ['id'];
   });
 
   let validate;
