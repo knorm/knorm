@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/knorm/postgres/compare/v2.0.2...v2.0.3) (2019-07-24)
+
+
+### Bug Fixes
+
+* use bind parameter for json patches ([fd6b5fa](https://github.com/knorm/postgres/commit/fd6b5fa))
+
 ## [2.0.2](https://github.com/knorm/postgres/compare/v2.0.1...v2.0.2) (2019-03-13)
 
 
