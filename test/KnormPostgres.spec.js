@@ -150,11 +150,6 @@ describe('KnormPostgres', () => {
           );
         });
 
-        it('does not stringify `null` values', () => {
-          const field = new Field({ name: 'foo', model: Model, type: 'json' });
-          expect(field.cast(null, null, { forSave: true }), 'to be undefined');
-        });
-
         it('does not stringify raw sql values', () => {
           const field = new Field({ name: 'foo', model: Model, type: 'json' });
           expect(
@@ -225,45 +220,16 @@ describe('KnormPostgres', () => {
       });
 
       describe('forFetch', () => {
-        it('parses values', () => {
+        it('does not parse values (already parsed by the postgres driver)', () => {
           const field = new Field({ name: 'foo', model: Model, type: 'json' });
           expect(
-            field.cast(JSON.stringify({ foo: 'bar' }), null, {
-              forFetch: true
-            }),
-            'to equal',
-            { foo: 'bar' }
-          );
-        });
-
-        it('does not parse `null` values', () => {
-          const field = new Field({ name: 'foo', model: Model, type: 'json' });
-          expect(field.cast(null, { forFetch: true }), 'to be undefined');
-        });
-
-        it('does nothing for already parsed values', () => {
-          const field = new Field({ name: 'foo', model: Model, type: 'json' });
-          expect(
-            field.cast({ foo: 'bar' }, null, { forFetch: true }),
+            field.cast('foo', null, { forFetch: true }),
             'to be undefined'
           );
-        });
-
-        it('does nothing for already parsed string values', () => {
-          const field = new Field({ name: 'foo', model: Model, type: 'json' });
-          expect(
-            field.cast('bar', null, { forFetch: true }),
-            'to be undefined'
-          );
-        });
-
-        it('parses json string values', () => {
-          const field = new Field({ name: 'foo', model: Model, type: 'json' });
-          expect(field.cast('"bar"', null, { forFetch: true }), 'to be', 'bar');
         });
 
         describe('with a forFetch cast function configured', () => {
-          it('uses the configred function', () => {
+          it('uses the configured function', () => {
             const field = new Field({
               name: 'foo',
               model: Model,
@@ -851,11 +817,25 @@ describe('KnormPostgres', () => {
         Foo.table = 'foo';
         Foo.fields = { json: 'json' };
 
-        await new Query(Foo).insert({ id: 1, json: '"foo"' });
         await expect(
-          new Query(Foo).update({ id: 1, json: '"bar"' }),
+          new Query(Foo).insert({ id: 1, json: 'foo' }),
           'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, json: 'bar' }]
+          [{ id: 1, json: 'foo' }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, json: { foo: 'foo' } }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, json: { foo: 'foo' } }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, json: '1' }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, json: '1' }]
+        );
+        await expect(
+          new Query(Foo).update({ id: 1, json: 10 }),
+          'to be fulfilled with sorted rows satisfying',
+          [{ id: 1, json: 10 }]
         );
         await expect(
           new Query(Foo).update({ id: 1, json: null }),
