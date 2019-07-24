@@ -1712,6 +1712,43 @@ describe('KnormPostgres', () => {
             )
           );
         });
+
+        it('updates the json object containing single quotes', async () => {
+          const query = new Query(Foo)
+            .where({ id: 1 })
+            .first()
+            .patch();
+          await expect(
+            query.update({
+              jsonb: { string: `bar ' ` },
+              json: { string: `bar ' ` }
+            }),
+            'to be fulfilled with value exhaustively satisfying',
+            new Foo({
+              id: 1,
+              jsonb: {
+                string: `bar ' `,
+                number: 1,
+                array: ['foo', 'bar'],
+                object: {
+                  string: 'foo',
+                  number: 1,
+                  array: ['foo', 'bar']
+                }
+              },
+              json: {
+                string: `bar ' `,
+                number: 1,
+                array: ['foo', 'bar'],
+                object: {
+                  string: 'foo',
+                  number: 1,
+                  array: ['foo', 'bar']
+                }
+              }
+            })
+          );
+        });
       });
     });
   });
