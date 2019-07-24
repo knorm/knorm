@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/knorm/postgres/compare/v2.0.3...v2.0.4) (2019-07-24)
+
+
+### Bug Fixes
+
+* do not JSON.parse values already parsed by the postgres driver ([55eaf6b](https://github.com/knorm/postgres/commit/55eaf6b))
+
 ## [2.0.3](https://github.com/knorm/postgres/compare/v2.0.2...v2.0.3) (2019-07-24)
 
 
