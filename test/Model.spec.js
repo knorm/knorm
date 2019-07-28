@@ -1318,6 +1318,18 @@ describe.only('Model', () => {
       expect(User.getDefaultConfig(), 'to satisfy', { Model: User });
     });
 
+    it('returns an empty schema config', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', {
+        schema: undefined
+      });
+    });
+
+    it('returns an empty table config', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', {
+        table: undefined
+      });
+    });
+
     it('returns default options', () => {
       expect(User.getDefaultConfig(), 'to satisfy', {
         options: { query: { debug: undefined } }
@@ -1476,6 +1488,68 @@ describe.only('Model', () => {
     });
   });
 
+  describe.only('Model.addOptions', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it('allows adding `query` options', () => {
+      User.addOptions({ query: { field: 'id' } });
+      expect(User.config.options, 'to equal', {
+        query: { debug: undefined, field: 'id' }
+      });
+      User.addOptions({ query: { where: { id: 1 } } });
+      expect(User.config.options, 'to equal', {
+        query: { debug: undefined, field: 'id', where: { id: 1 } }
+      });
+    });
+
+    it('allows adding `plugins` options', () => {
+      User.addOptions({ plugins: { toJSON: { exclude: ['id'] } } });
+      expect(User.config.options, 'to equal', {
+        query: { debug: undefined },
+        plugins: { toJSON: { exclude: ['id'] } }
+      });
+    });
+
+    it('merges options', () => {
+      User.addOptions({ query: { where: { id: 1 } } });
+      expect(User.config.options, 'to equal', {
+        query: { debug: undefined, where: { id: 1 } }
+      });
+      User.addOptions({
+        query: { where: { name: 'foo' } }
+      });
+      expect(User.config.options, 'to equal', {
+        query: { debug: undefined, where: { id: 1, name: 'foo' } }
+      });
+    });
+
+    it('does not modify the object passed', () => {
+      const options = { query: { where: { id: 1 } } };
+      User.addOptions(options);
+      expect(User.config.options, 'to equal', {
+        query: { debug: undefined, where: { id: 1 } }
+      });
+      expect(options, 'to equal', { query: { where: { id: 1 } } });
+    });
+
+    it('allows overwriting options', () => {
+      User.addOptions({ query: { where: { id: 1 } } });
+      expect(User.config.options, 'to equal', {
+        query: { debug: undefined, where: { id: 1 } }
+      });
+      User.addOptions({
+        query: { where: { id: [1] } }
+      });
+      expect(User.config.options, 'to equal', {
+        query: { debug: undefined, where: { id: [1] } }
+      });
+    });
+  });
+
   describe.only('Model.options', () => {
     let User;
 
@@ -1487,57 +1561,10 @@ describe.only('Model', () => {
       expect(User.options, 'to equal', { query: { debug: undefined } });
     });
 
-    it('allows adding `query` options', () => {
+    it('allows setting and getting options', () => {
       User.options = { query: { field: 'id' } };
       expect(User.options, 'to equal', {
         query: { debug: undefined, field: 'id' }
-      });
-      User.options = { query: { where: { id: 1 } } };
-      expect(User.options, 'to equal', {
-        query: { debug: undefined, field: 'id', where: { id: 1 } }
-      });
-    });
-
-    it('allows adding `plugins` options', () => {
-      User.options = { plugins: { toJSON: { exclude: ['id'] } } };
-      expect(User.options, 'to equal', {
-        query: { debug: undefined },
-        plugins: { toJSON: { exclude: ['id'] } }
-      });
-    });
-
-    it('merges options', () => {
-      User.options = { query: { where: { id: 1 } } };
-      expect(User.options, 'to equal', {
-        query: { debug: undefined, where: { id: 1 } }
-      });
-      User.options = {
-        query: { where: { name: 'foo' } }
-      };
-      expect(User.options, 'to equal', {
-        query: { debug: undefined, where: { id: 1, name: 'foo' } }
-      });
-    });
-
-    it('does not modify the object passed', () => {
-      const options = { query: { where: { id: 1 } } };
-      User.options = options;
-      expect(User.options, 'to equal', {
-        query: { debug: undefined, where: { id: 1 } }
-      });
-      expect(options, 'to equal', { query: { where: { id: 1 } } });
-    });
-
-    it('allows overwriting options', () => {
-      User.options = { query: { where: { id: 1 } } };
-      expect(User.options, 'to equal', {
-        query: { debug: undefined, where: { id: 1 } }
-      });
-      User.options = {
-        query: { where: { id: [1] } }
-      };
-      expect(User.options, 'to equal', {
-        query: { debug: undefined, where: { id: [1] } }
       });
     });
   });
