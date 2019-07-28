@@ -600,71 +600,71 @@ describe.only('Model', () => {
     });
   });
 
-  describe.only('Model.prototype.castValuesAfterFetch', () => {
+  describe.only('Model.prototype.parseValues', () => {
     let User;
     let user;
-    let castIdAfterFetch;
-    let castNameAfterFetch;
+    let parseId;
+    let parseName;
 
     beforeEach(() => {
-      castIdAfterFetch = sinon.stub().returns(10);
-      castNameAfterFetch = sinon.stub();
+      parseId = sinon.stub().returns(10);
+      parseName = sinon.stub();
       User = class extends Model {};
       User.fields = {
-        id: { castValueAfterFetch: castIdAfterFetch },
-        name: { castValueAfterFetch: castNameAfterFetch },
+        id: { parseValue: parseId },
+        name: { parseValue: parseName },
         confirmed: {}
       };
       user = new User({ id: 1, name: 'foo', confirmed: false });
     });
 
     it('updates field values with the values returned by cast methods', () => {
-      user.castValuesAfterFetch();
+      user.parseValues();
       expect(user.id, 'to be', 10);
     });
 
     it('does not cast `undefined` values', () => {
       user.id = undefined;
-      user.castValuesAfterFetch();
+      user.parseValues();
       expect(user.id, 'to be undefined');
     });
 
     it('does not update a field value if a cast function returns `undefined`', () => {
-      user.castValuesAfterFetch();
+      user.parseValues();
       expect(user.name, 'to be', 'foo');
     });
 
     it('calls the cast function with the model instance and the field value', () => {
-      user.castValuesAfterFetch();
-      expect(castIdAfterFetch, 'to have calls satisfying', () => {
-        castIdAfterFetch(user, 1);
+      user.parseValues();
+      expect(parseId, 'to have calls satisfying', () => {
+        parseId(user, 1);
       });
     });
 
     it('casts all fields with a cast-value function', () => {
       user.setData({ id: 1, name: 'foo', confirmed: false });
-      user.castValuesAfterFetch();
-      expect(castIdAfterFetch, 'to have calls satisfying', () => {
-        castIdAfterFetch(user, 1);
+      user.parseValues();
+      expect(parseId, 'to have calls satisfying', () => {
+        parseId(user, 1);
       });
-      expect(castNameAfterFetch, 'to have calls satisfying', () => {
-        castNameAfterFetch(user, 'foo');
+      expect(parseName, 'to have calls satisfying', () => {
+        parseName(user, 'foo');
       });
     });
 
     it('resolves with the Model instance', () => {
-      expect(user.castValuesAfterFetch(), 'to be', user);
+      expect(user.parseValues(), 'to be', user);
     });
 
     describe('when passed a list of fields to cast', () => {
       it('casts only those fields', () => {
-        user.castValuesAfterFetch({ fields: ['id'] });
+        user.parseValues({ fields: ['id'] });
         expect(user, 'to satisfy', { id: 10, name: 'foo', confirmed: false });
-        expect(castNameAfterFetch, 'was not called');
+        expect(parseName, 'was not called');
       });
 
       it('skips fields with no cast-value function configured', () => {
-        user.castValuesAfterFetch({ fields: ['confirmed'] });
+        user.parseValues({ fields: ['confirmed'] });
         expect(user, 'to satisfy', { id: 1, name: 'foo', confirmed: false });
       });
     });
@@ -1099,17 +1099,17 @@ describe.only('Model', () => {
       });
     });
 
-    describe('if the field has an after-fetch cast function', () => {
-      it('adds it to the fields with after-fetch cast functions', () => {
-        User.addField({ name: 'id', castValueAfterFetch: () => {} });
-        expect(User.config.castAfterFetch, 'to equal', ['id']);
+    describe('if the field has an parse-value function', () => {
+      it('adds it to the fields with parse-value functions', () => {
+        User.addField({ name: 'id', parseValue: () => {} });
+        expect(User.config.parsed, 'to equal', ['id']);
       });
     });
 
-    describe('if the field has no after-fetch cast function', () => {
-      it('does not add it to the fields with after-fetch cast functions', () => {
+    describe('if the field has no parse-value function', () => {
+      it('does not add it to the fields with parse-value functions', () => {
         User.addField({ name: 'id' });
-        expect(User.config.castAfterFetch, 'to be empty');
+        expect(User.config.parsed, 'to be empty');
       });
     });
 
@@ -1280,14 +1280,14 @@ describe.only('Model', () => {
       });
     });
 
-    describe('if the field has an after-fetch cast function', () => {
+    describe('if the field has an parse-value function', () => {
       beforeEach(() => {
-        idFieldConfig = { name: 'id', castValueAfterFetch: () => {} };
+        idFieldConfig = { name: 'id', parseValue: () => {} };
       });
 
-      it('removes it from the fields with after-fetch cast functions', () => {
+      it('removes it from the fields with parse-value functions', () => {
         User.removeField(id);
-        expect(User.config.castAfterFetch, 'to be empty');
+        expect(User.config.parsed, 'to be empty');
       });
     });
 
@@ -1354,8 +1354,8 @@ describe.only('Model', () => {
       expect(User.getDefaultConfig(), 'to satisfy', { cast: [] });
     });
 
-    it('returns empty fields with after-fetch cast functions', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { castAfterFetch: [] });
+    it('returns empty fields with parse-value functions', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { parsed: [] });
     });
   });
 
