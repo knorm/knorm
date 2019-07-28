@@ -976,9 +976,11 @@ describe.only('Model', () => {
       );
     });
 
-    it("adds the field to the Model's fields", () => {
+    it("adds the field to the Model's field instances", () => {
       User.addField({ name: 'id' });
-      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
+      expect(User.config.fields.instances, 'to equal', {
+        id: new Field(User, { name: 'id' })
+      });
     });
 
     it('supports an overriden Model.Field class', () => {
@@ -993,20 +995,20 @@ describe.only('Model', () => {
 
     it("adds the field's to the Model's field-names", () => {
       User.addField({ name: 'id' });
-      expect(User.config.fieldNames, 'to equal', ['id']);
+      expect(User.config.fields.names, 'to equal', ['id']);
     });
 
     describe('if the field is has validation', () => {
       it("adds it to the Model's validated fields", () => {
         User.addField({ name: 'id', validate: 'integer' });
-        expect(User.config.validated, 'to equal', ['id']);
+        expect(User.config.fields.validated, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no validation', () => {
       it("does not add it to the Model's validated fields", () => {
         User.addField({ name: 'id' });
-        expect(User.config.validated, 'to be empty');
+        expect(User.config.fields.validated, 'to be empty');
       });
     });
 
@@ -1027,89 +1029,89 @@ describe.only('Model', () => {
     describe('if the field is primary', () => {
       it("sets it as the Model's primary field", () => {
         User.addField({ name: 'id', primary: true });
-        expect(User.config.primary, 'to be', 'id');
+        expect(User.config.fields.primary, 'to be', 'id');
       });
     });
 
     describe('if the field is non-primary', () => {
       it("does not set it as the Model's primary field", () => {
         User.addField({ name: 'id', primary: false });
-        expect(User.config.primary, 'to be undefined');
+        expect(User.config.fields.primary, 'to be undefined');
       });
     });
 
     describe('if the field is not updated', () => {
       it("adds it to the Model's not-updated fields", () => {
         User.addField({ name: 'id', updated: false });
-        expect(User.config.notUpdated, 'to equal', ['id']);
+        expect(User.config.fields.notUpdated, 'to equal', ['id']);
       });
     });
 
     describe('if the field is updated', () => {
       it("does not add it to the Model's not-updated fields", () => {
         User.addField({ name: 'id', updated: true });
-        expect(User.config.notUpdated, 'to be empty');
+        expect(User.config.fields.notUpdated, 'to be empty');
       });
     });
 
     describe('if the field is unique', () => {
       it("adds it to the Model's unique fields", () => {
         User.addField({ name: 'id', unique: true });
-        expect(User.config.unique, 'to equal', ['id']);
+        expect(User.config.fields.unique, 'to equal', ['id']);
       });
     });
 
     describe('if the field is not unique', () => {
       it("does not add it to the Model's unique fields", () => {
         User.addField({ name: 'id', unique: false });
-        expect(User.config.unique, 'to be empty');
+        expect(User.config.fields.unique, 'to be empty');
       });
     });
 
     describe('if the field has a default', () => {
       it("adds it to the Model's default fields", () => {
         User.addField({ name: 'id', default: 1 });
-        expect(User.config.defaulted, 'to equal', ['id']);
+        expect(User.config.fields.defaulted, 'to equal', ['id']);
       });
 
       it('supports falsy defaults', () => {
         User.addField({ name: 'id', default: 0 });
-        expect(User.config.defaulted, 'to equal', ['id']);
+        expect(User.config.fields.defaulted, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no default', () => {
       it("does not add it to the Model's default fields", () => {
         User.addField({ name: 'id' });
-        expect(User.config.defaulted, 'to be empty');
+        expect(User.config.fields.defaulted, 'to be empty');
       });
     });
 
     describe('if the field has a cast-value function', () => {
       it('adds it to the fields with cast-value functions', () => {
         User.addField({ name: 'id', castValue: () => {} });
-        expect(User.config.cast, 'to equal', ['id']);
+        expect(User.config.fields.cast, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no cast-value function', () => {
       it('does not add it to the fields with cast-value functions', () => {
         User.addField({ name: 'id' });
-        expect(User.config.cast, 'to be empty');
+        expect(User.config.fields.cast, 'to be empty');
       });
     });
 
     describe('if the field has an parse-value function', () => {
       it('adds it to the fields with parse-value functions', () => {
         User.addField({ name: 'id', parseValue: () => {} });
-        expect(User.config.parsed, 'to equal', ['id']);
+        expect(User.config.fields.parsed, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no parse-value function', () => {
       it('does not add it to the fields with parse-value functions', () => {
         User.addField({ name: 'id' });
-        expect(User.config.parsed, 'to be empty');
+        expect(User.config.fields.parsed, 'to be empty');
       });
     });
 
@@ -1188,12 +1190,12 @@ describe.only('Model', () => {
 
     it("removes the field from the Model's fields", () => {
       User.removeField(id);
-      expect(User.fields, 'to be empty');
+      expect(User.config.fields.instances, 'to be empty');
     });
 
     it("removes the field from the Model's field-names", () => {
       User.removeField(id);
-      expect(User.config.fieldNames, 'to be empty');
+      expect(User.config.fields.names, 'to be empty');
     });
 
     describe('if the field has validation', () => {
@@ -1203,7 +1205,7 @@ describe.only('Model', () => {
 
       it("removes it from the Model's validated fields", () => {
         User.removeField(id);
-        expect(User.config.validated, 'to be empty');
+        expect(User.config.fields.validated, 'to be empty');
       });
     });
 
@@ -1225,7 +1227,7 @@ describe.only('Model', () => {
 
       it("unsets it as the Model's primary field", () => {
         User.removeField(id);
-        expect(User.config.primary, 'to be undefined');
+        expect(User.config.fields.primary, 'to be undefined');
       });
     });
 
@@ -1236,7 +1238,7 @@ describe.only('Model', () => {
 
       it("removes it from the Model's not-updated fields", () => {
         User.removeField(id);
-        expect(User.config.notUpdated, 'to be empty');
+        expect(User.config.fields.notUpdated, 'to be empty');
       });
     });
 
@@ -1247,7 +1249,7 @@ describe.only('Model', () => {
 
       it("removes it from the Model's unique fields", () => {
         User.removeField(id);
-        expect(User.config.unique, 'to be empty');
+        expect(User.config.fields.unique, 'to be empty');
       });
     });
 
@@ -1258,14 +1260,14 @@ describe.only('Model', () => {
 
       it("removes it from the Model's default fields", () => {
         User.removeField(id);
-        expect(User.config.defaulted, 'to be empty');
+        expect(User.config.fields.defaulted, 'to be empty');
       });
 
       it('supports falsy defaults', () => {
         User.addField({ name: 'name', default: '' });
         const name = User.fields.name;
         User.removeField(name);
-        expect(User.config.defaulted, 'to be empty');
+        expect(User.config.fields.defaulted, 'to be empty');
       });
     });
 
@@ -1276,7 +1278,7 @@ describe.only('Model', () => {
 
       it('removes it from the fields with cast-value functions', () => {
         User.removeField(id);
-        expect(User.config.cast, 'to be empty');
+        expect(User.config.fields.cast, 'to be empty');
       });
     });
 
@@ -1287,7 +1289,7 @@ describe.only('Model', () => {
 
       it('removes it from the fields with parse-value functions', () => {
         User.removeField(id);
-        expect(User.config.parsed, 'to be empty');
+        expect(User.config.fields.parsed, 'to be empty');
       });
     });
 
@@ -1322,40 +1324,24 @@ describe.only('Model', () => {
       });
     });
 
-    it('returns empty fields', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { fields: {} });
+    it('returns empty field configs', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', {
+        fields: {
+          instances: {},
+          names: [],
+          validated: [],
+          primary: undefined,
+          unique: [],
+          notUpdated: [],
+          defaulted: [],
+          cast: [],
+          parsed: []
+        }
+      });
     });
 
-    it('returns empty field-names', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { fieldNames: [] });
-    });
-
-    it('returns empty columns', () => {
+    it('returns empty column configs', () => {
       expect(User.getDefaultConfig(), 'to satisfy', { columns: {} });
-    });
-
-    it('returns no primary field', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { primary: undefined });
-    });
-
-    it('returns empty unique fields', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { unique: [] });
-    });
-
-    it('returns empty not-updated fields', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { notUpdated: [] });
-    });
-
-    it('returns empty default fields', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { defaulted: [] });
-    });
-
-    it('returns empty fields with cast-value functions', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { cast: [] });
-    });
-
-    it('returns empty fields with parse-value functions', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { parsed: [] });
     });
   });
 
@@ -1392,7 +1378,7 @@ describe.only('Model', () => {
       });
 
       it('inherits `fields`', () => {
-        expect(Student._config.fields, 'to satisfy', {
+        expect(Student._config.fields.instances, 'to satisfy', {
           id: new Field(Student, { name: 'id' })
         });
       });
@@ -1412,7 +1398,7 @@ describe.only('Model', () => {
           Model: User,
           schema: 'users',
           table: 'user',
-          fields: { id: new Field(User, { name: 'id' }) },
+          fields: { instances: { id: new Field(User, { name: 'id' }) } },
           options: { query: { debug: undefined, field: 'id' } }
         });
       });
@@ -1556,6 +1542,73 @@ describe.only('Model', () => {
     });
   });
 
+  describe.only('Model.addFields', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    it("sets the Model's fields", () => {
+      User.addFields({ id: {} });
+      expect(User.config.fields.instances, 'to equal', {
+        id: new Field(User, { name: 'id' })
+      });
+    });
+
+    it('allows setting fields via an array', () => {
+      User.addFields(['id']);
+      expect(User.config.fields.instances, 'to equal', {
+        id: new Field(User, { name: 'id' })
+      });
+    });
+
+    it('allows setting fields via Field instances', () => {
+      User.addFields({ id: new Field(User, { name: 'id' }) });
+      expect(User.config.fields.instances, 'to equal', {
+        id: new Field(User, { name: 'id' })
+      });
+    });
+
+    it('overwrites the `name` property in a field config', () => {
+      User.addFields({ id: { name: 'foo' } });
+      expect(User.config.fields.instances, 'to equal', {
+        id: new Field(User, { name: 'id' })
+      });
+    });
+
+    it('allows adding fields', () => {
+      User.addFields(['id']);
+      expect(User.config.fields.instances, 'to satisfy', {
+        id: new Field(User, { name: 'id' })
+      });
+      User.addFields(['name']);
+      expect(User.config.fields.instances, 'to satisfy', {
+        id: new Field(User, { name: 'id' }),
+        name: new Field(User, { name: 'name' })
+      });
+    });
+
+    it('allows replacing fields', () => {
+      User.addFields({ id: { primary: true } });
+      expect(User.config, 'to satisfy', {
+        fields: {
+          instances: { id: new Field(User, { name: 'id', primary: true }) },
+          names: ['id'],
+          primary: 'id'
+        }
+      });
+      User.addFields({ id: {} });
+      expect(User.config, 'to satisfy', {
+        fields: {
+          instances: { id: new Field(User, { name: 'id' }) },
+          names: ['id'],
+          primary: undefined
+        }
+      });
+    });
+  });
+
   describe.only('Model.fields', () => {
     let User;
 
@@ -1567,51 +1620,9 @@ describe.only('Model', () => {
       expect(User.fields, 'to equal', {});
     });
 
-    it('allows setting and getting `fields`', () => {
+    it('allows setting and getting fields', () => {
       User.fields = { id: {} };
       expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
-    });
-
-    it('allows setting fields via an array', () => {
-      User.fields = ['id'];
-      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
-    });
-
-    it('allows setting fields via Field instances', () => {
-      User.fields = { id: new Field(User, { name: 'id' }) };
-      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
-    });
-
-    it('overwrites the `name` property in a field config', () => {
-      User.fields = { id: { name: 'foo' } };
-      expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
-    });
-
-    it('allows adding fields', () => {
-      User.fields = ['id'];
-      expect(User.fields, 'to satisfy', {
-        id: new Field(User, { name: 'id' })
-      });
-      User.fields = ['name'];
-      expect(User.fields, 'to satisfy', {
-        id: new Field(User, { name: 'id' }),
-        name: new Field(User, { name: 'name' })
-      });
-    });
-
-    it('allows overwriting fields', () => {
-      User.fields = { id: { primary: true } };
-      expect(User.config, 'to satisfy', {
-        fields: { id: new Field(User, { name: 'id', primary: true }) },
-        primary: 'id',
-        fieldNames: ['id']
-      });
-      User.fields = { id: {} };
-      expect(User.config, 'to satisfy', {
-        fields: { id: new Field(User, { name: 'id' }) },
-        primary: undefined,
-        fieldNames: ['id']
-      });
     });
   });
 
