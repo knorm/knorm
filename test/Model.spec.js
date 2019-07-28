@@ -265,7 +265,7 @@ describe.only('Model', () => {
     });
   });
 
-  describe.only('Model.prototype.getData', () => {
+  describe.only('Model.prototype.getValues', () => {
     let User;
     let user;
 
@@ -294,48 +294,52 @@ describe.only('Model', () => {
     });
 
     it('returns values for database fields', () => {
-      expect(user.getData(), 'to satisfy', {
+      expect(user.getValues(), 'to satisfy', {
         firstName: 'foo',
         lastName: 'bar'
       });
     });
 
     it('returns values for virtual fields', () => {
-      expect(user.getData(), 'to satisfy', { initials: 'fb' });
+      expect(user.getValues(), 'to satisfy', { initials: 'fb' });
     });
 
     it('returns values for arbitrary fields', () => {
       user.setValues({ foo: 'foo' });
-      expect(user.getData(), 'to satisfy', { foo: 'foo' });
+      expect(user.getValues(), 'to satisfy', { foo: 'foo' });
     });
 
     it('allows specifying fields whose values to return', () => {
-      expect(user.getData({ fields: ['firstName', 'initials'] }), 'to equal', {
-        firstName: 'foo',
-        initials: 'fb'
-      });
+      expect(
+        user.getValues({ fields: ['firstName', 'initials'] }),
+        'to equal',
+        {
+          firstName: 'foo',
+          initials: 'fb'
+        }
+      );
     });
 
     it('returns values for directly assigned fields', () => {
       user.foo = 'foo';
-      expect(user.getData(), 'to satisfy', { foo: 'foo' });
+      expect(user.getValues(), 'to satisfy', { foo: 'foo' });
     });
 
     it('does not return `undefined` values', () => {
       user.foo = undefined;
-      expect(user.getData(), 'not to have key', 'foo');
+      expect(user.getValues(), 'not to have key', 'foo');
     });
 
     it('does not return values for virtuals with no `getValue` function', () => {
-      expect(user.getData(), 'not to have key', 'fullName');
+      expect(user.getValues(), 'not to have key', 'fullName');
     });
 
     it('does not include $values', () => {
-      expect(user.getData(), 'not to have key', '$values');
+      expect(user.getValues(), 'not to have key', '$values');
     });
 
     it('does not include $config', () => {
-      expect(user.getData(), 'not to have key', '$config');
+      expect(user.getValues(), 'not to have key', '$config');
     });
   });
 
@@ -969,11 +973,11 @@ describe.only('Model', () => {
 
     it('throws if the field-name is Model.prototype property', () => {
       expect(
-        () => User.addField({ name: 'getData' }),
+        () => User.addField({ name: 'getValues' }),
         'to throw',
         new ModelError({
           Model: User,
-          message: "field 'getData' conflicts with User.prototype.getData"
+          message: "field 'getValues' conflicts with User.prototype.getValues"
         })
       );
     });
