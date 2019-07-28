@@ -475,7 +475,7 @@ describe.only('Model', () => {
     });
   });
 
-  describe.only('Model.prototype.validate', () => {
+  describe.only('Model.prototype.validateValues', () => {
     let User;
     let user;
 
@@ -493,7 +493,7 @@ describe.only('Model', () => {
       user.setData({ id: 1, name: 'foo', confirmed: false });
       const Validate = sinon.spy(User, 'Validate');
       const validate = sinon.spy(User.Validate.prototype, 'validate');
-      await user.validate();
+      await user.validateValues();
       await expect(Validate, 'to have calls satisfying', () => {
         new Validate(user, User.fields.id); // eslint-disable-line no-new
         new Validate(user, User.fields.name); // eslint-disable-line no-new
@@ -509,14 +509,14 @@ describe.only('Model', () => {
     it('rejects with the first validation error', async () => {
       user.setData({ id: 'foo', name: 1 });
       await expect(
-        user.validate(),
+        user.validateValues(),
         'to be rejected with error satisfying',
         'User.fields.id: expected an integer value'
       );
     });
 
     it('resolves with the Model instance', async () => {
-      await expect(user.validate(), 'to be fulfilled with', user);
+      await expect(user.validateValues(), 'to be fulfilled with', user);
     });
 
     describe('when passed a list of fields to validate', () => {
@@ -526,7 +526,7 @@ describe.only('Model', () => {
 
       it('validates only those fields', async () => {
         await expect(
-          user.validate({ fields: ['name'] }),
+          user.validateValues({ fields: ['name'] }),
           'to be rejected with error satisfying',
           'User.fields.name: expected a string value'
         );
@@ -534,7 +534,7 @@ describe.only('Model', () => {
 
       it('skips fields with no default values configured', async () => {
         await expect(
-          user.validate({ fields: ['confirmed'] }),
+          user.validateValues({ fields: ['confirmed'] }),
           'to be fulfilled'
         );
       });
