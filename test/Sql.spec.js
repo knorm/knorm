@@ -151,6 +151,16 @@ describe.only('Sql', () => {
     });
   });
 
+  describe('Sql.prototype.throwSqlError', () => {
+    it('throws a SqlError', () => {
+      expect(
+        () => sql.throwSqlError('foo'),
+        'to throw',
+        new SqlError({ sql, message: 'foo' })
+      );
+    });
+  });
+
   describe('Sql.prototype.formatIdentifier', () => {
     it('quotes the identifier', () => {
       expect(sql.formatIdentifier('order'), 'to be', '"order"');
@@ -184,7 +194,7 @@ describe.only('Sql', () => {
         expect(
           () => sql.formatTable(),
           'to throw',
-          new SqlError({ sql, message: 'table not configured' })
+          new SqlError({ sql, message: 'table is not configured' })
         );
       });
     });
@@ -328,18 +338,12 @@ describe.only('Sql', () => {
       expect(
         () => sql.formatValue(),
         'to throw',
-        new SqlError({
-          sql,
-          message: 'value is `undefined`'
-        })
+        new SqlError({ sql, message: 'value is undefined' })
       );
       expect(
         () => sql.formatValue(undefined),
         'to throw',
-        new SqlError({
-          sql,
-          message: 'value is `undefined`'
-        })
+        new SqlError({ sql, message: 'value is undefined' })
       );
     });
 
@@ -1371,7 +1375,7 @@ describe.only('Sql', () => {
         'to throw',
         new SqlError({
           sql,
-          message: 'value for OFFSET should be an integer'
+          message: "value for 'OFFSET' should be an integer"
         })
       );
     });
