@@ -548,32 +548,40 @@ describe.only('Model', () => {
       user = new User({ id: 1, name: 'foo', confirmed: false });
     });
 
-    it('updates field values with the values returned by cast methods', () => {
-      user.castValues();
+    it('updates field values with the values returned by cast functions', async () => {
+      await user.castValues();
       expect(user.id, 'to be', 10);
     });
 
-    it('does not cast `undefined` values', () => {
+    it('supports async cast-value functions', async () => {
+      class Student extends Model {}
+      Student.fields = { id: { castValue: async () => 100 } };
+      const student = new Student({ id: 1 });
+      await student.castValues();
+      expect(student.id, 'to be', 100);
+    });
+
+    it('does not cast `undefined` values', async () => {
       user.id = undefined;
-      user.castValues();
+      await user.castValues();
       expect(user.id, 'to be undefined');
     });
 
-    it('does not update a field value if a cast function returns `undefined`', () => {
-      user.castValues();
+    it('does not update a field value if a cast function returns `undefined`', async () => {
+      await user.castValues();
       expect(user.name, 'to be', 'foo');
     });
 
-    it('calls the cast function with the model instance and the field value', () => {
-      user.castValues();
+    it('calls the cast function with the model instance and the field value', async () => {
+      await user.castValues();
       expect(castId, 'to have calls satisfying', () => {
         castId(user, 1);
       });
     });
 
-    it('casts all fields with a cast-value function', () => {
+    it('casts all fields with a cast-value function', async () => {
       user.setData({ id: 1, name: 'foo', confirmed: false });
-      user.castValues();
+      await user.castValues();
       expect(castId, 'to have calls satisfying', () => {
         castId(user, 1);
       });
@@ -582,19 +590,19 @@ describe.only('Model', () => {
       });
     });
 
-    it('resolves with the Model instance', () => {
-      expect(user.castValues(), 'to be', user);
+    it('resolves with the Model instance', async () => {
+      await expect(user.castValues(), 'to be fulfilled with', user);
     });
 
-    describe('when passed a list of fields to cast', () => {
-      it('casts only those fields', () => {
-        user.castValues({ fields: ['id'] });
+    describe('when passed a list of fields whose values to cast', () => {
+      it('casts only those field values', async () => {
+        await user.castValues({ fields: ['id'] });
         expect(user, 'to satisfy', { id: 10, name: 'foo', confirmed: false });
         expect(castName, 'was not called');
       });
 
-      it('skips fields with no cast-value function configured', () => {
-        user.castValues({ fields: ['confirmed'] });
+      it('skips fields with no cast-value function configured', async () => {
+        await user.castValues({ fields: ['confirmed'] });
         expect(user, 'to satisfy', { id: 1, name: 'foo', confirmed: false });
       });
     });
@@ -618,32 +626,40 @@ describe.only('Model', () => {
       user = new User({ id: 1, name: 'foo', confirmed: false });
     });
 
-    it('updates field values with the values returned by cast methods', () => {
-      user.parseValues();
+    it('updates field values with the values returned by parse functions', async () => {
+      await user.parseValues();
       expect(user.id, 'to be', 10);
     });
 
-    it('does not cast `undefined` values', () => {
+    it('supports async parse-value functions', async () => {
+      class Student extends Model {}
+      Student.fields = { id: { parseValue: async () => 100 } };
+      const student = new Student({ id: 1 });
+      await student.parseValues();
+      expect(student.id, 'to be', 100);
+    });
+
+    it('does not parse `undefined` values', async () => {
       user.id = undefined;
-      user.parseValues();
+      await user.parseValues();
       expect(user.id, 'to be undefined');
     });
 
-    it('does not update a field value if a cast function returns `undefined`', () => {
-      user.parseValues();
+    it('does not update a field value if a parse function returns `undefined`', async () => {
+      await user.parseValues();
       expect(user.name, 'to be', 'foo');
     });
 
-    it('calls the cast function with the model instance and the field value', () => {
-      user.parseValues();
+    it('calls the parse function with the model instance and the field value', async () => {
+      await user.parseValues();
       expect(parseId, 'to have calls satisfying', () => {
         parseId(user, 1);
       });
     });
 
-    it('casts all fields with a cast-value function', () => {
+    it('parses all fields with a parse-value function', async () => {
       user.setData({ id: 1, name: 'foo', confirmed: false });
-      user.parseValues();
+      await user.parseValues();
       expect(parseId, 'to have calls satisfying', () => {
         parseId(user, 1);
       });
@@ -652,19 +668,19 @@ describe.only('Model', () => {
       });
     });
 
-    it('resolves with the Model instance', () => {
-      expect(user.parseValues(), 'to be', user);
+    it('resolves with the Model instance', async () => {
+      await expect(user.parseValues(), 'to be fulfilled with', user);
     });
 
-    describe('when passed a list of fields to cast', () => {
-      it('casts only those fields', () => {
-        user.parseValues({ fields: ['id'] });
+    describe('when passed a list of fields whose values to parse', () => {
+      it('parses only those field values', async () => {
+        await user.parseValues({ fields: ['id'] });
         expect(user, 'to satisfy', { id: 10, name: 'foo', confirmed: false });
         expect(parseName, 'was not called');
       });
 
-      it('skips fields with no cast-value function configured', () => {
-        user.parseValues({ fields: ['confirmed'] });
+      it('skips fields with no parse-value function configured', async () => {
+        await user.parseValues({ fields: ['confirmed'] });
         expect(user, 'to satisfy', { id: 1, name: 'foo', confirmed: false });
       });
     });
