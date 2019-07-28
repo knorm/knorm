@@ -328,7 +328,7 @@ describe.only('Model', () => {
     });
   });
 
-  describe.only('Model.prototype.setDefaults', () => {
+  describe.only('Model.prototype.setDefaultValues', () => {
     let User;
     let user;
 
@@ -342,39 +342,39 @@ describe.only('Model', () => {
       user = new User();
     });
 
-    it('sets values for fields with defaults configured', () => {
-      user.setDefaults();
+    it('sets values for fields with defaults configured', async () => {
+      await user.setDefaultValues();
       expect(user.name, 'to be', 'foo');
     });
 
-    it('sets values for fields configured with falsy defaults', () => {
-      user.setDefaults();
+    it('sets values for fields configured with falsy defaults', async () => {
+      await user.setDefaultValues();
       expect(user.confirmed, 'to be false');
     });
 
-    it('does not set values for fields with no defaults configured', () => {
-      user.setDefaults();
+    it('does not set values for fields with no defaults configured', async () => {
+      await user.setDefaultValues();
       expect(user.id, 'to be undefined');
     });
 
-    it('does not overwrite fields with values already set', () => {
+    it('does not overwrite fields with values already set', async () => {
       user.name = 'bar';
-      user.setDefaults();
+      await user.setDefaultValues();
       expect(user.name, 'to be', 'bar');
     });
 
-    it('returns the Model instance', () => {
-      expect(user.setDefaults(), 'to be', user);
+    it('resolves with the Model instance', async () => {
+      await expect(user.setDefaultValues(), 'to be fulfilled with', user);
     });
 
     describe('when passed a list of fields to set defaults for', () => {
-      it('sets defaults for only those fields', () => {
-        user.setDefaults({ fields: ['name'] });
+      it('sets defaults for only those fields', async () => {
+        await user.setDefaultValues({ fields: ['name'] });
         expect(user, 'to satisfy', { name: 'foo', confirmed: undefined });
       });
 
-      it('skips fields with no default values configured', () => {
-        user.setDefaults({ fields: ['id', 'name'] });
+      it('skips fields with no default values configured', async () => {
+        await user.setDefaultValues({ fields: ['id', 'name'] });
         expect(user, 'to satisfy', { id: undefined, name: 'foo' });
       });
     });
@@ -382,24 +382,35 @@ describe.only('Model', () => {
     describe('for fields configured with a default-value function', () => {
       let User;
       let user;
+      let getId;
+      let getName;
 
       beforeEach(() => {
+        getId = sinon.stub().returns(10);
+        getName = sinon.stub().resolves('foo');
         User = class extends Model {};
         User.fields = {
-          name: { default: () => 'foo' },
-          initials: { default: model => model.name[0] }
+          id: { default: getId },
+          name: { default: getName }
         };
         user = new User();
       });
 
-      it("sets the field value from the function's return value", () => {
-        user.setDefaults();
+      it("sets the field value from the function's return value", async () => {
+        await user.setDefaultValues();
+        expect(user.id, 'to be', 10);
+      });
+
+      it('supports async default function', async () => {
+        await user.setDefaultValues();
         expect(user.name, 'to be', 'foo');
       });
 
-      it("passes the Model instance as the function's first parameter", () => {
-        user.setDefaults();
-        expect(user.initials, 'to be', 'f');
+      it("passes the Model instance as the function's first parameter", async () => {
+        await user.setDefaultValues();
+        await expect(getId, 'to have calls satisfying', () => {
+          getId(user);
+        });
       });
     });
   });
