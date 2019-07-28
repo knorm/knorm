@@ -1069,19 +1069,19 @@ describe.only('Model', () => {
     describe('if the field has a default', () => {
       it("adds it to the Model's default fields", () => {
         User.addField({ name: 'id', default: 1 });
-        expect(User.config.defaults, 'to equal', ['id']);
+        expect(User.config.defaulted, 'to equal', ['id']);
       });
 
       it('supports falsy defaults', () => {
         User.addField({ name: 'id', default: 0 });
-        expect(User.config.defaults, 'to equal', ['id']);
+        expect(User.config.defaulted, 'to equal', ['id']);
       });
     });
 
     describe('if the field has no default', () => {
       it("does not add it to the Model's default fields", () => {
         User.addField({ name: 'id' });
-        expect(User.config.defaults, 'to be empty');
+        expect(User.config.defaulted, 'to be empty');
       });
     });
 
@@ -1258,14 +1258,14 @@ describe.only('Model', () => {
 
       it("removes it from the Model's default fields", () => {
         User.removeField(id);
-        expect(User.config.defaults, 'to be empty');
+        expect(User.config.defaulted, 'to be empty');
       });
 
       it('supports falsy defaults', () => {
         User.addField({ name: 'name', default: '' });
         const name = User.fields.name;
         User.removeField(name);
-        expect(User.config.defaults, 'to be empty');
+        expect(User.config.defaulted, 'to be empty');
       });
     });
 
@@ -1347,7 +1347,7 @@ describe.only('Model', () => {
     });
 
     it('returns empty default fields', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { defaults: [] });
+      expect(User.getDefaultConfig(), 'to satisfy', { defaulted: [] });
     });
 
     it('returns empty fields with cast-value functions', () => {
