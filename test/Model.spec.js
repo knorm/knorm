@@ -159,16 +159,26 @@ describe.only('Model', () => {
     });
 
     describe('if passed data', () => {
-      it('calls Model.prototype.setData with the data', () => {
-        const setData = sinon.spy(User.prototype, 'setData');
+      let setValues;
+
+      beforeEach(() => {
+        setValues = sinon.spy(User.prototype, 'setValues');
+      });
+
+      afterEach(() => {
+        setValues.restore();
+      });
+
+      it('calls Model.prototype.setValues with the data', () => {
         new User({ id: 1 }); // eslint-disable-line no-new
-        expect(setData, 'to have calls satisfying', () => setData({ id: 1 }));
-        setData.restore();
+        expect(setValues, 'to have calls satisfying', () =>
+          setValues({ id: 1 })
+        );
       });
     });
   });
 
-  describe.only('Model.prototype.setData', () => {
+  describe.only('Model.prototype.setValues', () => {
     let User;
     let user;
 
@@ -199,43 +209,44 @@ describe.only('Model', () => {
     });
 
     it('sets values for database fields', () => {
-      user.setData({ firstName: 'foo', lastName: 'bar' });
+      user.setValues({ firstName: 'foo', lastName: 'bar' });
       expect(user.firstName, 'to be', 'foo');
       expect(user.lastName, 'to be', 'bar');
     });
 
     it('sets values for virtual fields', () => {
-      user.setData({ fullName: 'foo bar' });
+      user.setValues({ fullName: 'foo bar' });
       expect(user.firstName, 'to be', 'foo');
       expect(user.lastName, 'to be', 'bar');
     });
 
     it('sets values for arbitrary fields', () => {
-      user.setData({ foo: 'foo' });
+      user.setValues({ foo: 'foo' });
       expect(user.foo, 'to be', 'foo');
     });
 
     it('returns the Model instance', () => {
-      expect(user.setData({ firstName: 1 }), 'to be', user);
+      expect(user.setValues({ firstName: 1 }), 'to be', user);
     });
 
     it('does not set `undefined` values', () => {
-      user.setData({ firstName: 'foo' });
-      user.setData({ firstName: undefined });
+      user.setValues({ firstName: 'foo' });
+      user.setValues({ firstName: undefined });
       expect(user.firstName, 'to be', 'foo');
     });
 
     // https://github.com/knorm/knorm/issues/239
     it('does not set virtuals with no `setValue` function', () => {
-      user.setData({ firstName: 'foo', lastName: 'bar' });
+      user.setValues({ firstName: 'foo', lastName: 'bar' });
       expect(user.initials, 'to be', 'fb');
-      user.setData({ initials: 'foo' });
+      user.setValues({ initials: 'foo' });
       expect(user.initials, 'to be', 'fb');
     });
 
     it('does not allow overwriting $values', () => {
       expect(
-        () => user.setData({ $values: { firstName: 'foo', lastName: 'bar' } }),
+        () =>
+          user.setValues({ $values: { firstName: 'foo', lastName: 'bar' } }),
         'to throw',
         new TypeError(
           `Cannot assign to read only property '$values' of object '#<User>'`
@@ -245,7 +256,7 @@ describe.only('Model', () => {
 
     it('does not allow overwriting $config', () => {
       expect(
-        () => user.setData({ $config: { foo: 'bar' } }),
+        () => user.setValues({ $config: { foo: 'bar' } }),
         'to throw',
         new TypeError(
           `Cannot assign to read only property '$config' of object '#<User>'`
@@ -279,7 +290,7 @@ describe.only('Model', () => {
         }
       };
       user = new User();
-      user.setData({ firstName: 'foo', lastName: 'bar' });
+      user.setValues({ firstName: 'foo', lastName: 'bar' });
     });
 
     it('returns values for database fields', () => {
@@ -294,7 +305,7 @@ describe.only('Model', () => {
     });
 
     it('returns values for arbitrary fields', () => {
-      user.setData({ foo: 'foo' });
+      user.setValues({ foo: 'foo' });
       expect(user.getData(), 'to satisfy', { foo: 'foo' });
     });
 
@@ -444,7 +455,7 @@ describe.only('Model', () => {
     });
 
     it('inspects instances with field data', () => {
-      user.setData({ id: 1, firstName: 'foo', lastName: 'bar' });
+      user.setValues({ id: 1, firstName: 'foo', lastName: 'bar' });
       expect(
         user[util.inspect.custom](2, {}),
         'to be',
@@ -453,17 +464,17 @@ describe.only('Model', () => {
     });
 
     it('inspects instances with custom data', () => {
-      user.setData({ foo: 'bar' });
+      user.setValues({ foo: 'bar' });
       expect(user[util.inspect.custom](2, {}), 'to be', "User { foo: 'bar' }");
     });
 
     it('supports `depth < 0`', () => {
-      user.setData({ id: 1, firstName: 'foo', lastName: 'bar' });
+      user.setValues({ id: 1, firstName: 'foo', lastName: 'bar' });
       expect(user[util.inspect.custom](-1, {}), 'to be', 'User {}');
     });
 
     it('supports `colors`', () => {
-      user.setData({ id: 1, firstName: 'foo', lastName: 'bar' });
+      user.setValues({ id: 1, firstName: 'foo', lastName: 'bar' });
       expect(
         user[util.inspect.custom](2, {
           colors: true,
@@ -490,7 +501,7 @@ describe.only('Model', () => {
     });
 
     it('validates all fields with a validation spec', async () => {
-      user.setData({ id: 1, name: 'foo', confirmed: false });
+      user.setValues({ id: 1, name: 'foo', confirmed: false });
       const Validate = sinon.spy(User, 'Validate');
       const validate = sinon.spy(User.Validate.prototype, 'validate');
       await user.validateValues();
@@ -507,7 +518,7 @@ describe.only('Model', () => {
     });
 
     it('rejects with the first validation error', async () => {
-      user.setData({ id: 'foo', name: 1 });
+      user.setValues({ id: 'foo', name: 1 });
       await expect(
         user.validateValues(),
         'to be rejected with error satisfying',
@@ -521,7 +532,7 @@ describe.only('Model', () => {
 
     describe('when passed a list of fields to validate', () => {
       beforeEach(() => {
-        user.setData({ id: 'foo', name: 1, confirmed: 'foo' });
+        user.setValues({ id: 'foo', name: 1, confirmed: 'foo' });
       });
 
       it('validates only those fields', async () => {
@@ -591,7 +602,7 @@ describe.only('Model', () => {
     });
 
     it('casts all fields with a cast-value function', async () => {
-      user.setData({ id: 1, name: 'foo', confirmed: false });
+      user.setValues({ id: 1, name: 'foo', confirmed: false });
       await user.castValues();
       expect(castId, 'to have calls satisfying', () => {
         castId(user, 1);
@@ -669,7 +680,7 @@ describe.only('Model', () => {
     });
 
     it('parses all fields with a parse-value function', async () => {
-      user.setData({ id: 1, name: 'foo', confirmed: false });
+      user.setValues({ id: 1, name: 'foo', confirmed: false });
       await user.parseValues();
       expect(parseId, 'to have calls satisfying', () => {
         parseId(user, 1);
