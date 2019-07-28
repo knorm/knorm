@@ -530,71 +530,71 @@ describe.only('Model', () => {
     });
   });
 
-  describe.only('Model.prototype.castValuesBeforeSave', () => {
+  describe.only('Model.prototype.castValues', () => {
     let User;
     let user;
-    let castIdBeforeSave;
-    let castNameBeforeSave;
+    let castId;
+    let castName;
 
     beforeEach(() => {
-      castIdBeforeSave = sinon.stub().returns(10);
-      castNameBeforeSave = sinon.stub();
+      castId = sinon.stub().returns(10);
+      castName = sinon.stub();
       User = class extends Model {};
       User.fields = {
-        id: { castValueBeforeSave: castIdBeforeSave },
-        name: { castValueBeforeSave: castNameBeforeSave },
+        id: { castValue: castId },
+        name: { castValue: castName },
         confirmed: {}
       };
       user = new User({ id: 1, name: 'foo', confirmed: false });
     });
 
     it('updates field values with the values returned by cast methods', () => {
-      user.castValuesBeforeSave();
+      user.castValues();
       expect(user.id, 'to be', 10);
     });
 
     it('does not cast `undefined` values', () => {
       user.id = undefined;
-      user.castValuesBeforeSave();
+      user.castValues();
       expect(user.id, 'to be undefined');
     });
 
     it('does not update a field value if a cast function returns `undefined`', () => {
-      user.castValuesBeforeSave();
+      user.castValues();
       expect(user.name, 'to be', 'foo');
     });
 
     it('calls the cast function with the model instance and the field value', () => {
-      user.castValuesBeforeSave();
-      expect(castIdBeforeSave, 'to have calls satisfying', () => {
-        castIdBeforeSave(user, 1);
+      user.castValues();
+      expect(castId, 'to have calls satisfying', () => {
+        castId(user, 1);
       });
     });
 
-    it('casts all fields with a before-save cast function', () => {
+    it('casts all fields with a cast-value function', () => {
       user.setData({ id: 1, name: 'foo', confirmed: false });
-      user.castValuesBeforeSave();
-      expect(castIdBeforeSave, 'to have calls satisfying', () => {
-        castIdBeforeSave(user, 1);
+      user.castValues();
+      expect(castId, 'to have calls satisfying', () => {
+        castId(user, 1);
       });
-      expect(castNameBeforeSave, 'to have calls satisfying', () => {
-        castNameBeforeSave(user, 'foo');
+      expect(castName, 'to have calls satisfying', () => {
+        castName(user, 'foo');
       });
     });
 
     it('resolves with the Model instance', () => {
-      expect(user.castValuesBeforeSave(), 'to be', user);
+      expect(user.castValues(), 'to be', user);
     });
 
     describe('when passed a list of fields to cast', () => {
       it('casts only those fields', () => {
-        user.castValuesBeforeSave({ fields: ['id'] });
+        user.castValues({ fields: ['id'] });
         expect(user, 'to satisfy', { id: 10, name: 'foo', confirmed: false });
-        expect(castNameBeforeSave, 'was not called');
+        expect(castName, 'was not called');
       });
 
-      it('skips fields with no before-save cast function configured', () => {
-        user.castValuesBeforeSave({ fields: ['confirmed'] });
+      it('skips fields with no cast-value function configured', () => {
+        user.castValues({ fields: ['confirmed'] });
         expect(user, 'to satisfy', { id: 1, name: 'foo', confirmed: false });
       });
     });
@@ -641,7 +641,7 @@ describe.only('Model', () => {
       });
     });
 
-    it('casts all fields with a before-save cast function', () => {
+    it('casts all fields with a cast-value function', () => {
       user.setData({ id: 1, name: 'foo', confirmed: false });
       user.castValuesAfterFetch();
       expect(castIdAfterFetch, 'to have calls satisfying', () => {
@@ -663,7 +663,7 @@ describe.only('Model', () => {
         expect(castNameAfterFetch, 'was not called');
       });
 
-      it('skips fields with no before-save cast function configured', () => {
+      it('skips fields with no cast-value function configured', () => {
         user.castValuesAfterFetch({ fields: ['confirmed'] });
         expect(user, 'to satisfy', { id: 1, name: 'foo', confirmed: false });
       });
@@ -1085,17 +1085,17 @@ describe.only('Model', () => {
       });
     });
 
-    describe('if the field has a before-save cast function', () => {
-      it('adds it to the fields with before-save cast functions', () => {
-        User.addField({ name: 'id', castValueBeforeSave: () => {} });
-        expect(User.config.castBeforeSave, 'to equal', ['id']);
+    describe('if the field has a cast-value function', () => {
+      it('adds it to the fields with cast-value functions', () => {
+        User.addField({ name: 'id', castValue: () => {} });
+        expect(User.config.cast, 'to equal', ['id']);
       });
     });
 
-    describe('if the field has no before-save cast function', () => {
-      it('does not add it to the fields with before-save cast functions', () => {
+    describe('if the field has no cast-value function', () => {
+      it('does not add it to the fields with cast-value functions', () => {
         User.addField({ name: 'id' });
-        expect(User.config.castBeforeSave, 'to be empty');
+        expect(User.config.cast, 'to be empty');
       });
     });
 
@@ -1269,14 +1269,14 @@ describe.only('Model', () => {
       });
     });
 
-    describe('if the field has a before-save cast function', () => {
+    describe('if the field has a cast-value function', () => {
       beforeEach(() => {
-        idFieldConfig = { name: 'id', castValueBeforeSave: () => {} };
+        idFieldConfig = { name: 'id', castValue: () => {} };
       });
 
-      it('removes it from the fields with before-save cast functions', () => {
+      it('removes it from the fields with cast-value functions', () => {
         User.removeField(id);
-        expect(User.config.castBeforeSave, 'to be empty');
+        expect(User.config.cast, 'to be empty');
       });
     });
 
@@ -1350,8 +1350,8 @@ describe.only('Model', () => {
       expect(User.getDefaultConfig(), 'to satisfy', { defaults: [] });
     });
 
-    it('returns empty fields with before-save cast functions', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { castBeforeSave: [] });
+    it('returns empty fields with cast-value functions', () => {
+      expect(User.getDefaultConfig(), 'to satisfy', { cast: [] });
     });
 
     it('returns empty fields with after-fetch cast functions', () => {
