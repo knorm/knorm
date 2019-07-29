@@ -1,3 +1,10 @@
+## [2.0.5](https://github.com/knorm/postgres/compare/v2.0.4...v2.0.5) (2019-07-29)
+
+
+### Bug Fixes
+
+* do not stringify null values ([#124](https://github.com/knorm/postgres/issues/124)) ([cd3514c](https://github.com/knorm/postgres/commit/cd3514c))
+
 ## [2.0.4](https://github.com/knorm/postgres/compare/v2.0.3...v2.0.4) (2019-07-24)
 
 
