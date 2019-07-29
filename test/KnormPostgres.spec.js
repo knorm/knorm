@@ -169,6 +169,11 @@ describe('KnormPostgres', () => {
           Query.prototype.sql = sql;
         });
 
+        it('does not stringify `null` values', () => {
+          const field = new Field({ name: 'foo', model: Model, type: 'json' });
+          expect(field.cast(null, null, { forSave: true }), 'to be undefined');
+        });
+
         describe('with a forSave cast function configured', () => {
           it('uses the configred function', () => {
             const field = new Field({
