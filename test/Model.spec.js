@@ -556,79 +556,79 @@ describe.only('Model', () => {
     });
   });
 
-  describe.only('Model.prototype.castValues', () => {
+  describe.only('Model.prototype.preparedValues', () => {
     let User;
     let user;
-    let castId;
-    let castName;
+    let prepareId;
+    let prepareName;
 
     beforeEach(() => {
-      castId = sinon.stub().returns(10);
-      castName = sinon.stub();
+      prepareId = sinon.stub().returns(10);
+      prepareName = sinon.stub();
       User = class extends Model {};
       User.fields = {
-        id: { castValue: castId },
-        name: { castValue: castName },
+        id: { prepareValue: prepareId },
+        name: { prepareValue: prepareName },
         confirmed: {}
       };
       user = new User({ id: 1, name: 'foo', confirmed: false });
     });
 
-    it('updates field values with the values returned by cast functions', async () => {
-      await user.castValues();
+    it('updates field values with the values returned by prepare-value functions', async () => {
+      await user.prepareValues();
       expect(user.id, 'to be', 10);
     });
 
-    it('supports async cast-value functions', async () => {
+    it('supports async prepare-value functions', async () => {
       class Student extends Model {}
-      Student.fields = { id: { castValue: async () => 100 } };
+      Student.fields = { id: { prepareValue: async () => 100 } };
       const student = new Student({ id: 1 });
-      await student.castValues();
+      await student.prepareValues();
       expect(student.id, 'to be', 100);
     });
 
-    it('does not cast `undefined` values', async () => {
+    it('does not prepare `undefined` values', async () => {
       user.id = undefined;
-      await user.castValues();
+      await user.prepareValues();
       expect(user.id, 'to be undefined');
     });
 
-    it('does not update a field value if a cast function returns `undefined`', async () => {
-      await user.castValues();
+    it('does not update a field value if a prepare-vale function returns `undefined`', async () => {
+      await user.prepareValues();
       expect(user.name, 'to be', 'foo');
     });
 
-    it('calls the cast function with the model instance and the field value', async () => {
-      await user.castValues();
-      expect(castId, 'to have calls satisfying', () => {
-        castId(user, 1);
+    it('calls the prepare function with the model instance and the field value', async () => {
+      await user.prepareValues();
+      expect(prepareId, 'to have calls satisfying', () => {
+        prepareId(user, 1);
       });
     });
 
-    it('casts all fields with a cast-value function', async () => {
+    it('prepares all fields with a prepare-value function', async () => {
       user.setValues({ id: 1, name: 'foo', confirmed: false });
-      await user.castValues();
-      expect(castId, 'to have calls satisfying', () => {
-        castId(user, 1);
+      await user.prepareValues();
+      expect(prepareId, 'to have calls satisfying', () => {
+        prepareId(user, 1);
       });
-      expect(castName, 'to have calls satisfying', () => {
-        castName(user, 'foo');
+      expect(prepareName, 'to have calls satisfying', () => {
+        prepareName(user, 'foo');
       });
     });
 
     it('resolves with the Model instance', async () => {
-      await expect(user.castValues(), 'to be fulfilled with', user);
+      await expect(user.prepareValues(), 'to be fulfilled with', user);
     });
 
-    describe('when passed a list of fields whose values to cast', () => {
-      it('casts only those field values', async () => {
-        await user.castValues({ fields: ['id'] });
+    describe('when passed a list of fields whose values to prepare', () => {
+      it('prepares only those field values', async () => {
+        await user.prepareValues({ fields: ['id'] });
         expect(user, 'to satisfy', { id: 10, name: 'foo', confirmed: false });
-        expect(castName, 'was not called');
+        expect(prepareName, 'was not called');
       });
 
-      it('skips fields with no cast-value function configured', async () => {
-        await user.castValues({ fields: ['confirmed'] });
+      it('skips fields with no prepare-value function configured', async () => {
+        await user.prepareValues({ fields: ['confirmed'] });
         expect(user, 'to satisfy', { id: 1, name: 'foo', confirmed: false });
       });
     });
@@ -1129,17 +1129,17 @@ describe.only('Model', () => {
       });
     });
 
-    describe('if the field has a cast-value function', () => {
-      it('adds it to the fields with cast-value functions', () => {
-        User.addField({ name: 'id', castValue: () => {} });
-        expect(User.config.fields.cast, 'to equal', ['id']);
+    describe('if the field has a prepare-value function', () => {
+      it('adds it to the fields with prepare-value functions', () => {
+        User.addField({ name: 'id', prepareValue: () => {} });
+        expect(User.config.fields.prepared, 'to equal', ['id']);
       });
     });
 
-    describe('if the field has no cast-value function', () => {
-      it('does not add it to the fields with cast-value functions', () => {
+    describe('if the field has no prepare-value function', () => {
+      it('does not add it to the fields with prepare-value functions', () => {
         User.addField({ name: 'id' });
-        expect(User.config.fields.cast, 'to be empty');
+        expect(User.config.fields.prepared, 'to be empty');
       });
     });
 
@@ -1313,14 +1313,14 @@ describe.only('Model', () => {
       });
     });
 
-    describe('if the field has a cast-value function', () => {
+    describe('if the field has a prepare-value function', () => {
       beforeEach(() => {
-        idFieldConfig = { name: 'id', castValue: () => {} };
+        idFieldConfig = { name: 'id', prepareValue: () => {} };
       });
 
-      it('removes it from the fields with cast-value functions', () => {
+      it('removes it from the fields with prepare-value functions', () => {
         User.removeField(id);
-        expect(User.config.fields.cast, 'to be empty');
+        expect(User.config.fields.prepared, 'to be empty');
       });
     });
 
@@ -1388,7 +1388,7 @@ describe.only('Model', () => {
           unique: [],
           notUpdated: [],
           defaulted: [],
-          cast: [],
+          prepared: [],
           parsed: []
         }
       });
