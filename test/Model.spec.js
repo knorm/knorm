@@ -1055,16 +1055,16 @@ describe.only('Model', () => {
     });
 
     describe('if the field is non-virtual', () => {
-      it("adds it to the Model's columns", () => {
+      it("adds it to the Model's field columns", () => {
         User.addField({ name: 'id', virtual: false, column: '_id' });
-        expect(User.config.columns, 'to equal', { id: '_id' });
+        expect(User.config.fields.columns, 'to equal', { id: '_id' });
       });
     });
 
     describe('if the field is virtual', () => {
-      it("does not add it to the Model's columns", () => {
+      it("does not add it to the Model's field columns", () => {
         User.addField({ name: 'id', virtual: true, column: '_id' });
-        expect(User.config.columns, 'to be empty');
+        expect(User.config.fields.columns, 'to be empty');
       });
     });
 
@@ -1256,9 +1256,9 @@ describe.only('Model', () => {
         idFieldConfig = { name: 'id', virtual: false, column: '_id' };
       });
 
-      it("removes it from the Model's columns", () => {
+      it("removes it from the Model's field columns", () => {
         User.removeField(id);
-        expect(User.config.columns, 'to be empty');
+        expect(User.config.fields.columns, 'to be empty');
       });
     });
 
@@ -1382,6 +1382,7 @@ describe.only('Model', () => {
       expect(User.getDefaultConfig(), 'to satisfy', {
         fields: {
           instances: {},
+          columns: {},
           names: [],
           validated: [],
           primary: undefined,
@@ -1392,10 +1393,6 @@ describe.only('Model', () => {
           parsed: []
         }
       });
-    });
-
-    it('returns empty column configs', () => {
-      expect(User.getDefaultConfig(), 'to satisfy', { columns: {} });
     });
   });
 
@@ -1692,6 +1689,30 @@ describe.only('Model', () => {
     it('allows setting and getting fields', () => {
       User.fields = { id: {} };
       expect(User.fields, 'to equal', { id: new Field(User, { name: 'id' }) });
+    });
+  });
+
+  describe.only('Model.columns', () => {
+    let User;
+
+    beforeEach(() => {
+      User = class extends Model {};
+    });
+
+    describe('if the Model has no fields configured', () => {
+      it('returns an empty object', () => {
+        expect(User.columns, 'to equal', {});
+      });
+    });
+
+    describe('if the Model has fields configured', () => {
+      it("returns the Model's field column mappings", () => {
+        User.fields = { id: { column: '_id' }, name: { column: 'NAME' } };
+        expect(User.columns, 'to exhaustively satisfy', {
+          id: '_id',
+          name: 'NAME'
+        });
+      });
     });
   });
 
