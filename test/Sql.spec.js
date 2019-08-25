@@ -564,8 +564,8 @@ describe.only('Sql', () => {
         sql.formatSelect(
           new SqlPart({
             type: 'select',
-            value: [
-              new SqlPart({
+            value: {
+              fields: new SqlPart({
                 type: 'fields',
                 value: [
                   'id',
@@ -575,16 +575,10 @@ describe.only('Sql', () => {
                   })
                 ]
               }),
-              new SqlPart({ type: 'from', value: [User] }),
-              new SqlPart({
-                type: 'where',
-                value: [{ id: 1 }]
-              }),
-              new SqlPart({
-                type: 'groupBy',
-                value: ['id']
-              }),
-              new SqlPart({
+              from: new SqlPart({ type: 'from', value: [User] }),
+              where: new SqlPart({ type: 'where', value: [{ id: 1 }] }),
+              groupBy: new SqlPart({ type: 'groupBy', value: ['id'] }),
+              having: new SqlPart({
                 type: 'having',
                 value: [
                   new SqlPart({
@@ -597,7 +591,7 @@ describe.only('Sql', () => {
                   })
                 ]
               }),
-              new SqlPart({
+              orderBy: new SqlPart({
                 type: 'orderBy',
                 value: [
                   {
@@ -608,12 +602,12 @@ describe.only('Sql', () => {
                   }
                 ]
               }),
-              new SqlPart({ type: 'limit', value: 10 }),
-              new SqlPart({ type: 'offset', value: 0 }),
-              new SqlPart({ type: 'forUpdate', value: true }),
-              new SqlPart({ type: 'of', value: ['id'] }),
-              new SqlPart({ type: 'skipLocked', value: true })
-            ]
+              limit: new SqlPart({ type: 'limit', value: 10 }),
+              offset: new SqlPart({ type: 'offset', value: 0 }),
+              forUpdate: new SqlPart({ type: 'forUpdate', value: true }),
+              of: new SqlPart({ type: 'of', value: ['id'] }),
+              skipLocked: new SqlPart({ type: 'skipLocked', value: true })
+            }
           }),
           options
         ),
@@ -1567,10 +1561,10 @@ describe.only('Sql', () => {
         sql.formatSqlPart(
           new SqlPart({
             type: 'select',
-            value: [
-              new SqlPart({ type: 'fields', value: ['id'] }),
-              new SqlPart({ type: 'from', value: [User] })
-            ]
+            value: {
+              fields: new SqlPart({ type: 'fields', value: ['id'] }),
+              from: new SqlPart({ type: 'from', value: [User] })
+            }
           }),
           options
         ),
@@ -1998,9 +1992,12 @@ describe.only('Sql', () => {
   describe('Sql.select', () => {
     it('returns a `select` part', () => {
       expect(
-        Sql.select([new SqlPart({ type: 'from' })]),
+        Sql.select({ from: new SqlPart({ type: 'from', value: [User] }) }),
         'to equal',
-        new SqlPart({ type: 'select', value: [new SqlPart({ type: 'from' })] })
+        new SqlPart({
+          type: 'select',
+          value: { from: new SqlPart({ type: 'from', value: [User] }) }
+        })
       );
     });
   });
