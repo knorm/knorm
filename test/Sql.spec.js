@@ -37,18 +37,20 @@ describe.only('Sql', () => {
   });
 
   let sql;
+  let options;
 
   beforeEach(() => {
-    sql = new Sql(User);
+    sql = new Sql();
+    options = { Model: User };
   });
 
   describe('Sql.prototype.addValue', () => {
-    it('adds a value to the values array', () => {
+    it('adds a bind-value to the bind-values array', () => {
       sql.addValue('foo');
       expect(sql.getValues(), 'to equal', ['foo']);
     });
 
-    it('maintains the order of values', () => {
+    it('maintains the order of bind-values', () => {
       sql.addValue('foo');
       sql.addValue('bar');
       expect(sql.getValues(), 'to equal', ['foo', 'bar']);
@@ -60,12 +62,12 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.addValues', () => {
-    it('adds multiple values to the values array', () => {
+    it('adds multiple bind-values to the bind-values array', () => {
       sql.addValues(['foo', 'bar']);
       expect(sql.getValues(), 'to equal', ['foo', 'bar']);
     });
 
-    it('maintains the order of values', () => {
+    it('maintains the order of bind-values', () => {
       sql.addValues(['foo', 'bar']);
       sql.addValues(['baz', 'quux']);
       expect(sql.getValues(), 'to equal', ['foo', 'bar', 'baz', 'quux']);
@@ -77,7 +79,7 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.getValues', () => {
-    it('returns the currently added values', () => {
+    it('returns the currently added bind-values', () => {
       expect(sql.getValues(), 'to equal', []);
       sql.addValues(['foo', 'bar']);
       expect(sql.getValues(), 'to equal', ['foo', 'bar']);
@@ -85,12 +87,12 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.addField', () => {
-    it('adds a field to the fields array', () => {
+    it('adds a return-field to the return-fields array', () => {
       sql.addField('foo');
       expect(sql.getFields(), 'to equal', ['foo']);
     });
 
-    it('maintains the order of fields', () => {
+    it('maintains the order of return-fields', () => {
       sql.addField('foo');
       sql.addField('bar');
       expect(sql.getFields(), 'to equal', ['foo', 'bar']);
@@ -102,12 +104,12 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.addFields', () => {
-    it('adds multiple fields to the fields array', () => {
+    it('adds multiple return-fields to the return-fields array', () => {
       sql.addFields(['foo', 'bar']);
       expect(sql.getFields(), 'to equal', ['foo', 'bar']);
     });
 
-    it('maintains the order of fields', () => {
+    it('maintains the order of return-fields', () => {
       sql.addFields(['foo', 'bar']);
       sql.addFields(['baz', 'quux']);
       expect(sql.getFields(), 'to equal', ['foo', 'bar', 'baz', 'quux']);
@@ -119,138 +121,63 @@ describe.only('Sql', () => {
   });
 
   describe('Sql.prototype.getFields', () => {
-    it('returns the currently added fields', () => {
+    it('returns the currently added return-fields', () => {
       expect(sql.getFields(), 'to equal', []);
       sql.addFields(['foo', 'bar']);
       expect(sql.getFields(), 'to equal', ['foo', 'bar']);
     });
   });
 
-  describe('Sql.prototype.setAlias', () => {
-    it('sets the alias', () => {
-      sql.setAlias('foo');
-      expect(sql.getAlias(), 'to be', 'foo');
-    });
-
-    it('overwrites the alias when called again', () => {
-      sql.setAlias('foo');
-      sql.setAlias('bar');
-      expect(sql.getAlias(), 'to be', 'bar');
-    });
-
-    it('allows chaining', () => {
-      expect(sql.setAlias('foo'), 'to be', sql);
-    });
-  });
-
-  describe('Sql.prototype.getAlias', () => {
-    it('returns the currently set alias', () => {
-      expect(sql.getAlias(), 'to be undefined');
-      sql.setAlias('foo');
-      expect(sql.getAlias(), 'to be', 'foo');
-    });
-  });
-
   describe('Sql.prototype.throwSqlError', () => {
     it('throws a SqlError', () => {
       expect(
-        () => sql.throwSqlError('foo'),
+        () => sql.throwSqlError('foo', options),
         'to throw',
-        new SqlError({ sql, message: 'foo' })
+        new SqlError({ sql, options, message: 'foo' })
       );
+    });
+  });
+
+  describe('Sql.prototype.formatPlaceholder', () => {
+    it('returns a `?`', () => {
+      expect(sql.formatPlaceholder(options), 'to be', '?');
     });
   });
 
   describe('Sql.prototype.formatIdentifier', () => {
     it('quotes the identifier', () => {
-      expect(sql.formatIdentifier('order'), 'to be', '"order"');
+      expect(sql.formatIdentifier('order', options), 'to be', '"order"');
     });
   });
 
-  describe('Sql.prototype.formatAlias', () => {
-    describe('with the alias not set', () => {
-      it('returns `undefined`', () => {
-        expect(sql.formatAlias(), 'to be undefined');
-      });
-    });
-
-    describe('with the alias set', () => {
-      it('returns a quoted alias', () => {
-        sql.setAlias('foo');
-        expect(sql.formatAlias(), 'to be', '"foo"');
-      });
+  describe('Sql.prototype.formatDot', () => {
+    it('returns a dot-separated string', () => {
+      expect(sql.formatDot('left', 'right', options), 'to be', 'left.right');
     });
   });
 
-  describe('Sql.prototype.formatTable', () => {
-    it('returns a quoted `Model.table`', () => {
-      expect(sql.formatTable(), 'to be', '"user"');
+  describe('Sql.prototype.formatModel', () => {
+    it('returns a formatted `Model.table`', () => {
+      expect(sql.formatModel(User, options), 'to be', '"user"');
     });
 
     describe('with `Model.table` not configured', () => {
       it('throws an SqlError', () => {
         class Foo extends Model {}
-        const sql = new Sql(Foo);
         expect(
-          () => sql.formatTable(),
+          () => sql.formatModel(Foo, options),
           'to throw',
-          new SqlError({ sql, message: 'table is not configured' })
+          new SqlError({ sql, options, message: 'Foo: table not configured' })
         );
       });
     });
 
     describe('with `Model.schema` configured', () => {
-      it('returns a quoted `Model.schema`-qualified `Model.table`', () => {
+      it('qualifies `Model.table` with a formatted `Model.schema`', () => {
         expect(
-          new Sql(UserWithSchema).formatTable(),
+          sql.formatModel(UserWithSchema, options),
           'to be',
           '"public"."user"'
-        );
-      });
-    });
-
-    describe('with the alias set', () => {
-      it('returns an aliased table-name with the quoted alias', () => {
-        sql.setAlias('foo');
-        expect(sql.formatTable(), 'to be', '"user" AS "foo"');
-      });
-
-      describe('with `Model.schema` configured', () => {
-        it('returns a quoted and aliased schema-qualified table-name', () => {
-          const sql = new Sql(UserWithSchema).setAlias('foo');
-          expect(sql.formatTable(), 'to be', '"public"."user" AS "foo"');
-        });
-      });
-    });
-  });
-
-  describe('Sql.prototype.formatColumn', () => {
-    it('returns a quoted non-qualified column', () => {
-      expect(sql.formatColumn('id'), 'to be', '"id"');
-    });
-
-    describe('with custom columns configured', () => {
-      let OtherUser;
-
-      beforeEach(() => {
-        OtherUser = class extends User {};
-        OtherUser.fields = { id: { type: 'integer', column: 'ID' } };
-      });
-
-      it('uses the configured columns', () => {
-        expect(new Sql(OtherUser).formatColumn('id'), 'to be', '"ID"');
-      });
-    });
-
-    describe('with no `column` configured for a field', () => {
-      it('throws an SqlError', () => {
-        expect(
-          () => sql.formatColumn('foo'),
-          'to throw',
-          new SqlError({
-            sql,
-            message: "column not configured for field 'foo'"
-          })
         );
       });
     });
@@ -258,112 +185,77 @@ describe.only('Sql', () => {
 
   describe('Sql.prototype.formatQuery', () => {
     it('returns a SELECT query wrapped in parentheses', () => {
-      expect(sql.formatQuery(new Query(User)), 'to be', '(SELECT FROM "user")');
+      expect(
+        sql.formatQuery(new Query(User), options),
+        'to be',
+        '(SELECT FROM "user")'
+      );
     });
 
     it('adds values from the query to its values array', () => {
-      sql.formatQuery(new Query(User).setOption('where', { id: 1 }));
+      sql.formatQuery(new Query(User).setOption('where', { id: 1 }), options);
       expect(sql.getValues(), 'to equal', [1]);
     });
 
     it('adds fields from the query to its fields array', () => {
-      sql.formatQuery(new Query(User).setOption('fields', ['id', 'name']));
+      sql.formatQuery(
+        new Query(User).setOption('fields', ['id', 'name']),
+        options
+      );
       expect(sql.getFields(), 'to equal', ['id', 'name']);
-    });
-  });
-
-  describe('Sql.prototype.formatRaw', () => {
-    it("returns the part's SQL", () => {
-      expect(
-        sql.formatRaw(
-          new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })
-        ),
-        'to be',
-        'SELECT 1'
-      );
-    });
-
-    it('supports raw SQL as a string', () => {
-      expect(
-        sql.formatRaw(new SqlPart({ type: 'raw', value: 'SELECT 1' })),
-        'to be',
-        'SELECT 1'
-      );
-    });
-
-    it('adds values from the part to its values array', () => {
-      sql.formatRaw(
-        new SqlPart({ type: 'raw', value: { text: 'SELECT ?', values: [1] } })
-      );
-      expect(sql.getValues(), 'to equal', [1]);
-    });
-
-    it('adds fields from the part to its fields array', () => {
-      sql.formatRaw(
-        new SqlPart({
-          type: 'raw',
-          value: { text: 'SELECT 1 AS foo', fields: ['foo'] }
-        })
-      );
-      expect(sql.getFields(), 'to equal', ['foo']);
     });
   });
 
   describe('Sql.prototype.formatValue', () => {
     it('returns a placeholder', () => {
-      expect(sql.formatValue(1), 'to be', '?');
+      expect(sql.formatValue(1, options), 'to be', '?');
     });
 
     it('adds the value to its values array', () => {
-      sql.formatValue(1);
+      sql.formatValue(1, options);
       expect(sql.getValues(), 'to equal', [1]);
     });
 
     it('supports array values', () => {
-      expect(sql.formatValue([1]), 'to be', '?');
+      expect(sql.formatValue([1], options), 'to be', '?');
       expect(sql.getValues(), 'to equal', [[1]]);
     });
 
     it('supports object values', () => {
-      expect(sql.formatValue({ foo: 'bar' }), 'to be', '?');
+      expect(sql.formatValue({ foo: 'bar' }, options), 'to be', '?');
       expect(sql.getValues(), 'to equal', [{ foo: 'bar' }]);
     });
 
     it('supports falsy values', () => {
-      expect(sql.formatValue(false), 'to be', '?');
+      expect(sql.formatValue(false, options), 'to be', '?');
       expect(sql.getValues(), 'to equal', [false]);
     });
 
     it('throws an SqlError for `undefined`', () => {
       expect(
-        () => sql.formatValue(),
+        () => sql.formatValue(undefined, options),
         'to throw',
-        new SqlError({ sql, message: 'value is undefined' })
-      );
-      expect(
-        () => sql.formatValue(undefined),
-        'to throw',
-        new SqlError({ sql, message: 'value is undefined' })
+        new SqlError({ sql, options, message: 'value is undefined' })
       );
     });
 
     describe('for Model classes', () => {
-      it('creates a Query instance and returns its SELECT query', () => {
-        expect(sql.formatValue(User), 'to be', '(SELECT FROM "user")');
+      it("returns the Model's formatted table-name", () => {
+        expect(sql.formatValue(User, options), 'to be', '"user"');
       });
 
       describe('with the `formatModel` formatter passed', () => {
-        it('calls the function with the value', () => {
+        it('calls the function with the value and options', () => {
           const formatModel = sinon.spy();
-          sql.formatValue(User, { formatModel });
+          sql.formatValue(User, options, { formatModel });
           expect(formatModel, 'to have calls satisfying', () =>
-            formatModel(User)
+            formatModel(User, options)
           );
         });
 
         it("returns the function's return value", () => {
           expect(
-            sql.formatValue(User, {
+            sql.formatValue(User, options, {
               formatModel() {
                 return 'formatted value';
               }
@@ -376,26 +268,26 @@ describe.only('Sql', () => {
     });
 
     describe('for Query instances', () => {
-      it("returns the Query's SELECT query", () => {
+      it("returns the Query's formatted SELECT query", () => {
         expect(
-          sql.formatValue(new Query(User)),
+          sql.formatValue(new Query(User), options),
           'to be',
           '(SELECT FROM "user")'
         );
       });
 
       describe('with the `formatQuery` formatter passed', () => {
-        it('calls the function with the value', () => {
+        it('calls the function with the value and options', () => {
           const formatQuery = sinon.spy();
-          sql.formatValue(new Query(User), { formatQuery });
+          sql.formatValue(new Query(User), options, { formatQuery });
           expect(formatQuery, 'to have calls satisfying', () =>
-            formatQuery(new Query(User))
+            formatQuery(new Query(User), options)
           );
         });
 
         it("returns the function's return value", () => {
           expect(
-            sql.formatValue(new Query(User), {
+            sql.formatValue(new Query(User), options, {
               formatQuery() {
                 return 'formatted value';
               }
@@ -408,10 +300,11 @@ describe.only('Sql', () => {
     });
 
     describe('for SqlPart instances', () => {
-      it("returns the part's SQL", () => {
+      it("returns the part's SQL text", () => {
         expect(
           sql.formatValue(
-            new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })
+            new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } }),
+            options
           ),
           'to be',
           'SELECT 1'
@@ -421,21 +314,30 @@ describe.only('Sql', () => {
       describe('with the `formatSqlPart` formatter passed', () => {
         it('calls the function with the value', () => {
           const formatSqlPart = sinon.spy();
-          sql.formatValue(new SqlPart({ type: 'raw', value: 'SELECT 1' }), {
-            formatSqlPart
-          });
+          sql.formatValue(
+            new SqlPart({ type: 'raw', value: 'SELECT 1' }),
+            options,
+            { formatSqlPart }
+          );
           expect(formatSqlPart, 'to have calls satisfying', () =>
-            formatSqlPart(new SqlPart({ type: 'raw', value: 'SELECT 1' }))
+            formatSqlPart(
+              new SqlPart({ type: 'raw', value: 'SELECT 1' }),
+              options
+            )
           );
         });
 
         it("returns the function's return value", () => {
           expect(
-            sql.formatValue(new SqlPart({ type: 'raw', value: 'SELECT 1' }), {
-              formatSqlPart() {
-                return 'formatted value';
+            sql.formatValue(
+              new SqlPart({ type: 'raw', value: 'SELECT 1' }),
+              options,
+              {
+                formatSqlPart() {
+                  return 'formatted value';
+                }
               }
-            }),
+            ),
             'to be',
             'formatted value'
           );
@@ -446,13 +348,15 @@ describe.only('Sql', () => {
     describe('with the `formatArray` formatter passed', () => {
       it('calls the function with array values', () => {
         const formatArray = sinon.spy();
-        sql.formatValue([1], { formatArray });
-        expect(formatArray, 'to have calls satisfying', () => formatArray([1]));
+        sql.formatValue([1], options, { formatArray });
+        expect(formatArray, 'to have calls satisfying', () =>
+          formatArray([1], options)
+        );
       });
 
       it("returns the function's return value", () => {
         expect(
-          sql.formatValue([1], {
+          sql.formatValue([1], options, {
             formatArray() {
               return 'formatted value';
             }
@@ -466,22 +370,19 @@ describe.only('Sql', () => {
     describe('with the `formatObject` formatter passed', () => {
       it('calls the function with array values', () => {
         const formatObject = sinon.spy();
-        sql.formatValue({ foo: 'bar' }, { formatObject });
+        sql.formatValue({ foo: 'bar' }, options, { formatObject });
         expect(formatObject, 'to have calls satisfying', () =>
-          formatObject({ foo: 'bar' })
+          formatObject({ foo: 'bar' }, options)
         );
       });
 
       it("returns the function's return value", () => {
         expect(
-          sql.formatValue(
-            { foo: 'bar' },
-            {
-              formatObject() {
-                return 'formatted value';
-              }
+          sql.formatValue({ foo: 'bar' }, options, {
+            formatObject() {
+              return 'formatted value';
             }
-          ),
+          }),
           'to be',
           'formatted value'
         );
@@ -489,37 +390,39 @@ describe.only('Sql', () => {
 
       it('does not call the function with array values', () => {
         const formatObject = sinon.spy();
-        sql.formatValue([1], { formatObject });
+        sql.formatValue([1], options, { formatObject });
         expect(formatObject, 'was not called');
       });
     });
 
     describe('with the `formatValue` formatter passed', () => {
-      it('calls the function with the value', () => {
+      it('calls the function with the value and options', () => {
         const formatValue = sinon.spy();
-        sql.formatValue(false, { formatValue });
+        sql.formatValue(false, options, { formatValue });
         expect(formatValue, 'to have calls satisfying', () =>
-          formatValue(false)
+          formatValue(false, options)
         );
       });
 
       it('calls the function with object values', () => {
         const formatValue = sinon.spy();
-        sql.formatValue({ foo: 'bar' }, { formatValue });
+        sql.formatValue({ foo: 'bar' }, options, { formatValue });
         expect(formatValue, 'to have calls satisfying', () =>
-          formatValue({ foo: 'bar' })
+          formatValue({ foo: 'bar' }, options)
         );
       });
 
       it('calls the function with array values', () => {
         const formatValue = sinon.spy();
-        sql.formatValue([1], { formatValue });
-        expect(formatValue, 'to have calls satisfying', () => formatValue([1]));
+        sql.formatValue([1], options, { formatValue });
+        expect(formatValue, 'to have calls satisfying', () =>
+          formatValue([1], options)
+        );
       });
 
       it('does not call the function for Query instances', () => {
         const formatValue = sinon.spy();
-        sql.formatValue(new Query(User), { formatValue });
+        sql.formatValue(new Query(User), options, { formatValue });
         expect(formatValue, 'was not called');
       });
 
@@ -527,6 +430,7 @@ describe.only('Sql', () => {
         const formatValue = sinon.spy();
         sql.formatValue(
           new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } }),
+          options,
           { formatValue }
         );
         expect(formatValue, 'was not called');
@@ -534,7 +438,7 @@ describe.only('Sql', () => {
 
       it("returns the function's return value", () => {
         expect(
-          sql.formatValue(1, {
+          sql.formatValue(1, options, {
             formatValue() {
               return 'formatted value';
             }
@@ -546,9 +450,39 @@ describe.only('Sql', () => {
     });
   });
 
+  describe('Sql.prototype.formatColumn', () => {
+    it('returns a quoted non-qualified column', () => {
+      expect(sql.formatColumn('id', options), 'to be', '"id"');
+    });
+
+    it('uses configured Model columns', () => {
+      const OtherUser = class extends User {};
+      OtherUser.fields = { id: { column: 'ID' } };
+      expect(
+        new Sql(OtherUser).formatColumn('id', { Model: OtherUser }),
+        'to be',
+        '"ID"'
+      );
+    });
+
+    describe('with no column configured for a field', () => {
+      it('throws an SqlError', () => {
+        expect(
+          () => sql.formatColumn('foo', options),
+          'to throw',
+          new SqlError({
+            sql,
+            options,
+            message: "User: column not configured for field 'foo'"
+          })
+        );
+      });
+    });
+  });
+
   describe('Sql.prototype.formatField', () => {
-    it('returns a quoted table-name-qualified column', () => {
-      expect(sql.formatField('id'), 'to be', '"user"."id"');
+    it('returns a formatted column-name qualified with `Model.table`', () => {
+      expect(sql.formatField('id', { Model: User }), 'to be', '"user"."id"');
     });
 
     it('supports SqlPart instances', () => {
@@ -565,11 +499,66 @@ describe.only('Sql', () => {
       expect(sql.getFields(), 'to equal', ['count']);
     });
 
-    describe('with the alias set', () => {
-      it('qualifies the column-name with the alias instead', () => {
-        sql.setAlias('foo');
-        expect(sql.formatField('id'), 'to be', '"foo"."id"');
+    describe('with `Model.schema`  set', () => {
+      it('additionally qualifies the column-name with `Model.schema`', () => {
+        expect(
+          sql.formatField('id', { Model: UserWithSchema }),
+          'to be',
+          '"public"."user"."id"'
+        );
       });
+    });
+
+    describe('with the `alias` option set', () => {
+      it('qualifies the column-name with the alias instead', () => {
+        expect(
+          sql.formatField('id', { Model: User, alias: 'foo' }),
+          'to be',
+          '"foo"."id"'
+        );
+      });
+    });
+  });
+
+  describe('Sql.prototype.formatRaw', () => {
+    it("returns the part's SQL", () => {
+      expect(
+        sql.formatRaw(
+          new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } }),
+          options
+        ),
+        'to be',
+        'SELECT 1'
+      );
+    });
+
+    it('supports raw SQL as a string', () => {
+      expect(
+        sql.formatRaw(new SqlPart({ type: 'raw', value: 'SELECT 1' }), options),
+        'to be',
+        'SELECT 1'
+      );
+    });
+
+    it('adds values from the part to its values array', () => {
+      sql.formatRaw(
+        new SqlPart(
+          { type: 'raw', value: { text: 'SELECT ?', values: [1] } },
+          options
+        )
+      );
+      expect(sql.getValues(), 'to equal', [1]);
+    });
+
+    it('adds fields from the part to its fields array', () => {
+      sql.formatRaw(
+        new SqlPart({
+          type: 'raw',
+          value: { text: 'SELECT 1 AS foo', fields: ['foo'] }
+        }),
+        options
+      );
+      expect(sql.getFields(), 'to equal', ['foo']);
     });
   });
 
@@ -590,7 +579,7 @@ describe.only('Sql', () => {
                   })
                 ]
               }),
-              new SqlPart({ type: 'from' }),
+              new SqlPart({ type: 'from', value: [User] }),
               new SqlPart({
                 type: 'where',
                 value: [{ id: 1 }]
@@ -629,7 +618,8 @@ describe.only('Sql', () => {
               new SqlPart({ type: 'of', value: ['id'] }),
               new SqlPart({ type: 'skipLocked', value: true })
             ]
-          })
+          }),
+          options
         ),
         'to be',
         [
@@ -649,7 +639,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatDistinct', () => {
     it('returns a `DISTINCT` clause', () => {
       expect(
-        sql.formatDistinct(new SqlPart({ type: 'distinct' })),
+        sql.formatDistinct(new SqlPart({ type: 'distinct' }), options),
         'to be',
         'DISTINCT'
       );
@@ -662,7 +652,8 @@ describe.only('Sql', () => {
             new SqlPart({
               type: 'distinct',
               value: new SqlPart({ type: 'fields', value: ['id', 'name'] })
-            })
+            }),
+            options
           ),
           'to be',
           'DISTINCT "user"."id", "user"."name"'
@@ -673,7 +664,11 @@ describe.only('Sql', () => {
 
   describe('Sql.prototype.formatAll', () => {
     it('returns an `ALL` clause', () => {
-      expect(sql.formatAll(new SqlPart({ type: 'all' })), 'to be', 'ALL');
+      expect(
+        sql.formatAll(new SqlPart({ type: 'all' }), options),
+        'to be',
+        'ALL'
+      );
     });
 
     describe('with a part value set', () => {
@@ -683,7 +678,8 @@ describe.only('Sql', () => {
             new SqlPart({
               type: 'all',
               value: new SqlPart({ type: 'fields', value: ['id', 'name'] })
-            })
+            }),
+            options
           ),
           'to be',
           'ALL "user"."id", "user"."name"'
@@ -696,7 +692,8 @@ describe.only('Sql', () => {
     it('returns a comma-separated list of formatted fields', () => {
       expect(
         sql.formatFields(
-          new SqlPart({ type: 'fields', value: ['id', 'name'] })
+          new SqlPart({ type: 'fields', value: ['id', 'name'] }),
+          options
         ),
         'to be',
         '"user"."id", "user"."name"'
@@ -704,14 +701,18 @@ describe.only('Sql', () => {
     });
 
     it('adds the field-names to its fields array', () => {
-      sql.formatFields(new SqlPart({ type: 'fields', value: ['id', 'name'] }));
+      sql.formatFields(
+        new SqlPart({ type: 'fields', value: ['id', 'name'] }),
+        options
+      );
       expect(sql.getFields(), 'to equal', ['id', 'name']);
     });
 
     it('supports Query instances', () => {
       expect(
         sql.formatFields(
-          new SqlPart({ type: 'fields', value: [new Query(User)] })
+          new SqlPart({ type: 'fields', value: [new Query(User)] }),
+          options
         ),
         'to be',
         '(SELECT FROM "user")'
@@ -724,7 +725,8 @@ describe.only('Sql', () => {
           new SqlPart({
             type: 'fields',
             value: [new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })]
-          })
+          }),
+          options
         ),
         'to be',
         'SELECT 1'
@@ -738,7 +740,8 @@ describe.only('Sql', () => {
             new SqlPart({
               type: 'fields',
               value: [{ idAlias: 'id', nameAlias: 'name' }]
-            })
+            }),
+            options
           ),
           'to be',
           '"user"."id", "user"."name"'
@@ -750,7 +753,8 @@ describe.only('Sql', () => {
           new SqlPart({
             type: 'fields',
             value: [{ idAlias: 'id', nameAlias: 'name' }]
-          })
+          }),
+          options
         );
         expect(sql.getFields(), 'to equal', ['idAlias', 'nameAlias']);
       });
@@ -759,14 +763,21 @@ describe.only('Sql', () => {
 
   describe('Sql.prototype.formatFrom', () => {
     it('returns a `FROM` clause with a formatted table-name', () => {
-      expect(sql.formatFrom(), 'to be', 'FROM "user"');
+      expect(
+        sql.formatFrom(new SqlPart({ type: 'from', value: [User] })),
+        'to be',
+        'FROM "user"'
+      );
     });
   });
 
   describe('Sql.prototype.formatWhereOrHaving', () => {
     it('returns an `WHERE` clause for `where` parts', () => {
       expect(
-        sql.formatWhereOrHaving(new SqlPart({ type: 'where', value: [true] })),
+        sql.formatWhereOrHaving(
+          new SqlPart({ type: 'where', value: [true] }),
+          options
+        ),
         'to be',
         'WHERE ?'
       );
@@ -775,7 +786,10 @@ describe.only('Sql', () => {
 
     it('returns an `HAVING` clause for `having` parts', () => {
       expect(
-        sql.formatWhereOrHaving(new SqlPart({ type: 'having', value: [true] })),
+        sql.formatWhereOrHaving(
+          new SqlPart({ type: 'having', value: [true] }),
+          options
+        ),
         'to be',
         'HAVING ?'
       );
@@ -791,7 +805,8 @@ describe.only('Sql', () => {
               true,
               new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
             ]
-          })
+          }),
+          options
         ),
         'to be',
         'WHERE ? AND "user"."id" = ?'
@@ -801,7 +816,10 @@ describe.only('Sql', () => {
 
     it('supports falsy values', () => {
       expect(
-        sql.formatWhereOrHaving(new SqlPart({ type: 'where', value: [false] })),
+        sql.formatWhereOrHaving(
+          new SqlPart({ type: 'where', value: [false] }),
+          options
+        ),
         'to be',
         'WHERE ?'
       );
@@ -823,7 +841,8 @@ describe.only('Sql', () => {
                 ]
               })
             ]
-          })
+          }),
+          options
         ),
         'to be',
         'WHERE (SELECT ? FROM "user")'
@@ -837,7 +856,8 @@ describe.only('Sql', () => {
           new SqlPart({
             type: 'where',
             value: [{ id: 1, name: 'foo' }]
-          })
+          }),
+          options
         ),
         'to be',
 
@@ -854,7 +874,8 @@ describe.only('Sql', () => {
           new SqlPart({
             type: 'where',
             value: [new SqlPart({ type: 'equalTo', field: 'id', value: 1 })]
-          })
+          }),
+          options
         ),
         'to be',
         'WHERE "user"."id" = ?'
@@ -866,7 +887,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatNot', () => {
     it('returns a `NOT` clause with a formatted value', () => {
       expect(
-        sql.formatNot(new SqlPart({ type: 'not', value: true })),
+        sql.formatNot(new SqlPart({ type: 'not', value: true }), options),
         'to be',
         'NOT ?'
       );
@@ -877,7 +898,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatAny', () => {
     it('returns an `ANY` clause with a formatted value', () => {
       expect(
-        sql.formatAny(new SqlPart({ type: 'any', value: new Query(User) })),
+        sql.formatAny(
+          new SqlPart({ type: 'any', value: new Query(User) }),
+          options
+        ),
         'to be',
         'ANY (SELECT FROM "user")'
       );
@@ -888,7 +912,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatSome', () => {
     it('returns a `SOME` clause with a formatted value', () => {
       expect(
-        sql.formatSome(new SqlPart({ type: 'some', value: new Query(User) })),
+        sql.formatSome(
+          new SqlPart({ type: 'some', value: new Query(User) }),
+          options
+        ),
         'to be',
         'SOME (SELECT FROM "user")'
       );
@@ -900,7 +927,8 @@ describe.only('Sql', () => {
     it('returns an `EXISTS` clause with a formatted value', () => {
       expect(
         sql.formatExists(
-          new SqlPart({ type: 'exists', value: new Query(User) })
+          new SqlPart({ type: 'exists', value: new Query(User) }),
+          options
         ),
         'to be',
         'EXISTS (SELECT FROM "user")'
@@ -913,7 +941,8 @@ describe.only('Sql', () => {
     it('returns an `=` condition with a formatted field and value', () => {
       expect(
         sql.formatEqualTo(
-          new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
+          new SqlPart({ type: 'equalTo', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" = ?'
@@ -926,7 +955,8 @@ describe.only('Sql', () => {
     it('returns a `<>` condition with a formatted field and value', () => {
       expect(
         sql.formatNotEqualTo(
-          new SqlPart({ type: 'notEqualTo', field: 'id', value: 1 })
+          new SqlPart({ type: 'notEqualTo', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" <> ?'
@@ -939,7 +969,8 @@ describe.only('Sql', () => {
     it('returns a `>` condition with a formatted field and value', () => {
       expect(
         sql.formatGreaterThan(
-          new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
+          new SqlPart({ type: 'greaterThan', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" > ?'
@@ -952,7 +983,8 @@ describe.only('Sql', () => {
     it('returns a `>=` condition with a formatted field and value', () => {
       expect(
         sql.formatGreaterThanOrEqualTo(
-          new SqlPart({ type: 'greaterThanOrEqualTo', field: 'id', value: 1 })
+          new SqlPart({ type: 'greaterThanOrEqualTo', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" >= ?'
@@ -965,7 +997,8 @@ describe.only('Sql', () => {
     it('returns a `<` condition with a formatted field and value', () => {
       expect(
         sql.formatLessThan(
-          new SqlPart({ type: 'lessThan', field: 'id', value: 1 })
+          new SqlPart({ type: 'lessThan', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" < ?'
@@ -978,7 +1011,8 @@ describe.only('Sql', () => {
     it('returns a `<=` condition with a formatted field and value', () => {
       expect(
         sql.formatLessThanOrEqualTo(
-          new SqlPart({ type: 'lessThanOrEqualTo', field: 'id', value: 1 })
+          new SqlPart({ type: 'lessThanOrEqualTo', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" <= ?'
@@ -990,7 +1024,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatIsNull', () => {
     it('returns an `IS NULL` condition with a formatted field', () => {
       expect(
-        sql.formatIsNull(new SqlPart({ type: 'isNull', field: 'id' })),
+        sql.formatIsNull(new SqlPart({ type: 'isNull', field: 'id' }), options),
         'to be',
         '"user"."id" IS NULL'
       );
@@ -1001,7 +1035,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatIsNotNull', () => {
     it('returns an `IS NOT NULL` condition with a formatted field', () => {
       expect(
-        sql.formatIsNotNull(new SqlPart({ type: 'isNotNull', field: 'id' })),
+        sql.formatIsNotNull(
+          new SqlPart({ type: 'isNotNull', field: 'id' }),
+          options
+        ),
         'to be',
         '"user"."id" IS NOT NULL'
       );
@@ -1013,7 +1050,8 @@ describe.only('Sql', () => {
     it('returns an `LIKE` condition with a formatted field and value', () => {
       expect(
         sql.formatLike(
-          new SqlPart({ type: 'like', field: 'name', value: 'foo' })
+          new SqlPart({ type: 'like', field: 'name', value: 'foo' }),
+          options
         ),
         'to be',
         '"user"."name" LIKE ?'
@@ -1026,7 +1064,8 @@ describe.only('Sql', () => {
     it('returns an `BETWEEN` condition with a formatted field and value', () => {
       expect(
         sql.formatBetween(
-          new SqlPart({ type: 'between', field: 'id', value: [1, 2] })
+          new SqlPart({ type: 'between', field: 'id', value: [1, 2] }),
+          options
         ),
         'to be',
         '"user"."id" BETWEEN ? AND ?'
@@ -1039,7 +1078,8 @@ describe.only('Sql', () => {
     it('returns an `IN` condition with a formatted field and value', () => {
       expect(
         sql.formatIn(
-          new SqlPart({ type: 'in', field: 'id', value: [1, 2, 3] })
+          new SqlPart({ type: 'in', field: 'id', value: [1, 2, 3] }),
+          options
         ),
         'to be',
         '"user"."id" IN (?, ?, ?)'
@@ -1049,7 +1089,10 @@ describe.only('Sql', () => {
 
     it('converts the clause to `IN (null)` for empty arrays', () => {
       expect(
-        sql.formatIn(new SqlPart({ type: 'in', field: 'id', value: [] })),
+        sql.formatIn(
+          new SqlPart({ type: 'in', field: 'id', value: [] }),
+          options
+        ),
         'to be',
         '"user"."id" IN (?)'
       );
@@ -1060,7 +1103,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatAndOrOr', () => {
     it('returns an `AND` clause for `and` parts', () => {
       expect(
-        sql.formatAndOrOr(new SqlPart({ type: 'and', value: [true, true] })),
+        sql.formatAndOrOr(
+          new SqlPart({ type: 'and', value: [true, true] }),
+          options
+        ),
         'to be',
         '(? AND ?)'
       );
@@ -1069,7 +1115,10 @@ describe.only('Sql', () => {
 
     it('returns an `OR` clause for `or` parts', () => {
       expect(
-        sql.formatAndOrOr(new SqlPart({ type: 'or', value: [true, false] })),
+        sql.formatAndOrOr(
+          new SqlPart({ type: 'or', value: [true, false] }),
+          options
+        ),
         'to be',
         '(? OR ?)'
       );
@@ -1078,7 +1127,7 @@ describe.only('Sql', () => {
 
     it('supports single-item arrays', () => {
       expect(
-        sql.formatAndOrOr(new SqlPart({ type: 'or', value: [true] })),
+        sql.formatAndOrOr(new SqlPart({ type: 'or', value: [true] }), options),
         'to be',
         '?'
       );
@@ -1089,7 +1138,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatAnd', () => {
     it('returns an `AND` clause with formatted values', () => {
       expect(
-        sql.formatAnd(new SqlPart({ type: 'and', value: [true, true] })),
+        sql.formatAnd(
+          new SqlPart({ type: 'and', value: [true, true] }),
+          options
+        ),
         'to be',
         '(? AND ?)'
       );
@@ -1100,7 +1152,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatOr', () => {
     it('returns an `OR` clause with formatted values', () => {
       expect(
-        sql.formatOr(new SqlPart({ type: 'or', value: [true, false] })),
+        sql.formatOr(
+          new SqlPart({ type: 'or', value: [true, false] }),
+          options
+        ),
         'to be',
         '(? OR ?)'
       );
@@ -1111,7 +1166,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatGroupBy', () => {
     it('returns a `GROUP BY` clause with a formatted field', () => {
       expect(
-        sql.formatGroupBy(new SqlPart({ type: 'groupBy', value: ['id'] })),
+        sql.formatGroupBy(
+          new SqlPart({ type: 'groupBy', value: ['id'] }),
+          options
+        ),
         'to be',
         'GROUP BY "user"."id"'
       );
@@ -1120,7 +1178,8 @@ describe.only('Sql', () => {
     it('returns a list of formatted fields for multiple fields', () => {
       expect(
         sql.formatGroupBy(
-          new SqlPart({ type: 'where', value: ['id', 'name'] })
+          new SqlPart({ type: 'where', value: ['id', 'name'] }),
+          options
         ),
         'to be',
         'GROUP BY "user"."id", "user"."name"'
@@ -1129,7 +1188,10 @@ describe.only('Sql', () => {
 
     it('supports grouping by a column reference (integer)', () => {
       expect(
-        sql.formatGroupBy(new SqlPart({ type: 'groupBy', value: [1] })),
+        sql.formatGroupBy(
+          new SqlPart({ type: 'groupBy', value: [1] }),
+          options
+        ),
         'to be',
         'GROUP BY ?'
       );
@@ -1144,7 +1206,8 @@ describe.only('Sql', () => {
           new SqlPart({
             type: 'having',
             value: [new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })]
-          })
+          }),
+          options
         ),
         'to be',
         'HAVING "user"."id" > ?'
@@ -1156,7 +1219,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatOrderBy', () => {
     it('returns a `ORDER BY` clause with a formatted field', () => {
       expect(
-        sql.formatOrderBy(new SqlPart({ type: 'orderBy', value: ['id'] })),
+        sql.formatOrderBy(
+          new SqlPart({ type: 'orderBy', value: ['id'] }),
+          options
+        ),
         'to be',
         'ORDER BY "user"."id"'
       );
@@ -1165,7 +1231,8 @@ describe.only('Sql', () => {
     it('returns a list of formatted fields for array values', () => {
       expect(
         sql.formatOrderBy(
-          new SqlPart({ type: 'orderBy', value: ['id', 'name'] })
+          new SqlPart({ type: 'orderBy', value: ['id', 'name'] }),
+          options
         ),
         'to be',
         'ORDER BY "user"."id", "user"."name"'
@@ -1174,7 +1241,10 @@ describe.only('Sql', () => {
 
     it('supports ordering by a column reference (integer)', () => {
       expect(
-        sql.formatOrderBy(new SqlPart({ type: 'orderBy', value: [1] })),
+        sql.formatOrderBy(
+          new SqlPart({ type: 'orderBy', value: [1] }),
+          options
+        ),
         'to be',
         'ORDER BY ?'
       );
@@ -1185,7 +1255,8 @@ describe.only('Sql', () => {
       it('formats a 1 object value into an `ASC` clause', () => {
         expect(
           sql.formatOrderBy(
-            new SqlPart({ type: 'orderBy', value: [{ id: 1 }] })
+            new SqlPart({ type: 'orderBy', value: [{ id: 1 }] }),
+            options
           ),
           'to be',
           'ORDER BY "user"."id" ASC'
@@ -1195,7 +1266,8 @@ describe.only('Sql', () => {
       it('formats a -1 object value into an `DESC` clause', () => {
         expect(
           sql.formatOrderBy(
-            new SqlPart({ type: 'orderBy', value: [{ id: -1 }] })
+            new SqlPart({ type: 'orderBy', value: [{ id: -1 }] }),
+            options
           ),
           'to be',
           'ORDER BY "user"."id" DESC'
@@ -1205,7 +1277,8 @@ describe.only('Sql', () => {
       it("formats an 'asc' object value into an `ASC` clause", () => {
         expect(
           sql.formatOrderBy(
-            new SqlPart({ type: 'orderBy', value: [{ id: 'asc' }] })
+            new SqlPart({ type: 'orderBy', value: [{ id: 'asc' }] }),
+            options
           ),
           'to be',
           'ORDER BY "user"."id" ASC'
@@ -1215,7 +1288,8 @@ describe.only('Sql', () => {
       it("formats a 'DESC' object value into an `DESC` clause", () => {
         expect(
           sql.formatOrderBy(
-            new SqlPart({ type: 'orderBy', value: [{ id: 'DESC' }] })
+            new SqlPart({ type: 'orderBy', value: [{ id: 'DESC' }] }),
+            options
           ),
           'to be',
           'ORDER BY "user"."id" DESC'
@@ -1225,7 +1299,8 @@ describe.only('Sql', () => {
       it("formats an 'asc' object value into an `ASC` clause", () => {
         expect(
           sql.formatOrderBy(
-            new SqlPart({ type: 'orderBy', value: [{ id: 'asc' }] })
+            new SqlPart({ type: 'orderBy', value: [{ id: 'asc' }] }),
+            options
           ),
           'to be',
           'ORDER BY "user"."id" ASC'
@@ -1235,7 +1310,8 @@ describe.only('Sql', () => {
       it("formats a 'DESC' object value into an `DESC` clause", () => {
         expect(
           sql.formatOrderBy(
-            new SqlPart({ type: 'orderBy', value: [{ id: 'DESC' }] })
+            new SqlPart({ type: 'orderBy', value: [{ id: 'DESC' }] }),
+            options
           ),
           'to be',
           'ORDER BY "user"."id" DESC'
@@ -1255,7 +1331,8 @@ describe.only('Sql', () => {
                   })
                 }
               ]
-            })
+            }),
+            options
           ),
           'to be',
           'ORDER BY "user"."id" ASC NULLS LAST'
@@ -1266,7 +1343,11 @@ describe.only('Sql', () => {
 
   describe('Sql.prototype.formatAsc', () => {
     it('returns an `ASC` clause', () => {
-      expect(sql.formatAsc(new SqlPart({ type: 'asc' })), 'to be', 'ASC');
+      expect(
+        sql.formatAsc(new SqlPart({ type: 'asc' }), options),
+        'to be',
+        'ASC'
+      );
     });
 
     describe('with a part value set', () => {
@@ -1279,7 +1360,8 @@ describe.only('Sql', () => {
                 type: 'raw',
                 value: { text: 'NULLS FIRST' }
               })
-            })
+            }),
+            options
           ),
           'to be',
           'ASC NULLS FIRST'
@@ -1290,7 +1372,11 @@ describe.only('Sql', () => {
 
   describe('Sql.prototype.formatDesc', () => {
     it('returns a `DESC` clause', () => {
-      expect(sql.formatDesc(new SqlPart({ type: 'desc' })), 'to be', 'DESC');
+      expect(
+        sql.formatDesc(new SqlPart({ type: 'desc' }), options),
+        'to be',
+        'DESC'
+      );
     });
 
     describe('with a part value set', () => {
@@ -1300,7 +1386,8 @@ describe.only('Sql', () => {
             new SqlPart({
               type: 'desc',
               value: new SqlPart({ type: 'raw', value: { text: 'NULLS LAST' } })
-            })
+            }),
+            options
           ),
           'to be',
           'DESC NULLS LAST'
@@ -1312,7 +1399,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatNullsFirst', () => {
     it('returns a `NULLS FIRST` clause', () => {
       expect(
-        sql.formatNullsFirst(new SqlPart({ type: 'nullsFirst' })),
+        sql.formatNullsFirst(new SqlPart({ type: 'nullsFirst' }), options),
         'to be',
         'NULLS FIRST'
       );
@@ -1322,7 +1409,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatNullsLast', () => {
     it('returns a `NULLS LAST` clause', () => {
       expect(
-        sql.formatNullsLast(new SqlPart({ type: 'nullsLast' })),
+        sql.formatNullsLast(new SqlPart({ type: 'nullsLast' }), options),
         'to be',
         'NULLS LAST'
       );
@@ -1332,7 +1419,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatLimitOrOffset', () => {
     it('returns a `LIMIT` clause for `limit` parts', () => {
       expect(
-        sql.formatLimitOrOffset(new SqlPart({ type: 'limit', value: 10 })),
+        sql.formatLimitOrOffset(
+          new SqlPart({ type: 'limit', value: 10 }),
+          options
+        ),
         'to be',
         'LIMIT ?'
       );
@@ -1341,7 +1431,10 @@ describe.only('Sql', () => {
 
     it('returns a `OFFSET` clause for `offset` parts', () => {
       expect(
-        sql.formatLimitOrOffset(new SqlPart({ type: 'offset', value: 10 })),
+        sql.formatLimitOrOffset(
+          new SqlPart({ type: 'offset', value: 10 }),
+          options
+        ),
         'to be',
         'OFFSET ?'
       );
@@ -1350,7 +1443,10 @@ describe.only('Sql', () => {
 
     it('supports `0`', () => {
       expect(
-        sql.formatLimitOrOffset(new SqlPart({ type: 'offset', value: 0 })),
+        sql.formatLimitOrOffset(
+          new SqlPart({ type: 'offset', value: 0 }),
+          options
+        ),
         'to be',
         'OFFSET ?'
       );
@@ -1359,7 +1455,10 @@ describe.only('Sql', () => {
 
     it('casts string values to integers', () => {
       expect(
-        sql.formatLimitOrOffset(new SqlPart({ type: 'limit', value: '10' })),
+        sql.formatLimitOrOffset(
+          new SqlPart({ type: 'limit', value: '10' }),
+          options
+        ),
         'to be',
         'LIMIT ?'
       );
@@ -1370,11 +1469,13 @@ describe.only('Sql', () => {
       expect(
         () =>
           sql.formatLimitOrOffset(
-            new SqlPart({ type: 'offset', value: 'foo' })
+            new SqlPart({ type: 'offset', value: 'foo' }),
+            options
           ),
         'to throw',
         new SqlError({
           sql,
+          options,
           message: "value for 'OFFSET' should be an integer"
         })
       );
@@ -1384,7 +1485,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatLimit', () => {
     it('returns a `LIMIT` clause', () => {
       expect(
-        sql.formatLimit(new SqlPart({ type: 'limit', value: 10 })),
+        sql.formatLimit(new SqlPart({ type: 'limit', value: 10 }), options),
         'to be',
         'LIMIT ?'
       );
@@ -1395,7 +1496,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatOffset', () => {
     it('returns a `OFFSET` clause', () => {
       expect(
-        sql.formatOffset(new SqlPart({ type: 'offset', value: 10 })),
+        sql.formatOffset(new SqlPart({ type: 'offset', value: 10 }), options),
         'to be',
         'OFFSET ?'
       );
@@ -1406,7 +1507,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatForUpdate', () => {
     it('returns a `FOR UPDATE` clause', () => {
       expect(
-        sql.formatForUpdate(new SqlPart({ type: 'forUpdate' })),
+        sql.formatForUpdate(new SqlPart({ type: 'forUpdate' }), options),
         'to be',
         'FOR UPDATE'
       );
@@ -1416,7 +1517,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatForShare', () => {
     it('returns a `FOR SHARE` clause', () => {
       expect(
-        sql.formatForShare(new SqlPart({ type: 'forShare' })),
+        sql.formatForShare(new SqlPart({ type: 'forShare' }), options),
         'to be',
         'FOR SHARE'
       );
@@ -1426,7 +1527,10 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatOf', () => {
     it('returns an `OF` clause with a list of formatted fields', () => {
       expect(
-        sql.formatOf(new SqlPart({ type: 'of', value: ['id', 'name'] })),
+        sql.formatOf(
+          new SqlPart({ type: 'of', value: ['id', 'name'] }),
+          options
+        ),
         'to be',
         'OF "user"."id", "user"."name"'
       );
@@ -1436,7 +1540,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatNoWait', () => {
     it('returns a `NOWAIT` clause', () => {
       expect(
-        sql.formatNoWait(new SqlPart({ type: 'noWait' })),
+        sql.formatNoWait(new SqlPart({ type: 'noWait' }), options),
         'to be',
         'NOWAIT'
       );
@@ -1446,7 +1550,7 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatSkipLocked', () => {
     it('returns a `SKIP LOCKED` clause', () => {
       expect(
-        sql.formatSkipLocked(new SqlPart({ type: 'skipLocked' })),
+        sql.formatSkipLocked(new SqlPart({ type: 'skipLocked' }), options),
         'to be',
         'SKIP LOCKED'
       );
@@ -1457,7 +1561,8 @@ describe.only('Sql', () => {
     it('formats `raw` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })
+          new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } }),
+          options
         ),
         'to be',
         'SELECT 1'
@@ -1471,9 +1576,10 @@ describe.only('Sql', () => {
             type: 'select',
             value: [
               new SqlPart({ type: 'fields', value: ['id'] }),
-              new SqlPart({ type: 'from' })
+              new SqlPart({ type: 'from', value: [User] })
             ]
-          })
+          }),
+          options
         ),
         'to be',
         'SELECT "user"."id" FROM "user"'
@@ -1482,7 +1588,7 @@ describe.only('Sql', () => {
 
     it('formats `distinct` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'distinct' })),
+        sql.formatSqlPart(new SqlPart({ type: 'distinct' }), options),
         'to be',
         'DISTINCT'
       );
@@ -1490,7 +1596,10 @@ describe.only('Sql', () => {
 
     it('formats `all` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'all', value: new Query(User) })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'all', value: new Query(User) }),
+          options
+        ),
         'to be',
         'ALL (SELECT FROM "user")'
       );
@@ -1498,7 +1607,10 @@ describe.only('Sql', () => {
 
     it('formats `from` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'from' })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'from', value: [User] }),
+          options
+        ),
         'to be',
         'FROM "user"'
       );
@@ -1507,7 +1619,8 @@ describe.only('Sql', () => {
     it('formats `fields` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'fields', value: ['id', 'name'] })
+          new SqlPart({ type: 'fields', value: ['id', 'name'] }),
+          options
         ),
         'to be',
         '"user"."id", "user"."name"'
@@ -1520,7 +1633,8 @@ describe.only('Sql', () => {
           new SqlPart({
             type: 'where',
             value: [new SqlPart({ type: 'equalTo', field: 'id', value: 1 })]
-          })
+          }),
+          options
         ),
         'to be',
         'WHERE "user"."id" = ?'
@@ -1530,7 +1644,10 @@ describe.only('Sql', () => {
 
     it('formats `not` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'not', value: new Query(User) })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'not', value: new Query(User) }),
+          options
+        ),
         'to be',
         'NOT (SELECT FROM "user")'
       );
@@ -1538,7 +1655,10 @@ describe.only('Sql', () => {
 
     it('formats `any` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'any', value: new Query(User) })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'any', value: new Query(User) }),
+          options
+        ),
         'to be',
         'ANY (SELECT FROM "user")'
       );
@@ -1547,7 +1667,8 @@ describe.only('Sql', () => {
     it('formats `some` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'some', value: new Query(User) })
+          new SqlPart({ type: 'some', value: new Query(User) }),
+          options
         ),
         'to be',
         'SOME (SELECT FROM "user")'
@@ -1557,7 +1678,8 @@ describe.only('Sql', () => {
     it('formats `exists` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'exists', value: new Query(User) })
+          new SqlPart({ type: 'exists', value: new Query(User) }),
+          options
         ),
         'to be',
         'EXISTS (SELECT FROM "user")'
@@ -1567,7 +1689,8 @@ describe.only('Sql', () => {
     it('formats `equalTo` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'equalTo', field: 'id', value: 1 })
+          new SqlPart({ type: 'equalTo', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" = ?'
@@ -1578,7 +1701,8 @@ describe.only('Sql', () => {
     it('formats `notEqualTo` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'notEqualTo', field: 'id', value: 1 })
+          new SqlPart({ type: 'notEqualTo', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" <> ?'
@@ -1589,7 +1713,8 @@ describe.only('Sql', () => {
     it('formats `greaterThan` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'greaterThan', field: 'id', value: 1 })
+          new SqlPart({ type: 'greaterThan', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" > ?'
@@ -1600,7 +1725,8 @@ describe.only('Sql', () => {
     it('formats `greaterThanOrEqualTo` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'greaterThanOrEqualTo', field: 'id', value: 1 })
+          new SqlPart({ type: 'greaterThanOrEqualTo', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" >= ?'
@@ -1611,7 +1737,8 @@ describe.only('Sql', () => {
     it('formats `lessThan` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'lessThan', field: 'id', value: 1 })
+          new SqlPart({ type: 'lessThan', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" < ?'
@@ -1622,7 +1749,8 @@ describe.only('Sql', () => {
     it('formats `lessThanOrEqualTo` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'lessThanOrEqualTo', field: 'id', value: 1 })
+          new SqlPart({ type: 'lessThanOrEqualTo', field: 'id', value: 1 }),
+          options
         ),
         'to be',
         '"user"."id" <= ?'
@@ -1632,7 +1760,10 @@ describe.only('Sql', () => {
 
     it('formats `isNull` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'isNull', field: 'id' })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'isNull', field: 'id' }),
+          options
+        ),
         'to be',
         '"user"."id" IS NULL'
       );
@@ -1640,7 +1771,10 @@ describe.only('Sql', () => {
 
     it('formats `isNotNull` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'isNotNull', field: 'id' })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'isNotNull', field: 'id' }),
+          options
+        ),
         'to be',
         '"user"."id" IS NOT NULL'
       );
@@ -1649,7 +1783,8 @@ describe.only('Sql', () => {
     it('formats `like` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'like', field: 'name', value: 'foo' })
+          new SqlPart({ type: 'like', field: 'name', value: 'foo' }),
+          options
         ),
         'to be',
         '"user"."name" LIKE ?'
@@ -1660,7 +1795,8 @@ describe.only('Sql', () => {
     it('formats `between` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'between', field: 'id', value: [1, 3] })
+          new SqlPart({ type: 'between', field: 'id', value: [1, 3] }),
+          options
         ),
         'to be',
         '"user"."id" BETWEEN ? AND ?'
@@ -1671,7 +1807,8 @@ describe.only('Sql', () => {
     it('formats `in` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'in', field: 'id', value: [1, 2, 3] })
+          new SqlPart({ type: 'in', field: 'id', value: [1, 2, 3] }),
+          options
         ),
         'to be',
         '"user"."id" IN (?, ?, ?)'
@@ -1681,7 +1818,10 @@ describe.only('Sql', () => {
 
     it('formats `and` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'and', value: [true, true] })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'and', value: [true, true] }),
+          options
+        ),
         'to be',
         '(? AND ?)'
       );
@@ -1690,7 +1830,10 @@ describe.only('Sql', () => {
 
     it('formats `or` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'or', value: [true, false] })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'or', value: [true, false] }),
+          options
+        ),
         'to be',
         '(? OR ?)'
       );
@@ -1699,7 +1842,10 @@ describe.only('Sql', () => {
 
     it('formats `groupBy` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'groupBy', value: ['id'] })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'groupBy', value: ['id'] }),
+          options
+        ),
         'to be',
         'GROUP BY "user"."id"'
       );
@@ -1711,7 +1857,8 @@ describe.only('Sql', () => {
           new SqlPart({
             type: 'having',
             value: [new SqlPart({ type: 'equalTo', field: 'id', value: 1 })]
-          })
+          }),
+          options
         ),
         'to be',
         'HAVING "user"."id" = ?'
@@ -1721,23 +1868,34 @@ describe.only('Sql', () => {
 
     it('formats `orderBy` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'orderBy', value: ['id'] })),
+        sql.formatSqlPart(
+          new SqlPart({ type: 'orderBy', value: ['id'] }),
+          options
+        ),
         'to be',
         'ORDER BY "user"."id"'
       );
     });
 
     it('formats `asc` parts', () => {
-      expect(sql.formatSqlPart(new SqlPart({ type: 'asc' })), 'to be', 'ASC');
+      expect(
+        sql.formatSqlPart(new SqlPart({ type: 'asc' }), options),
+        'to be',
+        'ASC'
+      );
     });
 
     it('formats `desc` parts', () => {
-      expect(sql.formatSqlPart(new SqlPart({ type: 'desc' })), 'to be', 'DESC');
+      expect(
+        sql.formatSqlPart(new SqlPart({ type: 'desc' }), options),
+        'to be',
+        'DESC'
+      );
     });
 
     it('formats `nullsFirst` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'nullsFirst' })),
+        sql.formatSqlPart(new SqlPart({ type: 'nullsFirst' }), options),
         'to be',
         'NULLS FIRST'
       );
@@ -1745,7 +1903,7 @@ describe.only('Sql', () => {
 
     it('formats `nullsLast` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'nullsLast' })),
+        sql.formatSqlPart(new SqlPart({ type: 'nullsLast' }), options),
         'to be',
         'NULLS LAST'
       );
@@ -1753,7 +1911,7 @@ describe.only('Sql', () => {
 
     it('formats `limit` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'limit', value: 10 })),
+        sql.formatSqlPart(new SqlPart({ type: 'limit', value: 10 }), options),
         'to be',
         'LIMIT ?'
       );
@@ -1762,7 +1920,7 @@ describe.only('Sql', () => {
 
     it('formats `offset` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'offset', value: 10 })),
+        sql.formatSqlPart(new SqlPart({ type: 'offset', value: 10 }), options),
         'to be',
         'OFFSET ?'
       );
@@ -1771,7 +1929,7 @@ describe.only('Sql', () => {
 
     it('formats `forUpdate` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'forUpdate' })),
+        sql.formatSqlPart(new SqlPart({ type: 'forUpdate' }), options),
         'to be',
         'FOR UPDATE'
       );
@@ -1779,7 +1937,7 @@ describe.only('Sql', () => {
 
     it('formats `forShare` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'forShare' })),
+        sql.formatSqlPart(new SqlPart({ type: 'forShare' }), options),
         'to be',
         'FOR SHARE'
       );
@@ -1787,7 +1945,7 @@ describe.only('Sql', () => {
 
     it('formats `of` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'of', value: ['id'] })),
+        sql.formatSqlPart(new SqlPart({ type: 'of', value: ['id'] }), options),
         'to be',
         'OF "user"."id"'
       );
@@ -1795,7 +1953,7 @@ describe.only('Sql', () => {
 
     it('formats `noWait` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'noWait' })),
+        sql.formatSqlPart(new SqlPart({ type: 'noWait' }), options),
         'to be',
         'NOWAIT'
       );
@@ -1803,7 +1961,7 @@ describe.only('Sql', () => {
 
     it('formats `skipLocked` parts', () => {
       expect(
-        sql.formatSqlPart(new SqlPart({ type: 'skipLocked' })),
+        sql.formatSqlPart(new SqlPart({ type: 'skipLocked' }), options),
         'to be',
         'SKIP LOCKED'
       );
@@ -1811,17 +1969,25 @@ describe.only('Sql', () => {
 
     it('throws an SqlError for unsupported parts', () => {
       expect(
-        () => sql.formatSqlPart(new SqlPart({ type: 'foo' })),
+        () => sql.formatSqlPart(new SqlPart({ type: 'foo' }), options),
         'to throw',
-        new SqlError({ sql, message: "unsupported SqlPart type 'foo'" })
+        new SqlError({
+          sql,
+          options,
+          message: "unsupported SqlPart type 'foo'"
+        })
       );
     });
 
     it('throws an SqlError for invalid parts', () => {
       expect(
-        () => sql.formatSqlPart('SELECT'),
+        () => sql.formatSqlPart('SELECT', options),
         'to throw',
-        new SqlError({ sql, message: 'unsupported SqlPart type undefined' })
+        new SqlError({
+          sql,
+          options,
+          message: 'unsupported SqlPart type undefined'
+        })
       );
     });
   });
