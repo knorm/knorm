@@ -6,7 +6,6 @@ const expect = require('unexpected')
 
 describe.only('Sql', () => {
   let Model;
-  let Query;
   let Sql;
   let SqlPart;
   let SqlError;
@@ -30,7 +29,7 @@ describe.only('Sql', () => {
     };
 
     User.table = 'user';
-    User.fields = ['id', 'name', 'description', 'confirmed'];
+    User.fields = ['id', 'name'];
 
     UserWithSchema = class extends User {};
     UserWithSchema.schema = 'public';
@@ -186,22 +185,19 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatQuery', () => {
     it('returns a SELECT query wrapped in parentheses', () => {
       expect(
-        sql.formatQuery(new Query(User), options),
+        sql.formatQuery(User.query, options),
         'to be',
-        '(SELECT FROM "user")'
+        '(SELECT "user"."id", "user"."name" FROM "user")'
       );
     });
 
     it('adds values from the query to its values array', () => {
-      sql.formatQuery(new Query(User).setOption('where', { id: 1 }), options);
+      sql.formatQuery(User.query.setOption('where', { id: 1 }), options);
       expect(sql.getValues(), 'to equal', [1]);
     });
 
     it('adds fields from the query to its fields array', () => {
-      sql.formatQuery(
-        new Query(User).setOption('fields', ['id', 'name']),
-        options
-      );
+      sql.formatQuery(User.query.setOption('fields', ['id', 'name']), options);
       expect(sql.getFields(), 'to equal', ['id', 'name']);
     });
   });
@@ -270,24 +266,24 @@ describe.only('Sql', () => {
     describe('for Query instances', () => {
       it("returns the Query's formatted SELECT query", () => {
         expect(
-          sql.formatValue(new Query(User), options),
+          sql.formatValue(User.query, options),
           'to be',
-          '(SELECT FROM "user")'
+          '(SELECT "user"."id", "user"."name" FROM "user")'
         );
       });
 
       describe('with the `formatQuery` formatter passed', () => {
         it('calls the function with the value and options', () => {
           const formatQuery = sinon.spy();
-          sql.formatValue(new Query(User), options, { formatQuery });
+          sql.formatValue(User.query, options, { formatQuery });
           expect(formatQuery, 'to have calls satisfying', () =>
-            formatQuery(new Query(User), options)
+            formatQuery(User.query, options)
           );
         });
 
         it("returns the function's return value", () => {
           expect(
-            sql.formatValue(new Query(User), options, {
+            sql.formatValue(User.query, options, {
               formatQuery() {
                 return 'formatted value';
               }
@@ -422,7 +418,7 @@ describe.only('Sql', () => {
 
       it('does not call the function for Query instances', () => {
         const formatValue = sinon.spy();
-        sql.formatValue(new Query(User), options, { formatValue });
+        sql.formatValue(User.query, options, { formatValue });
         expect(formatValue, 'was not called');
       });
 
@@ -711,11 +707,11 @@ describe.only('Sql', () => {
     it('supports Query instances', () => {
       expect(
         sql.formatFields(
-          new SqlPart({ type: 'fields', value: [new Query(User)] }),
+          new SqlPart({ type: 'fields', value: [User.query] }),
           options
         ),
         'to be',
-        '(SELECT FROM "user")'
+        '(SELECT "user"."id", "user"."name" FROM "user")'
       );
     });
 
@@ -832,7 +828,7 @@ describe.only('Sql', () => {
           new SqlPart({
             type: 'where',
             value: [
-              new Query(User).setOptions({
+              User.query.setOptions({
                 fields: [
                   new SqlPart({
                     type: 'raw',
@@ -898,12 +894,9 @@ describe.only('Sql', () => {
   describe('Sql.prototype.formatAny', () => {
     it('returns an `ANY` clause with a formatted value', () => {
       expect(
-        sql.formatAny(
-          new SqlPart({ type: 'any', value: new Query(User) }),
-          options
-        ),
+        sql.formatAny(new SqlPart({ type: 'any', value: User.query }), options),
         'to be',
-        'ANY (SELECT FROM "user")'
+        'ANY (SELECT "user"."id", "user"."name" FROM "user")'
       );
       expect(sql.getValues(), 'to equal', []);
     });
@@ -913,11 +906,11 @@ describe.only('Sql', () => {
     it('returns a `SOME` clause with a formatted value', () => {
       expect(
         sql.formatSome(
-          new SqlPart({ type: 'some', value: new Query(User) }),
+          new SqlPart({ type: 'some', value: User.query }),
           options
         ),
         'to be',
-        'SOME (SELECT FROM "user")'
+        'SOME (SELECT "user"."id", "user"."name" FROM "user")'
       );
       expect(sql.getValues(), 'to equal', []);
     });
@@ -927,11 +920,11 @@ describe.only('Sql', () => {
     it('returns an `EXISTS` clause with a formatted value', () => {
       expect(
         sql.formatExists(
-          new SqlPart({ type: 'exists', value: new Query(User) }),
+          new SqlPart({ type: 'exists', value: User.query }),
           options
         ),
         'to be',
-        'EXISTS (SELECT FROM "user")'
+        'EXISTS (SELECT "user"."id", "user"."name" FROM "user")'
       );
       expect(sql.getValues(), 'to equal', []);
     });
@@ -1597,11 +1590,11 @@ describe.only('Sql', () => {
     it('formats `all` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'all', value: new Query(User) }),
+          new SqlPart({ type: 'all', value: User.query }),
           options
         ),
         'to be',
-        'ALL (SELECT FROM "user")'
+        'ALL (SELECT "user"."id", "user"."name" FROM "user")'
       );
     });
 
@@ -1645,44 +1638,44 @@ describe.only('Sql', () => {
     it('formats `not` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'not', value: new Query(User) }),
+          new SqlPart({ type: 'not', value: User.query }),
           options
         ),
         'to be',
-        'NOT (SELECT FROM "user")'
+        'NOT (SELECT "user"."id", "user"."name" FROM "user")'
       );
     });
 
     it('formats `any` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'any', value: new Query(User) }),
+          new SqlPart({ type: 'any', value: User.query }),
           options
         ),
         'to be',
-        'ANY (SELECT FROM "user")'
+        'ANY (SELECT "user"."id", "user"."name" FROM "user")'
       );
     });
 
     it('formats `some` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'some', value: new Query(User) }),
+          new SqlPart({ type: 'some', value: User.query }),
           options
         ),
         'to be',
-        'SOME (SELECT FROM "user")'
+        'SOME (SELECT "user"."id", "user"."name" FROM "user")'
       );
     });
 
     it('formats `exists` parts', () => {
       expect(
         sql.formatSqlPart(
-          new SqlPart({ type: 'exists', value: new Query(User) }),
+          new SqlPart({ type: 'exists', value: User.query }),
           options
         ),
         'to be',
-        'EXISTS (SELECT FROM "user")'
+        'EXISTS (SELECT "user"."id", "user"."name" FROM "user")'
       );
     });
 
@@ -2015,9 +2008,9 @@ describe.only('Sql', () => {
   describe('Sql.distinct', () => {
     it('returns a new `distinct` part', () => {
       expect(
-        Sql.distinct(new Query(User)),
+        Sql.distinct(User.query),
         'to equal',
-        new SqlPart({ type: 'distinct', value: new Query(User) })
+        new SqlPart({ type: 'distinct', value: User.query })
       );
     });
   });
@@ -2025,9 +2018,9 @@ describe.only('Sql', () => {
   describe('Sql.all', () => {
     it('returns a new `all` part', () => {
       expect(
-        Sql.all(new Query(User)),
+        Sql.all(User.query),
         'to equal',
-        new SqlPart({ type: 'all', value: new Query(User) })
+        new SqlPart({ type: 'all', value: User.query })
       );
     });
   });
@@ -2071,9 +2064,9 @@ describe.only('Sql', () => {
   describe('Sql.any', () => {
     it('returns a new `any` part', () => {
       expect(
-        Sql.any(new Query(User)),
+        Sql.any(User.query),
         'to equal',
-        new SqlPart({ type: 'any', value: new Query(User) })
+        new SqlPart({ type: 'any', value: User.query })
       );
     });
   });
@@ -2081,9 +2074,9 @@ describe.only('Sql', () => {
   describe('Sql.some', () => {
     it('returns a new `some` part', () => {
       expect(
-        Sql.some(new Query(User)),
+        Sql.some(User.query),
         'to equal',
-        new SqlPart({ type: 'some', value: new Query(User) })
+        new SqlPart({ type: 'some', value: User.query })
       );
     });
   });
@@ -2091,9 +2084,9 @@ describe.only('Sql', () => {
   describe('Sql.exists', () => {
     it('returns a new `exists` part', () => {
       expect(
-        Sql.exists(new Query(User)),
+        Sql.exists(User.query),
         'to equal',
-        new SqlPart({ type: 'exists', value: new Query(User) })
+        new SqlPart({ type: 'exists', value: User.query })
       );
     });
   });
