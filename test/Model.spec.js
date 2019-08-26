@@ -526,7 +526,7 @@ describe.only('Model', () => {
       await expect(
         user.validateValues(),
         'to be rejected with error satisfying',
-        'User.fields.id: expected an integer value'
+        'User.fields.id: value should be an integer'
       );
     });
 
@@ -543,7 +543,7 @@ describe.only('Model', () => {
         await expect(
           user.validateValues({ fields: ['name'] }),
           'to be rejected with error satisfying',
-          'User.fields.name: expected a string value'
+          'User.fields.name: value should be a string'
         );
       });
 
