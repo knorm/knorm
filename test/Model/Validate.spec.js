@@ -145,16 +145,16 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not reject if the value does not pass validation', () => {
-        expect(
-          () => validate.validate(undefined, 'required'),
+      it('does not reject if the value does not pass validation', async () => {
+        await expect(
+          validate.validate(undefined, 'required'),
           'to be fulfilled'
         );
       });
 
-      it('rejects if the value passes validation', () => {
-        expect(
-          () => validate.validate('foo', 'string'),
+      it('rejects if the value passes validation', async () => {
+        await expect(
+          validate.validate('foo', 'string'),
           'to be rejected with error satisfying',
           new ValidateError({
             validate,
@@ -166,10 +166,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.required', () => {
-    it('throws if the value is `undefined`', () => {
-      expect(
-        () => validate.required(undefined),
-        'to throw',
+    it('rejects if the value is `undefined`', async () => {
+      await expect(
+        validate.required(undefined),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should be set and not null'
@@ -177,10 +177,10 @@ describe.only('Validate', () => {
       );
     });
 
-    it('throws if the value is `null`', () => {
-      expect(
-        () => validate.required(null),
-        'to throw',
+    it('rejects if the value is `null`', async () => {
+      await expect(
+        validate.required(null),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should be set and not null'
@@ -188,8 +188,8 @@ describe.only('Validate', () => {
       );
     });
 
-    it('does not throw if the value is not undefined or null', () => {
-      expect(() => validate.required({}), 'not to throw');
+    it('does not throw if the value is not undefined or null', async () => {
+      await expect(validate.required({}), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -197,18 +197,18 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is `undefined`', () => {
-        expect(() => validate.required(undefined), 'not to throw');
+      it('does not throw if the value is `undefined`', async () => {
+        await expect(validate.required(undefined), 'to be fulfilled');
       });
 
-      it('does not throw if the value is `null`', () => {
-        expect(() => validate.required(null), 'not to throw');
+      it('does not throw if the value is `null`', async () => {
+        await expect(validate.required(null), 'to be fulfilled');
       });
 
-      it('throws if the value is not undefined or null', () => {
-        expect(
-          () => validate.required(true),
-          'to throw',
+      it('rejects if the value is not undefined or null', async () => {
+        await expect(
+          validate.required(true),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should be unset or null'
@@ -219,57 +219,57 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.number', () => {
-    it('throws if the value is not a number', () => {
-      expect(
-        () => validate.number('1'),
-        'to throw',
+    it('rejects if the value is not a number', async () => {
+      await expect(
+        validate.number('1'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a number' })
       );
     });
 
-    it('throws if the value is `NaN`', () => {
-      expect(
-        () => validate.number(NaN),
-        'to throw',
+    it('rejects if the value is `NaN`', async () => {
+      await expect(
+        validate.number(NaN),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a number' })
       );
     });
 
-    it('throws if the value is `Infinity`', () => {
-      expect(
-        () => validate.number(Infinity),
-        'to throw',
+    it('rejects if the value is `Infinity`', async () => {
+      await expect(
+        validate.number(Infinity),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a number' })
       );
     });
 
-    it('throws if the value is `-Infinity`', () => {
-      expect(
-        () => validate.number(-Infinity),
-        'to throw',
+    it('rejects if the value is `-Infinity`', async () => {
+      await expect(
+        validate.number(-Infinity),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a number' })
       );
     });
 
-    it('throws if the value is an instance of `Number`', () => {
+    it('rejects if the value is an instance of `Number`', async () => {
       expect(
         // eslint-disable-next-line no-new-wrappers
         () => validate.number(new Number(1)),
-        'to throw',
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a number' })
       );
     });
 
-    it('does not throw if the value is a number', () => {
-      expect(() => validate.number(1), 'not to throw');
+    it('does not throw if the value is a number', async () => {
+      await expect(validate.number(1), 'to be fulfilled');
     });
 
-    it('does not throw if the value is a finite exponential number', () => {
-      expect(() => validate.number(11e31), 'not to throw');
+    it('does not throw if the value is a finite exponential number', async () => {
+      await expect(validate.number(11e31), 'to be fulfilled');
     });
 
-    it('does not throw if the value is a float', () => {
-      expect(() => validate.number(1.5), 'not to throw');
+    it('does not throw if the value is a float', async () => {
+      await expect(validate.number(1.5), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -277,14 +277,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a number', () => {
-        expect(() => validate.number('foo'), 'not to throw');
+      it('does not throw if the value is not a number', async () => {
+        await expect(validate.number('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is a number', () => {
-        expect(
-          () => validate.number(1.5),
-          'to throw',
+      it('rejects if the value is a number', async () => {
+        await expect(
+          validate.number(1.5),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be a number'
@@ -295,33 +295,33 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.integer', () => {
-    it('throws if the value is not an integer', () => {
-      expect(
-        () => validate.integer('1'),
-        'to throw',
+    it('rejects if the value is not an integer', async () => {
+      await expect(
+        validate.integer('1'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an integer' })
       );
     });
 
-    it('throws if the value is an instance of `Number`', () => {
-      expect(
+    it('rejects if the value is an instance of `Number`', async () => {
+      await expect(
         // eslint-disable-next-line no-new-wrappers
-        () => validate.integer(new Number(1)),
-        'to throw',
+        validate.integer(new Number(1)),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an integer' })
       );
     });
 
-    it('throws if the value is a float', () => {
-      expect(
-        () => validate.integer(1.5),
-        'to throw',
+    it('rejects if the value is a float', async () => {
+      await expect(
+        validate.integer(1.5),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an integer' })
       );
     });
 
-    it('does not throw if the value is an integer', () => {
-      expect(() => validate.integer(1), 'not to throw');
+    it('does not throw if the value is an integer', async () => {
+      await expect(validate.integer(1), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -329,14 +329,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not an integer', () => {
-        expect(() => validate.integer(1.2), 'not to throw');
+      it('does not throw if the value is not an integer', async () => {
+        await expect(validate.integer(1.2), 'to be fulfilled');
       });
 
-      it('throws if the value is an integer', () => {
-        expect(
-          () => validate.integer(1),
-          'to throw',
+      it('rejects if the value is an integer', async () => {
+        await expect(
+          validate.integer(1),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be an integer'
@@ -347,25 +347,25 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.string', () => {
-    it('throws if the value is not a string', () => {
-      expect(
-        () => validate.string(true),
-        'to throw',
+    it('rejects if the value is not a string', async () => {
+      await expect(
+        validate.string(true),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a string' })
       );
     });
 
-    it('throws if the value is an instance of `String`', () => {
-      expect(
+    it('rejects if the value is an instance of `String`', async () => {
+      await expect(
         // eslint-disable-next-line no-new-wrappers
-        () => validate.string(new String('foo')),
-        'to throw',
+        validate.string(new String('foo')),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a string' })
       );
     });
 
-    it('does not throw if the value is a string', () => {
-      expect(() => validate.string('foo'), 'not to throw');
+    it('does not throw if the value is a string', async () => {
+      await expect(validate.string('foo'), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -373,14 +373,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a string', () => {
-        expect(() => validate.string(true), 'not to throw');
+      it('does not throw if the value is not a string', async () => {
+        await expect(validate.string(true), 'to be fulfilled');
       });
 
-      it('throws if the value is a string', () => {
-        expect(
-          () => validate.string('foo'),
-          'to throw',
+      it('rejects if the value is a string', async () => {
+        await expect(
+          validate.string('foo'),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be a string'
@@ -391,25 +391,25 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.boolean', () => {
-    it('throws if the value is not a boolean', () => {
-      expect(
-        () => validate.boolean('true'),
-        'to throw',
+    it('rejects if the value is not a boolean', async () => {
+      await expect(
+        validate.boolean('true'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a boolean' })
       );
     });
 
-    it('throws if the value is an instance of `Boolean`', () => {
-      expect(
+    it('rejects if the value is an instance of `Boolean`', async () => {
+      await expect(
         // eslint-disable-next-line no-new-wrappers
-        () => validate.boolean(new Boolean(true)),
-        'to throw',
+        validate.boolean(new Boolean(true)),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a boolean' })
       );
     });
 
-    it('does not throw if the value is a boolean', () => {
-      expect(() => validate.boolean(false), 'not to throw');
+    it('does not throw if the value is a boolean', async () => {
+      await expect(validate.boolean(false), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -417,14 +417,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a boolean', () => {
-        expect(() => validate.boolean('foo'), 'not to throw');
+      it('does not throw if the value is not a boolean', async () => {
+        await expect(validate.boolean('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is a boolean', () => {
-        expect(
-          () => validate.boolean(true),
-          'to throw',
+      it('rejects if the value is a boolean', async () => {
+        await expect(
+          validate.boolean(true),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be a boolean'
@@ -435,16 +435,16 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.email', () => {
-    it('throws if the value is not an email', () => {
-      expect(
-        () => validate.email('foo.com'),
-        'to throw',
+    it('rejects if the value is not an email', async () => {
+      await expect(
+        validate.email('foo.com'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an email' })
       );
     });
 
-    it('does not throw if the value is an email', () => {
-      expect(() => validate.email('foo@bar.com'), 'not to throw');
+    it('does not throw if the value is an email', async () => {
+      await expect(validate.email('foo@bar.com'), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -452,14 +452,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not an email', () => {
-        expect(() => validate.email('foo'), 'not to throw');
+      it('does not throw if the value is not an email', async () => {
+        await expect(validate.email('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is an email', () => {
-        expect(
-          () => validate.email('foo@bar.com'),
-          'to throw',
+      it('rejects if the value is an email', async () => {
+        await expect(
+          validate.email('foo@bar.com'),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be an email'
@@ -470,28 +470,34 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.uuid', () => {
-    it('throws if the value is not a UUID', () => {
-      expect(
-        () => validate.uuid('foo'),
-        'to throw',
+    it('rejects if the value is not a UUID', async () => {
+      await expect(
+        validate.uuid('foo'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a UUID' })
       );
     });
 
-    it('does not throw if the value is a v1 UUID', () => {
-      expect(() => validate.uuid(uuid1()), 'not to throw');
+    it('does not throw if the value is a v1 UUID', async () => {
+      await expect(validate.uuid(uuid1()), 'to be fulfilled');
     });
 
-    it('does not throw if the value is a v3 UUID', () => {
-      expect(() => validate.uuid(uuid3('foo.com', uuid3.DNS)), 'not to throw');
+    it('does not throw if the value is a v3 UUID', async () => {
+      await expect(
+        validate.uuid(uuid3('foo.com', uuid3.DNS)),
+        'to be fulfilled'
+      );
     });
 
-    it('does not throw if the value is a v4 UUID', () => {
-      expect(() => validate.uuid(uuid4()), 'not to throw');
+    it('does not throw if the value is a v4 UUID', async () => {
+      await expect(validate.uuid(uuid4()), 'to be fulfilled');
     });
 
-    it('does not throw if the value is a v5 UUID', () => {
-      expect(() => validate.uuid(uuid5('foo.com', uuid5.DNS)), 'not to throw');
+    it('does not throw if the value is a v5 UUID', async () => {
+      await expect(
+        validate.uuid(uuid5('foo.com', uuid5.DNS)),
+        'to be fulfilled'
+      );
     });
 
     describe('when negated', () => {
@@ -499,14 +505,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a UUID', () => {
-        expect(() => validate.uuid('foo'), 'not to throw');
+      it('does not throw if the value is not a UUID', async () => {
+        await expect(validate.uuid('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is a UUID', () => {
-        expect(
-          () => validate.uuid(uuid1()),
-          'to throw',
+      it('rejects if the value is a UUID', async () => {
+        await expect(
+          validate.uuid(uuid1()),
+          'to be rejected with error satisfying',
           new ValidateError({ validate, message: 'value should not be a UUID' })
         );
       });
@@ -514,40 +520,43 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.uuid3', () => {
-    it('throws if the value is not a UUID', () => {
-      expect(
-        () => validate.uuid3('foo'),
-        'to throw',
+    it('rejects if the value is not a UUID', async () => {
+      await expect(
+        validate.uuid3('foo'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v3 UUID' })
       );
     });
 
-    it('throws if the value is a v1 UUID', () => {
-      expect(
-        () => validate.uuid3(uuid1()),
-        'to throw',
+    it('rejects if the value is a v1 UUID', async () => {
+      await expect(
+        validate.uuid3(uuid1()),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v3 UUID' })
       );
     });
 
-    it('throws if the value is a v4 UUID', () => {
-      expect(
-        () => validate.uuid3(uuid4()),
-        'to throw',
+    it('rejects if the value is a v4 UUID', async () => {
+      await expect(
+        validate.uuid3(uuid4()),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v3 UUID' })
       );
     });
 
-    it('throws if the value is a v5 UUID', () => {
-      expect(
-        () => validate.uuid3(uuid5('foo.com', uuid5.DNS)),
-        'to throw',
+    it('rejects if the value is a v5 UUID', async () => {
+      await expect(
+        validate.uuid3(uuid5('foo.com', uuid5.DNS)),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v3 UUID' })
       );
     });
 
-    it('does not throw if the value is a v3 UUID', () => {
-      expect(() => validate.uuid3(uuid3('foo.com', uuid3.DNS)), 'not to throw');
+    it('does not throw if the value is a v3 UUID', async () => {
+      await expect(
+        validate.uuid3(uuid3('foo.com', uuid3.DNS)),
+        'to be fulfilled'
+      );
     });
 
     describe('when negated', () => {
@@ -555,14 +564,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a v3 uuid', () => {
-        expect(() => validate.uuid3('foo'), 'not to throw');
+      it('does not throw if the value is not a v3 uuid', async () => {
+        await expect(validate.uuid3('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is a v3 uuid', () => {
-        expect(
-          () => validate.uuid3(uuid3('foo.com', uuid3.DNS)),
-          'to throw',
+      it('rejects if the value is a v3 uuid', async () => {
+        await expect(
+          validate.uuid3(uuid3('foo.com', uuid3.DNS)),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be a v3 UUID'
@@ -573,40 +582,40 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.uuid4', () => {
-    it('throws if the value is not a UUID', () => {
-      expect(
-        () => validate.uuid4('foo'),
-        'to throw',
+    it('rejects if the value is not a UUID', async () => {
+      await expect(
+        validate.uuid4('foo'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v4 UUID' })
       );
     });
 
-    it('throws if the value is a v1 UUID', () => {
-      expect(
-        () => validate.uuid4(uuid1()),
-        'to throw',
+    it('rejects if the value is a v1 UUID', async () => {
+      await expect(
+        validate.uuid4(uuid1()),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v4 UUID' })
       );
     });
 
-    it('throws if the value is a v3 UUID', () => {
-      expect(
-        () => validate.uuid4(uuid3('foo.com', uuid3.DNS)),
-        'to throw',
+    it('rejects if the value is a v3 UUID', async () => {
+      await expect(
+        validate.uuid4(uuid3('foo.com', uuid3.DNS)),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v4 UUID' })
       );
     });
 
-    it('throws if the value is a v5 UUID', () => {
-      expect(
-        () => validate.uuid4(uuid5('foo.com', uuid5.DNS)),
-        'to throw',
+    it('rejects if the value is a v5 UUID', async () => {
+      await expect(
+        validate.uuid4(uuid5('foo.com', uuid5.DNS)),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v4 UUID' })
       );
     });
 
-    it('does not throw if the value is a v4 UUID', () => {
-      expect(() => validate.uuid4(uuid4()), 'not to throw');
+    it('does not throw if the value is a v4 UUID', async () => {
+      await expect(validate.uuid4(uuid4()), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -614,14 +623,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a v4 UUID', () => {
-        expect(() => validate.uuid4('foo'), 'not to throw');
+      it('does not throw if the value is not a v4 UUID', async () => {
+        await expect(validate.uuid4('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is a v4 UUID', () => {
-        expect(
-          () => validate.uuid4(uuid4()),
-          'to throw',
+      it('rejects if the value is a v4 UUID', async () => {
+        await expect(
+          validate.uuid4(uuid4()),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be a v4 UUID'
@@ -632,40 +641,43 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.uuid5', () => {
-    it('throws if the value is not a UUID', () => {
-      expect(
-        () => validate.uuid5('foo'),
-        'to throw',
+    it('rejects if the value is not a UUID', async () => {
+      await expect(
+        validate.uuid5('foo'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v5 UUID' })
       );
     });
 
-    it('throws if the value is a v1 UUID', () => {
-      expect(
-        () => validate.uuid5(uuid1()),
-        'to throw',
+    it('rejects if the value is a v1 UUID', async () => {
+      await expect(
+        validate.uuid5(uuid1()),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v5 UUID' })
       );
     });
 
-    it('throws if the value is a v3 UUID', () => {
-      expect(
-        () => validate.uuid5(uuid3('foo.com', uuid3.DNS)),
-        'to throw',
+    it('rejects if the value is a v3 UUID', async () => {
+      await expect(
+        validate.uuid5(uuid3('foo.com', uuid3.DNS)),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v5 UUID' })
       );
     });
 
-    it('throws if the value is a v4 UUID', () => {
-      expect(
-        () => validate.uuid5(uuid4()),
-        'to throw',
+    it('rejects if the value is a v4 UUID', async () => {
+      await expect(
+        validate.uuid5(uuid4()),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a v5 UUID' })
       );
     });
 
-    it('does not throw if the value is a v5 UUID', () => {
-      expect(() => validate.uuid5(uuid5('foo.com', uuid5.DNS)), 'not to throw');
+    it('does not throw if the value is a v5 UUID', async () => {
+      await expect(
+        validate.uuid5(uuid5('foo.com', uuid5.DNS)),
+        'to be fulfilled'
+      );
     });
 
     describe('when negated', () => {
@@ -673,14 +685,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a v5 UUID', () => {
-        expect(() => validate.uuid5('foo'), 'not to throw');
+      it('does not throw if the value is not a v5 UUID', async () => {
+        await expect(validate.uuid5('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is a v5 UUID', () => {
-        expect(
-          () => validate.uuid5(uuid5('foo.com', uuid5.DNS)),
-          'to throw',
+      it('rejects if the value is a v5 UUID', async () => {
+        await expect(
+          validate.uuid5(uuid5('foo.com', uuid5.DNS)),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be a v5 UUID'
@@ -691,16 +703,16 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.date', () => {
-    it('throws if the value is not a Date instance', () => {
-      expect(
-        () => validate.date('1970-01-01'),
-        'to throw',
+    it('rejects if the value is not a Date instance', async () => {
+      await expect(
+        validate.date('1970-01-01'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a date' })
       );
     });
 
-    it('does not throw if the value is a Date instance', () => {
-      expect(() => validate.date(new Date()), 'not to throw');
+    it('does not throw if the value is a Date instance', async () => {
+      await expect(validate.date(new Date()), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -708,14 +720,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a date', () => {
-        expect(() => validate.date('foo'), 'not to throw');
+      it('does not throw if the value is not a date', async () => {
+        await expect(validate.date('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is a date', () => {
-        expect(
-          () => validate.date(new Date()),
-          'to throw',
+      it('rejects if the value is a date', async () => {
+        await expect(
+          validate.date(new Date()),
+          'to be rejected with error satisfying',
           new ValidateError({ validate, message: 'value should not be a date' })
         );
       });
@@ -723,32 +735,32 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.object', () => {
-    it('throws if the value is not an object', () => {
-      expect(
-        () => validate.object('foo'),
-        'to throw',
+    it('rejects if the value is not an object', async () => {
+      await expect(
+        validate.object('foo'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an object' })
       );
     });
 
-    it('throws if the value is `null`', () => {
-      expect(
-        () => validate.object(null),
-        'to throw',
+    it('rejects if the value is `null`', async () => {
+      await expect(
+        validate.object(null),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an object' })
       );
     });
 
-    it('throws if the value is not an array', () => {
-      expect(
-        () => validate.object([]),
-        'to throw',
+    it('rejects if the value is not an array', async () => {
+      await expect(
+        validate.object([]),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an object' })
       );
     });
 
-    it('does not throw if the value is an object', () => {
-      expect(() => validate.object({}), 'not to throw');
+    it('does not throw if the value is an object', async () => {
+      await expect(validate.object({}), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -756,14 +768,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not an object', () => {
-        expect(() => validate.object('foo'), 'not to throw');
+      it('does not throw if the value is not an object', async () => {
+        await expect(validate.object('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is an object', () => {
-        expect(
-          () => validate.object({}),
-          'to throw',
+      it('rejects if the value is an object', async () => {
+        await expect(
+          validate.object({}),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be an object'
@@ -774,24 +786,24 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.array', () => {
-    it('throws if the value is not an array', () => {
-      expect(
-        () => validate.array('foo'),
-        'to throw',
+    it('rejects if the value is not an array', async () => {
+      await expect(
+        validate.array('foo'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an array' })
       );
     });
 
-    it('throws if the value is an object', () => {
-      expect(
-        () => validate.array({}),
-        'to throw',
+    it('rejects if the value is an object', async () => {
+      await expect(
+        validate.array({}),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be an array' })
       );
     });
 
-    it('does not throw if the value is an array', () => {
-      expect(() => validate.array([]), 'not to throw');
+    it('does not throw if the value is an array', async () => {
+      await expect(validate.array([]), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -799,14 +811,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not an array', () => {
-        expect(() => validate.array('foo'), 'not to throw');
+      it('does not throw if the value is not an array', async () => {
+        await expect(validate.array('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is an array', () => {
-        expect(
-          () => validate.array([]),
-          'to throw',
+      it('rejects if the value is an array', async () => {
+        await expect(
+          validate.array([]),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be an array'
@@ -817,16 +829,16 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.buffer', () => {
-    it('throws if the value is not a Buffer instance', () => {
-      expect(
-        () => validate.buffer('foo'),
-        'to throw',
+    it('rejects if the value is not a Buffer instance', async () => {
+      await expect(
+        validate.buffer('foo'),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be a buffer' })
       );
     });
 
-    it('does not throw if the value is a Buffer instance', () => {
-      expect(() => validate.buffer(Buffer.from('foo')), 'not to throw');
+    it('does not throw if the value is a Buffer instance', async () => {
+      await expect(validate.buffer(Buffer.from('foo')), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -834,14 +846,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not a buffer', () => {
-        expect(() => validate.buffer('foo'), 'not to throw');
+      it('does not throw if the value is not a buffer', async () => {
+        await expect(validate.buffer('foo'), 'to be fulfilled');
       });
 
-      it('throws if the value is a buffer', () => {
-        expect(
-          () => validate.buffer(Buffer.from('foo')),
-          'to throw',
+      it('rejects if the value is a buffer', async () => {
+        await expect(
+          validate.buffer(Buffer.from('foo')),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be a buffer'
@@ -852,10 +864,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.equalTo', () => {
-    it('throws if the value is not equal to the expected value', () => {
-      expect(
-        () => validate.equalTo('foo', 'bar'),
-        'to throw',
+    it('rejects if the value is not equal to the expected value', async () => {
+      await expect(
+        validate.equalTo('foo', 'bar'),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value should be equal to 'bar'"
@@ -863,18 +875,18 @@ describe.only('Validate', () => {
       );
     });
 
-    it('throws if objects are compared for equality', () => {
-      expect(
-        () => validate.equalTo({}, {}),
-        'to throw',
+    it('rejects if objects are compared for equality', async () => {
+      await expect(
+        validate.equalTo({}, {}),
+        'to be rejected with error satisfying',
         new ValidateError({ validate, message: 'value should be equal to {}' })
       );
     });
 
-    it('compares strings case-sensitively', () => {
-      expect(
-        () => validate.equalTo('foo', 'FOO'),
-        'to throw',
+    it('compares strings case-sensitively', async () => {
+      await expect(
+        validate.equalTo('foo', 'FOO'),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value should be equal to 'FOO'"
@@ -882,10 +894,10 @@ describe.only('Validate', () => {
       );
     });
 
-    it('compares values with strict equality', () => {
-      expect(
-        () => validate.equalTo(1, '1'),
-        'to throw',
+    it('compares values with strict equality', async () => {
+      await expect(
+        validate.equalTo(1, '1'),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value should be equal to '1'"
@@ -893,8 +905,8 @@ describe.only('Validate', () => {
       );
     });
 
-    it('does not throw if the value is equal to the expected value', () => {
-      expect(() => validate.equalTo('foo', 'foo'), 'not to throw');
+    it('does not throw if the value is equal to the expected value', async () => {
+      await expect(validate.equalTo('foo', 'foo'), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -902,14 +914,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not equal to the expected value', () => {
-        expect(() => validate.equalTo(1, 2), 'not to throw');
+      it('does not throw if the value is not equal to the expected value', async () => {
+        await expect(validate.equalTo(1, 2), 'to be fulfilled');
       });
 
-      it('throws if the value is equal to the expected value', () => {
-        expect(
-          () => validate.equalTo(1, 1),
-          'to throw',
+      it('rejects if the value is equal to the expected value', async () => {
+        await expect(
+          validate.equalTo(1, 1),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be equal to 1'
@@ -920,10 +932,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.greaterThan', () => {
-    it('throws if the value is less than the expected value', () => {
-      expect(
-        () => validate.greaterThan(10, 20),
-        'to throw',
+    it('rejects if the value is less than the expected value', async () => {
+      await expect(
+        validate.greaterThan(10, 20),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should be greater than 20'
@@ -931,10 +943,10 @@ describe.only('Validate', () => {
       );
     });
 
-    it('throws if the value is equal to the expected value', () => {
-      expect(
-        () => validate.greaterThan(10, 10),
-        'to throw',
+    it('rejects if the value is equal to the expected value', async () => {
+      await expect(
+        validate.greaterThan(10, 10),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should be greater than 10'
@@ -942,12 +954,12 @@ describe.only('Validate', () => {
       );
     });
 
-    it('does not throw if the value is greater than the expected value', () => {
-      expect(() => validate.greaterThan(10.01, 10), 'not to throw');
+    it('does not throw if the value is greater than the expected value', async () => {
+      await expect(validate.greaterThan(10.01, 10), 'to be fulfilled');
     });
 
-    it('does not throw if a string is alphabetically greater than the expected value', () => {
-      expect(() => validate.greaterThan('a', 'A'), 'not to throw');
+    it('does not throw if a string is alphabetically greater than the expected value', async () => {
+      await expect(validate.greaterThan('a', 'A'), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -955,14 +967,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not greater than the expected value', () => {
-        expect(() => validate.greaterThan(1, 2), 'not to throw');
+      it('does not throw if the value is not greater than the expected value', async () => {
+        await expect(validate.greaterThan(1, 2), 'to be fulfilled');
       });
 
-      it('throws if the value is greater than the expected value', () => {
-        expect(
-          () => validate.greaterThan(2, 1),
-          'to throw',
+      it('rejects if the value is greater than the expected value', async () => {
+        await expect(
+          validate.greaterThan(2, 1),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be greater than 1'
@@ -973,10 +985,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.greaterThanOrEqualTo', () => {
-    it('throws if the value is less than the expected value', () => {
-      expect(
-        () => validate.greaterThanOrEqualTo(10, 20),
-        'to throw',
+    it('rejects if the value is less than the expected value', async () => {
+      await expect(
+        validate.greaterThanOrEqualTo(10, 20),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should be greater than or equal to 20'
@@ -984,20 +996,26 @@ describe.only('Validate', () => {
       );
     });
 
-    it('does not throw if the value is greater than the expected value', () => {
-      expect(() => validate.greaterThanOrEqualTo(10.01, 10), 'not to throw');
+    it('does not throw if the value is greater than the expected value', async () => {
+      await expect(validate.greaterThanOrEqualTo(10.01, 10), 'to be fulfilled');
     });
 
-    it('does not throw if the value is equal to the expected value', () => {
-      expect(() => validate.greaterThanOrEqualTo(10, 10), 'not to throw');
+    it('does not throw if the value is equal to the expected value', async () => {
+      await expect(validate.greaterThanOrEqualTo(10, 10), 'to be fulfilled');
     });
 
-    it('does not throw if a string is alphabetically greater than the expected value', () => {
-      expect(() => validate.greaterThanOrEqualTo('foo', 'Foo'), 'not to throw');
+    it('does not throw if a string is alphabetically greater than the expected value', async () => {
+      await expect(
+        validate.greaterThanOrEqualTo('foo', 'Foo'),
+        'to be fulfilled'
+      );
     });
 
-    it('does not throw if a string is alphabetically equal to the expected value', () => {
-      expect(() => validate.greaterThanOrEqualTo('foo', 'foo'), 'not to throw');
+    it('does not throw if a string is alphabetically equal to the expected value', async () => {
+      await expect(
+        validate.greaterThanOrEqualTo('foo', 'foo'),
+        'to be fulfilled'
+      );
     });
 
     describe('when negated', () => {
@@ -1005,14 +1023,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not greater than or equal to the expected value', () => {
-        expect(() => validate.greaterThanOrEqualTo(1, 2), 'not to throw');
+      it('does not throw if the value is not greater than or equal to the expected value', async () => {
+        await expect(validate.greaterThanOrEqualTo(1, 2), 'to be fulfilled');
       });
 
-      it('throws if the value is greater than or equal to the expected value', () => {
-        expect(
-          () => validate.greaterThanOrEqualTo(1, 1),
-          'to throw',
+      it('rejects if the value is greater than or equal to the expected value', async () => {
+        await expect(
+          validate.greaterThanOrEqualTo(1, 1),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be greater than or equal to 1'
@@ -1023,10 +1041,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.lessThan', () => {
-    it('throws if the value is greater than the expected value', () => {
-      expect(
-        () => validate.lessThan(20, 10),
-        'to throw',
+    it('rejects if the value is greater than the expected value', async () => {
+      await expect(
+        validate.lessThan(20, 10),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should be less than 10'
@@ -1034,10 +1052,10 @@ describe.only('Validate', () => {
       );
     });
 
-    it('throws if the value is equal to the expected value', () => {
-      expect(
-        () => validate.lessThan(10, 10),
-        'to throw',
+    it('rejects if the value is equal to the expected value', async () => {
+      await expect(
+        validate.lessThan(10, 10),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should be less than 10'
@@ -1045,12 +1063,12 @@ describe.only('Validate', () => {
       );
     });
 
-    it('does not throw if the value is less than the expected value', () => {
-      expect(() => validate.lessThan(9, 10), 'not to throw');
+    it('does not throw if the value is less than the expected value', async () => {
+      await expect(validate.lessThan(9, 10), 'to be fulfilled');
     });
 
-    it('does not throw if a string is alphabetically less than the expected value', () => {
-      expect(() => validate.lessThan('a', 'b'), 'not to throw');
+    it('does not throw if a string is alphabetically less than the expected value', async () => {
+      await expect(validate.lessThan('a', 'b'), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -1058,14 +1076,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not less than the expected value', () => {
-        expect(() => validate.lessThan(3, 2), 'not to throw');
+      it('does not throw if the value is not less than the expected value', async () => {
+        await expect(validate.lessThan(3, 2), 'to be fulfilled');
       });
 
-      it('throws if the value is less than the expected value', () => {
-        expect(
-          () => validate.lessThan(1, 2),
-          'to throw',
+      it('rejects if the value is less than the expected value', async () => {
+        await expect(
+          validate.lessThan(1, 2),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be less than 2'
@@ -1076,10 +1094,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.lessThanOrEqualTo', () => {
-    it('throws if the value is greater than the expected value', () => {
-      expect(
-        () => validate.lessThanOrEqualTo(20, 10),
-        'to throw',
+    it('rejects if the value is greater than the expected value', async () => {
+      await expect(
+        validate.lessThanOrEqualTo(20, 10),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should be less than or equal to 10'
@@ -1087,20 +1105,20 @@ describe.only('Validate', () => {
       );
     });
 
-    it('does not throw if the value is less than the expected value', () => {
-      expect(() => validate.lessThanOrEqualTo(1, 10), 'not to throw');
+    it('does not throw if the value is less than the expected value', async () => {
+      await expect(validate.lessThanOrEqualTo(1, 10), 'to be fulfilled');
     });
 
-    it('does not throw if the value is equal to the expected value', () => {
-      expect(() => validate.lessThanOrEqualTo(10, 10), 'not to throw');
+    it('does not throw if the value is equal to the expected value', async () => {
+      await expect(validate.lessThanOrEqualTo(10, 10), 'to be fulfilled');
     });
 
-    it('does not throw if a string is alphabetically less than the expected value', () => {
-      expect(() => validate.lessThanOrEqualTo('A', 'a'), 'not to throw');
+    it('does not throw if a string is alphabetically less than the expected value', async () => {
+      await expect(validate.lessThanOrEqualTo('A', 'a'), 'to be fulfilled');
     });
 
-    it('does not throw if a string is alphabetically equal to the expected value', () => {
-      expect(() => validate.lessThanOrEqualTo('foo', 'foo'), 'not to throw');
+    it('does not throw if a string is alphabetically equal to the expected value', async () => {
+      await expect(validate.lessThanOrEqualTo('foo', 'foo'), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -1108,14 +1126,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not less than or equal to the expected value', () => {
-        expect(() => validate.lessThanOrEqualTo(4, 2), 'not to throw');
+      it('does not throw if the value is not less than or equal to the expected value', async () => {
+        await expect(validate.lessThanOrEqualTo(4, 2), 'to be fulfilled');
       });
 
-      it('throws if the value is less than or equal to the expected value', () => {
-        expect(
-          () => validate.lessThanOrEqualTo(0, 1),
-          'to throw',
+      it('rejects if the value is less than or equal to the expected value', async () => {
+        await expect(
+          validate.lessThanOrEqualTo(0, 1),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be less than or equal to 1'
@@ -1126,10 +1144,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.lengthEqualTo', () => {
-    it("throws if the value's length is not equal to the expected length", () => {
-      expect(
-        () => validate.lengthEqualTo('foo', 1),
-        'to throw',
+    it("rejects if the value's length is not equal to the expected length", async () => {
+      await expect(
+        validate.lengthEqualTo('foo', 1),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value's length should be equal to 1"
@@ -1137,8 +1155,8 @@ describe.only('Validate', () => {
       );
     });
 
-    it("does not throw if the value's length is equal to the expected length", () => {
-      expect(() => validate.lengthEqualTo([1, 2, 3], 3), 'not to throw');
+    it("does not throw if the value's length is equal to the expected length", async () => {
+      await expect(validate.lengthEqualTo([1, 2, 3], 3), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -1146,14 +1164,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it("does not throw if the value's length is not equal to the expected length", () => {
-        expect(() => validate.lengthEqualTo('foo', 2), 'not to throw');
+      it("does not throw if the value's length is not equal to the expected length", async () => {
+        await expect(validate.lengthEqualTo('foo', 2), 'to be fulfilled');
       });
 
-      it("throws if the value's length is equal to the expected length", () => {
-        expect(
-          () => validate.lengthEqualTo('foo', 3),
-          'to throw',
+      it("rejects if the value's length is equal to the expected length", async () => {
+        await expect(
+          validate.lengthEqualTo('foo', 3),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: "value's length should not be equal to 3"
@@ -1164,10 +1182,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.lengthGreaterThan', () => {
-    it("throws if the value's length is less than the expected length", () => {
-      expect(
-        () => validate.lengthGreaterThan('foo', 4),
-        'to throw',
+    it("rejects if the value's length is less than the expected length", async () => {
+      await expect(
+        validate.lengthGreaterThan('foo', 4),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value's length should be greater than 4"
@@ -1175,10 +1193,10 @@ describe.only('Validate', () => {
       );
     });
 
-    it("throws if the value's length is equal to the expected length", () => {
-      expect(
-        () => validate.lengthGreaterThan([1, 2, 3], 3),
-        'to throw',
+    it("rejects if the value's length is equal to the expected length", async () => {
+      await expect(
+        validate.lengthGreaterThan([1, 2, 3], 3),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value's length should be greater than 3"
@@ -1186,8 +1204,8 @@ describe.only('Validate', () => {
       );
     });
 
-    it("does not throw if the value's length is greater than the expected length", () => {
-      expect(() => validate.lengthGreaterThan('foo', 1), 'not to throw');
+    it("does not throw if the value's length is greater than the expected length", async () => {
+      await expect(validate.lengthGreaterThan('foo', 1), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -1195,14 +1213,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it("does not throw if the value's length is not greater than the expected length", () => {
-        expect(() => validate.lengthGreaterThan('foo', 4), 'not to throw');
+      it("does not throw if the value's length is not greater than the expected length", async () => {
+        await expect(validate.lengthGreaterThan('foo', 4), 'to be fulfilled');
       });
 
-      it("throws if the value's length is greater than the expected length", () => {
-        expect(
-          () => validate.lengthGreaterThan('foo', 1),
-          'to throw',
+      it("rejects if the value's length is greater than the expected length", async () => {
+        await expect(
+          validate.lengthGreaterThan('foo', 1),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: "value's length should not be greater than 1"
@@ -1213,10 +1231,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.lengthGreaterThanOrEqualTo', () => {
-    it("throws if the value's length is less than the expected value", () => {
-      expect(
-        () => validate.lengthGreaterThanOrEqualTo('foo', 4),
-        'to throw',
+    it("rejects if the value's length is less than the expected value", async () => {
+      await expect(
+        validate.lengthGreaterThanOrEqualTo('foo', 4),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value's length should be greater than or equal to 4"
@@ -1224,17 +1242,17 @@ describe.only('Validate', () => {
       );
     });
 
-    it("does not throw if the value's length is greater than the expected value", () => {
-      expect(
-        () => validate.lengthGreaterThanOrEqualTo([1, 2, 3, 4], 3),
-        'not to throw'
+    it("does not throw if the value's length is greater than the expected value", async () => {
+      await expect(
+        validate.lengthGreaterThanOrEqualTo([1, 2, 3, 4], 3),
+        'to be fulfilled'
       );
     });
 
-    it("does not throw if the value's length is equal to the expected value", () => {
-      expect(
-        () => validate.lengthGreaterThanOrEqualTo('foo', 3),
-        'not to throw'
+    it("does not throw if the value's length is equal to the expected value", async () => {
+      await expect(
+        validate.lengthGreaterThanOrEqualTo('foo', 3),
+        'to be fulfilled'
       );
     });
 
@@ -1243,17 +1261,17 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it("does not throw if the value's length is not greater than or equal to the expected length", () => {
-        expect(
-          () => validate.lengthGreaterThanOrEqualTo('foo', 4),
-          'not to throw'
+      it("does not throw if the value's length is not greater than or equal to the expected length", async () => {
+        await expect(
+          validate.lengthGreaterThanOrEqualTo('foo', 4),
+          'to be fulfilled'
         );
       });
 
-      it("throws if the value's length is greater than or equal to the expected length", () => {
-        expect(
-          () => validate.lengthGreaterThanOrEqualTo('foo', 3),
-          'to throw',
+      it("rejects if the value's length is greater than or equal to the expected length", async () => {
+        await expect(
+          validate.lengthGreaterThanOrEqualTo('foo', 3),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: "value's length should not be greater than or equal to 3"
@@ -1264,10 +1282,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.lengthLessThan', () => {
-    it("throws if the value's length is greater than the expected value", () => {
-      expect(
-        () => validate.lengthLessThan('foo', 2),
-        'to throw',
+    it("rejects if the value's length is greater than the expected value", async () => {
+      await expect(
+        validate.lengthLessThan('foo', 2),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value's length should be less than 2"
@@ -1275,10 +1293,10 @@ describe.only('Validate', () => {
       );
     });
 
-    it("throws if the value's length is equal to the expected value", () => {
-      expect(
-        () => validate.lengthLessThan([1, 2, 3], 3),
-        'to throw',
+    it("rejects if the value's length is equal to the expected value", async () => {
+      await expect(
+        validate.lengthLessThan([1, 2, 3], 3),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value's length should be less than 3"
@@ -1286,8 +1304,8 @@ describe.only('Validate', () => {
       );
     });
 
-    it("does not throw if the value's length is less than the expected value", () => {
-      expect(() => validate.lengthLessThan('foo', 4), 'not to throw');
+    it("does not throw if the value's length is less than the expected value", async () => {
+      await expect(validate.lengthLessThan('foo', 4), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -1295,14 +1313,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it("does not throw if the value's length is not less than the expected length", () => {
-        expect(() => validate.lengthLessThan('foo', 2), 'not to throw');
+      it("does not throw if the value's length is not less than the expected length", async () => {
+        await expect(validate.lengthLessThan('foo', 2), 'to be fulfilled');
       });
 
-      it("throws if the value's length is less than the expected length", () => {
-        expect(
-          () => validate.lengthLessThan('foo', 4),
-          'to throw',
+      it("rejects if the value's length is less than the expected length", async () => {
+        await expect(
+          validate.lengthLessThan('foo', 4),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: "value's length should not be less than 4"
@@ -1313,10 +1331,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.lengthLessThanOrEqualTo', () => {
-    it("throws if the value's length is greater than the expected value", () => {
-      expect(
-        () => validate.lengthLessThanOrEqualTo('foo', 2),
-        'to throw',
+    it("rejects if the value's length is greater than the expected value", async () => {
+      await expect(
+        validate.lengthLessThanOrEqualTo('foo', 2),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value's length should be less than or equal to 2"
@@ -1324,12 +1342,15 @@ describe.only('Validate', () => {
       );
     });
 
-    it("does not throw if the value's length is less than the expected value", () => {
-      expect(() => validate.lengthLessThanOrEqualTo([1], 2), 'not to throw');
+    it("does not throw if the value's length is less than the expected value", async () => {
+      await expect(validate.lengthLessThanOrEqualTo([1], 2), 'to be fulfilled');
     });
 
-    it("does not throw if the value's length is equal to the expected value", () => {
-      expect(() => validate.lengthLessThanOrEqualTo([1, 2], 2), 'not to throw');
+    it("does not throw if the value's length is equal to the expected value", async () => {
+      await expect(
+        validate.lengthLessThanOrEqualTo([1, 2], 2),
+        'to be fulfilled'
+      );
     });
 
     describe('when negated', () => {
@@ -1337,17 +1358,17 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it("does not throw if the value's length is not less than or equal to the expected length", () => {
-        expect(
-          () => validate.lengthLessThanOrEqualTo('foo', 2),
-          'not to throw'
+      it("does not throw if the value's length is not less than or equal to the expected length", async () => {
+        await expect(
+          validate.lengthLessThanOrEqualTo('foo', 2),
+          'to be fulfilled'
         );
       });
 
-      it("throws if the value's length is less than or equal to the expected length", () => {
-        expect(
-          () => validate.lengthLessThanOrEqualTo('foo', 4),
-          'to throw',
+      it("rejects if the value's length is less than or equal to the expected length", async () => {
+        await expect(
+          validate.lengthLessThanOrEqualTo('foo', 4),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: "value's length should not be less than or equal to 4"
@@ -1358,10 +1379,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.oneOf', () => {
-    it('throws if the value is not included in the list of expected values', () => {
-      expect(
-        () => validate.oneOf('foo', ['bar', 'baz']),
-        'to throw',
+    it('rejects if the value is not included in the list of expected values', async () => {
+      await expect(
+        validate.oneOf('foo', ['bar', 'baz']),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value should be one of [ 'bar', 'baz' ]"
@@ -1369,10 +1390,10 @@ describe.only('Validate', () => {
       );
     });
 
-    it('compares strings case-sensitively', () => {
-      expect(
-        () => validate.oneOf('foo', ['Foo', 'baz']),
-        'to throw',
+    it('compares strings case-sensitively', async () => {
+      await expect(
+        validate.oneOf('foo', ['Foo', 'baz']),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value should be one of [ 'Foo', 'baz' ]"
@@ -1380,10 +1401,10 @@ describe.only('Validate', () => {
       );
     });
 
-    it('compares values with strict equality', () => {
-      expect(
-        () => validate.oneOf(1, ['1', 2]),
-        'to throw',
+    it('compares values with strict equality', async () => {
+      await expect(
+        validate.oneOf(1, ['1', 2]),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: "value should be one of [ '1', 2 ]"
@@ -1391,8 +1412,8 @@ describe.only('Validate', () => {
       );
     });
 
-    it('does not throw if the value is included in the list of expected values', () => {
-      expect(() => validate.oneOf(1, [1, 2]), 'not to throw');
+    it('does not throw if the value is included in the list of expected values', async () => {
+      await expect(validate.oneOf(1, [1, 2]), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -1400,14 +1421,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value is not one of the expected values', () => {
-        expect(() => validate.oneOf(1, [2, 3]), 'not to throw');
+      it('does not throw if the value is not one of the expected values', async () => {
+        await expect(validate.oneOf(1, [2, 3]), 'to be fulfilled');
       });
 
-      it('throws if the value is one of the expected values', () => {
-        expect(
-          () => validate.oneOf(1, [1, 2]),
-          'to throw',
+      it('rejects if the value is one of the expected values', async () => {
+        await expect(
+          validate.oneOf(1, [1, 2]),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not be one of [ 1, 2 ]'
@@ -1418,10 +1439,10 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.match', () => {
-    it('throws if the value does not match the regex', () => {
-      expect(
-        () => validate.match('foo', /bar/),
-        'to throw',
+    it('rejects if the value does not match the regex', async () => {
+      await expect(
+        validate.match('foo', /bar/),
+        'to be rejected with error satisfying',
         new ValidateError({
           validate,
           message: 'value should match /bar/'
@@ -1429,8 +1450,8 @@ describe.only('Validate', () => {
       );
     });
 
-    it('does not throw if the value matches the regex', () => {
-      expect(() => validate.match('a', /[a-c]/), 'not to throw');
+    it('does not throw if the value matches the regex', async () => {
+      await expect(validate.match('a', /[a-c]/), 'to be fulfilled');
     });
 
     describe('when negated', () => {
@@ -1438,14 +1459,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not throw if the value does not match the regex', () => {
-        expect(() => validate.match('foo', /bar/), 'not to throw');
+      it('does not throw if the value does not match the regex', async () => {
+        await expect(validate.match('foo', /bar/), 'to be fulfilled');
       });
 
-      it('throws if the value matches the regex', () => {
-        expect(
-          () => validate.match('foo', /foo/),
-          'to throw',
+      it('rejects if the value matches the regex', async () => {
+        await expect(
+          validate.match('foo', /foo/),
+          'to be rejected with error satisfying',
           new ValidateError({
             validate,
             message: 'value should not match /foo/'
@@ -1502,14 +1523,14 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not reject if all items in the array fail validation', () => {
-        expect(
-          () => validate.item(['foo', 'bar'], { equalTo: 'quux' }),
+      it('does not reject if all items in the array fail validation', async () => {
+        await expect(
+          validate.item(['foo', 'bar'], { equalTo: 'quux' }),
           'to be fulfilled'
         );
       });
 
-      it('rejects if any item in the array passes validation', () => {
+      it('rejects if any item in the array passes validation', async () => {
         expect(
           validate.item(['foo', 'bar'], { match: /foo?/ }),
           'to be rejected with error satisfying',
@@ -1591,16 +1612,16 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not reject if the object does not satisfy the provided shape', () => {
-        expect(
-          () => validate.shape({ foo: 1 }, { foo: 'string' }),
-          'not to throw'
+      it('does not reject if the object does not satisfy the provided shape', async () => {
+        await expect(
+          validate.shape({ foo: 1 }, { foo: 'string' }),
+          'to be fulfilled'
         );
       });
 
-      it('rejects if the object satisfies the provided shape', () => {
-        expect(
-          () => validate.shape({ foo: 'foo' }, { foo: 'string' }),
+      it('rejects if the object satisfies the provided shape', async () => {
+        await expect(
+          validate.shape({ foo: 'foo' }, { foo: 'string' }),
           'to be rejected with error satisfying',
           'User.fields.id.foo: value should not be a string'
         );
@@ -1639,13 +1660,13 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not reject if the value fails validation against all specs', () => {
-        expect(() => validate.or({}, ['number', 'string']), 'not to throw');
+      it('does not reject if the value fails validation against all specs', async () => {
+        await expect(validate.or({}, ['number', 'string']), 'to be fulfilled');
       });
 
-      it('rejects if the value passes validation against all specs', () => {
-        expect(
-          () => validate.or(1, ['number', 'integer']),
+      it('rejects if the value passes validation against all specs', async () => {
+        await expect(
+          validate.or(1, ['number', 'integer']),
           'to be rejected with error satisfying',
           new ValidateError({
             validate,
@@ -1692,13 +1713,13 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not reject if the value fails validation against any of specs', () => {
-        expect(() => validate.and({}, ['number', 'string']), 'not to throw');
+      it('does not reject if the value fails validation against any of specs', async () => {
+        await expect(validate.and({}, ['number', 'string']), 'to be fulfilled');
       });
 
-      it('rejects if the value passes validation against all specs', () => {
-        expect(
-          () => validate.and(1, ['number', 'integer']),
+      it('rejects if the value passes validation against all specs', async () => {
+        await expect(
+          validate.and(1, ['number', 'integer']),
           'to be rejected with error satisfying',
           new ValidateError({
             validate,
@@ -1749,7 +1770,7 @@ describe.only('Validate', () => {
 
     it('rejects with the error thrown if the function throws', async () => {
       await expect(
-        validate.custom('foo', () => {
+        validate.custom('foo', async () => {
           throw new Error('foo');
         }),
         'to be rejected with error satisfying',
@@ -1762,7 +1783,7 @@ describe.only('Validate', () => {
     });
 
     it('fulfills if the function returns `undefined`', async () => {
-      await expect(validate.custom('foo', () => {}), 'to be fulfilled');
+      await expect(validate.custom('foo', async () => {}), 'to be fulfilled');
     });
 
     it('rejects if the function resolves with `false`', async () => {
@@ -1821,13 +1842,13 @@ describe.only('Validate', () => {
         validate.negate = true;
       });
 
-      it('does not reject if the value fails custom validation', () => {
-        expect(() => validate.custom('foo', () => false), 'not to throw');
+      it('does not reject if the value fails custom validation', async () => {
+        await expect(validate.custom('foo', () => false), 'to be fulfilled');
       });
 
-      it('rejects if the value passes custom validation', () => {
-        expect(
-          () => validate.custom('foo', () => true),
+      it('rejects if the value passes custom validation', async () => {
+        await expect(
+          validate.custom('foo', () => true),
           'to be rejected with error satisfying',
           new ValidateError({
             validate,
@@ -1836,9 +1857,9 @@ describe.only('Validate', () => {
         );
       });
 
-      it('rejects with the right error if the validator returns a new validation spec', () => {
-        expect(
-          () => validate.custom('foo', () => 'string'),
+      it('rejects with the right error if the validator returns a new validation spec', async () => {
+        await expect(
+          validate.custom('foo', () => 'string'),
           'to be rejected with error satisfying',
           new ValidateError({
             validate,
@@ -1850,7 +1871,7 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.throwValidateErrorIf', () => {
-    it('throws the message ValidateError if `invalid` is `false`', () => {
+    it('rejects the message ValidateError if `invalid` is `false`', () => {
       expect(
         () =>
           validate.throwValidateErrorIf(
@@ -1892,7 +1913,7 @@ describe.only('Validate', () => {
         );
       });
 
-      it('throws the negated message if `invalid` is `false`', () => {
+      it('rejects the negated message if `invalid` is `false`', () => {
         expect(
           () =>
             validate.throwValidateErrorIf(
@@ -1908,7 +1929,7 @@ describe.only('Validate', () => {
   });
 
   describe('Validate.prototype.throwValidateError', () => {
-    it('throws a ValidateError', () => {
+    it('rejects a ValidateError', () => {
       expect(
         () => validate.throwValidateError('foo'),
         'to throw',
