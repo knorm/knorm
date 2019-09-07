@@ -34,7 +34,7 @@
     "prettier": "1.17.0",
     "semantic-release": "15.13.3",
     "sinon": "7.3.1",
-    "unexpected": "11.2.0",
+    "unexpected": "11.8.0",
     "unexpected-knex": "2.0.0",
     "unexpected-sinon": "10.11.1"
   },
