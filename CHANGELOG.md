@@ -1,3 +1,10 @@
+## [2.1.4](https://github.com/knorm/knorm/compare/v2.1.3...v2.1.4) (2019-09-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lodash to v4.17.13 [security] ([2d283f5](https://github.com/knorm/knorm/commit/2d283f5))
+
 ## [2.1.3](https://github.com/knorm/knorm/compare/v2.1.2...v2.1.3) (2019-03-27)
 
 
