@@ -73,38 +73,6 @@ describe('Knorm', () => {
       const secondOrm = new Knorm();
       expect(firstOrm.Query, 'not to be', secondOrm.Query);
     });
-
-    describe('with the `fieldToColumn` option provided', () => {
-      it('configures it as the field-to-column-name mapping function', () => {
-        const { Model } = new Knorm({
-          fieldToColumn(field) {
-            return field.toLowerCase();
-          }
-        });
-        Model.fields = { firstName: { type: 'string' } };
-        expect(Model.fields.firstName.column, 'to be', 'firstname');
-      });
-
-      it('calls it with `this` set to the field instance', () => {
-        let wasCalled;
-        const { Model } = new Knorm({
-          fieldToColumn() {
-            wasCalled = true;
-            expect(this.constructor.name, 'to be', 'Field');
-          }
-        });
-        Model.fields = { firstName: { type: 'string' } };
-        expect(wasCalled, 'to be true');
-      });
-    });
-
-    describe('with no `fieldToColumn` option provided', () => {
-      it('does not configure a field-to-column-name mapping function', () => {
-        const { Model } = new Knorm();
-        Model.fields = { firstName: { type: 'string' } };
-        expect(Model.fields.firstName.column, 'to be', 'firstName');
-      });
-    });
   });
 
   describe('use', () => {
@@ -361,6 +329,26 @@ describe('Knorm', () => {
     });
   });
 
+  describe('updateField', () => {
+    it('updates Knorm.prototype.Field', () => {
+      class Foo {}
+      const knorm = new Knorm().updateField(Foo);
+      expect(knorm.Field, 'to be', Foo);
+    });
+
+    it('updates Knorm.Model.Field', () => {
+      class Foo {}
+      const knorm = new Knorm().updateField(Foo);
+      expect(knorm.Model.Field, 'to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      const knorm = new Knorm();
+      expect(knorm.updateField(Foo), 'to be', knorm);
+    });
+  });
+
   describe('updateQuery', () => {
     it('updates Knorm.prototype.Query', () => {
       class Foo {}
@@ -381,23 +369,23 @@ describe('Knorm', () => {
     });
   });
 
-  describe('updateField', () => {
-    it('updates Knorm.prototype.Field', () => {
+  describe('updateSql', () => {
+    it('updates Knorm.prototype.Sql', () => {
       class Foo {}
-      const knorm = new Knorm().updateField(Foo);
-      expect(knorm.Field, 'to be', Foo);
+      const knorm = new Knorm().updateSql(Foo);
+      expect(knorm.Sql, 'to be', Foo);
     });
 
-    it('updates Knorm.Model.Field', () => {
+    it('updates Knorm.Model.Sql', () => {
       class Foo {}
-      const knorm = new Knorm().updateField(Foo);
-      expect(knorm.Model.Field, 'to be', Foo);
+      const knorm = new Knorm().updateSql(Foo);
+      expect(knorm.Model.Sql, 'to be', Foo);
     });
 
     it('allows chaining', () => {
       class Foo {}
       const knorm = new Knorm();
-      expect(knorm.updateField(Foo), 'to be', knorm);
+      expect(knorm.updateSql(Foo), 'to be', knorm);
     });
   });
 

@@ -14,8 +14,12 @@ const postgresPlugin = knorm => {
         this.client = await pool.connect();
       }
 
-      async query(sql) {
-        const { rows } = await this.client.query(sql);
+      async query({ text, values }) {
+        const { rows } = await this.client.query({
+          text,
+          values,
+          rowMode: 'array'
+        });
         return rows;
       }
 
@@ -48,7 +52,6 @@ const postgresPlugin = knorm => {
   knorm.updateQuery(QueryForTests);
 
   QueryForTests.prototype.sql = sqlBricksPostgres;
-  knorm.Query.Where.prototype.sql = sqlBricksPostgres;
 };
 
 postgresPlugin.pool = pool;

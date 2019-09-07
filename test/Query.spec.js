@@ -1,28 +1,32 @@
-const { snakeCase: fieldToColumn } = require('lodash');
 const Knorm = require('../lib/Knorm');
 const knex = require('./lib/knex');
 const postgresPlugin = require('./lib/postgresPlugin');
+const fieldToColumnPlugin = require('./lib/fieldToColumnPlugin');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
   .use(require('unexpected-knex'));
 
-describe('Query', () => {
+describe.only('Query', () => {
   let Model;
   let Query;
   let Transaction;
   let Connection;
+  let Sql;
+  let SqlPart;
   let QueryError;
   let User;
 
   before(() => {
-    const orm = new Knorm({ fieldToColumn }).use(postgresPlugin);
+    const orm = new Knorm().use(postgresPlugin).use(fieldToColumnPlugin);
 
     Model = orm.Model;
     Query = orm.Query;
     Transaction = orm.Transaction;
     Connection = orm.Connection;
+    Sql = orm.Sql;
+    SqlPart = Sql.SqlPart;
     QueryError = Query.QueryError;
 
     Model.fields = {
@@ -68,7 +72,8 @@ describe('Query', () => {
             }
           }
         },
-        schema: {
+        // TODO: is this shape config even used?
+        shape: {
           type: 'array',
           maxLength: 2
         }
@@ -104,6 +109,12 @@ describe('Query', () => {
 
   after(async () => knex.schema.dropTable(User.table));
 
+  let query;
+
+  beforeEach(() => {
+    query = new Query(User);
+  });
+
   describe('constructor', () => {
     it('throws an error if not passed a model', () => {
       expect(
@@ -132,19 +143,89 @@ describe('Query', () => {
     });
   });
 
-  describe('Query.prototype.setOptions', () => {
-    it('throws an error if passed an option that is not a Query method', () => {
+  describe('Query.prototype.setOption', () => {
+    it('sets the query option value for booleans', () => {
+      const query = new Query(User);
+      query.setOption('require', false);
+      expect(query.getOption('require'), 'to be false');
+    });
+
+    it('sets the query option value for integers', () => {
+      const query = new Query(User);
+      query.setOption('limit', 1);
+      expect(query.getOption('limit'), 'to be', 1);
+    });
+
+    it('appends the query option value for arrays', () => {
+      const query = new Query(User);
+      query.setOption('fields', ['id', 'name']);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name']);
+      query.setOption('fields', ['age']);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name', 'age']);
+    });
+
+    it('unsets the query option value if passed `null`', () => {
+      const query = new Query(User);
+      query.setOption('fields', ['id', 'name']);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name']);
+      query.setOption('fields', null);
+      expect(query.getOption('fields'), 'to be null');
+    });
+
+    it('ignores `undefined` query option values', () => {
+      const query = new Query(User);
+      query.setOption('fields', ['id', 'name']);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name']);
+      query.setOption('fields', undefined);
+      expect(query.getOption('fields'), 'to equal', ['id', 'name']);
+    });
+
+    it('allows chaining', () => {
+      const query = new Query(User);
+      expect(query.setOption('fields', ['id']), 'to be', query);
+      expect(query.setOption('fields', null), 'to be', query);
+      expect(query.setOption('fields', undefined), 'to be', query);
+    });
+
+    it('throws an error if the option is not a QueryOption method', () => {
       expect(
-        () => new Query(User).setOptions({ foo: 'bar' }),
+        () => new Query(User).setOption('foo', 'bar'),
         'to throw',
-        new QueryError('User: unknown option `foo`')
+        new QueryError('User: unknown query option `foo`')
       );
     });
 
-    it('supports query builder methods', () => {
+    it('throws an error if the option starts with an underscore', () => {
       expect(
-        () => new Query(User).setOptions({ where: { foo: 'bar' } }),
-        'not to throw'
+        () => new Query(User).setOption('_getArray', ['bar']),
+        'to throw',
+        new QueryError('User: invalid query option `_getArray`')
+      );
+    });
+  });
+
+  describe('Query.prototype.setOptions', () => {
+    it('sets query options via Query.prototype.setOption', () => {
+      const setOption = sinon.spy(Query.prototype, 'setOption');
+      const query = new Query(User);
+      query.setOptions({ limit: 1, require: true, fields: null });
+      expect(query.getOption('limit'), 'to be', 1);
+      expect(query.getOption('require'), 'to be true');
+      expect(query.getOption('fields'), 'to be null');
+      expect(setOption, 'to have calls satisfying', () => {
+        setOption('limit', 1);
+        setOption('require', true);
+        setOption('fields', null);
+      });
+      setOption.restore();
+    });
+
+    it('allows chaining', () => {
+      const query = new Query(User);
+      expect(
+        query.setOptions({ fields: ['id'], require: false }),
+        'to be',
+        query
       );
     });
   });
@@ -177,13 +258,15 @@ describe('Query', () => {
     });
 
     it('copies added options to the clone', () => {
-      const query = new Query(User)
-        .fields(['id'])
-        .forUpdate()
-        .groupBy('id');
-      expect(query.clone(), 'to satisfy', {
-        options: { fields: { id: 'id' }, forUpdate: true, groupBy: [['id']] }
+      const query = new Query(User).setOptions({
+        fields: ['id'],
+        forUpdate: true,
+        groupBy: 'id'
       });
+      const clone = query.clone();
+      expect(clone.getOption('fields'), 'to equal', ['id']);
+      expect(clone.getOption('forUpdate'), 'to be true');
+      expect(clone.getOption('groupBy'), 'to equal', ['id']);
     });
   });
 
@@ -819,6 +902,190 @@ describe('Query', () => {
     });
   });
 
+  describe.only('Query.prototype.prepareSelect', () => {
+    describe('with no options', () => {
+      it('returns a `select` part with only a `from` part', () => {
+        expect(query.prepareSelect({}), 'to equal', Sql.select([Sql.from()]));
+      });
+    });
+
+    describe('with the `distinct` option set', () => {
+      it('adds a `distinct` part', () => {
+        expect(
+          query.prepareSelect({ distinct: true }),
+          'to equal',
+          Sql.select([Sql.distinct(), Sql.from()])
+        );
+      });
+    });
+
+    describe('with the `fields` option set', () => {
+      it('adds a `fields` part', () => {
+        expect(
+          query.prepareSelect({ fields: ['id'] }),
+          'to equal',
+          new SqlPart({
+            type: 'select',
+            value: [Sql.fields(['id']), Sql.from()]
+          })
+        );
+      });
+    });
+
+    describe('with the `where` option set', () => {
+      it('adds a `where` part', () => {
+        expect(
+          query.prepareSelect({ where: [{ id: 1 }] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.where([{ id: 1 }])])
+        );
+      });
+
+      it('supports other falsy option values', () => {
+        expect(
+          query.prepareSelect({ where: [false] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.where([false])])
+        );
+      });
+    });
+
+    describe('with the `groupBy` option set', () => {
+      it('adds a `groupBy` part', () => {
+        expect(
+          query.prepareSelect({ groupBy: ['id'] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.groupBy(['id'])])
+        );
+      });
+    });
+
+    describe('with the `having` option set', () => {
+      it('adds a `having` part', () => {
+        expect(
+          query.prepareSelect({ having: [{ id: 1 }] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.having([{ id: 1 }])])
+        );
+      });
+    });
+
+    describe('with the `orderBy` option set', () => {
+      it('adds an `orderBy` part', () => {
+        expect(
+          query.prepareSelect({ orderBy: ['id'] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.orderBy(['id'])])
+        );
+      });
+    });
+
+    describe('with the `limit` option set', () => {
+      it('adds a `limit` part', () => {
+        expect(
+          query.prepareSelect({ limit: 10 }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.limit(10)])
+        );
+      });
+    });
+
+    describe('with the `offset` option set', () => {
+      it('adds an `offset` part', () => {
+        expect(
+          query.prepareSelect({ offset: 10 }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.offset(10)])
+        );
+      });
+    });
+
+    describe('with the `forUpdate` option set', () => {
+      it('adds a `forUpdate` part', () => {
+        expect(
+          query.prepareSelect({ forUpdate: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.forUpdate()])
+        );
+      });
+    });
+
+    describe('with the `forShare` option set', () => {
+      it('adds a `forShare` part', () => {
+        expect(
+          query.prepareSelect({ forShare: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.forShare()])
+        );
+      });
+    });
+
+    describe('with the `of` option set', () => {
+      it('adds an `of` part', () => {
+        expect(
+          query.prepareSelect({ of: ['id'] }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.of(['id'])])
+        );
+      });
+    });
+
+    describe('with the `noWait` option set', () => {
+      it('adds a `noWait` part', () => {
+        expect(
+          query.prepareSelect({ noWait: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.noWait()])
+        );
+      });
+    });
+
+    describe('with the `skipLocked` option set', () => {
+      it('adds a `skipLocked` part', () => {
+        expect(
+          query.prepareSelect({ skipLocked: true }),
+          'to equal',
+          Sql.select([Sql.from(), Sql.skipLocked()])
+        );
+      });
+    });
+
+    describe('with all options set', () => {
+      it('adds parts for each option in the right order', () => {
+        expect(
+          query.prepareSelect({
+            distinct: true,
+            fields: ['id', Sql.raw({ sql: 'COUNT(*)', fields: ['count'] })],
+            where: [{ id: 1 }],
+            groupBy: ['id'],
+            having: [Sql.greaterThan(Sql.raw({ sql: 'COUNT(*)' }), 1)],
+            orderBy: [{ id: Sql.asc(Sql.nullsLast()) }],
+            limit: 10,
+            offset: 0,
+            forUpdate: true,
+            of: ['id', 'name'],
+            skipLocked: true
+          }),
+          'to equal',
+          Sql.select([
+            Sql.distinct(),
+            Sql.fields(['id', Sql.raw({ sql: 'COUNT(*)', fields: ['count'] })]),
+            Sql.from(),
+            Sql.where([{ id: 1 }]),
+            Sql.groupBy(['id']),
+            Sql.having([Sql.greaterThan(Sql.raw({ sql: 'COUNT(*)' }), 1)]),
+            Sql.orderBy([{ id: Sql.asc(Sql.nullsLast()) }]),
+            Sql.limit(10),
+            Sql.offset(0),
+            Sql.forUpdate(true),
+            Sql.of(['id', 'name']),
+            Sql.skipLocked(true)
+          ])
+        );
+      });
+    });
+  });
+
   describe('Query.prototype.fetch', () => {
     before(async () =>
       knex(User.table).insert([
@@ -955,8 +1222,16 @@ describe('Query', () => {
 
     // regression test for @knorm/relations
     it('supports options with string values', async () => {
-      const query = new Query(User);
-      query.options.joinType = 'innerJoin';
+      class RelationsQuery extends Query {}
+      RelationsQuery.updateQueryOptions(
+        class extends Query.QueryOptions {
+          joinType(joinType) {
+            return this._getString(joinType);
+          }
+        }
+      );
+      const query = new RelationsQuery(User);
+      query.setOption('joinType', 'innerJoin');
       await expect(
         query.fetch(),
         'to be fulfilled with sorted rows satisfying',
@@ -1038,9 +1313,9 @@ describe('Query', () => {
       });
     });
 
-    describe("with 'first' configured", () => {
+    describe('with `first` configured', () => {
       it('resolves with the first row', async () => {
-        const query = new Query(User).first();
+        const query = new Query(User).setOption('first', true);
         await expect(
           query.fetch(),
           'to be fulfilled with value satisfying',
@@ -1051,7 +1326,7 @@ describe('Query', () => {
 
     describe("with 'fields' configured", () => {
       it('resolves with instances containing only the requested fields', async () => {
-        const query = new Query(User).fields(['name']);
+        const query = new Query(User).setOption('fields', ['name']);
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1060,7 +1335,7 @@ describe('Query', () => {
       });
 
       it('casts the fields requested if they have post-fetch cast functions', async () => {
-        const query = new Query(User).fields('intToString');
+        const query = new Query(User).setOption('fields', 'intToString');
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1070,7 +1345,7 @@ describe('Query', () => {
 
       describe('as an object', () => {
         it('uses the objects keys as field aliases', async () => {
-          const query = new Query(User).fields({ ages: 'age' });
+          const query = new Query(User).setOption('fields', { ages: 'age' });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1079,7 +1354,7 @@ describe('Query', () => {
         });
 
         it('supports raw sql as object values as plain strings', async () => {
-          const query = new Query(User).fields({ now: 'now()' });
+          const query = new Query(User).setOption('fields', { now: 'now()' });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1092,7 +1367,7 @@ describe('Query', () => {
 
         it('supports raw sql as object values as sql-bricks instances', async () => {
           const query = new Query(User);
-          query.fields({ now: query.sql('now()') });
+          query.setOption('fields', { now: query.sql('now()') });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1106,7 +1381,11 @@ describe('Query', () => {
 
       describe('as an array of strings', () => {
         it('resolves with instances containing the requested fields', async () => {
-          const query = new Query(User).fields(['name', 'age', 'confirmed']);
+          const query = new Query(User).setOption('fields', [
+            'name',
+            'age',
+            'confirmed'
+          ]);
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1118,9 +1397,9 @@ describe('Query', () => {
         });
       });
 
-      describe('as `false`', () => {
+      describe('as `null`', () => {
         it('resolves with an empty array', async () => {
-          const query = new Query(User).fields(false);
+          const query = new Query(User).setOption('fields', null);
           await expect(
             query.fetch(),
             'to be fulfilled with value satisfying',
@@ -1129,7 +1408,10 @@ describe('Query', () => {
         });
 
         it('resolves with `null` if `first` is configured', async () => {
-          const query = new Query(User).fields(false).first(true);
+          const query = new Query(User).setOptions({
+            fields: null,
+            first: true
+          });
           await expect(
             query.fetch(),
             'to be fulfilled with value satisfying',
@@ -1139,9 +1421,9 @@ describe('Query', () => {
       });
     });
 
-    describe("with 'returning' configured", () => {
+    describe('with `returning` configured', () => {
       it('returns only the fields requested (synonymous with `fields` option)', async () => {
-        const query = new Query(User).returning(['name']);
+        const query = new Query(User).setOption('returning', ['name']);
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
@@ -1151,7 +1433,7 @@ describe('Query', () => {
 
       describe('as `false`', () => {
         it('resolves with an empty array', async () => {
-          const query = new Query(User).returning(false);
+          const query = new Query(User).setOption('returning', null);
           await expect(
             query.fetch(),
             'to be fulfilled with value satisfying',
@@ -1160,7 +1442,10 @@ describe('Query', () => {
         });
 
         it('resolves with `null` if `first` is configured', async () => {
-          const query = new Query(User).returning(false).first(true);
+          const query = new Query(User).setOptions({
+            returning: null,
+            first: true
+          });
           await expect(
             query.fetch(),
             'to be fulfilled with value satisfying',
@@ -1170,78 +1455,60 @@ describe('Query', () => {
       });
     });
 
-    describe("with 'distinct' configured", () => {
-      it('resolves with instances matching the distinct fields', async () => {
+    describe('with `distinct` set to `true`', () => {
+      it('resolves with an empty array if fields are not configured', async () => {
         await expect(
-          new Query(User).distinct('age').fetch(),
+          new Query(User).setOptions({ distinct: true }).fetch(),
           'to be fulfilled with value exhaustively satisfying',
-          [new User({ age: 10 })]
+          []
         );
       });
 
-      it('resolves with all instances matching the query', async () => {
-        await expect(
-          new Query(User).distinct(['id', 'name']).fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
-          ]
-        );
-      });
-
-      it('supports instances fetched without an id field', async () => {
-        await expect(
-          new Query(User).distinct(['name']).fetch(),
-          'to be fulfilled with value satisfying',
-          expect.it(
-            'when sorted by',
-            (a, b) => (a.name > b.name ? 1 : -1),
-            'to exhaustively satisfy',
-            [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
-          )
-        );
-      });
-
-      it('supports `fields`', async () => {
-        await expect(
-          new Query(User)
-            .distinct('name')
-            .field('id')
-            .fetch(),
-          'to be fulfilled with sorted rows exhaustively satisfying',
-          [
-            new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
-          ]
-        );
-      });
-
-      describe('as `false`', () => {
-        it('resolves with an empty array', async () => {
-          const query = new Query(User).distinct(false);
+      describe('with `fields` configured', () => {
+        it('resolves with instances matching the distinct fields', async () => {
           await expect(
-            query.fetch(),
-            'to be fulfilled with value satisfying',
-            []
+            new Query(User)
+              .setOptions({ distinct: true, field: 'age' })
+              .fetch(),
+            'to be fulfilled with value exhaustively satisfying',
+            [new User({ age: 10 })]
           );
         });
 
-        it('resolves with `null` if `first` is configured', async () => {
-          const query = new Query(User).distinct(false).first(true);
+        it('resolves with all instances matching the query', async () => {
           await expect(
-            query.fetch(),
+            new Query(User)
+              .setOptions({ distinct: true, fields: ['id', 'name'] })
+              .fetch(),
+            'to be fulfilled with sorted rows exhaustively satisfying',
+            [
+              new User({ id: 1, name: 'User 1' }),
+              new User({ id: 2, name: 'User 2' })
+            ]
+          );
+        });
+
+        it('supports fetching multiple instances without the primary field requested', async () => {
+          await expect(
+            new Query(User)
+              .setOptions({ distinct: true, field: 'name' })
+              .fetch(),
             'to be fulfilled with value satisfying',
-            null
+            expect.it(
+              'when sorted by',
+              (a, b) => (a.name > b.name ? 1 : -1),
+              'to exhaustively satisfy',
+              [new User({ name: 'User 1' }), new User({ name: 'User 2' })]
+            )
           );
         });
       });
     });
 
     // this also tests `having`
-    describe("with a 'where' configured", () => {
+    describe('with `where` configured', () => {
       it('supports an object', async () => {
-        const query = new Query(User).where({ id: 2 });
+        const query = new Query(User).setOption('where', { id: 2 });
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
@@ -1249,10 +1516,11 @@ describe('Query', () => {
         );
       });
 
-      it('supports chained `where` calls', async () => {
-        const query = new Query(User)
-          .where({ id: 2 })
-          .where({ name: 'User 2' });
+      it('supports an array', async () => {
+        const query = new Query(User).setOption('where', [
+          { id: 2 },
+          { name: 'User 2' }
+        ]);
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
@@ -1261,7 +1529,7 @@ describe('Query', () => {
       });
 
       it('supports "where true|false"', async () => {
-        const query = new Query(User).where(false);
+        const query = new Query(User).setOption('where', false);
         await expect(
           query.fetch(),
           'to be fulfilled with sorted rows satisfying',
@@ -1269,10 +1537,9 @@ describe('Query', () => {
         );
       });
 
-      describe('with a field as the first argument', () => {
-        it('supports "field, value"', async () => {
-          const query = new Query(User);
-          query.where('id', 2);
+      describe('with the object syntax', () => {
+        it('supports "field: value"', async () => {
+          const query = new Query(User).setOption('where', { id: 2 });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
@@ -1280,9 +1547,10 @@ describe('Query', () => {
           );
         });
 
-        it('supports "field, null"', async () => {
-          const query = new Query(User);
-          query.where('dateOfBirth', null);
+        it('supports "field: null"', async () => {
+          const query = new Query(User).setOption('where', {
+            dateOfBirth: null
+          });
           await expect(
             query.fetch(),
             'to be fulfilled with sorted rows satisfying',
@@ -1290,16 +1558,6 @@ describe('Query', () => {
               new User({ id: 1, name: 'User 1' }),
               new User({ id: 2, name: 'User 2' })
             ]
-          );
-        });
-
-        it('ignores everything after the second argument', async () => {
-          const query = new Query(User);
-          query.where('id', 1, 2);
-          await expect(
-            query.fetch(),
-            'to be fulfilled with sorted rows satisfying',
-            [new User({ id: 1, name: 'User 1' })]
           );
         });
       });
@@ -1826,7 +2084,7 @@ describe('Query', () => {
       });
     });
 
-    describe("with 'where' and 'having' configured", () => {
+    describe('with `where` and `having` configured', () => {
       it('fulfils the query', async () => {
         const query = new Query(User)
           .fields({ maxAge: 'MAX(age)' })
@@ -2165,6 +2423,64 @@ describe('Query', () => {
           { stack: expect.it('to contain', 'test/Query.spec.js') }
         );
         stub.restore();
+      });
+    });
+  });
+
+  describe.only('Query.prototype.prepareInsert', () => {
+    describe('with no options', () => {
+      it('returns a `insert` part with only an `into` part', () => {
+        expect(query.prepareInsert({}), 'to equal', Sql.insert([Sql.into()]));
+      });
+    });
+
+    describe('with the `data` option set', () => {
+      describe('with `columns` set', () => {
+        it('adds a `columns` part', () => {
+          expect(
+            query.prepareInsert({ data: { columns: ['id'] } }),
+            'to equal',
+            Sql.insert([Sql.into(), Sql.columns(['id'])])
+          );
+        });
+      });
+
+      describe('with `values` set', () => {
+        it('adds a `values` part', () => {
+          expect(
+            query.prepareInsert({ data: { values: [[1]] } }),
+            'to equal',
+            Sql.insert([Sql.into(), Sql.values([[1]])])
+          );
+        });
+      });
+    });
+
+    describe('with the `fields` option set', () => {
+      it('adds a `returning` part', () => {
+        expect(
+          query.prepareInsert({ fields: ['id'] }),
+          'to equal',
+          Sql.insert([Sql.into(), Sql.returning(['id'])])
+        );
+      });
+    });
+
+    describe('with all options set', () => {
+      it('adds parts for each option in the right order', () => {
+        expect(
+          query.prepareInsert({
+            data: { columns: ['id'], values: [[1]] },
+            fields: ['id']
+          }),
+          'to equal',
+          Sql.insert([
+            Sql.into(),
+            Sql.columns(['id']),
+            Sql.values([[1]]),
+            Sql.returning(['id'])
+          ])
+        );
       });
     });
   });
@@ -3708,6 +4024,22 @@ describe('Query', () => {
   describe('Query.where', () => {
     it('returns a `Query.Where` instance', () => {
       expect(Query.where, 'to be a', Query.Where);
+    });
+  });
+
+  describe('Query.updateQueryOptions', () => {
+    it('updates Query.QueryOptions', () => {
+      class Foo {}
+      class FooQuery extends Query {}
+      FooQuery.updateQueryOptions(Foo);
+      expect(FooQuery.QueryOptions, 'to be', Foo);
+      expect(Query.QueryOptions, 'not to be', Foo);
+    });
+
+    it('allows chaining', () => {
+      class Foo {}
+      class FooQuery extends Query {}
+      expect(FooQuery.updateQueryOptions(Foo), 'to be', FooQuery);
     });
   });
 });
