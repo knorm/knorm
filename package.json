@@ -22,7 +22,7 @@
     "@semantic-release/git": "7.0.8",
     "@semantic-release/github": "5.2.10",
     "@semantic-release/npm": "5.1.4",
-    "coveralls": "3.0.3",
+    "coveralls": "3.0.6",
     "eslint": "5.16.0",
     "eslint-config-ganintegrity": "3.1.4",
     "jsdoc-to-markdown": "4.0.1",
