@@ -24,7 +24,7 @@
     "@semantic-release/npm": "5.1.15",
     "coveralls": "3.0.6",
     "eslint": "5.16.0",
-    "eslint-config-ganintegrity": "3.2.0",
+    "eslint-config-ganintegrity": "4.0.2",
     "jsdoc-to-markdown": "5.0.1",
     "knex": "0.15.2",
     "mocha": "6.2.0",
