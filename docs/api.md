@@ -727,6 +727,7 @@ Creates and runs queries and parses any data returned.
         * [.transaction](#Query+transaction) : [Transaction](#Transaction)
         * [.batchSize(batchSize)](#Query+batchSize) ⇒ [Query](#Query)
         * [.first([first])](#Query+first) ⇒ [Query](#Query)
+        * [.from(from, [options])](#Query+from) ⇒ [Query](#Query)
         * [.fields(...fields)](#Query+fields) ⇒ [Query](#Query)
         * [.returning(...fields)](#Query+returning) ⇒ [Query](#Query)
         * [.execute(sql)](#Query+execute) ⇒ `Promise`
@@ -864,6 +865,65 @@ returning an array. This is handy when one is sure that there's only one
 item in the rows returned from the database.
 
 **Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
+<a name="Query+from"></a>
+
+### query.from(from, [options]) ⇒ [Query](#Query)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| from | [Query](#Query) \| [Model](#Model) \| `SqlBricks` \| `string` | The value to use for the FROM clause. If passed as a [Model](#Model) class (note - note a Model instance), then a [Query](#Query) instance is constructed from it via [Model.query](Model.query). |
+| [options] | `object` | If the `from` parameter is a [Model](#Model) class or a [Query](#Query) instance, these options are passed to [Query#setOptions](Query#setOptions). |
+
+Configures the FROM clause in a query. This is handy for constructing
+subqueries or for fetching data from one table and parsing it as different
+model instance. Note that the `from` option defaults to [Model.table](Model.table)
+for the model that's passed to [Query](#Query)'s constructor.
+
+**Returns**: [Query](#Query) - The same [Query](#Query) instance to allow chaining.  
+**Example**  
+For subqueries:
+
+```js
+class User extends Model {}
+
+User.table = 'user';
+User.fields = { name: 'string', type: 'string' };
+
+User.fetch({
+  from: User.query.where({ type: 'admin' })
+});
+```
+
+Which yields a query similar to:
+
+```sql
+SELECT * FROM (SELECT * FROM "user" WHERE "type" = 'admin') "user_alias";
+```
+
+For fetching data from one table and parsing it as if it's from a different
+model:
+
+```js
+User.fetch({
+  from: User.query.sql('student')
+});
+```
+
+Note that the two tables should have the same column-names for this to
+work. If that's not the case then you could use the [fields](#Query+fields)
+option to specify what columns to fetch from the other table:
+
+```js
+User.fetch({
+  from: User.query.sql('student'),
+  fields: { name: User.query.sql('student_name') }
+});
+```
+**Todo**
+
+- [ ] support multiple `from` clauses, both as an array and via multiple
+invocations
+
 <a name="Query+fields"></a>
 
 ### query.fields(...fields) ⇒ [Query](#Query)

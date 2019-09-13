@@ -1238,6 +1238,161 @@ describe('Query', () => {
       });
     });
 
+    describe.only("with 'from' configured", () => {
+      it('returns an empty array if no `fields` are configured', async () => {
+        const query = new Query(User).from({ user: 'user' });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          []
+        );
+      });
+
+      it('supports the value as a string', async () => {
+        const query = new Query(User)
+          .from({ user: 'user' })
+          .fields({ user: ['id', 'name'] });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('supports the value as an sql-bricks instance', async () => {
+        const query = new Query(User);
+        query
+          .from({ user: query.sql.select().from('user') })
+          .fields({ user: ['id', 'name'] });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('supports the value as a Query instance', async () => {
+        const query = new Query(User)
+          .from({ user: new Query(User) })
+          .fields({ user: ['id', 'name'] });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('supports the value as a Model class', async () => {
+        const query = new Query(User)
+          .from({ user: User })
+          .fields({ user: ['id', 'name'] });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('supports multiple values', async () => {
+        const query = new Query(User)
+          .from({ user1: User, user2: new Query(User).sql.select().from('user') })
+          .fields({ user1: ['id', 'name'], user2: ['id', 'age'] });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('supports multiple invocations', async () => {
+        const query = new Query(User);
+        query.from({ user1: User });
+        query.from({ user2: new Query(User).sql.select().from('user') });
+        query.fields({ user1: ['id', 'name'], user2: ['id', 'age'] });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('overwrites a previous invocation if the same alias is used', async () => {
+        const query = new Query(User);
+        query.from({ user1: new Query(User).sql.select().from('no_such_table') });
+        query.from({ user1: new Query(User).sql.select().from('user') });
+        query.fields({ user1: ['id', 'age'], user2: ['id', 'name'] });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [
+            new User({ id: 1, name: 'User 1' }),
+            new User({ id: 2, name: 'User 2' })
+          ]
+        );
+      });
+
+      it('works with other Query options', async () => {
+        const query = new Query(User)
+          .from({ user: 'user' })
+          .fields({ user: ['id', 'name'] })
+          .where({ id: 1 })
+          .first();
+        await expect(
+          query.fetch(),
+          'to be fulfilled with value exhaustively satisfying',
+          new User({ id: 1, name: 'User 1' })
+        );
+      });
+
+      it('supports options on Query instances', async () => {
+        const query = new Query(User)
+          .from({ user: User.query.field('id').where({ id: 1 }) })
+          .field({ user: 'id' });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with sorted rows exhaustively satisfying',
+          [new User({ id: 1 })]
+        );
+      });
+
+      it('enables fetching data from a different table', async () => {
+        await knex.schema.createTable('other_user', table => {
+          table.string('other_name');
+        });
+        await knex('other_user').insert([
+          { other_name: 'one' },
+          { other_name: 'two' }
+        ]);
+        const query = new Query(User)
+          .from({ user: 'other_user' })
+          .fields({ user: { name: 'other_name' } });
+        await expect(
+          query.fetch(),
+          'to be fulfilled with value exhaustively satisfying',
+          [new User({ name: 'one' }), new User({ name: 'two' })]
+        );
+        await knex.schema.dropTable('other_user');
+      });
+    });
+
     // this also tests `having`
     describe("with a 'where' configured", () => {
       it('supports an object', async () => {
