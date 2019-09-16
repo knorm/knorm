@@ -55,6 +55,7 @@
   ],
   "dependencies": {
     "lodash": "^4.17.5",
+    "nanoid": "2.1.0",
     "sql-bricks": "^2.0.4",
     "validator": "^10.1.0"
   },

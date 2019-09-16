@@ -39,7 +39,7 @@ describe.only('Sql', () => {
   let options;
 
   beforeEach(() => {
-    sql = new Sql();
+    sql = new Sql(User);
     options = { Model: User };
   });
 
@@ -82,48 +82,6 @@ describe.only('Sql', () => {
       expect(sql.getValues(), 'to equal', []);
       sql.addValues(['foo', 'bar']);
       expect(sql.getValues(), 'to equal', ['foo', 'bar']);
-    });
-  });
-
-  describe('Sql.prototype.addField', () => {
-    it('adds a return-field to the return-fields array', () => {
-      sql.addField('foo');
-      expect(sql.getFields(), 'to equal', ['foo']);
-    });
-
-    it('maintains the order of return-fields', () => {
-      sql.addField('foo');
-      sql.addField('bar');
-      expect(sql.getFields(), 'to equal', ['foo', 'bar']);
-    });
-
-    it('allows chaining', () => {
-      expect(sql.addField('foo'), 'to be', sql);
-    });
-  });
-
-  describe('Sql.prototype.addFields', () => {
-    it('adds multiple return-fields to the return-fields array', () => {
-      sql.addFields(['foo', 'bar']);
-      expect(sql.getFields(), 'to equal', ['foo', 'bar']);
-    });
-
-    it('maintains the order of return-fields', () => {
-      sql.addFields(['foo', 'bar']);
-      sql.addFields(['baz', 'quux']);
-      expect(sql.getFields(), 'to equal', ['foo', 'bar', 'baz', 'quux']);
-    });
-
-    it('allows chaining', () => {
-      expect(sql.addFields(['foo']), 'to be', sql);
-    });
-  });
-
-  describe('Sql.prototype.getFields', () => {
-    it('returns the currently added return-fields', () => {
-      expect(sql.getFields(), 'to equal', []);
-      sql.addFields(['foo', 'bar']);
-      expect(sql.getFields(), 'to equal', ['foo', 'bar']);
     });
   });
 
@@ -707,6 +665,7 @@ describe.only('Sql', () => {
         'to be',
         '(SELECT "user"."id", "user"."name" FROM "user")'
       );
+      expect(sql.getFields(), 'to equal', ['id', 'name']);
     });
 
     it('supports SqlPart instances', () => {
@@ -714,13 +673,20 @@ describe.only('Sql', () => {
         sql.formatFields(
           new SqlPart({
             type: 'fields',
-            value: [new SqlPart({ type: 'raw', value: { text: 'SELECT 1' } })]
+            value: [
+              new SqlPart({
+                type: 'raw',
+                value: { text: 'SELECT 1', values: [1], fields: ['count'] }
+              })
+            ]
           }),
           options
         ),
         'to be',
         'SELECT 1'
       );
+      expect(sql.getValues(), 'to equal', [1]);
+      expect(sql.getFields(), 'to equal', ['count']);
     });
 
     describe('for objects', () => {

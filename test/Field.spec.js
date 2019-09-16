@@ -17,8 +17,8 @@ describe.only('Field', function() {
     });
 
     it("sets the field's column", function() {
-      const field = new Field(User, { name: 'id', column: 'column' });
-      expect(field.column, 'to be', 'column');
+      const field = new Field(User, { name: 'id', column: '_id' });
+      expect(field.column, 'to be', '_id');
     });
   });
 });
