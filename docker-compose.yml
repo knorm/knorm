@@ -6,6 +6,8 @@ services:
 
   knorm:
     build: .
+    ports:
+      - "9229:9229"
     command: npm run test:mocha
     volumes:
       - .:/usr/src/app
