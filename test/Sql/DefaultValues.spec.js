@@ -9,10 +9,23 @@ describe('Sql/DefaultValues', () => {
     User = createUser();
   });
 
-  describe('DefaultValues.prototype.getText', () => {
+  let defaultValues;
+
+  beforeEach(() => {
+    defaultValues = new DefaultValues(User);
+  });
+
+  describe('DefaultValues.prototype.formatValue', () => {
+    it('returns an empty string', () => {
+      defaultValues.setValue(true);
+      expect(defaultValues.formatValue(), 'to be', '');
+    });
+  });
+
+  describe('DefaultValues.prototype.formatText', () => {
     it('returns a `DEFAULT VALUES` clause', () => {
-      const defaultValues = new DefaultValues(User, true);
-      expect(defaultValues.getText(), 'to be', 'DEFAULT VALUES');
+      defaultValues.setValue(true);
+      expect(defaultValues.formatText(), 'to be', 'DEFAULT VALUES');
     });
   });
 });

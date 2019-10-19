@@ -1,7 +1,7 @@
 const Sql = require('../../../lib/Sql');
 
 class Dummy extends Sql {
-  getText() {
+  formatValue() {
     return 'DUMMY';
   }
 }

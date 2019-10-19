@@ -10,25 +10,27 @@ describe('Sql/As', () => {
     User = createUser();
   });
 
-  describe('As.prototype.getText', () => {
+  let as;
+
+  beforeEach(() => {
+    as = new As(User);
+  });
+
+  describe('As.prototype.formatValue', () => {
     it('returns an `AS` clause with a formatted value and alias', () => {
-      const as = new As(User, { value: 'foo', alias: 'bar' });
-      expect(as.getText(), 'to be', '"foo" AS "bar"');
+      as.setValue({ value: 'foo', alias: 'bar' });
+      expect(as.formatValue(), 'to be', '"foo" AS "bar"');
     });
 
     it('supports values as expressions', () => {
-      const as = new As(User, { value: new Dummy(), alias: 'foo' });
-      expect(as.getText(), 'to be', 'DUMMY AS "foo"');
+      as.setValue({ value: new Dummy(User), alias: 'foo' });
+      expect(as.formatValue(), 'to be', 'DUMMY AS "foo"');
     });
 
     describe('with columns', () => {
       it('returns an `AS` clause with formatted identifiers', () => {
-        const as = new As(User, {
-          value: 'foo',
-          alias: 'bar',
-          columns: ['a', 'b']
-        });
-        expect(as.getText(), 'to be', '"foo" AS "bar" ("a", "b")');
+        as.setValue({ value: 'foo', alias: 'bar', columns: ['a', 'b'] });
+        expect(as.formatValue(), 'to be', '"foo" AS "bar" ("a", "b")');
       });
     });
   });

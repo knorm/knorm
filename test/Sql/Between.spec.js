@@ -10,21 +10,34 @@ describe('Sql/Between', () => {
     User = createUser();
   });
 
-  describe('Between.prototype.getText', () => {
+  let between;
+
+  beforeEach(() => {
+    between = new Between(User);
+  });
+
+  describe('Between.prototype.formatValue', () => {
     it('returns a `BETWEEN` clause with a formatted field and value', () => {
-      const between = new Between(User, { field: 'id', value: [1, 2] });
-      expect(between.getText(), 'to be', '"user"."id" BETWEEN ? AND ?');
+      between.setValue({ field: 'id', value1: 1, value2: 2 });
+      expect(between.formatValue(), 'to be', '"user"."id" BETWEEN ? AND ?');
     });
 
     it('supports field expressions', () => {
-      const between = new Between(User, { field: new Dummy(), value: [1, 2] });
-      expect(between.getText(), 'to be', 'DUMMY BETWEEN ? AND ?');
+      between.setValue({ field: new Dummy(User), value1: 1, value2: 2 });
+      expect(between.formatValue(), 'to be', 'DUMMY BETWEEN ? AND ?');
     });
 
     it('supports value expressions', () => {
-      const value = [new Dummy(), new Dummy()];
-      const between = new Between(User, { field: 'id', value });
-      expect(between.getText(), 'to be', '"user"."id" BETWEEN DUMMY AND DUMMY');
+      between.setValue({
+        field: 'id',
+        value1: new Dummy(User),
+        value2: new Dummy(User)
+      });
+      expect(
+        between.formatValue(),
+        'to be',
+        '"user"."id" BETWEEN DUMMY AND DUMMY'
+      );
     });
   });
 });

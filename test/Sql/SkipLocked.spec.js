@@ -9,10 +9,23 @@ describe('Sql/SkipLocked', () => {
     User = createUser();
   });
 
-  describe('SkipLocked.prototype.getText', () => {
+  let skipLocked;
+
+  beforeEach(() => {
+    skipLocked = new SkipLocked(User);
+  });
+
+  describe('SkipLocked.prototype.formatValue', () => {
+    it('returns an empty string', () => {
+      skipLocked.setValue(true);
+      expect(skipLocked.formatValue(), 'to be', '');
+    });
+  });
+
+  describe('SkipLocked.prototype.formatText', () => {
     it('returns a `SKIP LOCKED` clause', () => {
-      const skipLocked = new SkipLocked(User, true);
-      expect(skipLocked.getText(), 'to be', 'SKIP LOCKED');
+      skipLocked.setValue(true);
+      expect(skipLocked.formatText(), 'to be', 'SKIP LOCKED');
     });
   });
 });

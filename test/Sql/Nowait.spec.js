@@ -9,10 +9,23 @@ describe('Sql/Nowait', () => {
     User = createUser();
   });
 
-  describe('Nowait.prototype.getText', () => {
+  let nowait;
+
+  beforeEach(() => {
+    nowait = new Nowait(User);
+  });
+
+  describe('Nowait.prototype.formatValue', () => {
+    it('returns an empty string', () => {
+      nowait.setValue(true);
+      expect(nowait.formatValue(), 'to be', '');
+    });
+  });
+
+  describe('Nowait.prototype.formatText', () => {
     it('returns a `NOWAIT` clause', () => {
-      const nowait = new Nowait(User, true);
-      expect(nowait.getText(), 'to be', 'NOWAIT');
+      nowait.setValue(true);
+      expect(nowait.formatText(), 'to be', 'NOWAIT');
     });
   });
 });

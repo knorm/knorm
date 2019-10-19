@@ -10,19 +10,23 @@ describe('Sql/Desc', () => {
     User = createUser();
   });
 
-  describe('Desc.prototype.getText', () => {
-    describe('with `true` as the value', () => {
-      it('returns a `DESC` clause', () => {
-        const desc = new Desc(User, true);
-        expect(desc.getText(), 'to be', 'DESC');
-      });
-    });
+  let desc;
 
-    describe('with other values', () => {
-      it('returns a `DESC` clause with the formatted value', () => {
-        const desc = new Desc(User, new Dummy());
-        expect(desc.getText(), 'to be', 'DESC DUMMY');
-      });
+  beforeEach(() => {
+    desc = new Desc(User);
+  });
+
+  describe('Desc.prototype.formatValue', () => {
+    it('returns the formatted value', () => {
+      desc.setValue(new Dummy(User));
+      expect(desc.formatValue(), 'to be', 'DUMMY');
+    });
+  });
+
+  describe('Desc.prototype.formatText', () => {
+    it('returns an `DESC` clause with a formatted value', () => {
+      desc.setValue(new Dummy(User));
+      expect(desc.formatText(), 'to be', 'DESC DUMMY');
     });
   });
 });

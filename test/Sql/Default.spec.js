@@ -9,10 +9,23 @@ describe('Sql/Default', () => {
     User = createUser();
   });
 
-  describe('Default.prototype.getText', () => {
+  let _default;
+
+  beforeEach(() => {
+    _default = new Default(User);
+  });
+
+  describe('Default.prototype.formatValue', () => {
+    it('returns an empty string', () => {
+      _default.setValue(true);
+      expect(_default.formatValue(), 'to be', '');
+    });
+  });
+
+  describe('Default.prototype.formatText', () => {
     it('returns a `DEFAULT` clause', () => {
-      const _default = new Default(User, true);
-      expect(_default.getText(), 'to be', 'DEFAULT');
+      _default.setValue(true);
+      expect(_default.formatText(), 'to be', 'DEFAULT');
     });
   });
 });

@@ -10,19 +10,32 @@ describe('Sql/All', () => {
     User = createUser();
   });
 
-  describe('All.prototype.getText', () => {
+  let all;
+
+  beforeEach(() => {
+    all = new All(User);
+  });
+
+  describe('All.prototype.formatValue', () => {
     describe('with the value as `true`', () => {
-      it('returns an `ALL` clause', () => {
-        const all = new All(User, true);
-        expect(all.getText(), 'to be', 'ALL');
+      it('returns an empty string', () => {
+        all.setValue(true);
+        expect(all.formatValue(), 'to be', '');
       });
     });
 
     describe('with other values', () => {
-      it('returns an `ALL` clause with the formatted value', () => {
-        const all = new All(User, new Dummy());
-        expect(all.getText(), 'to be', 'ALL DUMMY');
+      it('returns the formatted value', () => {
+        all.setValue(new Dummy(User));
+        expect(all.formatValue(), 'to be', 'DUMMY');
       });
+    });
+  });
+
+  describe('All.prototype.formatText', () => {
+    it('returns an `ALL` clause with a formatted value', () => {
+      all.setValue(new Dummy(User));
+      expect(all.formatText(), 'to be', 'ALL DUMMY');
     });
   });
 });

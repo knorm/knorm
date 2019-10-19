@@ -10,20 +10,26 @@ describe('Sql/And', () => {
     User = createUser();
   });
 
-  describe('And.prototype.getText', () => {
+  let and;
+
+  beforeEach(() => {
+    and = new And(User);
+  });
+
+  describe('And.prototype.formatValue', () => {
     it('returns a formatted `AND` clause', () => {
-      const and = new And(User, [true, false]);
-      expect(and.getText(), 'to be', '? AND ?');
+      and.setValue([true, false]);
+      expect(and.formatValue(), 'to be', '? AND ?');
     });
 
     it('supports array values as expressions', () => {
-      const and = new And(User, [false, new Dummy()]);
-      expect(and.getText(), 'to be', '? AND DUMMY');
+      and.setValue([false, new Dummy(User), true]);
+      expect(and.formatValue(), 'to be', '? AND DUMMY AND ?');
     });
 
     it('supports an array with a single item', () => {
-      const and = new And(User, [1]);
-      expect(and.getText(), 'to be', '?');
+      and.setValue([1]);
+      expect(and.formatValue(), 'to be', '?');
     });
   });
 });

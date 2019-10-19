@@ -10,19 +10,23 @@ describe('Sql/Asc', () => {
     User = createUser();
   });
 
-  describe('Asc.prototype.getText', () => {
-    describe('with `true` as the value ', () => {
-      it('returns an `ASC` clause', () => {
-        const asc = new Asc(User, true);
-        expect(asc.getText(), 'to be', 'ASC');
-      });
-    });
+  let asc;
 
-    describe('with other values', () => {
-      it('returns an `ASC` clause with the formatted value', () => {
-        const asc = new Asc(User, new Dummy());
-        expect(asc.getText(), 'to be', 'ASC DUMMY');
-      });
+  beforeEach(() => {
+    asc = new Asc(User);
+  });
+
+  describe('Asc.prototype.formatValue', () => {
+    it('returns the formatted value', () => {
+      asc.setValue(new Dummy(User));
+      expect(asc.formatValue(), 'to be', 'DUMMY');
+    });
+  });
+
+  describe('Asc.prototype.formatText', () => {
+    it('returns an `ASC` clause with a formatted value', () => {
+      asc.setValue(new Dummy(User));
+      expect(asc.formatText(), 'to be', 'ASC DUMMY');
     });
   });
 });

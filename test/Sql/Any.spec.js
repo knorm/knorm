@@ -10,10 +10,23 @@ describe('Sql/Any', () => {
     User = createUser();
   });
 
-  describe('Any.prototype.getText', () => {
+  let any;
+
+  beforeEach(() => {
+    any = new Any(User);
+  });
+
+  describe('Any.prototype.formatValue', () => {
+    it('returns the formatted value', () => {
+      any.setValue(new Dummy(User));
+      expect(any.formatValue(), 'to be', 'DUMMY');
+    });
+  });
+
+  describe('Any.prototype.formatText', () => {
     it('returns an `ANY` clause with a formatted value', () => {
-      const any = new Any(User, new Dummy());
-      expect(any.getText(), 'to be', 'ANY DUMMY');
+      any.setValue(new Dummy(User));
+      expect(any.formatText(), 'to be', 'ANY DUMMY');
     });
   });
 });
