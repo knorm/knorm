@@ -1398,7 +1398,11 @@ describe.only('Model', () => {
     it('returns the `options` config with query defaults set', () => {
       expect(User.getDefaultConfig(), 'to satisfy', {
         options: {
-          query: { defaults: { debug: false, from: User, fields: [] } }
+          query: {
+            default: { fields: [] },
+            fetch: { from: User },
+            debug: false
+          }
         }
       });
     });
@@ -1413,7 +1417,7 @@ describe.only('Model', () => {
 
     it("sets the Model's default config", () => {
       User.setupConfig();
-      expect(User._config, 'to satisfy', User.getDefaultConfig());
+      expect(User.$config, 'to satisfy', User.getDefaultConfig());
     });
 
     describe('when a Model is subclassed', () => {
@@ -1429,29 +1433,29 @@ describe.only('Model', () => {
       });
 
       it('inherits `schema`', () => {
-        expect(Student._config.schema, 'to be', 'users');
+        expect(Student.$config.schema, 'to be', 'users');
       });
 
       it('inherits `table`', () => {
-        expect(Student._config.table, 'to be', 'user');
+        expect(Student.$config.table, 'to be', 'user');
       });
 
       it('inherits `fields`', () => {
-        expect(Student._config.fields.instances, 'to satisfy', {
+        expect(Student.$config.fields.instances, 'to satisfy', {
           id: new Field(Student, { name: 'id' })
         });
       });
 
       it('inherits `options`', () => {
-        expect(Student._config.options, 'to satisfy', {
+        expect(Student.$config.options, 'to satisfy', {
           query: {
-            defaults: {
-              debug: false,
-              from: Student,
+            default: {
               fields: expect
-                .it('to be', Student._config.fields.names)
+                .it('to be', Student.$config.fields.names)
                 .and('to equal', ['id'])
             },
+            fetch: { from: Student },
+            debug: false,
             where: { id: 1 }
           }
         });
@@ -1459,30 +1463,30 @@ describe.only('Model', () => {
 
       it('allows appending options', () => {
         Student.options = { query: { where: { name: 'foo' } } };
-        expect(Student._config.options, 'to satisfy', {
+        expect(Student.$config.options, 'to satisfy', {
           query: { where: { id: 1, name: 'foo' } }
         });
       });
 
       it('does not overwrite the `Model` config', () => {
-        expect(Student._config.Model, 'to be', Student);
+        expect(Student.$config.Model, 'to be', Student);
       });
 
       it('leaves the parent config as is', () => {
-        expect(User._config, 'to satisfy', {
+        expect(User.$config, 'to satisfy', {
           Model: User,
           schema: 'users',
           table: 'user',
           fields: { instances: { id: new Field(User, { name: 'id' }) } },
           options: {
             query: {
-              defaults: {
-                debug: false,
-                from: User,
+              default: {
                 fields: expect
-                  .it('to be', User._config.fields.names)
+                  .it('to be', User.$config.fields.names)
                   .and('to equal', ['id'])
               },
+              fetch: { from: User },
+              debug: false,
               where: { id: 1 }
             }
           }
@@ -1504,10 +1508,10 @@ describe.only('Model', () => {
         });
         User.setupConfig();
         Student.setupConfig();
-        expect(User._config.options, 'to equal', {
+        expect(User.$config.options, 'to equal', {
           foo: 'user'
         });
-        expect(Student._config.options, 'to equal', {
+        expect(Student.$config.options, 'to equal', {
           foo: 'student'
         });
       });
@@ -1656,9 +1660,9 @@ describe.only('Model', () => {
       User = class extends Model {};
     });
 
-    it('returns options with query defaults set', () => {
+    it('returns options with query default options set', () => {
       expect(User.options, 'to equal', {
-        query: { defaults: { debug: false, from: User, fields: [] } }
+        query: { default: { fields: [] }, fetch: { from: User }, debug: false }
       });
     });
 
@@ -1790,9 +1794,11 @@ describe.only('Model', () => {
     });
 
     it('configures the Query instance with the model', () => {
-      User.Query = sinon
-        .stub()
-        .returns({ setDefaultOptions() {}, setOptions() {} });
+      User.Query = sinon.stub().returns({
+        setDefaultOptions() {},
+        setMethodOptions() {},
+        setOptions() {}
+      });
       // eslint-disable-next-line no-unused-expressions
       User.query;
       expect(User.Query, 'to have calls satisfying', () => {
@@ -1810,10 +1816,7 @@ describe.only('Model', () => {
     });
 
     it('sets configured options on the Query instance', () => {
-      expect(User.query.getOptions(), 'to satisfy', {
-        fields: ['id'],
-        where: [{ id: 1 }]
-      });
+      expect(User.query.getOptions(), 'to satisfy', { where: [{ id: 1 }] });
     });
 
     it('allows overwriting default options', () => {
