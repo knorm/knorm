@@ -484,7 +484,6 @@ describe.only('Model', () => {
     });
 
     it('supports `colors`', () => {
-      user.setValues({ id: 1, firstName: 'foo', lastName: 'bar' });
       expect(
         user[util.inspect.custom](2, {
           colors: true,
