@@ -38,7 +38,7 @@
     "@knorm/postgres": "2.0.5",
     "@knorm/relations": "2.0.0",
     "@knorm/timestamps": "2.0.0",
-    "knex": "0.19.4",
+    "knex": "0.19.5",
     "pg": "7.12.1"
   }
 }
