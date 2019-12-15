@@ -24,7 +24,7 @@
     "@semantic-release/git": "7.0.16",
     "@semantic-release/github": "5.4.3",
     "@semantic-release/npm": "5.1.15",
-    "coveralls": "3.0.6",
+    "coveralls": "3.0.9",
     "eslint": "6.3.0",
     "eslint-config-ganintegrity": "4.0.2",
     "knex": "0.15.2",
