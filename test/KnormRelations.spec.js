@@ -1197,7 +1197,9 @@ describe('KnormRelations', () => {
           });
 
           describe('when a field is referenced by multiple fields', () => {
-            it('resolves with the correct data', async () => {
+            it('joins on all reference fields', async () => {
+              // this query doesn't match any users since it joins
+              // ON user.id = message.sender_id AND user.id = message.receiver_id
               const query = new Query(Message).leftJoin(
                 new Query(User).on('id')
               );
@@ -1210,28 +1212,14 @@ describe('KnormRelations', () => {
                     senderId: 1,
                     receiverId: 2,
                     text: 'Hi User 2',
-                    user: [
-                      new User({
-                        id: 2,
-                        name: 'User 2',
-                        confirmed: true,
-                        creator: null
-                      })
-                    ]
+                    user: []
                   }),
                   new Message({
                     id: 2,
                     senderId: 2,
                     receiverId: 1,
                     text: 'Hi User 1',
-                    user: [
-                      new User({
-                        id: 1,
-                        name: 'User 1',
-                        confirmed: null,
-                        creator: null
-                      })
-                    ]
+                    user: []
                   })
                 ]
               );
@@ -1619,10 +1607,10 @@ describe('KnormRelations', () => {
               new Query(User)
                 .leftJoin([
                   new Query(OtherMessage)
-                    .on(Message.fields.senderId)
+                    .on(OtherMessage.fields.senderId)
                     .as('sentMessages'),
                   new Query(OtherMessage)
-                    .on(Message.fields.receiverId)
+                    .on(OtherMessage.fields.receiverId)
                     .as('receivedMessages')
                 ])
                 .fetch(),
@@ -1644,10 +1632,10 @@ describe('KnormRelations', () => {
               new Query(OtherUser)
                 .leftJoin([
                   new Query(OtherMessage)
-                    .on(Message.fields.senderId)
+                    .on(OtherMessage.fields.senderId)
                     .as('sentMessages'),
                   new Query(OtherMessage)
-                    .on(Message.fields.receiverId)
+                    .on(OtherMessage.fields.receiverId)
                     .as('receivedMessages')
                 ])
                 .fetch(),
@@ -1710,14 +1698,16 @@ describe('KnormRelations', () => {
 
         describe('supports `on` on a reverse join', () => {
           it('as a string', async () => {
+            // these queries don't match any users since they join
+            // ON user.id = message.sender_id AND user.id = message.receiver_id
             await expect(
               new Query(OtherMessage)
                 .leftJoin(new Query(User).on('id'))
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
-                new OtherMessage({ id: 1, user: [new User({ id: 2 })] }),
-                new OtherMessage({ id: 2, user: [new User({ id: 1 })] })
+                new OtherMessage({ id: 1, user: [] }),
+                new OtherMessage({ id: 2, user: [] })
               ]
             );
             await expect(
@@ -1726,27 +1716,27 @@ describe('KnormRelations', () => {
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
-                new OtherMessage({
-                  id: 1,
-                  otherUser: [new OtherUser({ id: 2 })]
+                new OtherMessage({ id: 1,
+                  otherUser: []
                 }),
-                new OtherMessage({
-                  id: 2,
-                  otherUser: [new OtherUser({ id: 1 })]
+                new OtherMessage({ id: 2,
+                  otherUser: []
                 })
               ]
             );
           });
 
           it('as a field instance ', async () => {
+            // these queries don't match any users since they join
+            // ON user.id = message.sender_id AND user.id = message.receiver_id
             await expect(
               new Query(OtherMessage)
                 .leftJoin(new Query(User).on(User.fields.id))
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
-                new OtherMessage({ id: 1, user: [new User({ id: 2 })] }),
-                new OtherMessage({ id: 2, user: [new User({ id: 1 })] })
+                new OtherMessage({ id: 1, user: [] }),
+                new OtherMessage({ id: 2, user: [] })
               ]
             );
             await expect(
@@ -1755,13 +1745,11 @@ describe('KnormRelations', () => {
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
-                new OtherMessage({
-                  id: 1,
-                  otherUser: [new OtherUser({ id: 2 })]
+                new OtherMessage({ id: 1,
+                  otherUser: []
                 }),
-                new OtherMessage({
-                  id: 2,
-                  otherUser: [new OtherUser({ id: 1 })]
+                new OtherMessage({ id: 2,
+                  otherUser: []
                 })
               ]
             );
@@ -1915,10 +1903,10 @@ describe('KnormRelations', () => {
           it('as a field instance', async () => {
             const query = new Query(User).leftJoin([
               new Query(OtherMessage)
-                .on(Message.fields.senderId)
+                .on(OtherMessage.fields.senderId)
                 .as('sentMessages'),
               new Query(OtherMessage)
-                .on(Message.fields.receiverId)
+                .on(OtherMessage.fields.receiverId)
                 .as('receivedMessages')
             ]);
             await expect(
@@ -1972,8 +1960,8 @@ describe('KnormRelations', () => {
               query.fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
-                new OtherMessage({ id: 1, user: [new User({ id: 2 })] }),
-                new OtherMessage({ id: 2, user: [new User({ id: 1 })] })
+                new OtherMessage({ id: 1, user: [] }),
+                new OtherMessage({ id: 2, user: [] })
               ]
             );
           });
@@ -1986,8 +1974,8 @@ describe('KnormRelations', () => {
               query.fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
-                new OtherMessage({ id: 1, user: [new User({ id: 2 })] }),
-                new OtherMessage({ id: 2, user: [new User({ id: 1 })] })
+                new OtherMessage({ id: 1, user: [] }),
+                new OtherMessage({ id: 2, user: [] })
               ]
             );
           });
@@ -2192,10 +2180,10 @@ describe('KnormRelations', () => {
                 new Query(User)
                   .leftJoin([
                     new Query(AnotherMessage)
-                      .on(Message.fields.senderId)
+                      .on(AnotherMessage.fields.senderId)
                       .as('sentMessages'),
                     new Query(AnotherMessage)
-                      .on(Message.fields.receiverId)
+                      .on(AnotherMessage.fields.receiverId)
                       .as('receivedMessages')
                   ])
                   .fetch(),
@@ -2217,10 +2205,10 @@ describe('KnormRelations', () => {
                 new Query(AnotherUser)
                   .leftJoin([
                     new Query(AnotherMessage)
-                      .on(Message.fields.senderId)
+                      .on(AnotherMessage.fields.senderId)
                       .as('sentMessages'),
                     new Query(AnotherMessage)
-                      .on(Message.fields.receiverId)
+                      .on(AnotherMessage.fields.receiverId)
                       .as('receivedMessages')
                   ])
                   .fetch(),
@@ -2293,14 +2281,16 @@ describe('KnormRelations', () => {
 
           describe('supports `on` on a reverse join', () => {
             it('as a string', async () => {
+              // these queries don't match any users since they join
+              // ON user.id = message.sender_id AND user.id = message.receiver_id
               await expect(
                 new Query(AnotherMessage)
                   .leftJoin(new Query(User).on('id'))
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
                 [
-                  new AnotherMessage({ id: 1, user: [new User({ id: 2 })] }),
-                  new AnotherMessage({ id: 2, user: [new User({ id: 1 })] })
+                  new AnotherMessage({ id: 1, user: [] }),
+                  new AnotherMessage({ id: 2, user: [] })
                 ]
               );
               await expect(
@@ -2309,27 +2299,23 @@ describe('KnormRelations', () => {
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
                 [
-                  new AnotherMessage({
-                    id: 1,
-                    anotherUser: [new AnotherUser({ id: 2 })]
-                  }),
-                  new AnotherMessage({
-                    id: 2,
-                    anotherUser: [new AnotherUser({ id: 1 })]
-                  })
+                  new AnotherMessage({ id: 1, anotherUser: [] }),
+                  new AnotherMessage({ id: 2, anotherUser: [] })
                 ]
               );
             });
 
             it('as a field instance ', async () => {
+              // these queries don't match any users since they join
+              // ON user.id = message.sender_id AND user.id = message.receiver_id
               await expect(
                 new Query(AnotherMessage)
                   .leftJoin(new Query(User).on(User.fields.id))
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
                 [
-                  new AnotherMessage({ id: 1, user: [new User({ id: 2 })] }),
-                  new AnotherMessage({ id: 2, user: [new User({ id: 1 })] })
+                  new AnotherMessage({ id: 1, user: [] }),
+                  new AnotherMessage({ id: 2, user: [] })
                 ]
               );
               await expect(
@@ -2338,14 +2324,8 @@ describe('KnormRelations', () => {
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
                 [
-                  new AnotherMessage({
-                    id: 1,
-                    anotherUser: [new AnotherUser({ id: 2 })]
-                  }),
-                  new AnotherMessage({
-                    id: 2,
-                    anotherUser: [new AnotherUser({ id: 1 })]
-                  })
+                  new AnotherMessage({ id: 1, anotherUser: [] }),
+                  new AnotherMessage({ id: 2, anotherUser: [] })
                 ]
               );
             });
