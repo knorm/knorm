@@ -2573,7 +2573,10 @@ describe('KnormRelations', () => {
 
         before(() => {
           ChildUser = class extends User {};
+          ChildUser.table = 'user'; // trigger config inheritance
+
           ChildImage = class extends Image {};
+          ChildImage.table = 'image'; // trigger config inheritance
         });
 
         it('allows joins to a child model', async () => {
@@ -2631,6 +2634,68 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [new ChildImage({ id: 1, childUser: [new ChildUser({ id: 1 })] })]
           );
+        });
+
+        describe('when references are overwritten in a child model', () => {
+          let OtherChildImage;
+
+          before(() => {
+            OtherChildImage = class extends ChildImage {};
+            OtherChildImage.fields = {
+              userId: { type: 'integer', references: ChildUser.fields.id }
+            };
+          });
+
+          it('supports the new reference', async () => {
+            await expect(
+              new Query(ChildUser).leftJoin(new Query(OtherChildImage)).fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new ChildUser({
+                  id: 1,
+                  otherChildImage: [new OtherChildImage({ id: 1 })]
+                }),
+                new ChildUser({ id: 2, otherChildImage: [] })
+              ]
+            );
+          });
+
+          it('removes the old reference', async () => {
+            await expect(
+              new Query(User).leftJoin(new Query(OtherChildImage)).fetch(),
+              'to be rejected with error satisfying',
+              new Query.QueryError(
+                'User: there are no references to `OtherChildImage`'
+              )
+            );
+          });
+
+          describe('for reverse joins', () => {
+            it('supports the new reference', async () => {
+              await expect(
+                new Query(OtherChildImage)
+                  .leftJoin(new Query(ChildUser))
+                  .fetch(),
+                'to be fulfilled with sorted rows satisfying',
+                [
+                  new OtherChildImage({
+                    id: 1,
+                    childUser: [new ChildUser({ id: 1 })]
+                  })
+                ]
+              );
+            });
+
+            it('removes the old reference', async () => {
+              await expect(
+                new Query(OtherChildImage).leftJoin(new Query(User)).fetch(),
+                'to be rejected with error satisfying',
+                new Query.QueryError(
+                  'OtherChildImage: there are no references to `User`'
+                )
+              );
+            });
+          });
         });
       });
     });
