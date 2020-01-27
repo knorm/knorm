@@ -1716,12 +1716,8 @@ describe('KnormRelations', () => {
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
-                new OtherMessage({ id: 1,
-                  otherUser: []
-                }),
-                new OtherMessage({ id: 2,
-                  otherUser: []
-                })
+                new OtherMessage({ id: 1, otherUser: [] }),
+                new OtherMessage({ id: 2, otherUser: [] })
               ]
             );
           });
@@ -1745,12 +1741,8 @@ describe('KnormRelations', () => {
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
-                new OtherMessage({ id: 1,
-                  otherUser: []
-                }),
-                new OtherMessage({ id: 2,
-                  otherUser: []
-                })
+                new OtherMessage({ id: 1, otherUser: [] }),
+                new OtherMessage({ id: 2, otherUser: [] })
               ]
             );
           });
@@ -2571,6 +2563,73 @@ describe('KnormRelations', () => {
                 ]
               })
             ]
+          );
+        });
+      });
+
+      describe('when joining with child models', () => {
+        let ChildUser;
+        let ChildImage;
+
+        before(() => {
+          ChildUser = class extends User {};
+          ChildImage = class extends Image {};
+        });
+
+        it('allows joins to a child model', async () => {
+          await expect(
+            new Query(User).leftJoin(new Query(ChildImage)).fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new User({ id: 1, childImage: [new ChildImage({ id: 1 })] }),
+              new User({ id: 2, childImage: [] })
+            ]
+          );
+        });
+
+        it('allows reverse joins to a child model', async () => {
+          await expect(
+            new Query(Image).leftJoin(new Query(ChildUser)).fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new Image({ id: 1, childUser: [new ChildUser({ id: 1 })] })]
+          );
+        });
+
+        it('allows joins from a child model', async () => {
+          await expect(
+            new Query(ChildUser).leftJoin(new Query(Image)).fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new ChildUser({ id: 1, image: [new Image({ id: 1 })] }),
+              new ChildUser({ id: 2, image: [] })
+            ]
+          );
+        });
+
+        it('allows reverse joins from a child model', async () => {
+          await expect(
+            new Query(ChildImage).leftJoin(new Query(User)).fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new ChildImage({ id: 1, user: [new User({ id: 1 })] })]
+          );
+        });
+
+        it('allows joins between children models', async () => {
+          await expect(
+            new Query(ChildUser).leftJoin(new Query(ChildImage)).fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [
+              new ChildUser({ id: 1, childImage: [new ChildImage({ id: 1 })] }),
+              new ChildUser({ id: 2, childImage: [] })
+            ]
+          );
+        });
+
+        it('allows reverse joins between children models', async () => {
+          await expect(
+            new Query(ChildImage).leftJoin(new Query(ChildUser)).fetch(),
+            'to be fulfilled with sorted rows satisfying',
+            [new ChildImage({ id: 1, childUser: [new ChildUser({ id: 1 })] })]
           );
         });
       });
