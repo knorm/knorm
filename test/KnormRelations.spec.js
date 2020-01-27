@@ -2567,7 +2567,7 @@ describe('KnormRelations', () => {
         });
       });
 
-      describe('when joining with child models', () => {
+      describe('when joining with children models', () => {
         let ChildUser;
         let ChildImage;
 
