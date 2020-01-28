@@ -799,6 +799,17 @@ describe('KnormRelations', () => {
             );
           });
 
+          it('throws an error if the field does not exist on the joined model', async () => {
+            const query = new Query(User).leftJoin([
+              new Query(Message).on('fooId')
+            ]);
+            await expect(
+              query.fetch(),
+              'to be rejected with error satisfying',
+              new Query.QueryError('Message: unknown field `fooId`')
+            );
+          });
+
           it('supports passing a field instance', async () => {
             const query = new Query(User).leftJoin([
               new Query(Message).on(Message.fields.senderId).as('sentMessages'),
