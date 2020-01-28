@@ -810,6 +810,29 @@ describe('KnormRelations', () => {
             );
           });
 
+          it('supports `on` as an array', async () => {
+            const query = new Query(User).leftJoin([
+              new Query(Message).on(['senderId']).as('sentMessages'),
+              new Query(Message).on(['receiverId']).as('receivedMessages')
+            ]);
+            await expect(
+              query.fetch(),
+              'to be fulfilled with sorted rows satisfying',
+              [
+                new User({
+                  id: 1,
+                  sentMessages: [new Message({ id: 1 })],
+                  receivedMessages: [new Message({ id: 2 })]
+                }),
+                new User({
+                  id: 2,
+                  sentMessages: [new Message({ id: 2 })],
+                  receivedMessages: [new Message({ id: 1 })]
+                })
+              ]
+            );
+          });
+
           it('supports passing a field instance', async () => {
             const query = new Query(User).leftJoin([
               new Query(Message).on(Message.fields.senderId).as('sentMessages'),
