@@ -1,3 +1,49 @@
+# [3.0.0](https://github.com/knorm/relations/compare/v2.0.0...v3.0.0) (2020-02-07)
+
+
+### Bug Fixes
+
+* **Query:** refactor handling of references ([caf792d](https://github.com/knorm/relations/commit/caf792d))
+* support joining with children models ([6a544bc](https://github.com/knorm/relations/commit/6a544bc))
+* throw an error if an `on` field (as a string) doesn't exist ([2f575bc](https://github.com/knorm/relations/commit/2f575bc))
+
+
+### Features
+
+* support `on` as an array ([4faab5e](https://github.com/knorm/relations/commit/4faab5e))
+
+
+### BREAKING CHANGES
+
+* Referencing a field on the parent join's model using
+a string is no longer supported; it was only supported due to a bug.
+Instead, use a Field instance:
+
+```js
+Model.fields = { id: 'integer' };
+
+class User extends Model {}
+class Image extends Model {}
+
+Image.fields = {
+  userId: { type: 'integer', references: User.fields.id }
+};
+
+Image.fetch({
+  // wrong:
+  // join: User.query.on('userId')
+  // correct:
+  join: User.query.on(Image.fields.userId)
+});
+```
+
+However, fields on the same model can still be referenced by their
+string field-name:
+
+```js
+User.fetch({ join: Image.query.on('userId') });
+```
+
 # [2.0.0](https://github.com/knorm/relations/compare/v1.3.1...v2.0.0) (2019-02-03)
 
 
