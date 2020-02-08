@@ -39,6 +39,6 @@
     "@knorm/relations": "3.0.0",
     "@knorm/timestamps": "2.0.0",
     "knex": "0.19.5",
-    "pg": "7.12.1"
+    "pg": "7.18.1"
   }
 }
