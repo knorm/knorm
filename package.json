@@ -36,7 +36,7 @@
   "dependencies": {
     "@knorm/knorm": "2.1.4",
     "@knorm/postgres": "2.0.5",
-    "@knorm/relations": "2.0.0",
+    "@knorm/relations": "3.0.0",
     "@knorm/timestamps": "2.0.0",
     "knex": "0.19.4",
     "pg": "7.12.1"
