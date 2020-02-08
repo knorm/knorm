@@ -15,11 +15,11 @@
   "license": "MIT",
   "peerDependencies": {
     "@knorm/knorm": "^2.0.0",
-    "@knorm/relations": "^2.0.0"
+    "@knorm/relations": "^2.0.0 || ^3.0.0"
   },
   "devDependencies": {
     "@knorm/knorm": "2.1.4",
-    "@knorm/relations": "2.0.0",
+    "@knorm/relations": "3.0.0",
     "@semantic-release/changelog": "3.0.4",
     "@semantic-release/git": "7.0.16",
     "@semantic-release/github": "5.4.3",
