@@ -22,10 +22,10 @@ describe('Sql/DefaultValues', () => {
     });
   });
 
-  describe('DefaultValues.prototype.formatText', () => {
+  describe('DefaultValues.prototype.getText', () => {
     it('returns a `DEFAULT VALUES` clause', () => {
       defaultValues.setValue(true);
-      expect(defaultValues.formatText(), 'to be', 'DEFAULT VALUES');
+      expect(defaultValues.getText(), 'to be', 'DEFAULT VALUES');
     });
   });
 });

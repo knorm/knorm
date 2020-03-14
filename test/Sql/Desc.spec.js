@@ -23,10 +23,10 @@ describe('Sql/Desc', () => {
     });
   });
 
-  describe('Desc.prototype.formatText', () => {
+  describe('Desc.prototype.getText', () => {
     it('returns an `DESC` clause with a formatted value', () => {
       desc.setValue(new Dummy(User));
-      expect(desc.formatText(), 'to be', 'DESC DUMMY');
+      expect(desc.getText(), 'to be', 'DESC DUMMY');
     });
   });
 });

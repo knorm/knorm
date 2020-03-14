@@ -23,10 +23,10 @@ describe('Sql/Any', () => {
     });
   });
 
-  describe('Any.prototype.formatText', () => {
+  describe('Any.prototype.getText', () => {
     it('returns an `ANY` clause with a formatted value', () => {
       any.setValue(new Dummy(User));
-      expect(any.formatText(), 'to be', 'ANY DUMMY');
+      expect(any.getText(), 'to be', 'ANY DUMMY');
     });
   });
 });

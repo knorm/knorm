@@ -22,10 +22,10 @@ describe('Sql/Default', () => {
     });
   });
 
-  describe('Default.prototype.formatText', () => {
+  describe('Default.prototype.getText', () => {
     it('returns a `DEFAULT` clause', () => {
       _default.setValue(true);
-      expect(_default.formatText(), 'to be', 'DEFAULT');
+      expect(_default.getText(), 'to be', 'DEFAULT');
     });
   });
 });

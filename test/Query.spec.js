@@ -5,6 +5,7 @@ const fieldToColumnPlugin = require('./lib/fieldToColumnPlugin');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
+  .use(require('./lib/unexpected-knorm'))
   .use(require('unexpected-sinon'))
   .use(require('unexpected-knex'));
 
@@ -32,6 +33,7 @@ describe.only('Query', () => {
     Model.fields = {
       id: {
         type: 'integer',
+        column: 'id',
         required: true,
         primary: true,
         updated: false
@@ -43,28 +45,35 @@ describe.only('Query', () => {
     User.fields = {
       name: {
         type: 'string',
+        column: 'name',
         required: true
       },
       description: {
-        type: 'string'
+        type: 'string',
+        column: 'description'
       },
       age: {
         type: 'integer',
+        column: 'age',
         default: null
       },
       confirmed: {
         type: 'boolean',
+        column: 'confirmed',
         required: true,
         default: false
       },
       dateOfBirth: {
-        type: 'dateTime'
+        type: 'dateTime',
+        column: 'date_of_birth'
       },
       dbDefault: {
-        type: 'string'
+        type: 'string',
+        column: 'db_default'
       },
       jsonField: {
         type: 'json',
+        column: 'json_field',
         cast: {
           forSave(value) {
             if (value !== null) {
@@ -80,6 +89,7 @@ describe.only('Query', () => {
       },
       intToString: {
         type: 'integer',
+        column: 'int_to_string',
         cast: {
           forFetch(value) {
             if (value !== null) {
@@ -112,7 +122,7 @@ describe.only('Query', () => {
   let query;
 
   beforeEach(() => {
-    query = new Query(User);
+    query = User.query;
   });
 
   describe('constructor', () => {
@@ -902,7 +912,159 @@ describe.only('Query', () => {
     });
   });
 
-  describe.only('Query.prototype.prepareSelect', () => {
+  describe.only('Query.prototype.prepareFromValue', () => {
+    let preparedOptions;
+
+    beforeEach(() => {
+      preparedOptions = User.queryOptions;
+    });
+
+    describe('for Model classes', () => {
+      it('sets `from` to the Model', async () => {
+        const value = User;
+        expect(query.prepareFromValue(value, preparedOptions), 'to satisfy', {
+          from: [expect.it('to be', value)]
+        });
+      });
+    });
+
+    describe('for Raw instances', () => {
+      it('sets `from` to the Raw instance', async () => {
+        const value = User.sql.raw('"user"');
+        expect(query.prepareFromValue(value, preparedOptions), 'to satisfy', {
+          from: [expect.it('to be', value)]
+        });
+      });
+    });
+
+    describe('for From instances', () => {
+      it('sets `from` to the From instance', async () => {
+        const value = User.sql.from(User);
+        expect(query.prepareFromValue(value, preparedOptions), 'to satisfy', {
+          from: [expect.it('to be', value)]
+        });
+      });
+    });
+
+    describe('for Query instances', () => {
+      let value;
+      let sql;
+
+      beforeEach(() => {
+        value = User.query.setOptions({
+          from: User,
+          qualifier: 'foo',
+          fields: ['id', 'name'],
+          where: { id: 1 }
+        });
+        sql = User.sql.setOptions({ qualifier: 'foo' });
+      });
+
+      it('sets prepared Sql parts from the Query instance', async () => {
+        expect(
+          query.prepareFromValue(value, preparedOptions),
+          'to exhaustively satisfy',
+          {
+            from: [sql.from(User)],
+            fields: [sql.fields(['id', 'name'])],
+            where: [sql.where([{ id: 1 }])]
+          }
+        );
+      });
+
+      // TODO: move this test elsewhere?
+      it('renders the correct SQL', async () => {
+        expect(
+          query.prepareFromValue(value, preparedOptions),
+          'to be formatted as',
+          {
+            text: `
+              SELECT "foo"."id", "foo"."name"
+              FROM "user" AS "foo" WHERE "foo"."id" = ?
+            `,
+            values: [1]
+          }
+        );
+      });
+
+      describe('with multiple `from` values', () => {
+        let Student;
+        let studentSubquery;
+
+        beforeEach(() => {
+          Student = class extends User {};
+          studentSubquery = Student.query.setOptions({
+            subquery: true,
+            field: 'name'
+          });
+          value.setOption('from', [Student, studentSubquery]);
+        });
+
+        it('adds prepared `from` values from the Query instance', async () => {
+          expect(query.prepareFromValue(value, preparedOptions), 'to satisfy', {
+            from: [sql.from([User, Student, studentSubquery])]
+          });
+        });
+
+        // TODO: move this test elsewhere?
+        it('renders the correct SQL', async () => {
+          expect(
+            query.prepareFromValue(value, preparedOptions),
+            'to be formatted as',
+            {
+              text: `
+                SELECT "foo"."id", "foo"."name"
+                FROM
+                  "user" AS "foo",
+                  "user" AS "foo",
+                  (SELECT "user"."name" FROM "user") AS "foo"
+                WHERE "foo"."id" = ?
+              `,
+              values: [1]
+            }
+          );
+        });
+      });
+
+      describe('with `subquery` set', () => {
+        beforeEach(() => {
+          value.setOption('subquery', true);
+        });
+
+        it('sets `from` to the prepared Query instance', async () => {
+          expect(query.prepareFromValue(value, preparedOptions), 'to satisfy', {
+            from: [sql.from(value)]
+          });
+        });
+
+        it('sets prepared `fields` from the Query instance', async () => {
+          expect(query.prepareFromValue(value, preparedOptions), 'to satisfy', {
+            fields: [sql.fields(['id', 'name'])]
+          });
+        });
+
+        // TODO: move this test elsewhere?
+        it('renders the correct SQL', async () => {
+          expect(
+            query.prepareFromValue(value, preparedOptions),
+            'to be formatted as',
+            {
+              text: `
+                SELECT "foo"."id", "foo"."name"
+                FROM (
+                  SELECT "user"."id", "user"."name"
+                  FROM "user" WHERE "user"."id" = ?
+                ) AS "foo"
+              `,
+              values: [1]
+            }
+          );
+        });
+      });
+    });
+  });
+
+  describe('Query.prototype.prepareSelect', () => {
     describe('with no options', () => {
       it('returns a `select` part with only a `from` part', () => {
         expect(query.prepareSelect({}), 'to equal', Sql.select([Sql.from()]));
@@ -2427,7 +2589,7 @@ describe.only('Query', () => {
     });
   });
 
-  describe.only('Query.prototype.prepareInsert', () => {
+  describe('Query.prototype.prepareInsert', () => {
     describe('with no options', () => {
       it('returns a `insert` part with only an `into` part', () => {
         expect(query.prepareInsert({}), 'to equal', Sql.insert([Sql.into()]));

@@ -32,10 +32,10 @@ describe('Sql/All', () => {
     });
   });
 
-  describe('All.prototype.formatText', () => {
+  describe('All.prototype.getText', () => {
     it('returns an `ALL` clause with a formatted value', () => {
       all.setValue(new Dummy(User));
-      expect(all.formatText(), 'to be', 'ALL DUMMY');
+      expect(all.getText(), 'to be', 'ALL DUMMY');
     });
   });
 });

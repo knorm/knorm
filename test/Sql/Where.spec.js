@@ -55,10 +55,10 @@ describe('Sql/Where', () => {
     });
   });
 
-  describe('Where.prototype.formatText', () => {
+  describe('Where.prototype.getText', () => {
     it('returns a `WHERE` clause with formatted fields and values', () => {
       where.setValue([{ id: 1 }]);
-      expect(where.formatText(), 'to be', 'WHERE "user"."id" = ?');
+      expect(where.getText(), 'to be', 'WHERE "user"."id" = ?');
     });
   });
 });

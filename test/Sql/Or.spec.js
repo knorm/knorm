@@ -33,10 +33,10 @@ describe('Sql/Or', () => {
     });
   });
 
-  describe('Or.prototype.formatText', () => {
+  describe('Or.prototype.getText', () => {
     it('returns a formatted `OR` clause wrapped in parenthesis', () => {
       or.setValue([true, false]);
-      expect(or.formatText(), 'to be', '(? OR ?)');
+      expect(or.getText(), 'to be', '(? OR ?)');
     });
   });
 });

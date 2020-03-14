@@ -22,10 +22,10 @@ describe('Sql/SkipLocked', () => {
     });
   });
 
-  describe('SkipLocked.prototype.formatText', () => {
+  describe('SkipLocked.prototype.getText', () => {
     it('returns a `SKIP LOCKED` clause', () => {
       skipLocked.setValue(true);
-      expect(skipLocked.formatText(), 'to be', 'SKIP LOCKED');
+      expect(skipLocked.getText(), 'to be', 'SKIP LOCKED');
     });
   });
 });

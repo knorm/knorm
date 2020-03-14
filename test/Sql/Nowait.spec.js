@@ -22,10 +22,10 @@ describe('Sql/Nowait', () => {
     });
   });
 
-  describe('Nowait.prototype.formatText', () => {
+  describe('Nowait.prototype.getText', () => {
     it('returns a `NOWAIT` clause', () => {
       nowait.setValue(true);
-      expect(nowait.formatText(), 'to be', 'NOWAIT');
+      expect(nowait.getText(), 'to be', 'NOWAIT');
     });
   });
 });

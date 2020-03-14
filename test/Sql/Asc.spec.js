@@ -23,10 +23,10 @@ describe('Sql/Asc', () => {
     });
   });
 
-  describe('Asc.prototype.formatText', () => {
+  describe('Asc.prototype.getText', () => {
     it('returns an `ASC` clause with a formatted value', () => {
       asc.setValue(new Dummy(User));
-      expect(asc.formatText(), 'to be', 'ASC DUMMY');
+      expect(asc.getText(), 'to be', 'ASC DUMMY');
     });
   });
 });
