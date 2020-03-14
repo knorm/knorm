@@ -14,16 +14,9 @@
     "@knorm/knorm": "^2.0.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "2.1.4",
-    "@semantic-release/changelog": "3.0.4",
-    "@semantic-release/git": "7.0.16",
-    "@semantic-release/github": "5.4.3",
-    "@semantic-release/npm": "5.1.15",
-    "coveralls": "3.0.6",
+    "@knorm/knorm": "file:../knorm",
     "mocha": "6.2.0",
-    "nyc": "14.1.1",
-    "semantic-release": "15.13.24",
-    "unexpected": "11.8.0"
+    "nyc": "14.1.1"
   },
   "directories": {
     "lib": "lib",
@@ -42,6 +35,5 @@
   "bugs": {
     "url": "https://github.com/knorm/to-json/issues"
   },
-  "homepage": "https://github.com/knorm/to-json#readme",
-  "dependencies": {}
+  "homepage": "https://github.com/knorm/to-json#readme"
 }
