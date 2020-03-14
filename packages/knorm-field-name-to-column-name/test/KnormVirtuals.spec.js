@@ -1,6 +1,4 @@
-const knorm = require('@knorm/knorm');
 const KnormVirtuals = require('../lib/KnormVirtuals');
-const knormVirtuals = require('../');
 const expect = require('unexpected').clone();
 
 const { KnormVirtualsError } = KnormVirtuals;

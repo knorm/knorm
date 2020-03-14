@@ -1169,20 +1169,26 @@ describe('Model', () => {
   });
 
   describe('Model.prototype.getQuery', () => {
-    const { Model, Query } = new Knorm();
+    let Query;
+    let Model;
+    let Foo;
 
-    class Foo extends Model {}
+    before(() => {
+      ({ Model, Query } = new Knorm());
 
-    Foo.table = 'foo';
-    Foo.fields = {
-      id: {
-        type: 'integer',
-        primary: true
-      },
-      name: {
-        type: 'string'
-      }
-    };
+      Foo = class extends Model {};
+
+      Foo.table = 'foo';
+      Foo.fields = {
+        id: {
+          type: 'integer',
+          primary: true
+        },
+        name: {
+          type: 'string'
+        }
+      };
+    });
 
     it('passes any options passed to Query.prototype.setOptions', () => {
       const setOptions = sinon
@@ -1242,27 +1248,29 @@ describe('Model', () => {
     });
 
     describe('with unique fields configured', () => {
-      class Foo extends Model {}
-
-      Foo.table = 'foo';
-      Foo.fields = {
-        id: {
-          type: 'integer',
-          primary: true
-        },
-        name: {
-          type: 'string',
-          unique: true
-        },
-        number: {
-          type: 'integer',
-          unique: true
-        }
-      };
+      let Foo;
 
       let whereStub;
 
       before(() => {
+        Foo = class extends Model {};
+
+        Foo.table = 'foo';
+        Foo.fields = {
+          id: {
+            type: 'integer',
+            primary: true
+          },
+          name: {
+            type: 'string',
+            unique: true
+          },
+          number: {
+            type: 'integer',
+            unique: true
+          }
+        };
+
         whereStub = sinon.stub(Query.prototype, 'where').returnsThis();
       });
 
@@ -2432,23 +2440,29 @@ describe('Model', () => {
   });
 
   describe('for db operations', () => {
-    const { Model, Query } = new Knorm().use(postgresPlugin);
+    let Model;
+    let Query;
+    let User;
 
-    class User extends Model {}
+    before(() => {
+      ({ Model, Query } = new Knorm().use(postgresPlugin));
 
-    User.table = 'user';
-    User.fields = {
-      id: {
-        type: 'integer',
-        required: true,
-        primary: true,
-        methods: true
-      },
-      name: {
-        type: 'string',
-        required: true
-      }
-    };
+      User = class extends Model {};
+
+      User.table = 'user';
+      User.fields = {
+        id: {
+          type: 'integer',
+          required: true,
+          primary: true,
+          methods: true
+        },
+        name: {
+          type: 'string',
+          required: true
+        }
+      };
+    });
 
     before(async () => knex.schema.dropTableIfExists(User.table));
 

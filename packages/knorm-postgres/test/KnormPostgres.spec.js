@@ -119,8 +119,15 @@ describe('KnormPostgres', () => {
   });
 
   describe('PostgresField', () => {
-    const { Field, Model, Query } = knorm().use(knormPostgres());
-    const { sql } = Query.prototype;
+    let Field;
+    let Model;
+    let Query;
+    let sql;
+
+    before(() => {
+      ({ Field, Model, Query } = knorm().use(knormPostgres()));
+      ({ sql } = Query.prototype);
+    });
 
     it('enforces maxLength 255 on all strings', async () => {
       const field = new Field({ name: 'foo', model: Model, type: 'string' });
@@ -528,7 +535,10 @@ describe('KnormPostgres', () => {
       await expect(
         new Query(User).where(new Query.Where().ilike('name', 'Fo%')).fetch(),
         'to be fulfilled with value satisfying',
-        [{ id: 1, name: 'Foo' }, { id: 2, name: 'foo' }]
+        [
+          { id: 1, name: 'Foo' },
+          { id: 2, name: 'foo' }
+        ]
       );
     });
 
@@ -577,7 +587,10 @@ describe('KnormPostgres', () => {
       await expect(
         new Query(User).offset(0).fetch(),
         'to be fulfilled with value satisfying',
-        [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+        [
+          { id: 1, name: 'foo' },
+          { id: 2, name: 'bar' }
+        ]
       );
       await expect(execute, 'to have calls satisfying', () => {
         execute(
@@ -621,14 +634,20 @@ describe('KnormPostgres', () => {
       await expect(
         new Query(User).update({ name: 'bar' }),
         'to be fulfilled with sorted rows satisfying',
-        [{ id: 1, name: 'bar' }, { id: 2, name: 'bar' }]
+        [
+          { id: 1, name: 'bar' },
+          { id: 2, name: 'bar' }
+        ]
       );
       await expect(
         knex,
         'with table',
         User.table,
         'to have sorted rows satisfying',
-        [{ id: 1, name: 'bar' }, { id: 2, name: 'bar' }]
+        [
+          { id: 1, name: 'bar' },
+          { id: 2, name: 'bar' }
+        ]
       );
     });
 
@@ -647,7 +666,10 @@ describe('KnormPostgres', () => {
         'with table',
         User.table,
         'to have sorted rows satisfying',
-        [{ id: 1, name: 'bar' }, { id: 2, name: 'foo' }]
+        [
+          { id: 1, name: 'bar' },
+          { id: 2, name: 'foo' }
+        ]
       );
     });
 
@@ -1032,14 +1054,20 @@ describe('KnormPostgres', () => {
             { id: 2, name: 'barbar' }
           ]),
           'to be fulfilled with value satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'barbar' }
+          ]
         );
         await expect(
           knex,
           'with table',
           User.table,
           'to have rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'barbar' }
+          ]
         );
         await expect(execute, 'was called once');
         execute.restore();
@@ -1053,18 +1081,25 @@ describe('KnormPostgres', () => {
         const execute = sinon.spy(Query.prototype, 'execute');
         const query = sinon.spy(Query.prototype, 'query');
         await expect(
-          new Query(User)
-            .batchSize(1)
-            .update([{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]),
+          new Query(User).batchSize(1).update([
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'barbar' }
+          ]),
           'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'barbar' }
+          ]
         );
         await expect(
           knex,
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'barbar' }
+          ]
         );
         await expect(execute, 'was called once');
         await expect(query, 'was called twice');
@@ -1111,7 +1146,10 @@ describe('KnormPostgres', () => {
             { ID: 2, NAME: 'barbar' }
           ]),
           'to be fulfilled with value satisfying',
-          [{ ID: 1, NAME: 'foofoo' }, { ID: 2, NAME: 'barbar' }]
+          [
+            { ID: 1, NAME: 'foofoo' },
+            { ID: 2, NAME: 'barbar' }
+          ]
         );
       });
 
@@ -1127,14 +1165,20 @@ describe('KnormPostgres', () => {
             { id: 2, name: query.sql(`upper('bar')`) }
           ]),
           'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, name: 'FOO' }, { id: 2, name: 'BAR' }]
+          [
+            { id: 1, name: 'FOO' },
+            { id: 2, name: 'BAR' }
+          ]
         );
         await expect(
           knex,
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'FOO' }, { id: 2, name: 'BAR' }]
+          [
+            { id: 1, name: 'FOO' },
+            { id: 2, name: 'BAR' }
+          ]
         );
       });
 
@@ -1152,7 +1196,10 @@ describe('KnormPostgres', () => {
             { id: 2, name: 'barbar' }
           ]),
           'to be fulfilled with value satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'barbar' }
+          ]
         );
         await expect(execute, 'to have calls satisfying', () => {
           execute(
@@ -1182,7 +1229,10 @@ describe('KnormPostgres', () => {
             'with table',
             User.table,
             'to have sorted rows satisfying',
-            [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+            [
+              { id: 1, name: 'foo' },
+              { id: 2, name: 'bar' }
+            ]
           );
           await expect(insert, 'to have calls satisfying', () => {
             // options are undefined
@@ -1213,7 +1263,10 @@ describe('KnormPostgres', () => {
             'with table',
             User.table,
             'to have sorted rows satisfying',
-            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+            [
+              { id: 1, name: 'foofoo' },
+              { id: 2, name: 'barbar' }
+            ]
           );
           await expect(update, 'to have calls satisfying', () => {
             // options are undefined
@@ -1229,14 +1282,20 @@ describe('KnormPostgres', () => {
           await expect(
             new Query(User).save([{ id: 1, name: 'foofoo' }, { name: 'bar' }]),
             'to be fulfilled with sorted rows satisfying',
-            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+            [
+              { id: 1, name: 'foofoo' },
+              { id: 2, name: 'bar' }
+            ]
           );
           await expect(
             knex,
             'with table',
             User.table,
             'to have sorted rows satisfying',
-            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+            [
+              { id: 1, name: 'foofoo' },
+              { id: 2, name: 'bar' }
+            ]
           );
           await expect(insert, 'to have calls satisfying', () => {
             // options are undefined
@@ -1274,7 +1333,10 @@ describe('KnormPostgres', () => {
             'with table',
             User.table,
             'to have sorted rows satisfying',
-            [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+            [
+              { id: 1, name: 'foo' },
+              { id: 2, name: 'bar' }
+            ]
           );
         });
 
@@ -1285,7 +1347,10 @@ describe('KnormPostgres', () => {
           ]);
           await expect(
             new Query(User).save(
-              [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }],
+              [
+                { id: 1, name: 'foofoo' },
+                { id: 2, name: 'barbar' }
+              ],
               { first: true }
             ),
             'to be fulfilled with value satisfying',
@@ -1296,7 +1361,10 @@ describe('KnormPostgres', () => {
             'with table',
             User.table,
             'to have sorted rows satisfying',
-            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'barbar' }]
+            [
+              { id: 1, name: 'foofoo' },
+              { id: 2, name: 'barbar' }
+            ]
           );
         });
 
@@ -1314,7 +1382,10 @@ describe('KnormPostgres', () => {
             'with table',
             User.table,
             'to have sorted rows satisfying',
-            [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+            [
+              { id: 1, name: 'foofoo' },
+              { id: 2, name: 'bar' }
+            ]
           );
         });
       });
@@ -1444,15 +1515,19 @@ describe('KnormPostgres', () => {
     });
 
     describe('for json/jsonb field updates', function() {
-      const { Model } = knorm().use(knormPostgres({ connection }));
+      let Foo;
 
-      class Foo extends Model {}
-      Foo.table = 'foo';
-      Foo.fields = {
-        id: { type: 'integer', primary: true, updated: false, methods: true },
-        jsonb: { type: 'jsonb' },
-        json: { type: 'json' }
-      };
+      before(() => {
+        const { Model } = knorm().use(knormPostgres({ connection }));
+
+        Foo = class extends Model {};
+        Foo.table = 'foo';
+        Foo.fields = {
+          id: { type: 'integer', primary: true, updated: false, methods: true },
+          jsonb: { type: 'jsonb' },
+          json: { type: 'json' }
+        };
+      });
 
       before(async () => {
         await knex.schema.createTable(Foo.table, table => {

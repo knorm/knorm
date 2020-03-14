@@ -13,7 +13,9 @@ class KnormVirtuals {
 
   init(knorm) {
     if (!knorm) {
-      throw new this.constructor.KnormVirtualsError('no Knorm instance provided');
+      throw new this.constructor.KnormVirtualsError(
+        'no Knorm instance provided'
+      );
     }
 
     if (!(knorm instanceof Knorm)) {

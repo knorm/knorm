@@ -473,9 +473,7 @@ class Query {
       if (type === 'between' && isArray(value)) {
         if (!value.length) {
           throw new this.constructor.QueryError(
-            `${
-              this.model.name
-            }: empty array passed for "between" for field \`${field}\``
+            `${this.model.name}: empty array passed for "between" for field \`${field}\``
           );
         }
         return [column, ...value, ...rest];

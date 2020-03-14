@@ -393,9 +393,7 @@ describe('Query', () => {
       const query = new Query(User);
       await expect(
         query.execute({
-          text: `insert into "${
-            User.table
-          }" (id, name, confirmed) values ($1, $2, $3) returning id`,
+          text: `insert into "${User.table}" (id, name, confirmed) values ($1, $2, $3) returning id`,
           values: [1, 'foo', true]
         }),
         'to be fulfilled with value exhaustively satisfying',
@@ -415,9 +413,7 @@ describe('Query', () => {
             .insert(User.table)
             .values({ id: 1, name: 'foo', confirmed: true }),
           {
-            text: `insert into "${
-              User.table
-            }" (id, name, confirmed) values ($1, $2, $3) returning id`,
+            text: `insert into "${User.table}" (id, name, confirmed) values ($1, $2, $3) returning id`,
             values: [2, 'bar', false]
           }
         ]),
@@ -504,12 +500,8 @@ describe('Query', () => {
           const runQuery = sinon.spy(query, 'query');
           await expect(
             query.execute([
-              `insert into "${
-                User.table
-              }" (id, name, confirmed) values (1, 'foo', false)`,
-              `insert into "${
-                User.table
-              }" (id, name, confirmed) values (1, 'foo', false)`
+              `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`,
+              `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`
             ]),
             'to be rejected with error satisfying',
             new QueryError(
@@ -519,14 +511,10 @@ describe('Query', () => {
           await expect(connect, 'to have calls satisfying', () => connect());
           await expect(runQuery, 'to have calls satisfying', () => {
             runQuery({
-              text: `insert into "${
-                User.table
-              }" (id, name, confirmed) values (1, 'foo', false)`
+              text: `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`
             });
             runQuery({
-              text: `insert into "${
-                User.table
-              }" (id, name, confirmed) values (1, 'foo', false)`
+              text: `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`
             });
           });
           await expect(disconnect, 'to have calls satisfying', () =>
@@ -2717,7 +2705,10 @@ describe('Query', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'John Doe' }, { id: 2, name: 'Jane Doe' }]
+          [
+            { id: 1, name: 'John Doe' },
+            { id: 2, name: 'Jane Doe' }
+          ]
         );
       });
 
@@ -2732,7 +2723,10 @@ describe('Query', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'John Doe' }, { id: 2, name: 'Jane Doe' }]
+          [
+            { id: 1, name: 'John Doe' },
+            { id: 2, name: 'Jane Doe' }
+          ]
         );
       });
 
@@ -2791,7 +2785,10 @@ describe('Query', () => {
             new User({ id: 2, name: 'Jane Doe', intToString: null })
           ]),
           'to be fulfilled with sorted rows satisfying',
-          [{ id: 1, intToString: '10' }, { id: 2, intToString: null }]
+          [
+            { id: 1, intToString: '10' },
+            { id: 2, intToString: null }
+          ]
         );
         await expect(
           knex,
@@ -2997,7 +2994,10 @@ describe('Query', () => {
         'with table',
         User.table,
         'to have sorted rows satisfying',
-        [{ id: 1, name: 'Foo' }, { id: 2, name: 'Jane Doe' }]
+        [
+          { id: 1, name: 'Foo' },
+          { id: 2, name: 'Jane Doe' }
+        ]
       );
     });
 
@@ -3145,7 +3145,10 @@ describe('Query', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'Foo' }, { id: 2, name: 'Jane Doe' }]
+          [
+            { id: 1, name: 'Foo' },
+            { id: 2, name: 'Jane Doe' }
+          ]
         );
       });
     });
@@ -3177,7 +3180,10 @@ describe('Query', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'Johnie Doe' }, { id: 2, name: 'Johnie Doe' }]
+          [
+            { id: 1, name: 'Johnie Doe' },
+            { id: 2, name: 'Johnie Doe' }
+          ]
         );
       });
 
@@ -3227,14 +3233,20 @@ describe('Query', () => {
         await expect(
           query.update({ intToString: 10 }),
           'to be fulfilled with value satisfying',
-          [{ id: 1, intToString: '10' }, { id: 2, intToString: '10' }]
+          [
+            { id: 1, intToString: '10' },
+            { id: 2, intToString: '10' }
+          ]
         );
         await expect(
           knex,
           'with table',
           User.table,
           'to have rows satisfying',
-          [{ id: 1, int_to_string: 10 }, { id: 2, int_to_string: 10 }]
+          [
+            { id: 1, int_to_string: 10 },
+            { id: 2, int_to_string: 10 }
+          ]
         );
       });
 
@@ -3248,7 +3260,10 @@ describe('Query', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foo' }, { id: 2, name: 'Jane Doe' }]
+          [
+            { id: 1, name: 'foo' },
+            { id: 2, name: 'Jane Doe' }
+          ]
         );
       });
     });
@@ -3366,7 +3381,10 @@ describe('Query', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'Johnie Doe' }, { id: 2, name: 'Jane Doe' }]
+          [
+            { id: 1, name: 'Johnie Doe' },
+            { id: 2, name: 'Jane Doe' }
+          ]
         );
       });
     });

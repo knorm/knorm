@@ -101,25 +101,32 @@ describe('KnormSoftDelete', () => {
   });
 
   describe('updateQuery', () => {
-    const { Query, Model } = knorm()
-      .use(knormPostgres({ connection: knex.client.config.connection }))
-      .use(knormPaginate())
-      .use(knormSoftDelete({ deletedAt: true }));
+    let Query;
+    let User;
 
-    class User extends Model {}
+    before(() => {
+      const orm = knorm()
+        .use(knormPostgres({ connection: knex.client.config.connection }))
+        .use(knormPaginate())
+        .use(knormSoftDelete({ deletedAt: true }));
 
-    User.table = 'user';
-    User.fields = {
-      id: {
-        type: 'integer',
-        required: true,
-        primary: true,
-        updated: false
-      },
-      name: {
-        type: 'string'
-      }
-    };
+      Query = orm.Query;
+
+      User = class extends orm.Model {};
+
+      User.table = 'user';
+      User.fields = {
+        id: {
+          type: 'integer',
+          required: true,
+          primary: true,
+          updated: false
+        },
+        name: {
+          type: 'string'
+        }
+      };
+    });
 
     before(async () => {
       await knex.schema.createTable(User.table, table => {
@@ -284,7 +291,10 @@ describe('KnormSoftDelete', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, deleted: false }, { id: 2, deleted: false }]
+          [
+            { id: 1, deleted: false },
+            { id: 2, deleted: false }
+          ]
         );
       });
 
@@ -295,7 +305,10 @@ describe('KnormSoftDelete', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, deleted_at: null }, { id: 2, deleted_at: null }]
+          [
+            { id: 1, deleted_at: null },
+            { id: 2, deleted_at: null }
+          ]
         );
       });
 
@@ -571,7 +584,10 @@ describe('KnormSoftDelete', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'one' }, { id: 2, name: 'foo' }]
+          [
+            { id: 1, name: 'one' },
+            { id: 2, name: 'foo' }
+          ]
         );
       });
 

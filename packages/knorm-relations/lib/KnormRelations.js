@@ -181,9 +181,7 @@ class KnormRelations {
 
         if (!parentReferences.length && !joinReferences.length) {
           throw new Query.QueryError(
-            `${parent.model.name}: there are no references to \`${
-              join.model.name
-            }\``
+            `${parent.model.name}: there are no references to \`${join.model.name}\``
           );
         }
 
@@ -273,9 +271,7 @@ class KnormRelations {
 
         if (!unique) {
           throw new Query.QueryError(
-            `${this.model.name}: cannot join \`${
-              to.model.name
-            }\` with no primary or unique fields selected`
+            `${this.model.name}: cannot join \`${to.model.name}\` with no primary or unique fields selected`
           );
         }
 

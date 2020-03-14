@@ -13,31 +13,37 @@ const expect = require('unexpected')
 const { KnormPaginateError } = KnormPaginate;
 
 describe('KnormPaginate', () => {
-  const orm = knorm()
-    .use(knormPostgres({ connection: knex.client.config.connection }))
-    .use(knormRelations())
-    .use(knormPaginate({ page: 2, perPage: 2 }));
+  let Query;
+  let User;
+  let Image;
 
-  const Query = orm.Query;
+  before(() => {
+    const orm = knorm()
+      .use(knormPostgres({ connection: knex.client.config.connection }))
+      .use(knormRelations())
+      .use(knormPaginate({ page: 2, perPage: 2 }));
 
-  class Model extends orm.Model {}
-  Model.fields = {
-    id: { type: 'integer', primary: true, updated: false }
-  };
+    Query = orm.Query;
 
-  class User extends Model {}
-  User.table = 'user';
-  User.fields = {
-    name: { type: 'string', required: true },
-    age: { type: 'integer', default: null },
-    confirmed: 'boolean'
-  };
+    class Model extends orm.Model {}
+    Model.fields = {
+      id: { type: 'integer', primary: true, updated: false }
+    };
 
-  class Image extends Model {}
-  Image.table = 'image';
-  Image.fields = {
-    user: { type: 'integer', references: User.fields.id }
-  };
+    User = class extends Model {};
+    User.table = 'user';
+    User.fields = {
+      name: { type: 'string', required: true },
+      age: { type: 'integer', default: null },
+      confirmed: 'boolean'
+    };
+
+    Image = class extends Model {};
+    Image.table = 'image';
+    Image.fields = {
+      user: { type: 'integer', references: User.fields.id }
+    };
+  });
 
   before(async () => {
     await knex.schema.createTable(User.table, table => {
@@ -267,7 +273,10 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 2,
             perPage: 2,
-            rows: [{ id: 3, name: 'User 3' }, { id: 4, name: 'User 4' }]
+            rows: [
+              { id: 3, name: 'User 3' },
+              { id: 4, name: 'User 4' }
+            ]
           });
         });
 
@@ -385,7 +394,10 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 1,
             perPage: 2,
-            rows: [{ id: 1, name: 'User 1' }, { id: 2, name: 'User 2' }]
+            rows: [
+              { id: 1, name: 'User 1' },
+              { id: 2, name: 'User 2' }
+            ]
           });
         });
 
@@ -405,7 +417,10 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 5,
             perPage: 2,
-            rows: [{ id: 9, name: 'User 9' }, { id: 10, name: 'User 10' }]
+            rows: [
+              { id: 9, name: 'User 9' },
+              { id: 10, name: 'User 10' }
+            ]
           });
         });
 
@@ -503,7 +518,10 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 2,
             perPage: 2,
-            rows: [{ id: 3, name: 'User 3' }, { id: 4, name: 'User 4' }]
+            rows: [
+              { id: 3, name: 'User 3' },
+              { id: 4, name: 'User 4' }
+            ]
           });
         });
       });

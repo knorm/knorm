@@ -68,21 +68,25 @@ describe('KnormTimestamps', () => {
   });
 
   describe('updateQuery', () => {
-    const { Model } = knorm()
-      .use(knormPostgres({ connection: knex.client.config.connection }))
-      .use(knormTimestamps());
+    let User;
 
-    class User extends Model {}
+    before(() => {
+      const { Model } = knorm()
+        .use(knormPostgres({ connection: knex.client.config.connection }))
+        .use(knormTimestamps());
 
-    User.table = 'user';
-    User.fields = {
-      id: {
-        type: 'integer',
-        required: true,
-        primary: true,
-        updated: false
-      }
-    };
+      User = class extends Model {};
+
+      User.table = 'user';
+      User.fields = {
+        id: {
+          type: 'integer',
+          required: true,
+          primary: true,
+          updated: false
+        }
+      };
+    });
 
     before(async () =>
       knex.schema.createTable(User.table, table => {

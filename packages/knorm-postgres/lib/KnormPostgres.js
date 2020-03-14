@@ -218,9 +218,7 @@ class KnormPostgres {
 
         if (Array.isArray(value) || typeof value !== 'object') {
           throw new this.constructor.QueryError(
-            `${
-              this.model.name
-            }: cannot patch field \`${field}\` (JSON patching is only supported for objects)`
+            `${this.model.name}: cannot patch field \`${field}\` (JSON patching is only supported for objects)`
           );
         }
 

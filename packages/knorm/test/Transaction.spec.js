@@ -959,7 +959,10 @@ describe('Transaction', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'bar' }
+          ]
         );
       });
 
@@ -990,7 +993,10 @@ describe('Transaction', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'bar' }
+          ]
         );
         await expect(create, 'to have calls satisfying', () => create());
         create.restore();
@@ -1000,16 +1006,25 @@ describe('Transaction', () => {
         const create = sinon.spy(Connection.prototype, 'create');
         const query = sinon.spy(Connection.prototype, 'query');
         await new Transaction(async ({ models: { User } }) => {
-          await User.insert([{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }], {
-            batchSize: 1
-          });
+          await User.insert(
+            [
+              { id: 1, name: 'foo' },
+              { id: 2, name: 'bar' }
+            ],
+            {
+              batchSize: 1
+            }
+          );
         });
         await expect(
           knex,
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+          [
+            { id: 1, name: 'foo' },
+            { id: 2, name: 'bar' }
+          ]
         );
         await expect(create, 'to have calls satisfying', () => create());
         await expect(query, 'to have calls satisfying', () => {
@@ -1242,7 +1257,10 @@ describe('Transaction', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'bar' }
+          ]
         );
       });
 
@@ -1273,7 +1291,10 @@ describe('Transaction', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foofoo' }, { id: 2, name: 'bar' }]
+          [
+            { id: 1, name: 'foofoo' },
+            { id: 2, name: 'bar' }
+          ]
         );
         await expect(create, 'to have calls satisfying', () => create());
         create.restore();
@@ -1284,7 +1305,10 @@ describe('Transaction', () => {
         const query = sinon.spy(Connection.prototype, 'query');
         const transaction = new Transaction();
         await transaction.models.User.insert(
-          [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }],
+          [
+            { id: 1, name: 'foo' },
+            { id: 2, name: 'bar' }
+          ],
           { batchSize: 1 }
         );
         await transaction.commit();
@@ -1293,7 +1317,10 @@ describe('Transaction', () => {
           'with table',
           User.table,
           'to have sorted rows satisfying',
-          [{ id: 1, name: 'foo' }, { id: 2, name: 'bar' }]
+          [
+            { id: 1, name: 'foo' },
+            { id: 2, name: 'bar' }
+          ]
         );
         await expect(create, 'to have calls satisfying', () => create());
         await expect(query, 'to have calls satisfying', () => {
