@@ -8,10 +8,7 @@
     "test:mocha": "mocha --exit --recursive",
     "coverage": "nyc npm run test:mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
-    "todo": "grep -rn -e TODO -e FIXME lib",
-    "docs:jsdoc": "jsdoc2md --files lib/**/*.js --partial docs/.jsdoc2md/templates/link.hbs --partial docs/.jsdoc2md/templates/body.hbs > docs/api.md",
-    "docs:dev": "npm run docs:jsdoc && vuepress dev docs",
-    "docs:build": "npm run docs:jsdoc && vuepress build docs"
+    "todo": "grep -rn -e TODO -e FIXME lib"
   },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
@@ -21,7 +18,6 @@
     "@semantic-release/github": "5.4.3",
     "@semantic-release/npm": "5.1.15",
     "coveralls": "3.0.6",
-    "jsdoc-to-markdown": "5.0.1",
     "knex": "0.15.2",
     "mocha": "6.2.0",
     "nyc": "14.1.1",
@@ -32,8 +28,7 @@
     "sql-bricks-postgres": "0.5.0",
     "unexpected": "11.8.0",
     "unexpected-knex": "2.0.0",
-    "unexpected-sinon": "10.11.2",
-    "vuepress": "1.0.4"
+    "unexpected-sinon": "10.11.2"
   },
   "directories": {
     "doc": "docs",

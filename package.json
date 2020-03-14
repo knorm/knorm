@@ -2,7 +2,10 @@
   "name": "knorm",
   "scripts": {
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "jsdoc:knorm": "jsdoc2md --files packages/knorm/lib/**/*.js --partial docs/.jsdoc2md/templates/link.hbs --partial docs/.jsdoc2md/templates/body.hbs > docs/api/knorm.md",
+    "docs": "npm run jsdoc:knorm && vuepress dev docs",
+    "docs:build": "npm run jsdoc:knorm && vuepress build docs"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
@@ -14,7 +17,9 @@
     "eslint-plugin-prettier": "3.1.2",
     "eslint-plugin-promise": "4.2.1",
     "eslint-plugin-standard": "4.0.1",
+    "jsdoc-to-markdown": "5.0.1",
     "lerna": "^3.20.2",
-    "prettier": "1.19.1"
+    "prettier": "1.19.1",
+    "vuepress": "1.0.4"
   }
 }
