@@ -1,0 +1,68 @@
+{
+  "name": "@knorm/knorm",
+  "version": "2.1.4",
+  "description": "A JavaScript ORM written using ES6 classes",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "test": "docker-compose run --rm knorm",
+    "test:mocha": "mocha --exit --recursive",
+    "coverage": "nyc npm run test:mocha",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "todo": "grep -rn -e TODO -e FIXME lib",
+    "docs:jsdoc": "jsdoc2md --files lib/**/*.js --partial docs/.jsdoc2md/templates/link.hbs --partial docs/.jsdoc2md/templates/body.hbs > docs/api.md",
+    "docs:dev": "npm run docs:jsdoc && vuepress dev docs",
+    "docs:build": "npm run docs:jsdoc && vuepress build docs"
+  },
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@semantic-release/changelog": "3.0.4",
+    "@semantic-release/git": "7.0.16",
+    "@semantic-release/github": "5.4.3",
+    "@semantic-release/npm": "5.1.15",
+    "coveralls": "3.0.6",
+    "eslint": "5.16.0",
+    "eslint-config-ganintegrity": "3.2.0",
+    "jsdoc-to-markdown": "5.0.1",
+    "knex": "0.15.2",
+    "mocha": "6.2.0",
+    "npm-run-all": "4.1.5",
+    "nyc": "14.1.1",
+    "pg": "7.12.1",
+    "prettier": "1.17.0",
+    "proxyquire": "2.1.3",
+    "semantic-release": "15.13.24",
+    "sinon": "7.4.2",
+    "sql-bricks-postgres": "0.5.0",
+    "unexpected": "11.8.0",
+    "unexpected-knex": "2.0.0",
+    "unexpected-sinon": "10.11.2",
+    "vuepress": "1.0.4"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "keywords": [
+    "orm",
+    "erm",
+    "sql",
+    "db",
+    "database"
+  ],
+  "dependencies": {
+    "lodash": "^4.17.5",
+    "sql-bricks": "^2.0.4",
+    "validator": "^10.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/knorm/knorm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/knorm/knorm/issues"
+  },
+  "homepage": "https://github.com/knorm/knorm#readme"
+}
