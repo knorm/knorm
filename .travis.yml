@@ -10,6 +10,9 @@ jobs:
         - postgresql
       addons:
         postgresql: '10'
+      env:
+        global:
+          - PGHOST=127.0.0.1
       script:
         - npm run lint
         - npm run coverage
@@ -22,6 +25,9 @@ jobs:
         - postgresql
       addons:
         postgresql: '9.6'
+      env:
+        global:
+          - PGHOST=127.0.0.1
       script:
         - npm run test:mocha
     - stage: release

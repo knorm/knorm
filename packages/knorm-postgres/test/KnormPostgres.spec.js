@@ -11,7 +11,7 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'));
 
 const { KnormPostgresError } = KnormPostgres;
-const host = process.env.PGHOST || '127.0.0.1';
+const host = process.env.PGHOST;
 const connection = {
   host,
   port: 5432,
