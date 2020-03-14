@@ -30,23 +30,6 @@ describe('ValidationError', () => {
     );
   });
 
-  it('formats correct error messages by type of validator', () => {
-    const field = new Field({
-      name: 'firstName',
-      type: 'string',
-      model: User
-    });
-
-    expect(
-      new ValidationError({ field, validator: { required: true } }),
-      'to satisfy',
-      {
-        type: 'RequiredError',
-        message: 'Missing required value for field `User.firstName`'
-      }
-    );
-  });
-
   it('allows overriding formatMessage to customize error messages', () => {
     class CustomValidationError extends ValidationError {
       formatMessage({ field }) {

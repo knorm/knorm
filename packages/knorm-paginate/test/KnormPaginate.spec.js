@@ -156,13 +156,6 @@ describe('KnormPaginate', () => {
         });
       });
 
-      describe("with a 'leftJoin' configured", () => {
-        it('resolves with the count of rows matching the join', async () => {
-          const query = new Query(User).leftJoin(new Query(Image));
-          await expect(query.count(), 'to be fulfilled with', 2);
-        });
-      });
-
       describe("with a nested 'leftJoin' configured", () => {
         it('resolves with the count of rows matching the join', async () => {
           const query = new Query(User).leftJoin(
