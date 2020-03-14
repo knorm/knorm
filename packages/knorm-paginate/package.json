@@ -3,12 +3,6 @@
   "version": "2.0.0",
   "description": "Pagination plugin for knorm",
   "main": "index.js",
-  "scripts": {
-    "test": "docker-compose run --rm knorm-paginate",
-    "test:mocha": "mocha --exit --recursive",
-    "coverage": "nyc npm run test:mocha",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
-  },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
@@ -17,9 +11,7 @@
   "devDependencies": {
     "@knorm/knorm": "file:../knorm",
     "@knorm/postgres": "file:../knorm-postgres",
-    "@knorm/relations": "file:../knorm-relations",
-    "mocha": "6.2.0",
-    "nyc": "14.1.1"
+    "@knorm/relations": "file:../knorm-relations"
   },
   "directories": {
     "lib": "lib",

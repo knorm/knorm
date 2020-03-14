@@ -2,7 +2,7 @@
   "all": true,
   "cache": true,
   "include": [
-    "lib",
-    "index.js"
+    "packages/*/index.js",
+    "packages/*/lib"
   ]
 }

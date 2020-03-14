@@ -3,21 +3,10 @@
   "version": "2.1.4",
   "description": "A JavaScript ORM written using ES6 classes",
   "main": "index.js",
-  "scripts": {
-    "test": "docker-compose run --rm knorm",
-    "test:mocha": "mocha --exit --recursive",
-    "coverage": "nyc npm run test:mocha",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls",
-    "todo": "grep -rn -e TODO -e FIXME lib"
-  },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
-  "devDependencies": {
-    "mocha": "6.2.0",
-    "nyc": "14.1.1"
-  },
   "directories": {
-    "doc": "docs",
+    "lib": "lib",
     "test": "test"
   },
   "keywords": [

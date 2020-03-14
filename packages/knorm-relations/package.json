@@ -3,12 +3,6 @@
   "version": "3.0.0",
   "description": "Relations plugin for @knorm/knorm",
   "main": "index.js",
-  "scripts": {
-    "test": "docker-compose run --rm knorm-relations",
-    "test:mocha": "mocha --exit --recursive",
-    "coverage": "nyc npm run test:mocha",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
-  },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
@@ -16,9 +10,7 @@
     "@knorm/postgres": "^2.0.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "file:../knorm",
-    "mocha": "6.2.0",
-    "nyc": "14.1.1"
+    "@knorm/knorm": "file:../knorm"
   },
   "directories": {
     "lib": "lib",

@@ -1,8 +1,0 @@
-{
-  "all": true,
-  "cache": true,
-  "include": [
-    "lib",
-    "index.js"
-  ]
-}

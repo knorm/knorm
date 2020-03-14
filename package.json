@@ -1,11 +1,19 @@
 {
   "name": "knorm",
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
+    "todo": "grep -rn -e TODO -e FIXME .",
     "jsdoc:knorm": "jsdoc2md --files packages/knorm/lib/**/*.js --partial docs/.jsdoc2md/templates/link.hbs --partial docs/.jsdoc2md/templates/body.hbs > docs/api/knorm.md",
     "docs": "npm run jsdoc:knorm && vuepress dev docs",
-    "docs:build": "npm run jsdoc:knorm && vuepress build docs"
+    "docs:build": "npm run jsdoc:knorm && vuepress build docs",
+    "mocha": "mocha --exit --recursive packages/*/test",
+    "nyc": "nyc npm run mocha",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "test": "docker-compose run --rm tests",
+    "coverage": "docker-compose run --rm tests sh -c 'npm run nyc'"
   },
   "devDependencies": {
     "@knorm/knorm": "2.1.4",
@@ -31,7 +39,6 @@
     "lerna": "^3.20.2",
     "lodash": "4.17.15",
     "mocha": "6.2.0",
-    "npm-run-all": "4.1.5",
     "nyc": "14.1.1",
     "pg": "7.12.1",
     "prettier": "1.19.1",

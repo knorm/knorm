@@ -14,10 +14,10 @@ const { KnormPostgresError } = KnormPostgres;
 const host = process.env.PGHOST || '127.0.0.1';
 const connection = {
   host,
-  port: process.env.PGPORT || 5432,
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || '',
-  database: process.env.PGDATABASE || 'postgres'
+  port: 5432,
+  user: 'postgres',
+  password: '',
+  database: 'knorm-postgres'
 };
 
 const knex = makeKnex({

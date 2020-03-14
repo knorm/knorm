@@ -1,12 +1,14 @@
 version: '3'
 services:
   postgres:
-    image: postgres:9.6
+    image: postgres:10
     container_name: knorm
+    volumes:
+      - ./util/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
 
-  knorm:
+  tests:
     build: .
-    command: npm run test:mocha
+    command: npm run mocha
     volumes:
       - .:/usr/src/app
     depends_on:

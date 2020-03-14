@@ -3,20 +3,13 @@
   "version": "1.0.0",
   "description": "Virtuals plugin for @knorm/knorm",
   "main": "index.js",
-  "scripts": {
-    "test": "mocha --exit --recursive",
-    "coverage": "nyc npm test",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
-  },
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
     "@knorm/knorm": "^2.0.0"
   },
   "devDependencies": {
-    "@knorm/knorm": "file:../knorm",
-    "mocha": "6.2.0",
-    "nyc": "14.1.1"
+    "@knorm/knorm": "file:../knorm"
   },
   "directories": {
     "lib": "lib",
