@@ -16,10 +16,14 @@
     "coverage": "docker-compose run --rm tests sh -c 'npm run nyc'"
   },
   "devDependencies": {
-    "@knorm/knorm": "2.1.4",
-    "@knorm/paginate": "file:../knorm-paginate",
-    "@knorm/postgres": "file:../knorm-postgres",
-    "@knorm/relations": "3.0.0",
+    "@knorm/knorm": "file:packages/knorm",
+    "@knorm/paginate": "file:packages/knorm-paginate",
+    "@knorm/postgres": "file:packages/knorm-postgres",
+    "@knorm/relations": "file:packages/knorm-relations",
+    "@knorm/soft-delete": "file:packages/knorm-soft-delete",
+    "@knorm/timestamps": "file:packages/knorm-timestamps",
+    "@knorm/to-json": "file:packages/knorm-to-json",
+    "@knorm/knorm-field-name-to-column-name": "file:packages/knorm-field-name-to-column-name",
     "@semantic-release/changelog": "3.0.4",
     "@semantic-release/git": "7.0.16",
     "@semantic-release/github": "5.4.3",
@@ -50,15 +54,5 @@
     "unexpected-knex": "2.0.0",
     "unexpected-sinon": "10.11.2",
     "vuepress": "1.0.4"
-  },
-  "dependencies": {
-    "@knorm/knorm": "file:packages/knorm",
-    "@knorm/paginate": "file:packages/knorm-paginate",
-    "@knorm/postgres": "file:packages/knorm-postgres",
-    "@knorm/relations": "file:packages/knorm-relations",
-    "@knorm/soft-delete": "file:packages/knorm-soft-delete",
-    "@knorm/timestamps": "file:packages/knorm-timestamps",
-    "@knorm/to-json": "file:packages/knorm-to-json",
-    "@knorm/virtuals": "file:packages/knorm-field-name-to-column-name"
   }
 }
