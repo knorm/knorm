@@ -1,5 +1,7 @@
 {
   "name": "knorm",
+  "description": "This repository contains code for @knorm/knorm and it's plugins",
+  "private": true,
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "scripts": {
