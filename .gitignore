@@ -1,3 +1,5 @@
+# node.js modules
 node_modules
+
+# nyc's coverage output
 .nyc_output
-coverage
