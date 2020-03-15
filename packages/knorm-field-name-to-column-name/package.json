@@ -1,7 +1,7 @@
 {
-  "name": "@knorm/virtuals",
-  "version": "1.0.0",
-  "description": "Virtuals plugin for @knorm/knorm",
+  "name": "@knorm/field-name-to-column-name",
+  "version": "0.0.1",
+  "description": "Plugin for @knorm/knorm that generates column names from field names",
   "main": "index.js",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",

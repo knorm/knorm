@@ -26,7 +26,7 @@
     "@knorm/soft-delete": "file:packages/knorm-soft-delete",
     "@knorm/timestamps": "file:packages/knorm-timestamps",
     "@knorm/to-json": "file:packages/knorm-to-json",
-    "@knorm/knorm-field-name-to-column-name": "file:packages/knorm-field-name-to-column-name",
+    "@knorm/field-name-to-column-name": "file:packages/knorm-field-name-to-column-name",
     "@semantic-release/changelog": "3.0.4",
     "@semantic-release/git": "7.0.16",
     "@semantic-release/github": "5.4.3",
