@@ -19,6 +19,7 @@
     "coverage": "docker-compose run --rm tests sh -c 'npm run nyc'"
   },
   "devDependencies": {
+    "@knorm/field-name-to-column-name": "file:packages/knorm-field-name-to-column-name",
     "@knorm/knorm": "file:packages/knorm",
     "@knorm/paginate": "file:packages/knorm-paginate",
     "@knorm/postgres": "file:packages/knorm-postgres",
@@ -26,7 +27,6 @@
     "@knorm/soft-delete": "file:packages/knorm-soft-delete",
     "@knorm/timestamps": "file:packages/knorm-timestamps",
     "@knorm/to-json": "file:packages/knorm-to-json",
-    "@knorm/field-name-to-column-name": "file:packages/knorm-field-name-to-column-name",
     "@semantic-release/changelog": "3.0.4",
     "@semantic-release/git": "7.0.16",
     "@semantic-release/github": "5.4.3",
