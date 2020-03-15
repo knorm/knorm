@@ -42,13 +42,12 @@ module.exports = {
         text: 'Changelogs',
         items: [
           { text: '@knorm/knorm', link: '/changelogs/knorm.md' },
-          { text: '@knorm/knorm-paginate', link: '/changelogs/knorm-paginate.md' },
-          { text: '@knorm/knorm-postgres', link: '/changelogs/knorm-postgres.md' },
-          { text: '@knorm/knorm-relations', link: '/changelogs/knorm-relations.md' },
-          { text: '@knorm/knorm-to-json', link: '/changelogs/knorm-to-json.md' },
-          { text: '@knorm/knorm', link: '/changelogs/knorm.md' },
-          { text: '@knorm/knorm', link: '/changelogs/knorm.md' },
-          { text: '@knorm/knorm', link: '/changelogs/knorm.md' },
+          { text: '@knorm/postgres', link: '/changelogs/postgres.md' },
+          { text: '@knorm/to-json', link: '/changelogs/to-json.md' },
+          { text: '@knorm/relations', link: '/changelogs/relations.md' },
+          { text: '@knorm/soft-delete', link: '/changelogs/soft-delete.md' },
+          { text: '@knorm/paginate', link: '/changelogs/paginate.md' },
+          { text: '@knorm/timestamps', link: '/changelogs/timestamps.md' }
         ]
       },
       {

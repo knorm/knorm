@@ -29,7 +29,7 @@ server.
   [validation for JSON fields](https://knorm.netlify.com/guides/validation.html#json-validation) (similar to [Mongoose JS](http://mongoosejs.com/))
 * [plugin support](https://knorm.netlify.com/guides/plugins.html)
 * [transactions](https://knorm.netlify.com/guides/transactions.html)
-* [relations](https://knorm-relations.netlify.com) through SQL joins
+* [relations](https://knorm.netlify.com/plugins/relations.html) through SQL joins
 * [field-name to column-name](https://knorm.netlify.com/api.html#new-knorm-config) mapping (e.g. snake-casing)
 * [virtual fields](https://knorm.netlify.com/guides/virtuals.html) with support for `async` getters
 * [value casting](https://knorm.netlify.com/guides/fields.html#value-casting) before save and after fetch
