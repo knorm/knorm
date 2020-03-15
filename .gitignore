@@ -3,3 +3,6 @@ node_modules
 
 # nyc's coverage output
 .nyc_output
+
+# typescript output directories
+packages/*/lib

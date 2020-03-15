@@ -1,4 +1,4 @@
-const KnormPostgres = require('./lib/KnormPostgres');
+const KnormPostgres = require('./KnormPostgres');
 const knormPostgres = config => new KnormPostgres(config);
 
 knormPostgres.KnormPostgres = KnormPostgres;

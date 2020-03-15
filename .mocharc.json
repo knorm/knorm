@@ -1,0 +1,10 @@
+{
+  "exit": true,
+  "extension": [
+    "js"
+  ],
+  "spec": [
+    "packages/**/test/*.spec.js"
+  ],
+  "require": "ts-node/register"
+}

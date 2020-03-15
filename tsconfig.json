@@ -1,0 +1,26 @@
+{
+  "include": [
+    "packages"
+  ],
+  "exclude": [
+    "test",
+    "packages/*/lib",
+    "packages/*/test"
+  ],
+  "compilerOptions": {
+    "allowJs": true,
+    "target": "es2019",
+    "moduleResolution": "node", /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
+    "baseUrl": "./", /* Base directory to resolve non-absolute module names. */
+    "paths": {
+      "@knorm/*": [
+        "packages/*/src"
+      ]
+    },
+    "strict": true, /* Enable all strict type-checking options. */
+    "declaration": true, /* Generates corresponding '.d.ts' file. */
+    "declarationMap": true, /* Generates a sourcemap for each corresponding '.d.ts' file. */
+    "sourceMap": true, /* Generates corresponding '.map' file. */
+    "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
+  }
+}

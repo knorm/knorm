@@ -1,4 +1,4 @@
-const KnormRelations = require('./lib/KnormRelations');
+const KnormRelations = require('./KnormRelations');
 const knormRelations = config => new KnormRelations(config);
 
 knormRelations.KnormRelations = KnormRelations;

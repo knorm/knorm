@@ -2,7 +2,7 @@
   "name": "@knorm/soft-delete",
   "version": "2.0.0",
   "description": "Soft-delete plugin for @knorm/knorm",
-  "main": "index.js",
+  "main": "lib/index.js",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {

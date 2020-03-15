@@ -1,4 +1,4 @@
-const Knorm = require('./lib/Knorm');
+const Knorm = require('./Knorm');
 const knorm = config => new Knorm(config);
 
 knorm.Knorm = Knorm;

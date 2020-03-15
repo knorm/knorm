@@ -2,7 +2,7 @@
   "name": "@knorm/field-name-to-column-name",
   "version": "0.0.1",
   "description": "Plugin for @knorm/knorm that generates column names from field names",
-  "main": "index.js",
+  "main": "lib/index.js",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {

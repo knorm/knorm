@@ -2,7 +2,7 @@
   "name": "@knorm/to-json",
   "version": "2.0.0",
   "description": "toJSON plugin for @knorm/knorm",
-  "main": "index.js",
+  "main": "lib/index.js",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {

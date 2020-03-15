@@ -1,4 +1,4 @@
-const KnormToJSON = require('./lib/KnormToJSON');
+const KnormToJSON = require('./KnormToJSON');
 const knormToJSON = config => new KnormToJSON(config);
 
 knormToJSON.KnormToJSON = KnormToJSON;
