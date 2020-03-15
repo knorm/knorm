@@ -4,7 +4,7 @@ services:
     image: postgres:10
     container_name: knorm
     volumes:
-      - ./util/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+      - ./util/create-databases.sql:/docker-entrypoint-initdb.d/create-databases.sql
 
   tests:
     build: .

@@ -14,7 +14,7 @@ jobs:
         global:
           - PGHOST=127.0.0.1
       before_script:
-        - psql -f util/init-databases.sql -U postgres
+        - psql -f util/create-databases.sql -U postgres
       script:
         - npm run lint
         - npm run coverage
@@ -32,7 +32,7 @@ jobs:
         global:
           - PGHOST=127.0.0.1
       before_script:
-        - psql -f util/init-databases.sql -U postgres
+        - psql -f util/create-databases.sql -U postgres
       script:
         - npm run test:mocha
 
