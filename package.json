@@ -4,9 +4,6 @@
   "private": true,
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
