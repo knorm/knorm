@@ -1,20 +1,23 @@
 language: node_js
 
+os: linux
+dist: xenial # required for postgres 10
+
+env:
+  - PGHOST=127.0.0.1
+
+before_script:
+  - psql -f util/create-databases.sql -U postgres
+
 jobs:
   include:
     - stage: test
       name: 'Node.js 10 / Postgres 10'
-      dist: xenial # required for postgres 10
       node_js: '10'
       services:
         - postgresql
       addons:
         postgresql: '10'
-      env:
-        global:
-          - PGHOST=127.0.0.1
-      before_script:
-        - psql -f util/create-databases.sql -U postgres
       script:
         - npm run lint
         - npm run nyc
@@ -28,11 +31,6 @@ jobs:
         - postgresql
       addons:
         postgresql: '9.6'
-      env:
-        global:
-          - PGHOST=127.0.0.1
-      before_script:
-        - psql -f util/create-databases.sql -U postgres
       script:
         - npm run mocha
 
