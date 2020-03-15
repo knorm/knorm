@@ -35,7 +35,7 @@ Defines how to connect to the database and run queries e.g. via plugins.
         * [.knorm](#Connection+knorm) : [Knorm](#Knorm)
         * [.create()](#Connection+create)
         * [.query(sql)](#Connection+query)
-        * [.close([error])](#Connection+close)
+        * [.close()](#Connection+close)
     * _static_
         * [.ConnectionError](#Connection.ConnectionError)
         * [.knorm](#Connection.knorm) : [Knorm](#Knorm)
@@ -80,12 +80,7 @@ query with the connection created by [create](#Connection+create).
 
 <a name="Connection+close"></a>
 
-### connection.close([error])
-
-| Param | Type | Description |
-| --- | --- | --- |
-| [error] | `QueryError` | If [disconnect](#Query+disconnect) was called with an error, that error is passed as this param. That error will have usually originated from [query](#Query+query). |
-
+### connection.close()
 Called by [disconnect](#Query+disconnect) and [disconnect](#Transaction+disconnect) to
 close the connection created by [create](#Connection+create).
 
@@ -484,14 +479,13 @@ property, just added as a convenience for use in static methods.
 Sets an instance's data.
 
 ::: tip INFO
-- Keys with `undefined` values are skipped.
-- Virtuals with no setters are skipped.
+Keys with `undefined` values are skipped.
 :::
 
 **Returns**: [Model](#Model) - The same model instance  
 **Todo**
 
-- [ ] strict mode: throw if a virtual has no setter
+- [ ] strict mode: for virtues, check if it has a setter
 - [ ] strict mode: check if all fields in the data are valid field names
 
 <a name="Model+insert"></a>
@@ -723,10 +717,6 @@ Deletes a single or multiple rows from the database.
 ## Query
 Creates and runs queries and parses any data returned.
 
-**Todo**
-
-- [ ] use short table alias except in strict/debug mode
-
 
 * [Query](#Query)
     * [new Query(model)](#new_Query_new)
@@ -743,7 +733,7 @@ Creates and runs queries and parses any data returned.
         * [.connect()](#Query+connect) ⇒ `Promise`
         * [.formatSql(sql)](#Query+formatSql) ⇒ `object`
         * [.query(sql)](#Query+query) ⇒ `Promise`
-        * [.disconnect([error])](#Query+disconnect) ⇒ `Promise`
+        * [.disconnect()](#Query+disconnect) ⇒ `Promise`
         * [.insert(data, [options])](#Query+insert) ⇒ `Promise`
         * [.update(data, [options])](#Query+update) ⇒ `Promise`
         * [.save(data, [options])](#Query+save)
@@ -937,39 +927,13 @@ connect to the database, [formatSql](#Query+formatSql) to format the SQL to be
 queried, [query](#Query+query) to run the query against the database, and
 finally, [disconnect](#Query+disconnect) to close the database connection.
 
-::: tip INFO: Usage
+::: tip INFO
 This method is used internally by all [Query](#Query) methods i.e.
 [fetch](#Query+fetch), [insert](#Query+insert), [update](#Query+update) and
 [delete](#Query+delete).
 :::
 
-::: tip INFO: Query errors
-If the promise from [query](#Query+query) is rejected, the [QueryError](QueryError)
-is passed to [disconnect](#Query+disconnect).
-:::
-
-::: tip INFO: Transactions
-When queries are executed in a transaction (that has not yet
-[ended](#Transaction+ended)), this method does not connect to the database
-via [connect](#Query+connect). Instead, it connects via
-[connect](#Transaction+connect). The first query to be executed in the
-transaction causes [connect](#Transaction+connect) and
-[begin](#Transaction+begin) to be run, after which subsequent queries re-use
-the transaction's connection.
-
-In addition, the database connection is not closed after executing the
-query. This is deferred to be handled by [commit](#Transaction+commit) or
-[rollback](#Transaction+rollback).
-
-If [query](#Query+query) rejects with an error, the error is passed to
-[rollback](#Transaction+rollback).
-
-**NOTE:** once the transaction has [ended](#Transaction+ended), connections
-are established and closed as usual, via [connect](#Query+connect) and
-[disconnect](#Query+disconnect).
-:::
-
-::: tip INFO: Multiple queries
+::: tip INFO
 When the `sql` parameter is an array, a single database connection will be
 created but [formatSql](#Query+formatSql) and [query](#Query+query) will be called
 for each item in the array.
@@ -992,6 +956,15 @@ is attached to the error as an `sql` property.
 Connects to the database, via [create](#Connection+create). This method is
 called by [execute](#Query+execute).
 
+::: tip INFO
+When running in a transaction, this method connects to the database via
+[connect](#Transaction+connect). The first query to be executed in the
+transaction runs [connect](#Transaction+connect) and [begin](#Transaction+begin),
+after which subsequent queries re-use the transaction's connection.
+However, once the transaction is [ended](#Transaction+ended), connections are
+made as usual.
+:::
+
 **Returns**: `Promise` - The `Promise` from [create](#Connection+create), that is
 resolved when a connection is established or rejected with a
 [QueryError](QueryError) on error.  
@@ -1003,7 +976,7 @@ resolved when a connection is established or rejected with a
 | --- | --- | --- |
 | sql | `SqlBricks` \| `object` \| `string` | The SQL to be formatted. |
 | sql.text | `string` | The parameterized SQL string (with placeholders), when `sql` is passed as an object. |
-| sql.values | `array` | The values for the parameterized SQL string, when `sql` is passed as an object. ::: tip INFO This method is called internally by [execute](#Query+execute). ::: |
+| sql.values | `array` | The values for the parameterized SQL string, when `sql` is passed as an object. |
 
 Formats SQL before it's sent to the database. This method is called
 by [execute](#Query+execute) and allows manipulating or changing the SQL
@@ -1029,14 +1002,15 @@ resolved with the query result or rejected with a [QueryError](QueryError) on
 error.  
 <a name="Query+disconnect"></a>
 
-### query.disconnect([error]) ⇒ `Promise`
-
-| Param | Type | Description |
-| --- | --- | --- |
-| [error] | `QueryError` | A [QueryError](QueryError) from [query](#Query+query), if one occurred. This error is then passed to [close](#Connection+close). |
-
+### query.disconnect() ⇒ `Promise`
 Closes the database connection after running the query, via
 [close](#Connection+close). This method is called by [execute](#Query+execute).
+
+::: tip INFO
+When running in a transaction, this method does not close the database
+connection.However, if the transaction is [ended](#Transaction+ended),
+connections are closed as usual.
+:::
 
 **Returns**: `Promise` - The `Promise` from [close](#Connection+close), that is
 resolved when the connection is closed or rejected with a
@@ -1327,12 +1301,12 @@ a transaction.
         * [.knorm](#Transaction+knorm) : [Knorm](#Knorm)
         * [.models](#Transaction+models) : `object`
         * [.connect()](#Transaction+connect) ⇒ `Promise`
-        * [.disconnect([error])](#Transaction+disconnect) ⇒ `Promise`
+        * [.disconnect()](#Transaction+disconnect) ⇒ `Promise`
         * [.begin()](#Transaction+begin) ⇒ `Promise`
         * [._begin()](#Transaction+_begin) ⇒ `Promise`
         * [.commit()](#Transaction+commit) ⇒ `Promise`
         * [._commit()](#Transaction+_commit) ⇒ `Promise`
-        * [.rollback([error])](#Transaction+rollback) ⇒ `Promise`
+        * [.rollback()](#Transaction+rollback) ⇒ `Promise`
         * [._rollback()](#Transaction+_rollback) ⇒ `Promise`
         * [.execute()](#Transaction+execute) ⇒ `Promise`
         * [.then()](#Transaction+then) ⇒ `Promise`
@@ -1408,12 +1382,7 @@ resolved when a connection is established or rejected with a
 [TransactionError](TransactionError) on error.  
 <a name="Transaction+disconnect"></a>
 
-### transaction.disconnect([error]) ⇒ `Promise`
-
-| Param | Type | Description |
-| --- | --- | --- |
-| [error] | `QueryError` | The error from [rollback](#Transaction+rollback), if it was called with one. This error is then passed to [close](#Connection+close). |
-
+### transaction.disconnect() ⇒ `Promise`
 Closes the database connection (via [close](#Connection+close)) after
 committing (via [commit](#Transaction+commit)) or rolling back (via
 [rollback](#Transaction+rollback)) a transaction.
@@ -1431,7 +1400,7 @@ connection exists, one is created via [connect](#Transaction+connect).
 or rejected with a [TransactionError](TransactionError) on error.  
 <a name="Transaction+_begin"></a>
 
-### transaction.\_begin() ⇒ `Promise`
+### transaction._begin() ⇒ `Promise`
 Sends a `BEGIN` query (via [query](#Connection+query)) to start a
 transaction. This can be overloaded to send a different query e.g. `START
 TRANSACTION`.
@@ -1451,7 +1420,7 @@ committed and the connection closed or rejected with a
 [TransactionError](TransactionError) on error.  
 <a name="Transaction+_commit"></a>
 
-### transaction.\_commit() ⇒ `Promise`
+### transaction._commit() ⇒ `Promise`
 Sends a `COMMIT` query (via [query](#Connection+query)) to commit a
 transaction. This can be overloaded to send a different query.
 
@@ -1459,12 +1428,7 @@ transaction. This can be overloaded to send a different query.
 resolved with the query result.  
 <a name="Transaction+rollback"></a>
 
-### transaction.rollback([error]) ⇒ `Promise`
-
-| Param | Type | Description |
-| --- | --- | --- |
-| [error] | `QueryError` | A [QueryError](QueryError) from [query](#Query+query), or a [TransactionError](TransactionError) from [commit](#Transaction+commit) or [rollback](#Transaction+rollback), if one occurs when those methods are run. This error is then passed to [disconnect](#Transaction+disconnect) and finally to [close](#Connection+close). |
-
+### transaction.rollback() ⇒ `Promise`
 Rolls back a transaction, via [_rollback](#Transaction+_rollback) and afterwards
 closes the database connection, via [disconnect](#Transaction+disconnect).
 
@@ -1473,7 +1437,7 @@ rolled back and the connection closed or rejected with a
 [TransactionError](TransactionError) on error.  
 <a name="Transaction+_rollback"></a>
 
-### transaction.\_rollback() ⇒ `Promise`
+### transaction._rollback() ⇒ `Promise`
 Sends a `ROLLBACK` query (via [query](#Connection+query)) to roll back a
 transaction. This can be overloaded to send a different query.
 

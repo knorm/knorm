@@ -1,0 +1,1 @@
+../../packages/knorm-postgres/CHANGELOG.md
