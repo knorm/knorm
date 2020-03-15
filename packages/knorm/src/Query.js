@@ -1287,8 +1287,12 @@ module.exports = Query;
 
 // circular deps
 const Model = require('./Model');
+const Where = require('./Where');
 
-Query.Where = require('./Where');
+Where.prototype.sql = sqlBricks;
+Query.prototype.sql = sqlBricks;
+
+Query.Where = Where;
 
 /**
  * A reference to {@link Connection}, for use within {@link Query}.
@@ -1312,7 +1316,6 @@ Query.Connection = require('./Connection');
  * @returns {Query} The same {@link Query} instance to allow chaining.
  */
 Query.prototype.field = Query.prototype.fields;
-Query.prototype.sql = Query.Where.prototype.sql = sqlBricks;
 
 /**
  * The base error that all errors thrown by {@link Query} inherit from.
