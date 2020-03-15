@@ -1,8 +1,9 @@
 {
-  "name": "@knorm/soft-delete",
+  "name": "@knorm/timestamps",
   "version": "2.0.0",
-  "description": "Soft-delete plugin for @knorm/knorm",
+  "description": "Timestamps plugin for @knorm/knorm",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
@@ -18,14 +19,14 @@
   "keywords": [
     "knorm",
     "plugin",
-    "soft-delete"
+    "timestamps"
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/knorm/soft-delete.git"
+    "url": "git+ssh://git@github.com/knorm/timestamps.git"
   },
   "bugs": {
-    "url": "https://github.com/knorm/soft-delete/issues"
+    "url": "https://github.com/knorm/timestamps/issues"
   },
-  "homepage": "https://github.com/knorm/soft-delete#readme"
+  "homepage": "https://github.com/knorm/timestamps#readme"
 }

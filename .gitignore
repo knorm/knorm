@@ -4,5 +4,7 @@ node_modules
 # nyc's coverage output
 .nyc_output
 
-# typescript output directories
+# typescript' output directories
 packages/*/lib
+# typescript' build files
+tsconfig.tsbuildinfo

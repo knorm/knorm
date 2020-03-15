@@ -4,7 +4,10 @@
     "js"
   ],
   "spec": [
-    "packages/**/test/*.spec.js"
+    "packages/*/test/*.spec.js"
   ],
-  "require": "ts-node/register"
+  "require": [
+    "tsconfig-paths/register",
+    "ts-node/register"
+  ]
 }

@@ -3,6 +3,7 @@
   "version": "2.0.5",
   "description": "Postgres plugin for knorm",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
@@ -11,7 +12,7 @@
   },
   "devDependencies": {
     "@knorm/knorm": "file:../knorm",
-    "@knorm/relations": "file:../knorm-relations"
+    "@knorm/relations": "file:../relations"
   },
   "directories": {
     "lib": "lib",

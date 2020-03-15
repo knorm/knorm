@@ -4,11 +4,6 @@
     "src"
   ],
   "compilerOptions": {
-    "outDir": "lib",
-    "paths": {
-      "@knorm/*": [
-        "node_modules/@knorm/*/src"
-      ]
-    }
+    "outDir": "lib"
   }
 }

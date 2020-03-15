@@ -1,8 +1,9 @@
 {
-  "name": "@knorm/to-json",
-  "version": "2.0.0",
-  "description": "toJSON plugin for @knorm/knorm",
+  "name": "@knorm/field-name-to-column-name",
+  "version": "0.0.1",
+  "description": "Plugin for @knorm/knorm that generates column names from field names",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
@@ -18,15 +19,14 @@
   "keywords": [
     "knorm",
     "plugin",
-    "to-json",
-    "toJSON"
+    "virtuals"
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/knorm/to-json.git"
+    "url": "git+ssh://git@github.com/knorm/virtuals.git"
   },
   "bugs": {
-    "url": "https://github.com/knorm/to-json/issues"
+    "url": "https://github.com/knorm/virtuals/issues"
   },
-  "homepage": "https://github.com/knorm/to-json#readme"
+  "homepage": "https://github.com/knorm/virtuals#readme"
 }

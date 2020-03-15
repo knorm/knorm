@@ -1,8 +1,9 @@
 {
-  "name": "@knorm/timestamps",
+  "name": "@knorm/to-json",
   "version": "2.0.0",
-  "description": "Timestamps plugin for @knorm/knorm",
+  "description": "toJSON plugin for @knorm/knorm",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
@@ -18,14 +19,15 @@
   "keywords": [
     "knorm",
     "plugin",
-    "timestamps"
+    "to-json",
+    "toJSON"
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/knorm/timestamps.git"
+    "url": "git+ssh://git@github.com/knorm/to-json.git"
   },
   "bugs": {
-    "url": "https://github.com/knorm/timestamps/issues"
+    "url": "https://github.com/knorm/to-json/issues"
   },
-  "homepage": "https://github.com/knorm/timestamps#readme"
+  "homepage": "https://github.com/knorm/to-json#readme"
 }
