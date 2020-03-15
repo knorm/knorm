@@ -1,8 +1,8 @@
 const knorm = require('@knorm/knorm');
 const knormRelations = require('@knorm/relations');
 const { Client } = require('pg');
-const KnormPostgres = require('../lib/KnormPostgres');
-const knormPostgres = require('../');
+const KnormPostgres = require('../src/KnormPostgres');
+const knormPostgres = require('../src/');
 const makeKnex = require('knex');
 const sinon = require('sinon');
 const expect = require('unexpected')

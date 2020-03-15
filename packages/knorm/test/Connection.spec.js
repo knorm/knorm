@@ -1,4 +1,4 @@
-const Knorm = require('../lib/Knorm');
+const Knorm = require('../src/Knorm');
 const expect = require('unexpected').clone();
 
 describe('Connection', function() {

@@ -1,8 +1,8 @@
 const knorm = require('@knorm/knorm');
 const knormPostgres = require('@knorm/postgres');
 const knex = require('./lib/knex');
-const KnormTimestamps = require('../lib/KnormTimestamps');
-const knormTimestamps = require('../');
+const KnormTimestamps = require('../src/KnormTimestamps');
+const knormTimestamps = require('../src/');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()

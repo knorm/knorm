@@ -1,6 +1,6 @@
 const knorm = require('@knorm/knorm');
-const KnormToJSON = require('../lib/KnormToJSON');
-const knormToJSON = require('../');
+const KnormToJSON = require('../src/KnormToJSON');
+const knormToJSON = require('../src/');
 const expect = require('unexpected').clone();
 
 const { KnormToJSONError } = KnormToJSON;

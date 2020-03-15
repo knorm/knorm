@@ -1,5 +1,5 @@
 const uuid = require('uuid');
-const Knorm = require('../lib/Knorm');
+const Knorm = require('../src/Knorm');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()

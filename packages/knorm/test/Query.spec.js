@@ -1,5 +1,5 @@
 const { snakeCase: fieldToColumn } = require('lodash');
-const Knorm = require('../lib/Knorm');
+const Knorm = require('../src/Knorm');
 const knex = require('./lib/knex');
 const postgresPlugin = require('./lib/postgresPlugin');
 const sinon = require('sinon');

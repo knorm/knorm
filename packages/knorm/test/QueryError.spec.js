@@ -1,7 +1,7 @@
 const expect = require('unexpected').clone();
-const QueryError = require('../lib/QueryError');
-const KnormError = require('../lib/KnormError');
-const Knorm = require('../lib/Knorm');
+const QueryError = require('../src/QueryError');
+const KnormError = require('../src/KnormError');
+const Knorm = require('../src/Knorm');
 
 const { Query, Model } = new Knorm();
 class User extends Model {}

@@ -6,9 +6,6 @@
   "types": "lib/index.d.ts",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
-  "scripts": {
-    "prepublish": "tsc"
-  },
   "directories": {
     "src": "src",
     "lib": "lib",

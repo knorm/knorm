@@ -1,8 +1,8 @@
 const { snakeCase: fieldToColumn } = require('lodash');
 const knorm = require('@knorm/knorm');
 const knormPostgres = require('@knorm/postgres');
-const KnormRelations = require('../lib/KnormRelations');
-const knormRelations = require('../');
+const KnormRelations = require('../src/KnormRelations');
+const knormRelations = require('../src/');
 const knex = require('./lib/knex');
 const sinon = require('sinon');
 const expect = require('unexpected')

@@ -1,5 +1,5 @@
-const Virtual = require('../lib/Virtual');
-const Model = require('../lib/Model');
+const Virtual = require('../src/Virtual');
+const Model = require('../src/Model');
 const expect = require('unexpected')
   .clone()
   .use(require('./lib/unexpected-workaround'));

@@ -2,13 +2,13 @@ const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'));
-const Knorm = require('../lib/Knorm');
-const KnormError = require('../lib/KnormError');
-const Field = require('../lib/Field');
-const Model = require('../lib/Model');
-const Query = require('../lib/Query');
-const Connection = require('../lib/Connection');
-const Transaction = require('../lib/Transaction');
+const Knorm = require('../src/Knorm');
+const KnormError = require('../src/KnormError');
+const Field = require('../src/Field');
+const Model = require('../src/Model');
+const Query = require('../src/Query');
+const Connection = require('../src/Connection');
+const Transaction = require('../src/Transaction');
 
 describe('Knorm', () => {
   it('exposes Field, Model, Query, Transaction as statics', () => {

@@ -1,5 +1,5 @@
 const expect = require('unexpected').clone();
-const KnormError = require('../lib/KnormError');
+const KnormError = require('../src/KnormError');
 
 describe('KnormError', () => {
   it('extends Error', () => {

@@ -1,8 +1,8 @@
 const expect = require('unexpected').clone();
-const ValidationError = require('../lib/ValidationError');
-const KnormError = require('../lib/KnormError');
-const AbstractModel = require('../lib/Model');
-const AbstractField = require('../lib/Field');
+const ValidationError = require('../src/ValidationError');
+const KnormError = require('../src/KnormError');
+const AbstractModel = require('../src/Model');
+const AbstractField = require('../src/Field');
 
 class Field extends AbstractField {}
 
