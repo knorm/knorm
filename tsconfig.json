@@ -10,15 +10,19 @@
   "compilerOptions": {
     "allowJs": true,
     "target": "es2019",
-    "baseUrl": ".", /* Base directory to resolve non-absolute module names. */
+    // base directory to resolve non-absolute module names:
+    "baseUrl": ".",
     "paths": {
-      // map imports for @knorm/* directly to the src files in the packages/ directory
+      // map imports for @knorm/* directly to the src files in packages/:
       "@knorm/*": [
         "packages/*/src"
       ]
     },
-    "strict": true, /* Enable all strict type-checking options. */
-    "declaration": true, /* Generates corresponding '.d.ts' file. */
-    "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
+    // enable all strict type-checking options:
+    "strict": true,
+    // generate *.d.ts files:
+    "declaration": true,
+    // disallow inconsistently-cased references to the same file:
+    "forceConsistentCasingInFileNames": true
   }
 }
