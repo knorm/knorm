@@ -1,0 +1,7 @@
+{
+  "inputFiles": [
+    "./src"
+  ],
+  "theme": "default",
+  "mode": "modules"
+}

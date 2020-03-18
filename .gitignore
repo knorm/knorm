@@ -6,5 +6,9 @@ node_modules
 
 # typescript' output directories
 packages/*/lib
+
 # typescript' build files
 tsconfig.tsbuildinfo
+
+# typedoc output directories
+packages/*/docs
