@@ -10,9 +10,6 @@
     "@knorm/knorm": "^2.0.0",
     "@knorm/postgres": "^2.0.0"
   },
-  "devDependencies": {
-    "@knorm/knorm": "file:../knorm"
-  },
   "directories": {
     "lib": "lib",
     "test": "test"
