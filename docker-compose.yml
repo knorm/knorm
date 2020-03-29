@@ -3,6 +3,8 @@ services:
   postgres:
     image: postgres:10
     container_name: knorm
+    environment:
+      POSTGRES_PASSWORD: postgres
     volumes:
       - ./util/create-databases.sql:/docker-entrypoint-initdb.d/create-databases.sql
 
@@ -13,5 +15,3 @@ services:
       - .:/usr/src/app
     depends_on:
       - postgres
-    environment:
-      PGHOST: postgres

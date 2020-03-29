@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, v* ]
+  pull_request:
+    branches: [ master, v* ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:9.6-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    container:
+      image: node:10-alpine
+
+    steps:
+      - name: Install psql
+        run: apk update && apk add postgresql-client
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create test databases
+        run: psql -Atx postgres://postgres:postgres@postgres/postgres -f util/create-databases.sql
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Run tests
+        run: yarn mocha
