@@ -16,8 +16,20 @@ module.exports = {
       links: [
         {
           to: 'docs/getting-started/introduction',
-          activeBasePath: 'docs',
-          label: 'Docs',
+          activeBasePath: 'docs/getting-started',
+          label: 'Getting started',
+          position: 'left'
+        },
+        {
+          to: 'docs/guides/models',
+          activeBasePath: 'docs/guides',
+          label: 'Guides',
+          position: 'left'
+        },
+        {
+          to: 'docs/plugins/postgres',
+          activeBasePath: 'docs/plugins',
+          label: 'Plugins',
           position: 'left'
         },
         {
@@ -34,7 +46,7 @@ module.exports = {
     },
     footer: {
       style: 'dark',
-      copyright: `Copyright © 2017-${new Date().getFullYear()} Joel Mukuthu. Built with Docusaurus.`
+      copyright: `Copyright © 2017-${new Date().getFullYear()} Joel Mukuthu. Docs built with Docusaurus.`
     }
   },
   presets: [

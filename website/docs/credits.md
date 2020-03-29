@@ -1,10 +1,6 @@
 ---
-id: credits
 title: Credits
-sidebar_label: Credits
 ---
-
-# Credits
 
 Knorm was originally inspired by the [Mongoose JS](http://mongoosejs.com/) and
 [Bookshelf.js](http://bookshelfjs.org/) APIs.
