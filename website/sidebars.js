@@ -18,6 +18,18 @@ module.exports = {
         'guides/plugins',
         'guides/debugging'
       ]
+    },
+    {
+      type: 'category',
+      label: 'Plugins',
+      items: [
+        'plugins/postgres',
+        'plugins/to-json',
+        'plugins/relations',
+        'plugins/soft-delete',
+        'plugins/paginate',
+        'plugins/timestamps'
+      ]
     }
   ]
 };

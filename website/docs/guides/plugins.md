@@ -21,18 +21,18 @@ const { Model, Query } = knorm({
 );
 ```
 
-> see [@knorm/relations](/plugins/relations.md) for this plugin's documentation
+> see [@knorm/relations](plugins/relations.md) for this plugin's documentation
 
 ## Available plugins
 
 | Plugin                                        | Description                          |
 | --------------------------------------------- | ------------------------------------ |
-| [@knorm/postgres](/plugins/postgres.md)       | enables connecting to postgres       |
-| [@knorm/to-json](/plugins/to-json.md)         | adds a `toJSON` method to Model      |
-| [@knorm/relations](/plugins/relations.md)     | enables SQL joins                    |
-| [@knorm/soft-delete](/plugins/soft-delete.md) | enables soft-deletion                |
-| [@knorm/paginate](/plugins/paginate.md)       | enables counting and paginating rows |
-| [@knorm/timestamps](/plugins/timestamps.md)   | enables timestamps                   |
+| [@knorm/postgres](plugins/postgres.md)       | enables connecting to postgres       |
+| [@knorm/to-json](plugins/to-json.md)         | adds a `toJSON` method to Model      |
+| [@knorm/relations](plugins/relations.md)     | enables SQL joins                    |
+| [@knorm/soft-delete](plugins/soft-delete.md) | enables soft-deletion                |
+| [@knorm/paginate](plugins/paginate.md)       | enables counting and paginating rows |
+| [@knorm/timestamps](plugins/timestamps.md)   | enables timestamps                   |
 
 ## Creating custom plugins
 
