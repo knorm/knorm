@@ -6,10 +6,16 @@
   "types": "lib/index.d.ts",
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
+  "files": [
+    "lib"
+  ],
   "directories": {
-    "src": "src",
-    "lib": "lib",
-    "test": "test"
+    "lib": "lib"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "yarn clean && yarn build"
   },
   "keywords": [
     "orm",
