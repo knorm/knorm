@@ -3,8 +3,7 @@ const Knorm = require('../src/Knorm');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
-  .use(require('unexpected-sinon'))
-  .use(require('./lib/unexpected-workaround'));
+  .use(require('unexpected-sinon'));
 
 describe('Field', function() {
   let Model;
@@ -210,15 +209,12 @@ describe('Field', function() {
             'to satisfy',
             {
               validators: {
-                shape: expect.it(
-                  'to be field',
-                  new Field({
-                    name: 'json',
-                    path: 'json',
-                    model: Foo,
-                    type: 'string'
-                  })
-                )
+                shape: new Field({
+                  name: 'json',
+                  path: 'json',
+                  model: Foo,
+                  type: 'string'
+                })
               }
             }
           );
@@ -266,15 +262,12 @@ describe('Field', function() {
             {
               validators: {
                 shape: {
-                  foo: expect.it(
-                    'to be field',
-                    new Field({
-                      name: 'foo',
-                      path: 'json.foo',
-                      model: Foo,
-                      type: 'string'
-                    })
-                  )
+                  foo: new Field({
+                    name: 'foo',
+                    path: 'json.foo',
+                    model: Foo,
+                    type: 'string'
+                  })
                 }
               }
             }

@@ -1,8 +1,6 @@
 const Virtual = require('../src/Virtual');
 const Model = require('../src/Model');
-const expect = require('unexpected')
-  .clone()
-  .use(require('./lib/unexpected-workaround'));
+const expect = require('unexpected').clone();
 
 describe('Virtual', function() {
   describe('constructor', function() {

@@ -6,8 +6,7 @@ const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'))
-  .use(require('./lib/unexpected-workaround'));
+  .use(require('unexpected-knex'));
 
 describe('Model', () => {
   let Model;
@@ -1462,14 +1461,11 @@ describe('Model', () => {
         };
 
         expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
+          firstName: new Field({
+            name: 'firstName',
+            model: User,
+            type: 'string'
+          })
         });
       });
     });
@@ -1484,14 +1480,11 @@ describe('Model', () => {
         };
 
         expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
+          firstName: new Field({
+            name: 'firstName',
+            model: User,
+            type: 'string'
+          })
         });
       });
 
@@ -1500,14 +1493,11 @@ describe('Model', () => {
         User.fields = { firstName: 'string' };
 
         expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
+          firstName: new Field({
+            name: 'firstName',
+            model: User,
+            type: 'string'
+          })
         });
       });
 
@@ -1561,14 +1551,11 @@ describe('Model', () => {
           };
 
           expect(User.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: User,
-                type: 'string'
-              })
-            )
+            id: new Field({
+              name: 'id',
+              model: User,
+              type: 'string'
+            })
           });
 
           class OtherUser extends User {}
@@ -1579,14 +1566,11 @@ describe('Model', () => {
           };
 
           expect(OtherUser.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: OtherUser,
-                type: 'text'
-              })
-            )
+            id: new Field({
+              name: 'id',
+              model: OtherUser,
+              type: 'text'
+            })
           });
         });
 
@@ -1620,14 +1604,11 @@ describe('Model', () => {
           };
 
           expect(User.fields, 'to satisfy', {
-            firstName: expect.it(
-              'to be field',
-              new Field({
-                name: 'firstName',
-                model: User,
-                type: 'string'
-              })
-            )
+            firstName: new Field({
+              name: 'firstName',
+              model: User,
+              type: 'string'
+            })
           });
 
           class Student extends User {}
@@ -1638,14 +1619,11 @@ describe('Model', () => {
           };
 
           expect(Student.fields, 'to satisfy', {
-            firstName: expect.it(
-              'to be field',
-              new Field({
-                name: 'firstName',
-                model: Student,
-                type: 'string'
-              })
-            )
+            firstName: new Field({
+              name: 'firstName',
+              model: Student,
+              type: 'string'
+            })
           });
         });
 
@@ -1660,15 +1638,12 @@ describe('Model', () => {
           };
 
           expect(User.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: User,
-                required: true,
-                type: 'integer'
-              })
-            )
+            id: new Field({
+              name: 'id',
+              model: User,
+              required: true,
+              type: 'integer'
+            })
           });
 
           class OtherUser extends User {}
@@ -1679,34 +1654,25 @@ describe('Model', () => {
           };
 
           expect(User.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: User,
-                required: true,
-                type: 'integer'
-              })
-            )
+            id: new Field({
+              name: 'id',
+              model: User,
+              required: true,
+              type: 'integer'
+            })
           });
           expect(OtherUser.fields, 'to exhaustively satisfy', {
-            id: expect.it(
-              'to be field',
-              new Field({
-                name: 'id',
-                model: OtherUser,
-                required: true,
-                type: 'integer'
-              })
-            ),
-            firstName: expect.it(
-              'to be field',
-              new Field({
-                name: 'firstName',
-                model: OtherUser,
-                type: 'string'
-              })
-            )
+            id: new Field({
+              name: 'id',
+              model: OtherUser,
+              required: true,
+              type: 'integer'
+            }),
+            firstName: new Field({
+              name: 'firstName',
+              model: OtherUser,
+              type: 'string'
+            })
           });
         });
       });
@@ -1776,14 +1742,11 @@ describe('Model', () => {
 
       it('returns fields added via the `Model.config` setter', () => {
         expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
+          firstName: new Field({
+            name: 'firstName',
+            model: User,
+            type: 'string'
+          })
         });
       });
 
@@ -1796,33 +1759,24 @@ describe('Model', () => {
         }
 
         expect(User.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: User,
-              type: 'string'
-            })
-          )
+          firstName: new Field({
+            name: 'firstName',
+            model: User,
+            type: 'string'
+          })
         });
 
         expect(Student.fields, 'to exhaustively satisfy', {
-          firstName: expect.it(
-            'to be field',
-            new Field({
-              name: 'firstName',
-              model: Student,
-              type: 'string'
-            })
-          ),
-          studentId: expect.it(
-            'to be field',
-            new Field({
-              name: 'studentId',
-              model: Student,
-              type: 'integer'
-            })
-          )
+          firstName: new Field({
+            name: 'firstName',
+            model: Student,
+            type: 'string'
+          }),
+          studentId: new Field({
+            name: 'studentId',
+            model: Student,
+            type: 'integer'
+          })
         });
       });
     });
@@ -1845,8 +1799,8 @@ describe('Model', () => {
             name: 'firstName',
             model: User,
             descriptor: {
-              get() {},
-              set() {}
+              get: expect.it('to be a function'),
+              set: expect.it('to be a function')
             }
           })
         });
@@ -1908,9 +1862,7 @@ describe('Model', () => {
               name: 'firstName',
               model: User,
               descriptor: {
-                get() {
-                  return 'foo';
-                }
+                get: expect.it('to be a function')
               }
             })
           });
@@ -1929,9 +1881,7 @@ describe('Model', () => {
               name: 'firstName',
               model: OtherUser,
               descriptor: {
-                get() {
-                  return 'bar';
-                }
+                get: expect.it('to be a function')
               }
             })
           });
@@ -1952,9 +1902,7 @@ describe('Model', () => {
               name: 'firstName',
               model: User,
               descriptor: {
-                get() {
-                  return 'foo';
-                }
+                get: expect.it('to be a function')
               }
             })
           });
@@ -1973,9 +1921,7 @@ describe('Model', () => {
               name: 'firstName',
               model: Student,
               descriptor: {
-                get() {
-                  return 'foo';
-                }
+                get: expect.it('to be a function')
               }
             })
           });
@@ -1997,9 +1943,7 @@ describe('Model', () => {
               name: 'firstName',
               model: User,
               descriptor: {
-                get() {
-                  return 'foo';
-                }
+                get: expect.it('to be a function')
               }
             })
           });
@@ -2018,9 +1962,7 @@ describe('Model', () => {
               name: 'firstName',
               model: User,
               descriptor: {
-                get() {
-                  return 'foo';
-                }
+                get: expect.it('to be a function')
               }
             })
           });
@@ -2029,18 +1971,14 @@ describe('Model', () => {
               name: 'firstName',
               model: OtherUser,
               descriptor: {
-                get() {
-                  return 'foo';
-                }
+                get: expect.it('to be a function')
               }
             }),
             lastName: new Virtual({
               name: 'lastName',
               model: OtherUser,
               descriptor: {
-                get() {
-                  return 'bar';
-                }
+                get: expect.it('to be a function')
               }
             })
           });
@@ -2065,9 +2003,7 @@ describe('Model', () => {
             name: 'firstName',
             model: User,
             descriptor: {
-              get() {
-                return 'foo';
-              }
+              get: expect.it('to be a function')
             }
           })
         });
@@ -2414,7 +2350,7 @@ describe('Model', () => {
         User.query;
         expect(User.Query, 'to have calls satisfying', () => {
           // eslint-disable-next-line no-new
-          new User.Query(expect.it('to be model class', User));
+          new User.Query(User);
         });
         spy.restore();
       });
