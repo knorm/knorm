@@ -19,10 +19,10 @@ jobs:
       addons:
         postgresql: '10'
       script:
-        - npm run lint
-        - npm run nyc
+        - yarn lint
+        - yarn nyc
       after_success:
-        - npm run coveralls
+        - yarn coveralls
 
     - stage: test
       name: 'Node.js 8 / Postgres 9'
@@ -32,7 +32,7 @@ jobs:
       addons:
         postgresql: '9.6'
       script:
-        - npm run mocha
+        - yarn mocha
 
     # - stage: release
     #   node_js: '10'

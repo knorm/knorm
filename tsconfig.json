@@ -8,6 +8,14 @@
     "allowJs": true,
     // compile for ES6
     "target": "ES6",
+    // base directory to resolve "paths" from
+    "baseUrl": ".",
+    // import @knorm/* packages directly from source
+    "paths": {
+      "@knorm/*": [
+        "packages/*/src"
+      ]
+    },
     // resolve modules the way Node.js does it
     "moduleResolution": "node",
     // enable noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply,

@@ -8,7 +8,7 @@ services:
 
   tests:
     build: .
-    command: npm run mocha
+    command: yarn mocha
     volumes:
       - .:/usr/src/app
     depends_on:
