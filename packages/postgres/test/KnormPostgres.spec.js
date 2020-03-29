@@ -3,7 +3,7 @@ const knormRelations = require('@knorm/relations');
 const { Client } = require('pg');
 const KnormPostgres = require('../src/KnormPostgres');
 const knormPostgres = require('../src/');
-const makeKnex = require('knex');
+const createKnex = require('../../../util/create-knex');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
@@ -11,19 +11,10 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'));
 
 const { KnormPostgresError } = KnormPostgres;
-const host = process.env.PGHOST;
-const connection = {
-  host,
-  port: 5432,
-  user: 'postgres',
-  password: '',
-  database: 'knorm-postgres'
-};
 
-const knex = makeKnex({
-  client: 'pg',
-  connection
-});
+const knex = createKnex('knorm-postgres');
+const connection = knex.client.config.connection;
+const host = connection.host;
 
 describe('KnormPostgres', () => {
   before(async () =>

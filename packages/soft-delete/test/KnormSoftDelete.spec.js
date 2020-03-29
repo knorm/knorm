@@ -4,7 +4,7 @@ const knormPostgres = require('@knorm/postgres');
 const KnormSoftDelete = require('../src/KnormSoftDelete');
 const knormSoftDelete = require('../src/');
 const sinon = require('sinon');
-const knex = require('./lib/knex');
+const createKnex = require('../../../util/create-knex');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
@@ -14,6 +14,7 @@ const {
   Knorm: { Query: KnormQuery }
 } = knorm;
 const { KnormSoftDeleteError } = KnormSoftDelete;
+const knex = createKnex('knorm-soft-delete');
 
 describe('KnormSoftDelete', () => {
   describe('init', () => {

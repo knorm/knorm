@@ -3,14 +3,15 @@ const knormPostgres = require('@knorm/postgres');
 const knormRelations = require('@knorm/relations');
 const KnormPaginate = require('../src/KnormPaginate');
 const knormPaginate = require('../src/');
+const createKnex = require('../../../util/create-knex');
 const sinon = require('sinon');
-const knex = require('./lib/knex');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-sinon'))
   .use(require('unexpected-knex'));
 
 const { KnormPaginateError } = KnormPaginate;
+const knex = createKnex('knorm-paginate');
 
 describe('KnormPaginate', () => {
   let Query;

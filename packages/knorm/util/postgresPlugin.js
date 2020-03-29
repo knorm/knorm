@@ -1,9 +1,10 @@
 const { Pool } = require('pg');
-const knex = require('./knex');
 const sqlBricksPostgres = require('sql-bricks-postgres');
+const knex = require('./knex');
 
 const pool = new Pool(
-  // a test in Transaction.spec.js depends on idleTimeoutMillis being 10
+  // a test in packages/knorm/test/Transaction.spec.js depends on
+  // idleTimeoutMillis being 10
   Object.assign({ idleTimeoutMillis: 10 }, knex.client.config.connection)
 );
 

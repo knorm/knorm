@@ -3,7 +3,7 @@ const knorm = require('@knorm/knorm');
 const knormPostgres = require('@knorm/postgres');
 const KnormRelations = require('../src/KnormRelations');
 const knormRelations = require('../src/');
-const knex = require('./lib/knex');
+const createKnex = require('../../../util/create-knex');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
@@ -11,6 +11,7 @@ const expect = require('unexpected')
   .use(require('unexpected-sinon'));
 
 const { KnormRelationsError } = KnormRelations;
+const knex = createKnex('knorm-relations');
 
 describe('KnormRelations', () => {
   let Query;

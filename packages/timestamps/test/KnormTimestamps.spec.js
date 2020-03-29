@@ -1,14 +1,15 @@
 const knorm = require('@knorm/knorm');
 const knormPostgres = require('@knorm/postgres');
-const knex = require('./lib/knex');
 const KnormTimestamps = require('../src/KnormTimestamps');
 const knormTimestamps = require('../src/');
+const createKnex = require('../../../util/create-knex');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
   .use(require('unexpected-knex'));
 
 const { KnormTimestampsError } = KnormTimestamps;
+const knex = createKnex('knorm-timestamps');
 
 describe('KnormTimestamps', () => {
   describe('init', () => {

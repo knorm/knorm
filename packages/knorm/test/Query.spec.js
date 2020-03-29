@@ -1,7 +1,7 @@
 const { snakeCase: fieldToColumn } = require('lodash');
 const Knorm = require('../src/Knorm');
-const knex = require('./lib/knex');
-const postgresPlugin = require('./lib/postgresPlugin');
+const knex = require('../util/knex');
+const postgresPlugin = require('../util/postgresPlugin');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()

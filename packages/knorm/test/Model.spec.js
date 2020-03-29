@@ -1,7 +1,7 @@
 const Knorm = require('../src/Knorm');
 const Virtual = require('../src/Virtual');
-const postgresPlugin = require('./lib/postgresPlugin');
-const knex = require('./lib/knex');
+const knex = require('../util/knex');
+const postgresPlugin = require('../util/postgresPlugin');
 const sinon = require('sinon');
 const expect = require('unexpected')
   .clone()
