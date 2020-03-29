@@ -17,7 +17,7 @@ describe('NoRowsError', () => {
     class SomethingWrongError extends NoRowsError {}
 
     expect(new SomethingWrongError({ query: new Query(User) }), 'to satisfy', {
-      message: 'User: something wrong'
+      message: 'User: something wrong',
     });
   });
 });

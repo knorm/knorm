@@ -28,7 +28,7 @@ describe('KnormPostgres', () => {
 
   it('supports passing `connection` config as a string', async () => {
     const knormPostgres = new KnormPostgres({
-      connection: `postgres://postgres@${host}:5432/postgres`
+      connection: `postgres://postgres@${host}:5432/postgres`,
     });
     await expect(
       knormPostgres.pool.connect(),
@@ -43,7 +43,7 @@ describe('KnormPostgres', () => {
 
   it('supports options in the connection string', async () => {
     const knormPostgres = new KnormPostgres({
-      connection: `postgres://postgres@${host}:5432/postgres?max=5`
+      connection: `postgres://postgres@${host}:5432/postgres?max=5`,
     });
 
     // TODO: pg-connection-string should parseInt on the `max` option
@@ -126,7 +126,7 @@ describe('KnormPostgres', () => {
       expect(value.length, 'to be', 256);
       await expect(field.validate(value), 'to be rejected with', {
         name: 'ValidationError',
-        type: 'MaxLengthError'
+        type: 'MaxLengthError',
       });
     });
 
@@ -181,8 +181,8 @@ describe('KnormPostgres', () => {
               cast: {
                 forSave() {
                   return 'foo';
-                }
-              }
+                },
+              },
             });
             expect(
               field.cast({ foo: 'bar' }, null, { forSave: true }),
@@ -197,7 +197,7 @@ describe('KnormPostgres', () => {
               name: 'foo',
               model: Model,
               type: 'json',
-              cast: { forSave }
+              cast: { forSave },
             });
             const instance = { model: 'instance' };
             field.cast({ foo: 'bar' }, instance, { forSave: true });
@@ -212,7 +212,7 @@ describe('KnormPostgres', () => {
               name: 'foo',
               model: Model,
               type: 'json',
-              cast: { forSave }
+              cast: { forSave },
             });
             field.cast(sql('foo'), 'a model instance', { forSave: true });
             expect(forSave, 'to have calls satisfying', () =>
@@ -240,8 +240,8 @@ describe('KnormPostgres', () => {
               cast: {
                 forFetch() {
                   return 'foo';
-                }
-              }
+                },
+              },
             });
             expect(
               field.cast({ foo: 'bar' }, null, { forFetch: true }),
@@ -256,7 +256,7 @@ describe('KnormPostgres', () => {
               name: 'foo',
               model: Model,
               type: 'json',
-              cast: { forFetch }
+              cast: { forFetch },
             });
             const instance = { model: 'instace' };
             field.cast({ foo: 'bar' }, instance, { forFetch: true });
@@ -278,8 +278,8 @@ describe('KnormPostgres', () => {
           cast: {
             forSave() {
               return 'foo';
-            }
-          }
+            },
+          },
         });
         expect(field.cast('bar', null, { forSave: true }), 'to be', 'foo');
       });
@@ -290,7 +290,7 @@ describe('KnormPostgres', () => {
           name: 'foo',
           model: Model,
           type: 'string',
-          cast: { forSave }
+          cast: { forSave },
         });
         const instance = { model: 'instace' };
         field.cast('bar', instance, { forSave: true });
@@ -316,7 +316,7 @@ describe('KnormPostgres', () => {
       User.table = 'user';
       User.fields = {
         id: { type: 'integer', primary: true, updated: false },
-        name: 'string'
+        name: 'string',
       };
     });
 
@@ -329,7 +329,7 @@ describe('KnormPostgres', () => {
         [{ id: 1, name: 'foo' }]
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'foo' }
+        { id: 1, name: 'foo' },
       ]);
     });
 
@@ -341,7 +341,7 @@ describe('KnormPostgres', () => {
         [{ id: 1, name: 'bar' }]
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'bar' }
+        { id: 1, name: 'bar' },
       ]);
     });
 
@@ -376,7 +376,7 @@ describe('KnormPostgres', () => {
       await expect(
         new Query(User).execute({
           text: `select upper($1) as foo`,
-          values: ['foo']
+          values: ['foo'],
         }),
         'to be fulfilled with value satisfying',
         [{ foo: 'FOO' }]
@@ -457,7 +457,7 @@ describe('KnormPostgres', () => {
           new Transaction(async ({ models: { User } }) => {
             return User.query.execute({
               text: `select upper($1) as foo`,
-              values: ['foo']
+              values: ['foo'],
             });
           }),
           'to be fulfilled with value satisfying',
@@ -483,14 +483,14 @@ describe('KnormPostgres', () => {
       User.table = 'user';
       User.fields = {
         id: { type: 'integer', primary: true, updated: false },
-        name: 'string'
+        name: 'string',
       };
 
       Image = class extends orm.Model {};
       Image.table = 'image';
       Image.fields = {
         id: { type: 'integer', primary: true, updated: false },
-        userId: { type: 'integer', references: User.fields.id }
+        userId: { type: 'integer', references: User.fields.id },
       };
 
       await knex.schema.createTable('image', table => {
@@ -521,14 +521,14 @@ describe('KnormPostgres', () => {
     it('enables `ilike`', async () => {
       await new Query(User).insert([
         { id: 1, name: 'Foo' },
-        { id: 2, name: 'foo' }
+        { id: 2, name: 'foo' },
       ]);
       await expect(
         new Query(User).where(new Query.Where().ilike('name', 'Fo%')).fetch(),
         'to be fulfilled with value satisfying',
         [
           { id: 1, name: 'Foo' },
-          { id: 2, name: 'foo' }
+          { id: 2, name: 'foo' },
         ]
       );
     });
@@ -536,7 +536,7 @@ describe('KnormPostgres', () => {
     it('enables `limit`', async () => {
       await new Query(User).insert([
         { id: 1, name: 'foo' },
-        { id: 2, name: 'bar' }
+        { id: 2, name: 'bar' },
       ]);
       await expect(
         new Query(User).limit(1).fetch(),
@@ -548,7 +548,7 @@ describe('KnormPostgres', () => {
     it('enables `offset`', async () => {
       await new Query(User).insert([
         { id: 1, name: 'foo' },
-        { id: 2, name: 'bar' }
+        { id: 2, name: 'bar' },
       ]);
       await expect(
         new Query(User).offset(1).fetch(),
@@ -560,7 +560,7 @@ describe('KnormPostgres', () => {
     it('supports `limit: 0`', async () => {
       await new Query(User).insert([
         { id: 1, name: 'foo' },
-        { id: 2, name: 'bar' }
+        { id: 2, name: 'bar' },
       ]);
       await expect(
         new Query(User).limit(0).fetch(),
@@ -572,7 +572,7 @@ describe('KnormPostgres', () => {
     it('supports `offset: 0`', async () => {
       await new Query(User).insert([
         { id: 1, name: 'foo' },
-        { id: 2, name: 'bar' }
+        { id: 2, name: 'bar' },
       ]);
       const execute = sinon.spy(Query.prototype, 'execute');
       await expect(
@@ -580,7 +580,7 @@ describe('KnormPostgres', () => {
         'to be fulfilled with value satisfying',
         [
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]
       );
       await expect(execute, 'to have calls satisfying', () => {
@@ -620,14 +620,14 @@ describe('KnormPostgres', () => {
     it('allows updating all rows', async () => {
       await new Query(User).insert([
         { id: 1, name: 'foo' },
-        { id: 2, name: 'bar' }
+        { id: 2, name: 'bar' },
       ]);
       await expect(
         new Query(User).update({ name: 'bar' }),
         'to be fulfilled with sorted rows satisfying',
         [
           { id: 1, name: 'bar' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]
       );
       await expect(
@@ -637,7 +637,7 @@ describe('KnormPostgres', () => {
         'to have sorted rows satisfying',
         [
           { id: 1, name: 'bar' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]
       );
     });
@@ -645,7 +645,7 @@ describe('KnormPostgres', () => {
     it('allows updates with a `where` clause', async () => {
       await new Query(User).insert([
         { id: 1, name: 'foo' },
-        { id: 2, name: 'foo' }
+        { id: 2, name: 'foo' },
       ]);
       await expect(
         new Query(User).update({ name: 'bar' }, { where: { id: 1 } }),
@@ -659,7 +659,7 @@ describe('KnormPostgres', () => {
         'to have sorted rows satisfying',
         [
           { id: 1, name: 'bar' },
-          { id: 2, name: 'foo' }
+          { id: 2, name: 'foo' },
         ]
       );
     });
@@ -744,7 +744,7 @@ describe('KnormPostgres', () => {
         Query = orm.Query;
         Model = orm.Model;
         Model.fields = {
-          id: { type: 'integer', primary: true, updated: false }
+          id: { type: 'integer', primary: true, updated: false },
         };
       });
 
@@ -1007,21 +1007,21 @@ describe('KnormPostgres', () => {
         await new Query(Foo).insert({
           id: 1,
           uuid: '44bbd080-3453-11e9-8f01-0f3f09e1cf60',
-          uuid4: 'bb726591-e5ee-4725-b8b2-92101a387a56'
+          uuid4: 'bb726591-e5ee-4725-b8b2-92101a387a56',
         });
         await expect(
           new Query(Foo).update({
             id: 1,
             uuid: 'a4af1ba0-3453-11e9-8f01-0f3f09e1cf60',
-            uuid4: '1c5e91d3-07b7-47cc-980a-cef937c66bef'
+            uuid4: '1c5e91d3-07b7-47cc-980a-cef937c66bef',
           }),
           'to be fulfilled with value satisfying',
           [
             {
               id: 1,
               uuid: 'a4af1ba0-3453-11e9-8f01-0f3f09e1cf60',
-              uuid4: '1c5e91d3-07b7-47cc-980a-cef937c66bef'
-            }
+              uuid4: '1c5e91d3-07b7-47cc-980a-cef937c66bef',
+            },
           ]
         );
         await expect(
@@ -1036,18 +1036,18 @@ describe('KnormPostgres', () => {
       it('runs a single query', async () => {
         await new Query(User).insert([
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]);
         const execute = sinon.spy(Query.prototype, 'execute');
         await expect(
           new Query(User).update([
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'barbar' }
+            { id: 2, name: 'barbar' },
           ]),
           'to be fulfilled with value satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'barbar' }
+            { id: 2, name: 'barbar' },
           ]
         );
         await expect(
@@ -1057,7 +1057,7 @@ describe('KnormPostgres', () => {
           'to have rows satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'barbar' }
+            { id: 2, name: 'barbar' },
           ]
         );
         await expect(execute, 'was called once');
@@ -1067,19 +1067,19 @@ describe('KnormPostgres', () => {
       it('respects `batchSize`', async () => {
         await new Query(User).insert([
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]);
         const execute = sinon.spy(Query.prototype, 'execute');
         const query = sinon.spy(Query.prototype, 'query');
         await expect(
           new Query(User).batchSize(1).update([
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'barbar' }
+            { id: 2, name: 'barbar' },
           ]),
           'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'barbar' }
+            { id: 2, name: 'barbar' },
           ]
         );
         await expect(
@@ -1089,7 +1089,7 @@ describe('KnormPostgres', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'barbar' }
+            { id: 2, name: 'barbar' },
           ]
         );
         await expect(execute, 'was called once');
@@ -1101,12 +1101,12 @@ describe('KnormPostgres', () => {
       it('does not update fields `updated: false` fields', async () => {
         await new Query(User).insert([
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]);
         const execute = sinon.spy(Query.prototype, 'execute');
         await new Query(User).update([
           { id: 1, name: 'foofoo' },
-          { id: 2, name: 'barbar' }
+          { id: 2, name: 'barbar' },
         ]);
         await expect(execute, 'to have calls satisfying', () => {
           execute(
@@ -1125,21 +1125,21 @@ describe('KnormPostgres', () => {
         class OtherUser extends User {}
         OtherUser.fields = {
           ID: { type: 'integer', primary: true, updated: false, column: 'id' },
-          NAME: { type: 'string', column: 'name' }
+          NAME: { type: 'string', column: 'name' },
         };
         await new Query(OtherUser).insert([
           { ID: 1, NAME: 'foo' },
-          { ID: 2, NAME: 'bar' }
+          { ID: 2, NAME: 'bar' },
         ]);
         await expect(
           new Query(OtherUser).update([
             { ID: 1, NAME: 'foofoo' },
-            { ID: 2, NAME: 'barbar' }
+            { ID: 2, NAME: 'barbar' },
           ]),
           'to be fulfilled with value satisfying',
           [
             { ID: 1, NAME: 'foofoo' },
-            { ID: 2, NAME: 'barbar' }
+            { ID: 2, NAME: 'barbar' },
           ]
         );
       });
@@ -1147,18 +1147,18 @@ describe('KnormPostgres', () => {
       it('allows updating with raw sql values', async () => {
         await new Query(User).insert([
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]);
         const query = new Query(User);
         await expect(
           query.update([
             { id: 1, name: query.sql(`upper('foo')`) },
-            { id: 2, name: query.sql(`upper('bar')`) }
+            { id: 2, name: query.sql(`upper('bar')`) },
           ]),
           'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'FOO' },
-            { id: 2, name: 'BAR' }
+            { id: 2, name: 'BAR' },
           ]
         );
         await expect(
@@ -1168,7 +1168,7 @@ describe('KnormPostgres', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'FOO' },
-            { id: 2, name: 'BAR' }
+            { id: 2, name: 'BAR' },
           ]
         );
       });
@@ -1178,18 +1178,18 @@ describe('KnormPostgres', () => {
         OtherUser.schema = 'public';
         await new Query(OtherUser).insert([
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]);
         const execute = sinon.spy(Query.prototype, 'execute');
         await expect(
           new Query(OtherUser).update([
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'barbar' }
+            { id: 2, name: 'barbar' },
           ]),
           'to be fulfilled with value satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'barbar' }
+            { id: 2, name: 'barbar' },
           ]
         );
         await expect(execute, 'to have calls satisfying', () => {
@@ -1222,7 +1222,7 @@ describe('KnormPostgres', () => {
             'to have sorted rows satisfying',
             [
               { id: 1, name: 'foo' },
-              { id: 2, name: 'bar' }
+              { id: 2, name: 'bar' },
             ]
           );
           await expect(insert, 'to have calls satisfying', () => {
@@ -1235,18 +1235,18 @@ describe('KnormPostgres', () => {
         it('supports `update`', async () => {
           await new Query(User).insert([
             { id: 1, name: 'foo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ]);
           const update = sinon.spy(Query.prototype, 'update');
           await expect(
             new Query(User).save([
               { id: 1, name: 'foofoo' },
-              { id: 2, name: 'barbar' }
+              { id: 2, name: 'barbar' },
             ]),
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: 'foofoo' }),
-              new User({ id: 2, name: 'barbar' })
+              new User({ id: 2, name: 'barbar' }),
             ]
           );
           await expect(
@@ -1256,7 +1256,7 @@ describe('KnormPostgres', () => {
             'to have sorted rows satisfying',
             [
               { id: 1, name: 'foofoo' },
-              { id: 2, name: 'barbar' }
+              { id: 2, name: 'barbar' },
             ]
           );
           await expect(update, 'to have calls satisfying', () => {
@@ -1275,7 +1275,7 @@ describe('KnormPostgres', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               { id: 1, name: 'foofoo' },
-              { id: 2, name: 'bar' }
+              { id: 2, name: 'bar' },
             ]
           );
           await expect(
@@ -1285,7 +1285,7 @@ describe('KnormPostgres', () => {
             'to have sorted rows satisfying',
             [
               { id: 1, name: 'foofoo' },
-              { id: 2, name: 'bar' }
+              { id: 2, name: 'bar' },
             ]
           );
           await expect(insert, 'to have calls satisfying', () => {
@@ -1314,7 +1314,7 @@ describe('KnormPostgres', () => {
         it('supports `first` with insert', async () => {
           await expect(
             new Query(User).save([{ name: 'foo' }, { name: 'bar' }], {
-              first: true
+              first: true,
             }),
             'to be fulfilled with value satisfying',
             new User({ id: 1, name: 'foo' })
@@ -1326,7 +1326,7 @@ describe('KnormPostgres', () => {
             'to have sorted rows satisfying',
             [
               { id: 1, name: 'foo' },
-              { id: 2, name: 'bar' }
+              { id: 2, name: 'bar' },
             ]
           );
         });
@@ -1334,13 +1334,13 @@ describe('KnormPostgres', () => {
         it('supports `first` with `update`', async () => {
           await new Query(User).insert([
             { id: 1, name: 'foo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ]);
           await expect(
             new Query(User).save(
               [
                 { id: 1, name: 'foofoo' },
-                { id: 2, name: 'barbar' }
+                { id: 2, name: 'barbar' },
               ],
               { first: true }
             ),
@@ -1354,7 +1354,7 @@ describe('KnormPostgres', () => {
             'to have sorted rows satisfying',
             [
               { id: 1, name: 'foofoo' },
-              { id: 2, name: 'barbar' }
+              { id: 2, name: 'barbar' },
             ]
           );
         });
@@ -1363,7 +1363,7 @@ describe('KnormPostgres', () => {
           await new Query(User).insert([{ name: 'foo' }]);
           await expect(
             new Query(User).save([{ id: 1, name: 'foofoo' }, { name: 'bar' }], {
-              first: true
+              first: true,
             }),
             'to be fulfilled with value satisfying',
             { id: 2, name: 'bar' }
@@ -1375,7 +1375,7 @@ describe('KnormPostgres', () => {
             'to have sorted rows satisfying',
             [
               { id: 1, name: 'foofoo' },
-              { id: 2, name: 'bar' }
+              { id: 2, name: 'bar' },
             ]
           );
         });
@@ -1450,18 +1450,18 @@ describe('KnormPostgres', () => {
       it('does not add `limit` if `first` is configured on the join', async () => {
         await new Query(User).insert([
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]);
         await new Query(Image).insert([
           { id: 1, userId: 1 },
-          { id: 2, userId: 1 }
+          { id: 2, userId: 1 },
         ]);
         await expect(
           new Query(User).leftJoin(new Query(Image).first()).fetch(),
           'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foo', image: { id: 1 } },
-            { id: 2, name: 'bar', image: null }
+            { id: 2, name: 'bar', image: null },
           ]
         );
       });
@@ -1469,18 +1469,18 @@ describe('KnormPostgres', () => {
       it('ignores `limit` on the join', async () => {
         await new Query(User).insert([
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]);
         await new Query(Image).insert([
           { id: 1, userId: 1 },
-          { id: 2, userId: 1 }
+          { id: 2, userId: 1 },
         ]);
         await expect(
           new Query(User).leftJoin(new Query(Image).limit(1)).fetch(),
           'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foo', image: [{ id: 1 }, { id: 2 }] },
-            { id: 2, name: 'bar', image: [] }
+            { id: 2, name: 'bar', image: [] },
           ]
         );
       });
@@ -1488,18 +1488,18 @@ describe('KnormPostgres', () => {
       it('ignores `offset` on the join', async () => {
         await new Query(User).insert([
           { id: 1, name: 'foo' },
-          { id: 2, name: 'bar' }
+          { id: 2, name: 'bar' },
         ]);
         await new Query(Image).insert([
           { id: 1, userId: 1 },
-          { id: 2, userId: 1 }
+          { id: 2, userId: 1 },
         ]);
         await expect(
           new Query(User).leftJoin(new Query(Image).offset(1)).fetch(),
           'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, name: 'foo', image: [{ id: 1 }, { id: 2 }] },
-            { id: 2, name: 'bar', image: [] }
+            { id: 2, name: 'bar', image: [] },
           ]
         );
       });
@@ -1516,7 +1516,7 @@ describe('KnormPostgres', () => {
         Foo.fields = {
           id: { type: 'integer', primary: true, updated: false, methods: true },
           jsonb: { type: 'jsonb' },
-          json: { type: 'json' }
+          json: { type: 'json' },
         };
       });
 
@@ -1537,7 +1537,7 @@ describe('KnormPostgres', () => {
           string: 'foo',
           number: 1,
           array: ['foo', 'bar'],
-          object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+          object: { string: 'foo', number: 1, array: ['foo', 'bar'] },
         };
         await new Query(Foo).insert({ id: 1, jsonb: data, json: data });
       });
@@ -1566,7 +1566,7 @@ describe('KnormPostgres', () => {
             string: 'bar',
             number: 1,
             array: ['foo', 'bar'],
-            object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+            object: { string: 'foo', number: 1, array: ['foo', 'bar'] },
           };
           await expect(
             query.update({ jsonb: { string: 'bar' }, json: { string: 'bar' } }),
@@ -1584,7 +1584,7 @@ describe('KnormPostgres', () => {
             string: 'bar',
             number: 2,
             array: ['foo', 'bar'],
-            object: { string: 'bar', number: 2, array: ['bar'] }
+            object: { string: 'bar', number: 2, array: ['bar'] },
           };
           await expect(
             query.update({ jsonb: data, json: data }),
@@ -1603,12 +1603,12 @@ describe('KnormPostgres', () => {
             number: 1,
             array: ['foo', 'bar'],
             missing: 'bar',
-            object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+            object: { string: 'foo', number: 1, array: ['foo', 'bar'] },
           };
           await expect(
             query.update({
               jsonb: { missing: 'bar' },
-              json: { missing: 'bar' }
+              json: { missing: 'bar' },
             }),
             'to be fulfilled with value exhaustively satisfying',
             new Foo({ id: 1, jsonb: data, json: data })
@@ -1625,7 +1625,7 @@ describe('KnormPostgres', () => {
             string: 'foo',
             number: 1,
             array: ['foo', 'bar'],
-            object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+            object: { string: 'foo', number: 1, array: ['foo', 'bar'] },
           };
           await expect(
             query.update({ jsonb: data, json: data }),
@@ -1642,20 +1642,20 @@ describe('KnormPostgres', () => {
           await expect(
             query.update({
               jsonb: { array: ['bar'] },
-              json: { array: ['foo'] }
+              json: { array: ['foo'] },
             }),
             'to be fulfilled with value exhaustively satisfying',
             new Foo({
               id: 1,
               jsonb: {
-                array: ['bar']
+                array: ['bar'],
               },
               json: {
                 string: 'foo',
                 number: 1,
                 array: ['foo'],
-                object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
-              }
+                object: { string: 'foo', number: 1, array: ['foo', 'bar'] },
+              },
             })
           );
         });
@@ -1668,7 +1668,7 @@ describe('KnormPostgres', () => {
           await expect(
             query.update({
               jsonb: { array: ['bar'] },
-              json: { array: ['foo'] }
+              json: { array: ['foo'] },
             }),
             'to be fulfilled with value exhaustively satisfying',
             new Foo({
@@ -1677,14 +1677,14 @@ describe('KnormPostgres', () => {
                 string: 'foo',
                 number: 1,
                 array: ['bar'],
-                object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
+                object: { string: 'foo', number: 1, array: ['foo', 'bar'] },
               },
               json: {
                 string: 'foo',
                 number: 1,
                 array: ['foo'],
-                object: { string: 'foo', number: 1, array: ['foo', 'bar'] }
-              }
+                object: { string: 'foo', number: 1, array: ['foo', 'bar'] },
+              },
             })
           );
         });
@@ -1701,7 +1701,7 @@ describe('KnormPostgres', () => {
               ),
               json: query.sql(
                 `jsonb_set("json"::jsonb, '{object,array,1}', '"foo"')::json`
-              )
+              ),
             }),
             'to be fulfilled with value exhaustively satisfying',
             new Foo({
@@ -1713,8 +1713,8 @@ describe('KnormPostgres', () => {
                 object: {
                   string: 'foo',
                   number: 1,
-                  array: ['bar', 'bar']
-                }
+                  array: ['bar', 'bar'],
+                },
               },
               json: {
                 string: 'foo',
@@ -1723,9 +1723,9 @@ describe('KnormPostgres', () => {
                 object: {
                   string: 'foo',
                   number: 1,
-                  array: ['foo', 'foo']
-                }
-              }
+                  array: ['foo', 'foo'],
+                },
+              },
             })
           );
         });
@@ -1738,7 +1738,7 @@ describe('KnormPostgres', () => {
           await expect(
             query.update({
               jsonb: 'string',
-              json: { array: ['foo'] }
+              json: { array: ['foo'] },
             }),
             'to be rejected with error satisfying',
             new Query.QueryError(
@@ -1755,7 +1755,7 @@ describe('KnormPostgres', () => {
           await expect(
             query.update({
               jsonb: { array: ['foo'] },
-              json: ['foo']
+              json: ['foo'],
             }),
             'to be rejected with error satisfying',
             new Query.QueryError(
@@ -1772,7 +1772,7 @@ describe('KnormPostgres', () => {
           await expect(
             query.update({
               jsonb: { string: `bar ' ` },
-              json: { string: `bar ' ` }
+              json: { string: `bar ' ` },
             }),
             'to be fulfilled with value exhaustively satisfying',
             new Foo({
@@ -1784,8 +1784,8 @@ describe('KnormPostgres', () => {
                 object: {
                   string: 'foo',
                   number: 1,
-                  array: ['foo', 'bar']
-                }
+                  array: ['foo', 'bar'],
+                },
               },
               json: {
                 string: `bar ' `,
@@ -1794,9 +1794,9 @@ describe('KnormPostgres', () => {
                 object: {
                   string: 'foo',
                   number: 1,
-                  array: ['foo', 'bar']
-                }
-              }
+                  array: ['foo', 'bar'],
+                },
+              },
             })
           );
         });

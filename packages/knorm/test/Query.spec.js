@@ -30,8 +30,8 @@ describe('Query', () => {
         type: 'integer',
         required: true,
         primary: true,
-        updated: false
-      }
+        updated: false,
+      },
     };
 
     User = class extends Model {};
@@ -39,25 +39,25 @@ describe('Query', () => {
     User.fields = {
       name: {
         type: 'string',
-        required: true
+        required: true,
       },
       description: {
-        type: 'string'
+        type: 'string',
       },
       age: {
         type: 'integer',
-        default: null
+        default: null,
       },
       confirmed: {
         type: 'boolean',
         required: true,
-        default: false
+        default: false,
       },
       dateOfBirth: {
-        type: 'dateTime'
+        type: 'dateTime',
       },
       dbDefault: {
-        type: 'string'
+        type: 'string',
       },
       jsonField: {
         type: 'json',
@@ -66,12 +66,12 @@ describe('Query', () => {
             if (value !== null) {
               return JSON.stringify(value);
             }
-          }
+          },
         },
         schema: {
           type: 'array',
-          maxLength: 2
-        }
+          maxLength: 2,
+        },
       },
       intToString: {
         type: 'integer',
@@ -80,9 +80,9 @@ describe('Query', () => {
             if (value !== null) {
               return String(value);
             }
-          }
-        }
-      }
+          },
+        },
+      },
     };
   });
 
@@ -182,7 +182,7 @@ describe('Query', () => {
         .forUpdate()
         .groupBy('id');
       expect(query.clone(), 'to satisfy', {
-        options: { fields: { id: 'id' }, forUpdate: true, groupBy: [['id']] }
+        options: { fields: { id: 'id' }, forUpdate: true, groupBy: [['id']] },
       });
     });
   });
@@ -332,7 +332,7 @@ describe('Query', () => {
       it('returns an object with the sql as the `text` property', async () => {
         const query = new Query(User);
         await expect(query.formatSql('select now()'), 'to equal', {
-          text: 'select now()'
+          text: 'select now()',
         });
       });
     });
@@ -345,7 +345,7 @@ describe('Query', () => {
           'to equal',
           {
             text: 'INSERT INTO "table" (foo) VALUES ($1)',
-            values: ['bar']
+            values: ['bar'],
           }
         );
       });
@@ -356,7 +356,7 @@ describe('Query', () => {
         const query = new Query(User);
         await expect(query.formatSql({ text: 'select now()' }), 'to equal', {
           text: 'select now()',
-          values: undefined
+          values: undefined,
         });
       });
     });
@@ -385,7 +385,7 @@ describe('Query', () => {
         []
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'foo', confirmed: true }
+        { id: 1, name: 'foo', confirmed: true },
       ]);
     });
 
@@ -394,13 +394,13 @@ describe('Query', () => {
       await expect(
         query.execute({
           text: `insert into "${User.table}" (id, name, confirmed) values ($1, $2, $3) returning id`,
-          values: [1, 'foo', true]
+          values: [1, 'foo', true],
         }),
         'to be fulfilled with value exhaustively satisfying',
         [{ id: 1 }]
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'foo', confirmed: true }
+        { id: 1, name: 'foo', confirmed: true },
       ]);
     });
 
@@ -414,15 +414,15 @@ describe('Query', () => {
             .values({ id: 1, name: 'foo', confirmed: true }),
           {
             text: `insert into "${User.table}" (id, name, confirmed) values ($1, $2, $3) returning id`,
-            values: [2, 'bar', false]
-          }
+            values: [2, 'bar', false],
+          },
         ]),
         'to be fulfilled with value exhaustively satisfying',
         [{ now: expect.it('to be a', Date) }, { id: 2 }]
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
         { id: 1, name: 'foo', confirmed: true },
-        { id: 2, name: 'bar', confirmed: false }
+        { id: 2, name: 'bar', confirmed: false },
       ]);
     });
 
@@ -501,7 +501,7 @@ describe('Query', () => {
           await expect(
             query.execute([
               `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`,
-              `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`
+              `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`,
             ]),
             'to be rejected with error satisfying',
             new QueryError(
@@ -511,10 +511,10 @@ describe('Query', () => {
           await expect(connect, 'to have calls satisfying', () => connect());
           await expect(runQuery, 'to have calls satisfying', () => {
             runQuery({
-              text: `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`
+              text: `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`,
             });
             runQuery({
-              text: `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`
+              text: `insert into "${User.table}" (id, name, confirmed) values (1, 'foo', false)`,
             });
           });
           await expect(disconnect, 'to have calls satisfying', () =>
@@ -560,7 +560,7 @@ describe('Query', () => {
             'to be rejected with error satisfying',
             {
               message: 'query error',
-              sql: { text: 'INSERT INTO "table" (foo) VALUES ($1)' }
+              sql: { text: 'INSERT INTO "table" (foo) VALUES ($1)' },
             }
           );
         });
@@ -600,8 +600,8 @@ describe('Query', () => {
               message: 'query error',
               sql: {
                 text: 'INSERT INTO "table" (foo) VALUES ($1)',
-                values: ['bar']
-              }
+                values: ['bar'],
+              },
             }
           );
         });
@@ -612,7 +612,7 @@ describe('Query', () => {
             'to be rejected with error satisfying',
             {
               message: 'query error',
-              sql: { text: 'select now()', values: [] }
+              sql: { text: 'select now()', values: [] },
             }
           );
         });
@@ -818,7 +818,7 @@ describe('Query', () => {
           age: 10,
           date_of_birth: null,
           json_field: null,
-          int_to_string: 10
+          int_to_string: 10,
         },
         {
           id: 2,
@@ -828,8 +828,8 @@ describe('Query', () => {
           age: 10,
           date_of_birth: null,
           json_field: null,
-          int_to_string: null
-        }
+          int_to_string: null,
+        },
       ])
     );
 
@@ -848,7 +848,7 @@ describe('Query', () => {
       const query = new Query(User);
       await expect(query.fetch(), 'to be fulfilled with value satisfying', [
         expect.it('to be a', User),
-        expect.it('to be a', User)
+        expect.it('to be a', User),
       ]);
     });
 
@@ -867,7 +867,7 @@ describe('Query', () => {
             dateOfBirth: null,
             dbDefault: 'set-by-db',
             jsonField: null,
-            intToString: '10'
+            intToString: '10',
           }),
           new User({
             id: 2,
@@ -878,8 +878,8 @@ describe('Query', () => {
             dateOfBirth: null,
             dbDefault: 'set-by-db',
             jsonField: null,
-            intToString: null
-          })
+            intToString: null,
+          }),
         ]
       );
     });
@@ -891,7 +891,7 @@ describe('Query', () => {
         'to be fulfilled with sorted rows satisfying',
         [
           new User({ id: 1, intToString: '10' }),
-          new User({ id: 2, intToString: null })
+          new User({ id: 2, intToString: null }),
         ]
       );
     });
@@ -904,7 +904,7 @@ describe('Query', () => {
         'to be fulfilled with sorted rows exhaustively satisfying',
         [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]
       );
       await expect(spy, 'to have calls satisfying', () => {
@@ -925,7 +925,7 @@ describe('Query', () => {
         'to be fulfilled with sorted rows satisfying',
         [
           new OtherUser({ id: 1, name: 'User 1' }),
-          new OtherUser({ id: 2, name: 'User 2' })
+          new OtherUser({ id: 2, name: 'User 2' }),
         ]
       );
       await expect(execute, 'to have calls satisfying', () => {
@@ -950,7 +950,7 @@ describe('Query', () => {
         'to be fulfilled with sorted rows satisfying',
         [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]
       );
     });
@@ -1073,7 +1073,7 @@ describe('Query', () => {
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
               new User({ now: expect.it('to be a', Date) }),
-              new User({ now: expect.it('to be a', Date) })
+              new User({ now: expect.it('to be a', Date) }),
             ]
           );
         });
@@ -1086,7 +1086,7 @@ describe('Query', () => {
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
               new User({ now: expect.it('to be a', Date) }),
-              new User({ now: expect.it('to be a', Date) })
+              new User({ now: expect.it('to be a', Date) }),
             ]
           );
         });
@@ -1100,7 +1100,7 @@ describe('Query', () => {
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
               new User({ name: 'User 1', age: 10, confirmed: false }),
-              new User({ name: 'User 2', age: 10, confirmed: true })
+              new User({ name: 'User 2', age: 10, confirmed: true }),
             ]
           );
         });
@@ -1173,7 +1173,7 @@ describe('Query', () => {
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
             new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
+            new User({ id: 2, name: 'User 2' }),
           ]
         );
       });
@@ -1200,7 +1200,7 @@ describe('Query', () => {
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
             new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
+            new User({ id: 2, name: 'User 2' }),
           ]
         );
       });
@@ -1276,7 +1276,7 @@ describe('Query', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: 'User 1' }),
-              new User({ id: 2, name: 'User 2' })
+              new User({ id: 2, name: 'User 2' }),
             ]
           );
         });
@@ -1399,7 +1399,7 @@ describe('Query', () => {
           'to be fulfilled with sorted rows satisfying',
           [
             new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
+            new User({ id: 2, name: 'User 2' }),
           ]
         );
       });
@@ -1412,7 +1412,7 @@ describe('Query', () => {
           'to be fulfilled with sorted rows satisfying',
           [
             new User({ id: 1, name: 'User 1' }),
-            new User({ id: 2, name: 'User 2' })
+            new User({ id: 2, name: 'User 2' }),
           ]
         );
       });
@@ -1477,7 +1477,7 @@ describe('Query', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: 'User 1' }),
-              new User({ id: 2, name: 'User 2' })
+              new User({ id: 2, name: 'User 2' }),
             ]
           );
         });
@@ -1539,7 +1539,7 @@ describe('Query', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: 'User 1' }),
-              new User({ id: 2, name: 'User 2' })
+              new User({ id: 2, name: 'User 2' }),
             ]
           );
         });
@@ -1553,7 +1553,7 @@ describe('Query', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: 'User 1' }),
-              new User({ id: 2, name: 'User 2' })
+              new User({ id: 2, name: 'User 2' }),
             ]
           );
         });
@@ -1807,7 +1807,7 @@ describe('Query', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: 'User 1' }),
-              new User({ id: 2, name: 'User 2' })
+              new User({ id: 2, name: 'User 2' }),
             ]
           );
         });
@@ -1864,7 +1864,7 @@ describe('Query', () => {
           'to be fulfilled with sorted rows satisfying',
           [
             new User({ id: 1, name: 'User 1', age: 10 }),
-            new User({ id: 2, name: 'User 2', age: 10 })
+            new User({ id: 2, name: 'User 2', age: 10 }),
           ]
         );
       });
@@ -1878,7 +1878,7 @@ describe('Query', () => {
           'to be fulfilled with sorted rows satisfying',
           [
             new User({ id: 1, name: 'User 1', age: 10 }),
-            new User({ id: 2, name: 'User 2', age: 10 })
+            new User({ id: 2, name: 'User 2', age: 10 }),
           ]
         );
       });
@@ -1889,7 +1889,7 @@ describe('Query', () => {
         const query = new Query(User).orderBy({ id: 'asc' });
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
       });
 
@@ -1897,7 +1897,7 @@ describe('Query', () => {
         const query = new Query(User).orderBy({ id: 'desc' });
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 2, name: 'User 2' }),
-          new User({ id: 1, name: 'User 1' })
+          new User({ id: 1, name: 'User 1' }),
         ]);
       });
 
@@ -1905,7 +1905,7 @@ describe('Query', () => {
         const query = new Query(User).orderBy({ id: 1 });
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
       });
 
@@ -1913,7 +1913,7 @@ describe('Query', () => {
         const query = new Query(User).orderBy({ id: -1 });
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 2, name: 'User 2' }),
-          new User({ id: 1, name: 'User 1' })
+          new User({ id: 1, name: 'User 1' }),
         ]);
       });
 
@@ -1921,7 +1921,7 @@ describe('Query', () => {
         const query = new Query(User).orderBy({ id: 'foo' });
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
       });
 
@@ -1929,7 +1929,7 @@ describe('Query', () => {
         const query = new Query(User).orderBy('id');
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
       });
 
@@ -1937,7 +1937,7 @@ describe('Query', () => {
         const query = new Query(User).orderBy(['id', 'name']);
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
       });
 
@@ -1945,7 +1945,7 @@ describe('Query', () => {
         const query = new Query(User).orderBy({ id: 1 }, { name: 'desc' });
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
       });
     });
@@ -1956,7 +1956,7 @@ describe('Query', () => {
         const query = new Query(User).forUpdate();
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
         await expect(execute, 'to have calls satisfying', () => {
           execute(
@@ -1976,7 +1976,7 @@ describe('Query', () => {
         const query = new Query(User).forUpdate().of('user');
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
         await expect(execute, 'to have calls satisfying', () => {
           execute(
@@ -1996,7 +1996,7 @@ describe('Query', () => {
         const query = new Query(User).forUpdate().of(['user', 'user']);
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
         await expect(execute, 'to have calls satisfying', () => {
           execute(
@@ -2019,7 +2019,7 @@ describe('Query', () => {
           .of(['user']);
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
         await expect(execute, 'to have calls satisfying', () => {
           execute(
@@ -2039,7 +2039,7 @@ describe('Query', () => {
         const query = new Query(User).forUpdate().noWait();
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
         await expect(execute, 'to have calls satisfying', () => {
           execute(
@@ -2062,7 +2062,7 @@ describe('Query', () => {
           .noWait();
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
-          new User({ id: 2, name: 'User 2' })
+          new User({ id: 2, name: 'User 2' }),
         ]);
         await expect(execute, 'to have calls satisfying', () => {
           execute(
@@ -2165,7 +2165,7 @@ describe('Query', () => {
       const user = new User({ id: 1, name: 'John Doe', confirmed: true });
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'John Doe', confirmed: true }
+        { id: 1, name: 'John Doe', confirmed: true },
       ]);
     });
 
@@ -2174,7 +2174,7 @@ describe('Query', () => {
       const user = { id: 1, name: 'John Doe', confirmed: true };
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'John Doe', confirmed: true }
+        { id: 1, name: 'John Doe', confirmed: true },
       ]);
     });
 
@@ -2183,7 +2183,7 @@ describe('Query', () => {
       const user = new User({ id: 1, name: 'John Doe' });
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'John Doe', confirmed: false, age: null }
+        { id: 1, name: 'John Doe', confirmed: false, age: null },
       ]);
     });
 
@@ -2192,11 +2192,11 @@ describe('Query', () => {
       const user = new User({
         id: 1,
         name: 'John Doe',
-        jsonField: ['foo', 'bar']
+        jsonField: ['foo', 'bar'],
       });
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'John Doe', json_field: ['foo', 'bar'] }
+        { id: 1, name: 'John Doe', json_field: ['foo', 'bar'] },
       ]);
     });
 
@@ -2205,7 +2205,7 @@ describe('Query', () => {
       const user = new User({ id: 1, name: 1 });
       await expect(query.insert(user), 'to be rejected with error satisfying', {
         name: 'ValidationError',
-        type: 'TypeError'
+        type: 'TypeError',
       });
     });
 
@@ -2223,7 +2223,7 @@ describe('Query', () => {
       const user = new User({ name: 'John Doe' });
       await expect(query.insert(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'John Doe' }
+        { id: 1, name: 'John Doe' },
       ]);
     });
 
@@ -2231,7 +2231,7 @@ describe('Query', () => {
       const query = new Query(User);
       await expect(query.insert({ name: 'John Doe' }), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'John Doe' }
+        { id: 1, name: 'John Doe' },
       ]);
     });
 
@@ -2259,8 +2259,8 @@ describe('Query', () => {
             dateOfBirth: null,
             dbDefault: 'set-by-db',
             jsonField: null,
-            intToString: null
-          })
+            intToString: null,
+          }),
         ]
       );
     });
@@ -2274,7 +2274,7 @@ describe('Query', () => {
         [new User({ intToString: '10' })]
       );
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'John Doe', int_to_string: 10 }
+        { id: 1, name: 'John Doe', int_to_string: 10 },
       ]);
     });
 
@@ -2450,7 +2450,7 @@ describe('Query', () => {
       it('allows using aliases for the fields returned from the database', async () => {
         const query = new Query(User).returning({
           theName: 'name',
-          theConfirmed: 'confirmed'
+          theConfirmed: 'confirmed',
         });
         await expect(
           query.insert(new User({ name: 'John Doe' })),
@@ -2574,7 +2574,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ id: 1, name: 'John Doe', confirmed: true }),
-            new User({ id: 2, name: 'Jane Doe', confirmed: false })
+            new User({ id: 2, name: 'Jane Doe', confirmed: false }),
           ]),
           'to be fulfilled'
         );
@@ -2585,7 +2585,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'John Doe', confirmed: true },
-            { id: 2, name: 'Jane Doe', confirmed: false }
+            { id: 2, name: 'Jane Doe', confirmed: false },
           ]
         );
       });
@@ -2595,7 +2595,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             { id: 1, name: 'John Doe', confirmed: true },
-            { id: 2, name: 'Jane Doe', confirmed: false }
+            { id: 2, name: 'Jane Doe', confirmed: false },
           ]),
           'to be fulfilled'
         );
@@ -2606,7 +2606,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'John Doe', confirmed: true },
-            { id: 2, name: 'Jane Doe', confirmed: false }
+            { id: 2, name: 'Jane Doe', confirmed: false },
           ]
         );
       });
@@ -2616,7 +2616,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ id: 1, name: 'John Doe' }),
-            new User({ id: 2, name: 'Jane Doe', age: 10 })
+            new User({ id: 2, name: 'Jane Doe', age: 10 }),
           ]),
           'to be fulfilled'
         );
@@ -2627,7 +2627,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'John Doe', confirmed: false, age: null },
-            { id: 2, name: 'Jane Doe', confirmed: false, age: 10 }
+            { id: 2, name: 'Jane Doe', confirmed: false, age: 10 },
           ]
         );
       });
@@ -2637,7 +2637,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ id: 1, name: 'John Doe' }),
-            new User({ id: 2, name: 'Jane Doe', jsonField: ['foo', 'bar'] })
+            new User({ id: 2, name: 'Jane Doe', jsonField: ['foo', 'bar'] }),
           ]),
           'to be rejected with error satisfying',
           new QueryError(
@@ -2651,7 +2651,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ id: 1, name: 'John Doe', jsonField: null }),
-            new User({ id: 2, name: 'Jane Doe', jsonField: ['foo', 'bar'] })
+            new User({ id: 2, name: 'Jane Doe', jsonField: ['foo', 'bar'] }),
           ]),
           'to be fulfilled'
         );
@@ -2662,7 +2662,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'John Doe', json_field: null },
-            { id: 2, name: 'Jane Doe', json_field: ['foo', 'bar'] }
+            { id: 2, name: 'Jane Doe', json_field: ['foo', 'bar'] },
           ]
         );
       });
@@ -2672,7 +2672,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ id: 1, name: 'John Doe' }),
-            new User({ id: 1, name: 'Jane Doe', confirmed: 'false' })
+            new User({ id: 1, name: 'Jane Doe', confirmed: 'false' }),
           ]),
           'to be rejected with error satisfying',
           { name: 'ValidationError', type: 'TypeError', message: /confirmed/ }
@@ -2684,7 +2684,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             { id: 1, name: 'John Doe' },
-            { id: 1, name: 'Jane Doe', confirmed: 'false' }
+            { id: 1, name: 'Jane Doe', confirmed: 'false' },
           ]),
           'to be rejected with error satisfying',
           { name: 'ValidationError', type: 'TypeError', message: /confirmed/ }
@@ -2696,7 +2696,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ name: 'John Doe' }),
-            new User({ name: 'Jane Doe' })
+            new User({ name: 'Jane Doe' }),
           ]),
           'to be fulfilled'
         );
@@ -2707,7 +2707,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'John Doe' },
-            { id: 2, name: 'Jane Doe' }
+            { id: 2, name: 'Jane Doe' },
           ]
         );
       });
@@ -2725,7 +2725,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'John Doe' },
-            { id: 2, name: 'Jane Doe' }
+            { id: 2, name: 'Jane Doe' },
           ]
         );
       });
@@ -2735,7 +2735,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ name: 'John Doe' }),
-            new User({ name: 'Jane Doe' })
+            new User({ name: 'Jane Doe' }),
           ]),
           'to be fulfilled with value satisfying',
           [expect.it('to be a', User), expect.it('to be a', User)]
@@ -2747,7 +2747,7 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ name: 'John Doe' }),
-            new User({ name: 'Jane Doe' })
+            new User({ name: 'Jane Doe' }),
           ]),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
@@ -2760,7 +2760,7 @@ describe('Query', () => {
               dateOfBirth: null,
               dbDefault: 'set-by-db',
               jsonField: null,
-              intToString: null
+              intToString: null,
             }),
             new User({
               id: 2,
@@ -2771,8 +2771,8 @@ describe('Query', () => {
               dateOfBirth: null,
               dbDefault: 'set-by-db',
               jsonField: null,
-              intToString: null
-            })
+              intToString: null,
+            }),
           ]
         );
       });
@@ -2782,12 +2782,12 @@ describe('Query', () => {
         await expect(
           query.insert([
             new User({ id: 1, name: 'John Doe', intToString: 10 }),
-            new User({ id: 2, name: 'Jane Doe', intToString: null })
+            new User({ id: 2, name: 'Jane Doe', intToString: null }),
           ]),
           'to be fulfilled with sorted rows satisfying',
           [
             { id: 1, intToString: '10' },
-            { id: 2, intToString: null }
+            { id: 2, intToString: null },
           ]
         );
         await expect(
@@ -2797,7 +2797,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'John Doe', int_to_string: 10 },
-            { id: 2, name: 'Jane Doe', int_to_string: null }
+            { id: 2, name: 'Jane Doe', int_to_string: null },
           ]
         );
       });
@@ -2807,7 +2807,7 @@ describe('Query', () => {
         const query = new Query(User);
         await query.insert([
           new User({ name: 'John Doe' }),
-          new User({ name: 'Jane Doe' })
+          new User({ name: 'Jane Doe' }),
         ]);
         await expect(querySpy, 'was called once');
         querySpy.restore();
@@ -2858,7 +2858,7 @@ describe('Query', () => {
             .batchSize(1)
             .insert([
               new User({ name: 'John Doe' }),
-              new User({ name: 'Jane Doe' })
+              new User({ name: 'Jane Doe' }),
             ]);
           await expect(runQuery, 'was called twice');
           runQuery.restore();
@@ -2870,7 +2870,7 @@ describe('Query', () => {
             { name: 'John Doe' },
             { name: 'Jane Doe' },
             { name: 'John Smith' },
-            { name: 'Jane Smith' }
+            { name: 'Jane Smith' },
           ];
 
           await new Query(User).batchSize(1).insert(users);
@@ -2905,13 +2905,13 @@ describe('Query', () => {
             query.insert([
               new User({ id: 1, name: 'John Doe' }),
               new User({ id: 2, name: 'Jane Doe' }),
-              new User({ id: 3, name: 'John Smith' })
+              new User({ id: 3, name: 'John Smith' }),
             ]),
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: 'John Doe' }),
               new User({ id: 2, name: 'Jane Doe' }),
-              new User({ id: 3, name: 'John Smith' })
+              new User({ id: 3, name: 'John Smith' }),
             ]
           );
         });
@@ -2935,7 +2935,7 @@ describe('Query', () => {
       user.name = 'Jane Doe';
       await expect(query.update(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'Jane Doe' }
+        { id: 1, name: 'Jane Doe' },
       ]);
     });
 
@@ -2944,7 +2944,7 @@ describe('Query', () => {
       const user = { id: 1, name: 'Jane Doe' };
       await expect(query.update(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'Jane Doe' }
+        { id: 1, name: 'Jane Doe' },
       ]);
     });
 
@@ -2953,7 +2953,7 @@ describe('Query', () => {
       user.name = 1;
       await expect(query.update(user), 'to be rejected with error satisfying', {
         name: 'ValidationError',
-        type: 'TypeError'
+        type: 'TypeError',
       });
     });
 
@@ -2962,7 +2962,7 @@ describe('Query', () => {
       user.jsonField = ['foo', 'bar'];
       await expect(query.update(user), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 1, name: 'John Doe', json_field: ['foo', 'bar'] }
+        { id: 1, name: 'John Doe', json_field: ['foo', 'bar'] },
       ]);
     });
 
@@ -2996,7 +2996,7 @@ describe('Query', () => {
         'to have sorted rows satisfying',
         [
           { id: 1, name: 'Foo' },
-          { id: 2, name: 'Jane Doe' }
+          { id: 2, name: 'Jane Doe' },
         ]
       );
     });
@@ -3147,7 +3147,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'Foo' },
-            { id: 2, name: 'Jane Doe' }
+            { id: 2, name: 'Jane Doe' },
           ]
         );
       });
@@ -3182,7 +3182,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'Johnie Doe' },
-            { id: 2, name: 'Johnie Doe' }
+            { id: 2, name: 'Johnie Doe' },
           ]
         );
       });
@@ -3211,7 +3211,7 @@ describe('Query', () => {
               dateOfBirth: null,
               dbDefault: 'set-by-db',
               jsonField: null,
-              intToString: null
+              intToString: null,
             }),
             new User({
               id: 2,
@@ -3222,8 +3222,8 @@ describe('Query', () => {
               dateOfBirth: null,
               dbDefault: 'set-by-db',
               jsonField: null,
-              intToString: null
-            })
+              intToString: null,
+            }),
           ]
         );
       });
@@ -3235,7 +3235,7 @@ describe('Query', () => {
           'to be fulfilled with value satisfying',
           [
             { id: 1, intToString: '10' },
-            { id: 2, intToString: '10' }
+            { id: 2, intToString: '10' },
           ]
         );
         await expect(
@@ -3245,7 +3245,7 @@ describe('Query', () => {
           'to have rows satisfying',
           [
             { id: 1, int_to_string: 10 },
-            { id: 2, int_to_string: 10 }
+            { id: 2, int_to_string: 10 },
           ]
         );
       });
@@ -3262,7 +3262,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'foo' },
-            { id: 2, name: 'Jane Doe' }
+            { id: 2, name: 'Jane Doe' },
           ]
         );
       });
@@ -3292,7 +3292,7 @@ describe('Query', () => {
       it('allows using aliases for the returned fields', async () => {
         const query = new Query(User).returning({
           theName: 'name',
-          theConfirmed: 'confirmed'
+          theConfirmed: 'confirmed',
         });
         user.name = 'Jane Doe';
         await expect(
@@ -3383,7 +3383,7 @@ describe('Query', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'Johnie Doe' },
-            { id: 2, name: 'Jane Doe' }
+            { id: 2, name: 'Jane Doe' },
           ]
         );
       });
@@ -3396,7 +3396,7 @@ describe('Query', () => {
         await new Query(User).update(user);
         await expect(spy, 'to have calls satisfying', () => {
           spy([
-            expect.it('to have key', '"name"').and('not to have key', '"id"')
+            expect.it('to have key', '"name"').and('not to have key', '"id"'),
           ]);
         });
         spy.restore();
@@ -3418,7 +3418,7 @@ describe('Query', () => {
       });
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
         { id: 1, name: 'John Doe' },
-        { id: 2, name: 'Jane Doe' }
+        { id: 2, name: 'Jane Doe' },
       ]);
       spy.restore();
     });
@@ -3427,7 +3427,7 @@ describe('Query', () => {
       const query = new Query(User);
       await expect(
         query.save([{ name: 'John Doe' }, { name: 'Jane Doe' }], {
-          returning: 'id'
+          returning: 'id',
         }),
         'to be fulfilled with sorted rows exhaustively satisfying',
         [new User({ id: 1 }), new User({ id: 2 })]
@@ -3494,14 +3494,14 @@ describe('Query', () => {
           id: 1,
           name: 'John Doe',
           confirmed: true,
-          int_to_string: 10
+          int_to_string: 10,
         },
         {
           id: 2,
           name: 'Jane Doe',
           confirmed: true,
-          int_to_string: null
-        }
+          int_to_string: null,
+        },
       ]);
     });
 
@@ -3527,7 +3527,7 @@ describe('Query', () => {
             dateOfBirth: null,
             dbDefault: 'set-by-db',
             jsonField: null,
-            intToString: '10'
+            intToString: '10',
           }),
           new User({
             id: 2,
@@ -3538,8 +3538,8 @@ describe('Query', () => {
             dateOfBirth: null,
             dbDefault: 'set-by-db',
             jsonField: null,
-            intToString: null
-          })
+            intToString: null,
+          }),
         ]
       );
     });
@@ -3547,7 +3547,7 @@ describe('Query', () => {
     it('casts fields configured with post-fetch cast functions after deleting', async () => {
       const query = new Query(User).where({ id: 1 });
       await expect(query.delete(), 'to be fulfilled with value satisfying', [
-        new User({ intToString: '10' })
+        new User({ intToString: '10' }),
       ]);
     });
 
@@ -3555,7 +3555,7 @@ describe('Query', () => {
       const query = new Query(User);
       await expect(query.delete({ where: { id: 1 } }), 'to be fulfilled');
       await expect(knex, 'with table', User.table, 'to have rows satisfying', [
-        { id: 2, name: 'Jane Doe' }
+        { id: 2, name: 'Jane Doe' },
       ]);
     });
 
@@ -3569,7 +3569,7 @@ describe('Query', () => {
         'to be fulfilled with sorted rows satisfying',
         [
           new OtherUser({ id: 1, name: 'John Doe' }),
-          new OtherUser({ id: 2, name: 'Jane Doe' })
+          new OtherUser({ id: 2, name: 'Jane Doe' }),
         ]
       );
       await expect(execute, 'to have calls satisfying', () => {
@@ -3612,7 +3612,7 @@ describe('Query', () => {
       it('deletes only the rows matching the query', async () => {
         const query = new Query(User).where({ id: 1 });
         await expect(query.delete(), 'to be fulfilled with value satisfying', [
-          new User({ id: 1, name: 'John Doe' })
+          new User({ id: 1, name: 'John Doe' }),
         ]);
         await expect(
           knex,
@@ -3637,14 +3637,14 @@ describe('Query', () => {
       it('allows using aliases for the returned fields', async () => {
         const query = new Query(User).returning({
           theName: 'name',
-          theConfirmed: 'confirmed'
+          theConfirmed: 'confirmed',
         });
         await expect(
           query.delete(),
           'to be fulfilled with value exhaustively satisfying',
           [
             new User({ theName: 'John Doe', theConfirmed: true }),
-            new User({ theName: 'Jane Doe', theConfirmed: true })
+            new User({ theName: 'Jane Doe', theConfirmed: true }),
           ]
         );
       });

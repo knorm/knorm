@@ -917,7 +917,7 @@ describe('Transaction', () => {
       User.table = 'user';
       User.fields = {
         id: { type: 'integer', primary: true, updated: false },
-        name: 'string'
+        name: 'string',
       };
     });
 
@@ -961,7 +961,7 @@ describe('Transaction', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ]
         );
       });
@@ -995,7 +995,7 @@ describe('Transaction', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ]
         );
         await expect(create, 'to have calls satisfying', () => create());
@@ -1009,10 +1009,10 @@ describe('Transaction', () => {
           await User.insert(
             [
               { id: 1, name: 'foo' },
-              { id: 2, name: 'bar' }
+              { id: 2, name: 'bar' },
             ],
             {
-              batchSize: 1
+              batchSize: 1,
             }
           );
         });
@@ -1023,7 +1023,7 @@ describe('Transaction', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'foo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ]
         );
         await expect(create, 'to have calls satisfying', () => create());
@@ -1186,7 +1186,7 @@ describe('Transaction', () => {
             'to be rejected with error satisfying',
             {
               message:
-                'User: duplicate key value violates unique constraint "user_pkey"'
+                'User: duplicate key value violates unique constraint "user_pkey"',
             }
           );
         });
@@ -1205,7 +1205,7 @@ describe('Transaction', () => {
           await expect(rollback, 'to have calls satisfying', () => {
             rollback({
               message:
-                'duplicate key value violates unique constraint "user_pkey"'
+                'duplicate key value violates unique constraint "user_pkey"',
             }); // one call from Query#execute
             rollback(); // one call from the try..catch in Transaction#execute
           });
@@ -1259,7 +1259,7 @@ describe('Transaction', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ]
         );
       });
@@ -1293,7 +1293,7 @@ describe('Transaction', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'foofoo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ]
         );
         await expect(create, 'to have calls satisfying', () => create());
@@ -1307,7 +1307,7 @@ describe('Transaction', () => {
         await transaction.models.User.insert(
           [
             { id: 1, name: 'foo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ],
           { batchSize: 1 }
         );
@@ -1319,7 +1319,7 @@ describe('Transaction', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'foo' },
-            { id: 2, name: 'bar' }
+            { id: 2, name: 'bar' },
           ]
         );
         await expect(create, 'to have calls satisfying', () => create());
@@ -1463,7 +1463,7 @@ describe('Transaction', () => {
             'to be rejected with error satisfying',
             {
               message:
-                'User: duplicate key value violates unique constraint "user_pkey"'
+                'User: duplicate key value violates unique constraint "user_pkey"',
             }
           );
         });
@@ -1481,7 +1481,7 @@ describe('Transaction', () => {
           await expect(rollback, 'to have calls satisfying', () =>
             rollback({
               message:
-                'duplicate key value violates unique constraint "user_pkey"'
+                'duplicate key value violates unique constraint "user_pkey"',
             })
           );
           await expect(commit, 'was not called'); // `commit` was never reached
@@ -1509,7 +1509,7 @@ describe('Transaction', () => {
           await expect(rollback, 'to have calls satisfying', () => {
             rollback({
               message:
-                'duplicate key value violates unique constraint "user_pkey"'
+                'duplicate key value violates unique constraint "user_pkey"',
             }); // one call from Query#execture
             rollback(); // one call from the try..catch above
           });
@@ -1526,7 +1526,7 @@ describe('Transaction', () => {
         await transaction.models.User.query.execute('select now()');
         const user = await new transaction.models.User({
           id: 1,
-          name: 'foo'
+          name: 'foo',
         }).insert();
         await transaction.commit();
         await expect(user, 'to satisfy', { id: 1, name: 'foo' });
@@ -1539,7 +1539,7 @@ describe('Transaction', () => {
         );
         user.name = 'bar';
         const {
-          options: { idleTimeoutMillis }
+          options: { idleTimeoutMillis },
         } = postgresPlugin.pool;
         // ensure the connection is closed before running the second query
         await expect(idleTimeoutMillis, 'to be', 10);
@@ -1549,7 +1549,7 @@ describe('Transaction', () => {
         );
         await expect(user.update(), 'to be fulfilled with value satisfying', {
           id: 1,
-          name: 'bar'
+          name: 'bar',
         });
         await expect(
           knex,

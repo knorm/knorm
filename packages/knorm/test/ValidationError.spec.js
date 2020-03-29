@@ -17,7 +17,7 @@ describe('ValidationError', () => {
     const field = new Field({
       name: 'firstName',
       type: 'string',
-      model: User
+      model: User,
     });
 
     expect(
@@ -25,7 +25,7 @@ describe('ValidationError', () => {
       'to satisfy',
       {
         type: 'RequiredError',
-        message: 'Missing required value for field `User.firstName`'
+        message: 'Missing required value for field `User.firstName`',
       }
     );
   });
@@ -39,10 +39,10 @@ describe('ValidationError', () => {
     const field = new Field({
       name: 'firstName',
       type: 'string',
-      model: User
+      model: User,
     });
     expect(new CustomValidationError({ field }), 'to satisfy', {
-      message: 'my custom error for firstName'
+      message: 'my custom error for firstName',
     });
   });
 });

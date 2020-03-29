@@ -23,7 +23,7 @@ class Field {
       primary,
       updated = true,
       unique,
-      methods
+      methods,
     } = config;
 
     if (!name) {
@@ -110,7 +110,7 @@ class Field {
       oneOf,
       equals,
       regex,
-      shape
+      shape,
     } = config;
 
     const validators = { type };
@@ -155,7 +155,7 @@ class Field {
         Object.assign({}, shape, {
           name: this.name,
           path: this.path,
-          model: this.model
+          model: this.model,
         })
       );
     }
@@ -183,7 +183,7 @@ class Field {
         Object.assign({}, config, {
           name,
           path,
-          model: this.model
+          model: this.model,
         })
       );
       return validators;
@@ -198,7 +198,7 @@ class Field {
     throw new this.constructor.ValidationError({
       value,
       validator,
-      field: this
+      field: this,
     });
   }
 
@@ -537,7 +537,7 @@ class Field {
       equals,
       regex,
       validate,
-      shape
+      shape,
     } = validators;
 
     if (required) {
@@ -668,7 +668,7 @@ Field.types = [
   'any',
   'number',
   'object',
-  'array'
+  'array',
 ];
 
 Field.ValidationError = require('./ValidationError');

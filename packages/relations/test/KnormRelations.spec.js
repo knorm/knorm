@@ -30,7 +30,7 @@ describe('KnormRelations', () => {
 
     Model = class extends orm.Model {};
     Model.fields = {
-      id: { type: 'integer', primary: true, updated: false }
+      id: { type: 'integer', primary: true, updated: false },
     };
 
     User = class extends Model {};
@@ -42,8 +42,8 @@ describe('KnormRelations', () => {
         type: 'integer',
         references() {
           return User.fields.id;
-        }
-      }
+        },
+      },
     };
 
     ImageCategory = class extends Model {};
@@ -54,7 +54,7 @@ describe('KnormRelations', () => {
     Image.table = 'image';
     Image.fields = {
       userId: { type: 'integer', references: User.fields.id },
-      categoryId: { type: 'integer', references: ImageCategory.fields.id }
+      categoryId: { type: 'integer', references: ImageCategory.fields.id },
     };
 
     Message = class extends Model {};
@@ -62,7 +62,7 @@ describe('KnormRelations', () => {
     Message.fields = {
       text: { type: 'text', required: true },
       senderId: { type: 'integer', references: User.fields.id },
-      receiverId: { type: 'integer', references: User.fields.id }
+      receiverId: { type: 'integer', references: User.fields.id },
     };
   });
 
@@ -103,13 +103,13 @@ describe('KnormRelations', () => {
 
     await User.insert([
       { id: 1, name: 'User 1', confirmed: null },
-      { id: 2, name: 'User 2', confirmed: true }
+      { id: 2, name: 'User 2', confirmed: true },
     ]);
     await ImageCategory.insert([{ id: 1, name: 'User images' }]);
     await Image.insert([{ id: 1, userId: 1, categoryId: 1 }]);
     await Message.insert([
       { id: 1, text: 'Hi User 2', senderId: 1, receiverId: 2 },
-      { id: 2, text: 'Hi User 1', senderId: 2, receiverId: 1 }
+      { id: 2, text: 'Hi User 1', senderId: 2, receiverId: 1 },
     ]);
   });
 
@@ -148,7 +148,7 @@ describe('KnormRelations', () => {
         Bar.fields = { fooId: { type: 'integer', references: Foo.fields.id } };
 
         expect(Bar.config.references, 'to exhaustively satisfy', {
-          Foo: { fooId: Bar.fields.fooId }
+          Foo: { fooId: Bar.fields.fooId },
         });
       });
 
@@ -165,18 +165,18 @@ describe('KnormRelations', () => {
           class Quux extends Bar {}
 
           Bar.fields = {
-            fooId: { type: 'integer', references: Foo.fields.id }
+            fooId: { type: 'integer', references: Foo.fields.id },
           };
           Quux.fields = {
-            fooId: { type: 'integer', references: Foo.fields.id2 }
+            fooId: { type: 'integer', references: Foo.fields.id2 },
           };
 
           expect(Model.config.references, 'to exhaustively satisfy', {});
           expect(Bar.config.references, 'to exhaustively satisfy', {
-            Foo: { fooId: Bar.fields.fooId }
+            Foo: { fooId: Bar.fields.fooId },
           });
           expect(Quux.config.references, 'to exhaustively satisfy', {
-            Foo: { fooId: Quux.fields.fooId }
+            Foo: { fooId: Quux.fields.fooId },
           });
         });
 
@@ -189,16 +189,16 @@ describe('KnormRelations', () => {
               type: 'integer',
               references() {
                 return Foo.fields.id;
-              }
-            }
+              },
+            },
           };
           Quux.fields = {
             fooId: {
               type: 'integer',
               references() {
                 return Foo.fields.id2;
-              }
-            }
+              },
+            },
           };
 
           expect(
@@ -212,7 +212,7 @@ describe('KnormRelations', () => {
               f => f.toString(),
               'to contain',
               'return Foo.fields.id;'
-            )
+            ),
           });
           expect(Quux.config.referenceFunctions, 'to exhaustively satisfy', {
             fooId: expect.it(
@@ -220,7 +220,7 @@ describe('KnormRelations', () => {
               f => f.toString(),
               'to contain',
               'return Foo.fields.id2;'
-            )
+            ),
           });
         });
 
@@ -229,18 +229,18 @@ describe('KnormRelations', () => {
           class Quux extends Bar {}
 
           Bar.fields = {
-            fooId: { type: 'integer', references: Foo.fields.id }
+            fooId: { type: 'integer', references: Foo.fields.id },
           };
           Quux.fields = {
-            fooId2: { type: 'integer', references: Foo.fields.id2 }
+            fooId2: { type: 'integer', references: Foo.fields.id2 },
           };
 
           expect(Model.config.references, 'to exhaustively satisfy', {});
           expect(Bar.config.references, 'to exhaustively satisfy', {
-            Foo: { fooId: Bar.fields.fooId }
+            Foo: { fooId: Bar.fields.fooId },
           });
           expect(Quux.config.references, 'to exhaustively satisfy', {
-            Foo: { fooId: Quux.fields.fooId, fooId2: Quux.fields.fooId2 }
+            Foo: { fooId: Quux.fields.fooId, fooId2: Quux.fields.fooId2 },
           });
         });
 
@@ -253,16 +253,16 @@ describe('KnormRelations', () => {
               type: 'integer',
               references() {
                 return Foo.fields.id;
-              }
-            }
+              },
+            },
           };
           Quux.fields = {
             fooId2: {
               type: 'integer',
               references() {
                 return Foo.fields.id2;
-              }
-            }
+              },
+            },
           };
 
           expect(
@@ -276,7 +276,7 @@ describe('KnormRelations', () => {
               f => f.toString(),
               'to contain',
               'return Foo.fields.id;'
-            )
+            ),
           });
           expect(Quux.config.referenceFunctions, 'to exhaustively satisfy', {
             fooId: expect.it(
@@ -290,7 +290,7 @@ describe('KnormRelations', () => {
               f => f.toString(),
               'to contain',
               'return Foo.fields.id2;'
-            )
+            ),
           });
         });
       });
@@ -313,12 +313,12 @@ describe('KnormRelations', () => {
           Bar.fields = {
             id: 'integer',
             fooId: { type: 'integer', references: Foo.fields.id },
-            barId: { type: 'integer', references: Foo.fields.id }
+            barId: { type: 'integer', references: Foo.fields.id },
           };
 
           Bar.removeField(Bar.fields.fooId);
           expect(Bar.config.references, 'to exhaustively satisfy', {
-            Foo: expect.it('to have keys', ['barId'])
+            Foo: expect.it('to have keys', ['barId']),
           });
 
           Bar.removeField(Bar.fields.barId);
@@ -336,8 +336,8 @@ describe('KnormRelations', () => {
               type: 'integer',
               references() {
                 return Foo.fields.id;
-              }
-            }
+              },
+            },
           };
 
           expect(Bar.config.referenceFunctions, 'to have key', 'fooId');
@@ -361,14 +361,14 @@ describe('KnormRelations', () => {
                 id: 1,
                 name: 'User 1',
                 confirmed: null,
-                creator: null
+                creator: null,
               }),
               new User({
                 id: 2,
                 name: 'User 2',
                 confirmed: true,
-                creator: null
-              })
+                creator: null,
+              }),
             ]
           );
         });
@@ -401,9 +401,9 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
+                  image: [new Image({ id: 1, userId: 1, categoryId: 1 })],
                 }),
-                new User({ id: 2, name: 'User 2', image: [] })
+                new User({ id: 2, name: 'User 2', image: [] }),
               ]
             )
           );
@@ -424,9 +424,9 @@ describe('KnormRelations', () => {
                 name: 'User 1',
                 image: [
                   new Image({ id: 2, userId: 1, categoryId: 1 }),
-                  new Image({ id: 1, userId: 1, categoryId: 1 })
-                ]
-              })
+                  new Image({ id: 1, userId: 1, categoryId: 1 }),
+                ],
+              }),
             ]
           );
 
@@ -459,9 +459,9 @@ describe('KnormRelations', () => {
               new User({
                 id: 1,
                 name: 'User 1',
-                image: [new Image({ id: 1 })]
+                image: [new Image({ id: 1 })],
               }),
-              new User({ id: 2, name: 'User 2', image: [] })
+              new User({ id: 2, name: 'User 2', image: [] }),
             ]
           );
         });
@@ -477,15 +477,15 @@ describe('KnormRelations', () => {
                 name: 'User 1',
                 confirmed: null,
                 creator: null,
-                image: [new Image({ id: 1, userId: 1, categoryId: 1 })]
+                image: [new Image({ id: 1, userId: 1, categoryId: 1 })],
               }),
               new User({
                 id: 2,
                 name: 'User 2',
                 confirmed: true,
                 creator: null,
-                image: []
-              })
+                image: [],
+              }),
             ]
           );
         });
@@ -514,8 +514,8 @@ describe('KnormRelations', () => {
               new User({
                 id: 1,
                 name: 'User 1',
-                image: [new Image({ id: 1 }), new Image({ id: 2 })]
-              })
+                image: [new Image({ id: 1 }), new Image({ id: 2 })],
+              }),
             ]
           );
 
@@ -529,7 +529,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, name: [new Image({ id: 1 })] }),
-              new User({ id: 2, name: [] })
+              new User({ id: 2, name: [] }),
             ]
           );
         });
@@ -547,9 +547,9 @@ describe('KnormRelations', () => {
                   id: 1,
                   name: 'User 1',
                   image: [
-                    expect.it('to exhaustively satisfy', new Image({ id: 1 }))
-                  ]
-                })
+                    expect.it('to exhaustively satisfy', new Image({ id: 1 })),
+                  ],
+                }),
               ]
             );
           });
@@ -567,8 +567,8 @@ describe('KnormRelations', () => {
                   name: 'User 1',
                   confirmed: null,
                   creator: null,
-                  image: [new Image({ id: 1 })]
-                })
+                  image: [new Image({ id: 1 })],
+                }),
               ]
             );
           });
@@ -585,8 +585,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 1 })]
-                })
+                  image: [new Image({ id: 1 })],
+                }),
               ]
             );
           });
@@ -622,7 +622,7 @@ describe('KnormRelations', () => {
 
               class OtherImage extends Image {}
               OtherImage.fields = {
-                userId: { type: 'integer', references: OtherUser.fields.id }
+                userId: { type: 'integer', references: OtherUser.fields.id },
               };
 
               const query = new Query(OtherUser)
@@ -639,12 +639,12 @@ describe('KnormRelations', () => {
                   [
                     new OtherUser({
                       name: 'User 1',
-                      otherImage: [new OtherImage({ id: 1 })]
+                      otherImage: [new OtherImage({ id: 1 })],
                     }),
                     new OtherUser({
                       name: 'User 2',
-                      otherImage: []
-                    })
+                      otherImage: [],
+                    }),
                   ]
                 )
               );
@@ -688,7 +688,7 @@ describe('KnormRelations', () => {
                     'to exhaustively satisfy',
                     [
                       new User({ name: 'User 1', image: [] }),
-                      new User({ name: 'User 2', image: [] })
+                      new User({ name: 'User 2', image: [] }),
                     ]
                   )
                 );
@@ -709,8 +709,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  images: [new Image({ id: 1 })]
-                })
+                  images: [new Image({ id: 1 })],
+                }),
               ]
             );
           });
@@ -739,9 +739,9 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: new Image({ id: 1 })
+                  image: new Image({ id: 1 }),
                 }),
-                new User({ id: 2, name: 'User 2', image: null })
+                new User({ id: 2, name: 'User 2', image: null }),
               ]
             );
           });
@@ -755,7 +755,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new User({ id: 1, name: new Image({ id: 1 }) }),
-                new User({ id: 2, name: null })
+                new User({ id: 2, name: null }),
               ]
             );
           });
@@ -778,7 +778,7 @@ describe('KnormRelations', () => {
           it('creates a join on the provided field', async () => {
             const query = new Query(User).leftJoin([
               new Query(Message).on('senderId').as('sentMessages'),
-              new Query(Message).on('receiverId').as('receivedMessages')
+              new Query(Message).on('receiverId').as('receivedMessages'),
             ]);
             await expect(
               query.fetch(),
@@ -788,21 +788,21 @@ describe('KnormRelations', () => {
                   id: 1,
                   name: 'User 1',
                   sentMessages: [new Message({ id: 1, text: 'Hi User 2' })],
-                  receivedMessages: [new Message({ id: 2, text: 'Hi User 1' })]
+                  receivedMessages: [new Message({ id: 2, text: 'Hi User 1' })],
                 }),
                 new User({
                   id: 2,
                   name: 'User 2',
                   sentMessages: [new Message({ id: 2, text: 'Hi User 1' })],
-                  receivedMessages: [new Message({ id: 1, text: 'Hi User 2' })]
-                })
+                  receivedMessages: [new Message({ id: 1, text: 'Hi User 2' })],
+                }),
               ]
             );
           });
 
           it('throws an error if the field does not exist on the joined model', async () => {
             const query = new Query(User).leftJoin([
-              new Query(Message).on('fooId')
+              new Query(Message).on('fooId'),
             ]);
             await expect(
               query.fetch(),
@@ -814,7 +814,7 @@ describe('KnormRelations', () => {
           it('supports `on` as an array', async () => {
             const query = new Query(User).leftJoin([
               new Query(Message).on(['senderId']).as('sentMessages'),
-              new Query(Message).on(['receiverId']).as('receivedMessages')
+              new Query(Message).on(['receiverId']).as('receivedMessages'),
             ]);
             await expect(
               query.fetch(),
@@ -823,13 +823,13 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   sentMessages: [new Message({ id: 1 })],
-                  receivedMessages: [new Message({ id: 2 })]
+                  receivedMessages: [new Message({ id: 2 })],
                 }),
                 new User({
                   id: 2,
                   sentMessages: [new Message({ id: 2 })],
-                  receivedMessages: [new Message({ id: 1 })]
-                })
+                  receivedMessages: [new Message({ id: 1 })],
+                }),
               ]
             );
           });
@@ -839,7 +839,7 @@ describe('KnormRelations', () => {
               new Query(Message).on(Message.fields.senderId).as('sentMessages'),
               new Query(Message)
                 .on(Message.fields.receiverId)
-                .as('receivedMessages')
+                .as('receivedMessages'),
             ]);
             await expect(
               query.fetch(),
@@ -848,27 +848,27 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   sentMessages: [new Message({ id: 1 })],
-                  receivedMessages: [new Message({ id: 2 })]
+                  receivedMessages: [new Message({ id: 2 })],
                 }),
                 new User({
                   id: 2,
                   sentMessages: [new Message({ id: 2 })],
-                  receivedMessages: [new Message({ id: 1 })]
-                })
+                  receivedMessages: [new Message({ id: 1 })],
+                }),
               ]
             );
           });
 
           it('supports passing a field instance from the other model', async () => {
             const query = new Query(User).leftJoin([
-              new Query(Image).on(User.fields.id).as('images')
+              new Query(Image).on(User.fields.id).as('images'),
             ]);
             await expect(
               query.fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
                 new User({ id: 1, images: [new Image({ id: 1 })] }),
-                new User({ id: 2, images: [] })
+                new User({ id: 2, images: [] }),
               ]
             );
           });
@@ -889,8 +889,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 2 })]
-                })
+                  image: [new Image({ id: 2 })],
+                }),
               ]
             );
 
@@ -914,8 +914,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 1 })]
-                })
+                  image: [new Image({ id: 1 })],
+                }),
               ]
             );
 
@@ -939,8 +939,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 2 }), new Image({ id: 1 })]
-                })
+                  image: [new Image({ id: 2 }), new Image({ id: 1 })],
+                }),
               ]
             );
 
@@ -952,7 +952,7 @@ describe('KnormRelations', () => {
           it('fulfils the requested query on the joined model', async () => {
             await Image.insert([
               { id: 2, userId: 1, categoryId: 1 },
-              { id: 3, userId: 1, categoryId: 1 }
+              { id: 3, userId: 1, categoryId: 1 },
             ]);
 
             const where = new Query.Where();
@@ -967,8 +967,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 2 }), new Image({ id: 1 })]
-                })
+                  image: [new Image({ id: 2 }), new Image({ id: 1 })],
+                }),
               ]
             );
 
@@ -981,7 +981,7 @@ describe('KnormRelations', () => {
             await User.insert({ id: 3, name: 'User 3' });
             await Image.insert([
               { id: 2, userId: 1, categoryId: 1 },
-              { id: 3, userId: 3, categoryId: 1 }
+              { id: 3, userId: 3, categoryId: 1 },
             ]);
 
             const query = new Query(User).leftJoin(
@@ -995,18 +995,18 @@ describe('KnormRelations', () => {
                 new User({
                   id: 2,
                   name: 'User 2',
-                  image: []
+                  image: [],
                 }),
                 new User({
                   id: 3,
                   name: 'User 3',
-                  image: [new Image({ id: 3 })]
+                  image: [new Image({ id: 3 })],
                 }),
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 2 }), new Image({ id: 1 })]
-                })
+                  image: [new Image({ id: 2 }), new Image({ id: 1 })],
+                }),
               ]
             );
 
@@ -1031,8 +1031,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 1 }), new Image({ id: 2 })]
-                })
+                  image: [new Image({ id: 1 }), new Image({ id: 2 })],
+                }),
               ]
             );
 
@@ -1044,7 +1044,7 @@ describe('KnormRelations', () => {
           it('fulfils the requested order on the joined model', async () => {
             await Image.insert([
               { id: 2, userId: 1, categoryId: 1 },
-              { id: 3, userId: 2, categoryId: 1 }
+              { id: 3, userId: 2, categoryId: 1 },
             ]);
 
             const query = new Query(User)
@@ -1061,8 +1061,8 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   name: 'User 1',
-                  image: [new Image({ id: 1 }), new Image({ id: 2 })]
-                })
+                  image: [new Image({ id: 1 }), new Image({ id: 2 })],
+                }),
               ]
             );
 
@@ -1140,9 +1140,9 @@ describe('KnormRelations', () => {
               new User({
                 id: 1,
                 name: 'User 1',
-                image: [new Image({ id: 1 })]
+                image: [new Image({ id: 1 })],
               }),
-              new User({ id: 2, name: 'User 2' })
+              new User({ id: 2, name: 'User 2' }),
             ]
           );
         });
@@ -1157,13 +1157,13 @@ describe('KnormRelations', () => {
                 id: 1,
                 name: 'User 1',
                 image: [
-                  expect.it('to exhaustively satisfy', new Image({ id: 1 }))
-                ]
+                  expect.it('to exhaustively satisfy', new Image({ id: 1 })),
+                ],
               }),
               new User({
                 id: 2,
-                name: 'User 2'
-              })
+                name: 'User 2',
+              }),
             ]
           );
         });
@@ -1177,8 +1177,8 @@ describe('KnormRelations', () => {
               [
                 new Image({
                   id: 1,
-                  user: [new User({ id: 1, name: 'User 1' })]
-                })
+                  user: [new User({ id: 1, name: 'User 1' })],
+                }),
               ]
             );
           });
@@ -1192,8 +1192,8 @@ describe('KnormRelations', () => {
                 [
                   new Image({
                     id: 1,
-                    user: [new User({ id: 1, name: 'User 1' })]
-                  })
+                    user: [new User({ id: 1, name: 'User 1' })],
+                  }),
                 ]
               );
             });
@@ -1208,8 +1208,8 @@ describe('KnormRelations', () => {
                 [
                   new Image({
                     id: 1,
-                    user: [new User({ id: 1, name: 'User 1' })]
-                  })
+                    user: [new User({ id: 1, name: 'User 1' })],
+                  }),
                 ]
               );
             });
@@ -1224,8 +1224,8 @@ describe('KnormRelations', () => {
                 [
                   new Image({
                     id: 1,
-                    user: [new User({ id: 1, name: 'User 1' })]
-                  })
+                    user: [new User({ id: 1, name: 'User 1' })],
+                  }),
                 ]
               );
             });
@@ -1247,15 +1247,15 @@ describe('KnormRelations', () => {
                     senderId: 1,
                     receiverId: 2,
                     text: 'Hi User 2',
-                    user: []
+                    user: [],
                   }),
                   new Message({
                     id: 2,
                     senderId: 2,
                     receiverId: 1,
                     text: 'Hi User 1',
-                    user: []
-                  })
+                    user: [],
+                  }),
                 ]
               );
             });
@@ -1282,18 +1282,18 @@ describe('KnormRelations', () => {
                       userId: 1,
                       categoryId: 1,
                       imageCategory: [
-                        new ImageCategory({ id: 1, name: 'User images' })
-                      ]
-                    })
-                  ]
+                        new ImageCategory({ id: 1, name: 'User images' }),
+                      ],
+                    }),
+                  ],
                 }),
                 new User({
                   id: 2,
                   name: 'User 2',
                   confirmed: true,
                   creator: null,
-                  image: []
-                })
+                  image: [],
+                }),
               ]
             );
           });
@@ -1351,12 +1351,12 @@ describe('KnormRelations', () => {
                               id: 1,
                               name: 'User 1',
                               confirmed: null,
-                              creator: null
-                            })
-                          ]
-                        })
-                      ]
-                    })
+                              creator: null,
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
                   ]
                 )
               );
@@ -1381,8 +1381,8 @@ describe('KnormRelations', () => {
                       name: 'User 1',
                       confirmed: null,
                       creator: null,
-                      image: [new Image({ userId: 1, user: [] })]
-                    })
+                      image: [new Image({ userId: 1, user: [] })],
+                    }),
                   ]
                 )
               );
@@ -1427,23 +1427,23 @@ describe('KnormRelations', () => {
                                   id: 1,
                                   name: 'User 1',
                                   confirmed: null,
-                                  creator: null
-                                })
-                              ]
-                            })
-                          ]
-                        })
-                      ]
-                    })
-                  ]
+                                  creator: null,
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
                 }),
                 new User({
                   id: 2,
                   name: 'User 2',
                   confirmed: true,
                   creator: null,
-                  image: []
-                })
+                  image: [],
+                }),
               ]
             );
           });
@@ -1528,8 +1528,8 @@ describe('KnormRelations', () => {
           OtherImage.fields = {
             userId: {
               type: 'integer',
-              references: [User.fields.id, OtherUser.fields.id]
-            }
+              references: [User.fields.id, OtherUser.fields.id],
+            },
           };
 
           OtherMessage = class extends Model {};
@@ -1538,12 +1538,12 @@ describe('KnormRelations', () => {
             text: { type: 'text', required: true },
             senderId: {
               type: 'integer',
-              references: [User.fields.id, OtherUser.fields.id]
+              references: [User.fields.id, OtherUser.fields.id],
             },
             receiverId: {
               type: 'integer',
-              references: [User.fields.id, OtherUser.fields.id]
-            }
+              references: [User.fields.id, OtherUser.fields.id],
+            },
           };
         });
 
@@ -1553,8 +1553,8 @@ describe('KnormRelations', () => {
           Foo.fields = {
             foo: {
               type: 'integer',
-              references: [Message.fields.id, OtherMessage.fields.id]
-            }
+              references: [Message.fields.id, OtherMessage.fields.id],
+            },
           };
           await expect(
             new Query(User).leftJoin(new Query(Foo)).fetch(),
@@ -1574,7 +1574,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, otherImage: [new OtherImage({ id: 1 })] }),
-              new User({ id: 2, otherImage: [] })
+              new User({ id: 2, otherImage: [] }),
             ]
           );
           await expect(
@@ -1582,7 +1582,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new OtherUser({ id: 1, otherImage: [new OtherImage({ id: 1 })] }),
-              new OtherUser({ id: 2, otherImage: [] })
+              new OtherUser({ id: 2, otherImage: [] }),
             ]
           );
         });
@@ -1595,7 +1595,7 @@ describe('KnormRelations', () => {
                   new Query(OtherMessage).on('senderId').as('sentMessages'),
                   new Query(OtherMessage)
                     .on('receiverId')
-                    .as('receivedMessages')
+                    .as('receivedMessages'),
                 ])
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
@@ -1603,13 +1603,13 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   sentMessages: [new OtherMessage({ id: 1 })],
-                  receivedMessages: [new OtherMessage({ id: 2 })]
+                  receivedMessages: [new OtherMessage({ id: 2 })],
                 }),
                 new User({
                   id: 2,
                   sentMessages: [new OtherMessage({ id: 2 })],
-                  receivedMessages: [new OtherMessage({ id: 1 })]
-                })
+                  receivedMessages: [new OtherMessage({ id: 1 })],
+                }),
               ]
             );
             await expect(
@@ -1618,7 +1618,7 @@ describe('KnormRelations', () => {
                   new Query(OtherMessage).on('senderId').as('sentMessages'),
                   new Query(OtherMessage)
                     .on('receiverId')
-                    .as('receivedMessages')
+                    .as('receivedMessages'),
                 ])
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
@@ -1626,13 +1626,13 @@ describe('KnormRelations', () => {
                 new OtherUser({
                   id: 1,
                   sentMessages: [new OtherMessage({ id: 1 })],
-                  receivedMessages: [new OtherMessage({ id: 2 })]
+                  receivedMessages: [new OtherMessage({ id: 2 })],
                 }),
                 new OtherUser({
                   id: 2,
                   sentMessages: [new OtherMessage({ id: 2 })],
-                  receivedMessages: [new OtherMessage({ id: 1 })]
-                })
+                  receivedMessages: [new OtherMessage({ id: 1 })],
+                }),
               ]
             );
           });
@@ -1646,7 +1646,7 @@ describe('KnormRelations', () => {
                     .as('sentMessages'),
                   new Query(OtherMessage)
                     .on(OtherMessage.fields.receiverId)
-                    .as('receivedMessages')
+                    .as('receivedMessages'),
                 ])
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
@@ -1654,13 +1654,13 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   sentMessages: [new OtherMessage({ id: 1 })],
-                  receivedMessages: [new OtherMessage({ id: 2 })]
+                  receivedMessages: [new OtherMessage({ id: 2 })],
                 }),
                 new User({
                   id: 2,
                   sentMessages: [new OtherMessage({ id: 2 })],
-                  receivedMessages: [new OtherMessage({ id: 1 })]
-                })
+                  receivedMessages: [new OtherMessage({ id: 1 })],
+                }),
               ]
             );
             await expect(
@@ -1671,7 +1671,7 @@ describe('KnormRelations', () => {
                     .as('sentMessages'),
                   new Query(OtherMessage)
                     .on(OtherMessage.fields.receiverId)
-                    .as('receivedMessages')
+                    .as('receivedMessages'),
                 ])
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
@@ -1679,13 +1679,13 @@ describe('KnormRelations', () => {
                 new OtherUser({
                   id: 1,
                   sentMessages: [new OtherMessage({ id: 1 })],
-                  receivedMessages: [new OtherMessage({ id: 2 })]
+                  receivedMessages: [new OtherMessage({ id: 2 })],
                 }),
                 new OtherUser({
                   id: 2,
                   sentMessages: [new OtherMessage({ id: 2 })],
-                  receivedMessages: [new OtherMessage({ id: 1 })]
-                })
+                  receivedMessages: [new OtherMessage({ id: 1 })],
+                }),
               ]
             );
           });
@@ -1694,25 +1694,25 @@ describe('KnormRelations', () => {
             await expect(
               new Query(User)
                 .leftJoin([
-                  new Query(OtherImage).on(User.fields.id).as('images')
+                  new Query(OtherImage).on(User.fields.id).as('images'),
                 ])
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
                 new User({ id: 1, images: [new OtherImage({ id: 1 })] }),
-                new User({ id: 2, images: [] })
+                new User({ id: 2, images: [] }),
               ]
             );
             await expect(
               new Query(OtherUser)
                 .leftJoin([
-                  new Query(OtherImage).on(OtherUser.fields.id).as('images')
+                  new Query(OtherImage).on(OtherUser.fields.id).as('images'),
                 ])
                 .fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
                 new OtherUser({ id: 1, images: [new OtherImage({ id: 1 })] }),
-                new OtherUser({ id: 2, images: [] })
+                new OtherUser({ id: 2, images: [] }),
               ]
             );
           });
@@ -1742,7 +1742,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new OtherMessage({ id: 1, user: [] }),
-                new OtherMessage({ id: 2, user: [] })
+                new OtherMessage({ id: 2, user: [] }),
               ]
             );
             await expect(
@@ -1752,7 +1752,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new OtherMessage({ id: 1, otherUser: [] }),
-                new OtherMessage({ id: 2, otherUser: [] })
+                new OtherMessage({ id: 2, otherUser: [] }),
               ]
             );
           });
@@ -1767,7 +1767,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new OtherMessage({ id: 1, user: [] }),
-                new OtherMessage({ id: 2, user: [] })
+                new OtherMessage({ id: 2, user: [] }),
               ]
             );
             await expect(
@@ -1777,7 +1777,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new OtherMessage({ id: 1, otherUser: [] }),
-                new OtherMessage({ id: 2, otherUser: [] })
+                new OtherMessage({ id: 2, otherUser: [] }),
               ]
             );
           });
@@ -1839,14 +1839,14 @@ describe('KnormRelations', () => {
               type: 'integer',
               references() {
                 return User.fields.id;
-              }
+              },
             },
             categoryId: {
               type: 'integer',
               references() {
                 return ImageCategory.fields.id;
-              }
-            }
+              },
+            },
           };
 
           OtherMessage = class extends Model {};
@@ -1857,14 +1857,14 @@ describe('KnormRelations', () => {
               type: 'integer',
               references() {
                 return User.fields.id;
-              }
+              },
             },
             receiverId: {
               type: 'integer',
               references() {
                 return User.fields.id;
-              }
-            }
+              },
+            },
           };
         });
 
@@ -1876,8 +1876,8 @@ describe('KnormRelations', () => {
               type: 'integer',
               references() {
                 return Message.fields.id;
-              }
-            }
+              },
+            },
           };
           await expect(
             new Query(User).leftJoin(new Query(Foo)).fetch(),
@@ -1898,7 +1898,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, otherImage: [new OtherImage({ id: 1 })] }),
-              new User({ id: 2, otherImage: [] })
+              new User({ id: 2, otherImage: [] }),
             ]
           );
         });
@@ -1907,7 +1907,7 @@ describe('KnormRelations', () => {
           it('as a string', async () => {
             const query = new Query(User).leftJoin([
               new Query(OtherMessage).on('senderId').as('sentMessages'),
-              new Query(OtherMessage).on('receiverId').as('receivedMessages')
+              new Query(OtherMessage).on('receiverId').as('receivedMessages'),
             ]);
             await expect(
               query.fetch(),
@@ -1916,13 +1916,13 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   sentMessages: [new OtherMessage({ id: 1 })],
-                  receivedMessages: [new OtherMessage({ id: 2 })]
+                  receivedMessages: [new OtherMessage({ id: 2 })],
                 }),
                 new User({
                   id: 2,
                   sentMessages: [new OtherMessage({ id: 2 })],
-                  receivedMessages: [new OtherMessage({ id: 1 })]
-                })
+                  receivedMessages: [new OtherMessage({ id: 1 })],
+                }),
               ]
             );
           });
@@ -1934,7 +1934,7 @@ describe('KnormRelations', () => {
                 .as('sentMessages'),
               new Query(OtherMessage)
                 .on(OtherMessage.fields.receiverId)
-                .as('receivedMessages')
+                .as('receivedMessages'),
             ]);
             await expect(
               query.fetch(),
@@ -1943,27 +1943,27 @@ describe('KnormRelations', () => {
                 new User({
                   id: 1,
                   sentMessages: [new OtherMessage({ id: 1 })],
-                  receivedMessages: [new OtherMessage({ id: 2 })]
+                  receivedMessages: [new OtherMessage({ id: 2 })],
                 }),
                 new User({
                   id: 2,
                   sentMessages: [new OtherMessage({ id: 2 })],
-                  receivedMessages: [new OtherMessage({ id: 1 })]
-                })
+                  receivedMessages: [new OtherMessage({ id: 1 })],
+                }),
               ]
             );
           });
 
           it('as a field instance from the other model', async () => {
             const query = new Query(User).leftJoin([
-              new Query(OtherImage).on(User.fields.id).as('images')
+              new Query(OtherImage).on(User.fields.id).as('images'),
             ]);
             await expect(
               query.fetch(),
               'to be fulfilled with sorted rows satisfying',
               [
                 new User({ id: 1, images: [new OtherImage({ id: 1 })] }),
-                new User({ id: 2, images: [] })
+                new User({ id: 2, images: [] }),
               ]
             );
           });
@@ -1988,7 +1988,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new OtherMessage({ id: 1, user: [] }),
-                new OtherMessage({ id: 2, user: [] })
+                new OtherMessage({ id: 2, user: [] }),
               ]
             );
           });
@@ -2002,7 +2002,7 @@ describe('KnormRelations', () => {
               'to be fulfilled with sorted rows satisfying',
               [
                 new OtherMessage({ id: 1, user: [] }),
-                new OtherMessage({ id: 2, user: [] })
+                new OtherMessage({ id: 2, user: [] }),
               ]
             );
           });
@@ -2044,14 +2044,14 @@ describe('KnormRelations', () => {
             text: { type: 'text', required: true },
             senderId: {
               type: 'integer',
-              references: User.fields.id
+              references: User.fields.id,
             },
             receiverId: {
               type: 'integer',
               references() {
                 return User.fields.id;
-              }
-            }
+              },
+            },
           };
           const query = new Query(User).leftJoin(
             new Query(AnotherMessage).as('messages')
@@ -2081,8 +2081,8 @@ describe('KnormRelations', () => {
                 type: 'integer',
                 references() {
                   return [User.fields.id, AnotherUser.fields.id];
-                }
-              }
+                },
+              },
             };
 
             AnotherMessage = class extends Model {};
@@ -2093,14 +2093,14 @@ describe('KnormRelations', () => {
                 type: 'integer',
                 references() {
                   return [User.fields.id, AnotherUser.fields.id];
-                }
+                },
               },
               receiverId: {
                 type: 'integer',
                 references() {
                   return [User.fields.id, AnotherUser.fields.id];
-                }
-              }
+                },
+              },
             };
           });
 
@@ -2112,8 +2112,8 @@ describe('KnormRelations', () => {
                 type: 'integer',
                 references() {
                   return [Message.fields.id, AnotherMessage.fields.id];
-                }
-              }
+                },
+              },
             };
             await expect(
               new Query(User).leftJoin(new Query(Foo)).fetch(),
@@ -2134,9 +2134,9 @@ describe('KnormRelations', () => {
               [
                 new User({
                   id: 1,
-                  anotherImage: [new AnotherImage({ id: 1 })]
+                  anotherImage: [new AnotherImage({ id: 1 })],
                 }),
-                new User({ id: 2, anotherImage: [] })
+                new User({ id: 2, anotherImage: [] }),
               ]
             );
             await expect(
@@ -2145,9 +2145,9 @@ describe('KnormRelations', () => {
               [
                 new AnotherUser({
                   id: 1,
-                  anotherImage: [new AnotherImage({ id: 1 })]
+                  anotherImage: [new AnotherImage({ id: 1 })],
                 }),
-                new AnotherUser({ id: 2, anotherImage: [] })
+                new AnotherUser({ id: 2, anotherImage: [] }),
               ]
             );
           });
@@ -2160,7 +2160,7 @@ describe('KnormRelations', () => {
                     new Query(AnotherMessage).on('senderId').as('sentMessages'),
                     new Query(AnotherMessage)
                       .on('receiverId')
-                      .as('receivedMessages')
+                      .as('receivedMessages'),
                   ])
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
@@ -2168,13 +2168,13 @@ describe('KnormRelations', () => {
                   new User({
                     id: 1,
                     sentMessages: [new AnotherMessage({ id: 1 })],
-                    receivedMessages: [new AnotherMessage({ id: 2 })]
+                    receivedMessages: [new AnotherMessage({ id: 2 })],
                   }),
                   new User({
                     id: 2,
                     sentMessages: [new AnotherMessage({ id: 2 })],
-                    receivedMessages: [new AnotherMessage({ id: 1 })]
-                  })
+                    receivedMessages: [new AnotherMessage({ id: 1 })],
+                  }),
                 ]
               );
               await expect(
@@ -2183,7 +2183,7 @@ describe('KnormRelations', () => {
                     new Query(AnotherMessage).on('senderId').as('sentMessages'),
                     new Query(AnotherMessage)
                       .on('receiverId')
-                      .as('receivedMessages')
+                      .as('receivedMessages'),
                   ])
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
@@ -2191,13 +2191,13 @@ describe('KnormRelations', () => {
                   new AnotherUser({
                     id: 1,
                     sentMessages: [new AnotherMessage({ id: 1 })],
-                    receivedMessages: [new AnotherMessage({ id: 2 })]
+                    receivedMessages: [new AnotherMessage({ id: 2 })],
                   }),
                   new AnotherUser({
                     id: 2,
                     sentMessages: [new AnotherMessage({ id: 2 })],
-                    receivedMessages: [new AnotherMessage({ id: 1 })]
-                  })
+                    receivedMessages: [new AnotherMessage({ id: 1 })],
+                  }),
                 ]
               );
             });
@@ -2211,7 +2211,7 @@ describe('KnormRelations', () => {
                       .as('sentMessages'),
                     new Query(AnotherMessage)
                       .on(AnotherMessage.fields.receiverId)
-                      .as('receivedMessages')
+                      .as('receivedMessages'),
                   ])
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
@@ -2219,13 +2219,13 @@ describe('KnormRelations', () => {
                   new User({
                     id: 1,
                     sentMessages: [new AnotherMessage({ id: 1 })],
-                    receivedMessages: [new AnotherMessage({ id: 2 })]
+                    receivedMessages: [new AnotherMessage({ id: 2 })],
                   }),
                   new User({
                     id: 2,
                     sentMessages: [new AnotherMessage({ id: 2 })],
-                    receivedMessages: [new AnotherMessage({ id: 1 })]
-                  })
+                    receivedMessages: [new AnotherMessage({ id: 1 })],
+                  }),
                 ]
               );
               await expect(
@@ -2236,7 +2236,7 @@ describe('KnormRelations', () => {
                       .as('sentMessages'),
                     new Query(AnotherMessage)
                       .on(AnotherMessage.fields.receiverId)
-                      .as('receivedMessages')
+                      .as('receivedMessages'),
                   ])
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
@@ -2244,13 +2244,13 @@ describe('KnormRelations', () => {
                   new AnotherUser({
                     id: 1,
                     sentMessages: [new AnotherMessage({ id: 1 })],
-                    receivedMessages: [new AnotherMessage({ id: 2 })]
+                    receivedMessages: [new AnotherMessage({ id: 2 })],
                   }),
                   new AnotherUser({
                     id: 2,
                     sentMessages: [new AnotherMessage({ id: 2 })],
-                    receivedMessages: [new AnotherMessage({ id: 1 })]
-                  })
+                    receivedMessages: [new AnotherMessage({ id: 1 })],
+                  }),
                 ]
               );
             });
@@ -2259,13 +2259,13 @@ describe('KnormRelations', () => {
               await expect(
                 new Query(User)
                   .leftJoin([
-                    new Query(AnotherImage).on(User.fields.id).as('images')
+                    new Query(AnotherImage).on(User.fields.id).as('images'),
                   ])
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
                 [
                   new User({ id: 1, images: [new AnotherImage({ id: 1 })] }),
-                  new User({ id: 2, images: [] })
+                  new User({ id: 2, images: [] }),
                 ]
               );
               await expect(
@@ -2273,16 +2273,16 @@ describe('KnormRelations', () => {
                   .leftJoin([
                     new Query(AnotherImage)
                       .on(AnotherUser.fields.id)
-                      .as('images')
+                      .as('images'),
                   ])
                   .fetch(),
                 'to be fulfilled with sorted rows satisfying',
                 [
                   new AnotherUser({
                     id: 1,
-                    images: [new AnotherImage({ id: 1 })]
+                    images: [new AnotherImage({ id: 1 })],
                   }),
-                  new AnotherUser({ id: 2, images: [] })
+                  new AnotherUser({ id: 2, images: [] }),
                 ]
               );
             });
@@ -2300,8 +2300,8 @@ describe('KnormRelations', () => {
               [
                 new AnotherImage({
                   id: 1,
-                  anotherUser: [new AnotherUser({ id: 1 })]
-                })
+                  anotherUser: [new AnotherUser({ id: 1 })],
+                }),
               ]
             );
           });
@@ -2317,7 +2317,7 @@ describe('KnormRelations', () => {
                 'to be fulfilled with sorted rows satisfying',
                 [
                   new AnotherMessage({ id: 1, user: [] }),
-                  new AnotherMessage({ id: 2, user: [] })
+                  new AnotherMessage({ id: 2, user: [] }),
                 ]
               );
               await expect(
@@ -2327,7 +2327,7 @@ describe('KnormRelations', () => {
                 'to be fulfilled with sorted rows satisfying',
                 [
                   new AnotherMessage({ id: 1, anotherUser: [] }),
-                  new AnotherMessage({ id: 2, anotherUser: [] })
+                  new AnotherMessage({ id: 2, anotherUser: [] }),
                 ]
               );
             });
@@ -2342,7 +2342,7 @@ describe('KnormRelations', () => {
                 'to be fulfilled with sorted rows satisfying',
                 [
                   new AnotherMessage({ id: 1, user: [] }),
-                  new AnotherMessage({ id: 2, user: [] })
+                  new AnotherMessage({ id: 2, user: [] }),
                 ]
               );
               await expect(
@@ -2352,7 +2352,7 @@ describe('KnormRelations', () => {
                 'to be fulfilled with sorted rows satisfying',
                 [
                   new AnotherMessage({ id: 1, anotherUser: [] }),
-                  new AnotherMessage({ id: 2, anotherUser: [] })
+                  new AnotherMessage({ id: 2, anotherUser: [] }),
                 ]
               );
             });
@@ -2375,8 +2375,8 @@ describe('KnormRelations', () => {
                 [
                   new AnotherImage({
                     id: 1,
-                    anotherUser: [new AnotherUser({ id: 1 })]
-                  })
+                    anotherUser: [new AnotherUser({ id: 1 })],
+                  }),
                 ]
               );
             });
@@ -2394,8 +2394,8 @@ describe('KnormRelations', () => {
               [
                 new AnotherUser({
                   id: 1,
-                  anotherImage: [new AnotherImage({ id: 1 })]
-                })
+                  anotherImage: [new AnotherImage({ id: 1 })],
+                }),
               ]
             );
           });
@@ -2412,8 +2412,8 @@ describe('KnormRelations', () => {
               [
                 new AnotherUser({
                   id: 1,
-                  anotherImage: [new AnotherImage({ id: 1 })]
-                })
+                  anotherImage: [new AnotherImage({ id: 1 })],
+                }),
               ]
             );
           });
@@ -2424,13 +2424,13 @@ describe('KnormRelations', () => {
         before(async () => {
           await User.insert([
             { id: 3, name: 'User 3', creator: 1 },
-            { id: 4, name: 'User 4', creator: 2 }
+            { id: 4, name: 'User 4', creator: 2 },
           ]);
         });
 
         after(async () => {
           await User.delete({
-            where: User.where.in({ id: [3, 4] })
+            where: User.where.in({ id: [3, 4] }),
           });
         });
 
@@ -2447,13 +2447,13 @@ describe('KnormRelations', () => {
               new User({
                 id: 3,
                 name: 'User 3',
-                creator: new User({ id: 1, name: 'User 1' })
+                creator: new User({ id: 1, name: 'User 1' }),
               }),
               new User({
                 id: 4,
                 name: 'User 4',
-                creator: new User({ id: 2, name: 'User 2' })
-              })
+                creator: new User({ id: 2, name: 'User 2' }),
+              }),
             ]
           );
         });
@@ -2472,7 +2472,7 @@ describe('KnormRelations', () => {
               new User({ id: 1, creator: null }),
               new User({ id: 2, creator: null }),
               new User({ id: 3, creator: new User({ id: 1 }) }),
-              new User({ id: 4, creator: new User({ id: 2 }) })
+              new User({ id: 4, creator: new User({ id: 2 }) }),
             ]
           );
         });
@@ -2491,7 +2491,7 @@ describe('KnormRelations', () => {
               new User({ id: 1, creator: null }),
               new User({ id: 2, creator: null }),
               new User({ id: 3, creator: new User({ id: 1 }) }),
-              new User({ id: 4, creator: new User({ id: 2 }) })
+              new User({ id: 4, creator: new User({ id: 2 }) }),
             ]
           );
         });
@@ -2510,7 +2510,7 @@ describe('KnormRelations', () => {
               new User({ id: 1, creator: null }),
               new User({ id: 2, creator: null }),
               new User({ id: 3, creator: new User({ id: 1 }) }),
-              new User({ id: 4, creator: new User({ id: 2 }) })
+              new User({ id: 4, creator: new User({ id: 2 }) }),
             ]
           );
         });
@@ -2529,7 +2529,7 @@ describe('KnormRelations', () => {
               new User({ id: 1, creator: null }),
               new User({ id: 2, creator: null }),
               new User({ id: 3, creator: new User({ id: 1 }) }),
-              new User({ id: 4, creator: new User({ id: 2 }) })
+              new User({ id: 4, creator: new User({ id: 2 }) }),
             ]
           );
         });
@@ -2562,7 +2562,7 @@ describe('KnormRelations', () => {
 
           await MessageInOtherSchema.insert([
             { id: 1, text: 'Hi User 2', senderId: 1, receiverId: 2 },
-            { id: 2, text: 'Hi User 1', senderId: 2, receiverId: 1 }
+            { id: 2, text: 'Hi User 1', senderId: 2, receiverId: 1 },
           ]);
         });
 
@@ -2575,7 +2575,7 @@ describe('KnormRelations', () => {
         it('supports `leftJoin`', async () => {
           const query = new Query(User).leftJoin([
             new Query(MessageInOtherSchema).on('senderId').as('sent'),
-            new Query(MessageInOtherSchema).on('receiverId').as('received')
+            new Query(MessageInOtherSchema).on('receiverId').as('received'),
           ]);
           await expect(
             query.fetch(),
@@ -2586,17 +2586,17 @@ describe('KnormRelations', () => {
                 name: 'User 1',
                 sent: [new MessageInOtherSchema({ id: 1, text: 'Hi User 2' })],
                 received: [
-                  new MessageInOtherSchema({ id: 2, text: 'Hi User 1' })
-                ]
+                  new MessageInOtherSchema({ id: 2, text: 'Hi User 1' }),
+                ],
               }),
               new User({
                 id: 2,
                 name: 'User 2',
                 sent: [new MessageInOtherSchema({ id: 2, text: 'Hi User 1' })],
                 received: [
-                  new MessageInOtherSchema({ id: 1, text: 'Hi User 2' })
-                ]
-              })
+                  new MessageInOtherSchema({ id: 1, text: 'Hi User 2' }),
+                ],
+              }),
             ]
           );
         });
@@ -2620,7 +2620,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new User({ id: 1, childImage: [new ChildImage({ id: 1 })] }),
-              new User({ id: 2, childImage: [] })
+              new User({ id: 2, childImage: [] }),
             ]
           );
         });
@@ -2639,7 +2639,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new ChildUser({ id: 1, image: [new Image({ id: 1 })] }),
-              new ChildUser({ id: 2, image: [] })
+              new ChildUser({ id: 2, image: [] }),
             ]
           );
         });
@@ -2658,7 +2658,7 @@ describe('KnormRelations', () => {
             'to be fulfilled with sorted rows satisfying',
             [
               new ChildUser({ id: 1, childImage: [new ChildImage({ id: 1 })] }),
-              new ChildUser({ id: 2, childImage: [] })
+              new ChildUser({ id: 2, childImage: [] }),
             ]
           );
         });
@@ -2677,7 +2677,7 @@ describe('KnormRelations', () => {
           before(() => {
             OtherChildImage = class extends ChildImage {};
             OtherChildImage.fields = {
-              userId: { type: 'integer', references: ChildUser.fields.id }
+              userId: { type: 'integer', references: ChildUser.fields.id },
             };
           });
 
@@ -2688,9 +2688,9 @@ describe('KnormRelations', () => {
               [
                 new ChildUser({
                   id: 1,
-                  otherChildImage: [new OtherChildImage({ id: 1 })]
+                  otherChildImage: [new OtherChildImage({ id: 1 })],
                 }),
-                new ChildUser({ id: 2, otherChildImage: [] })
+                new ChildUser({ id: 2, otherChildImage: [] }),
               ]
             );
           });
@@ -2715,8 +2715,8 @@ describe('KnormRelations', () => {
                 [
                   new OtherChildImage({
                     id: 1,
-                    childUser: [new ChildUser({ id: 1 })]
-                  })
+                    childUser: [new ChildUser({ id: 1 })],
+                  }),
                 ]
               );
             });

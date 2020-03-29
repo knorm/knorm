@@ -35,7 +35,7 @@ describe('Virtual', function() {
           new Virtual({
             name: 'bar',
             model: Foo,
-            descriptor: {}
+            descriptor: {},
           }),
         'to throw',
         new Error("Virtual 'Foo.bar' has no setter or getter")
@@ -49,7 +49,7 @@ describe('Virtual', function() {
           new Virtual({
             name: 'bar',
             model: Foo,
-            descriptor: { get: 'foo' }
+            descriptor: { get: 'foo' },
           }),
         'to throw',
         new Error("Getter for virtual 'Foo.bar' is not a function")
@@ -63,7 +63,7 @@ describe('Virtual', function() {
           new Virtual({
             name: 'bar',
             model: Foo,
-            descriptor: { set: 'foo' }
+            descriptor: { set: 'foo' },
           }),
         'to throw',
         new Error("Setter for virtual 'Foo.bar' is not a function")
@@ -77,11 +77,11 @@ describe('Virtual', function() {
         const virtual = new Virtual({
           name: 'bar',
           model: Foo,
-          descriptor: () => 'foo'
+          descriptor: () => 'foo',
         });
 
         expect(virtual, 'to satisfy', {
-          get: expect.it('when called', 'to be', 'foo')
+          get: expect.it('when called', 'to be', 'foo'),
         });
       });
     });

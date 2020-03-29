@@ -8,6 +8,6 @@ module.exports = database =>
       host: process.env.PGHOST,
       port: 5432,
       user: 'postgres',
-      password: ''
-    }
+      password: '',
+    },
   });

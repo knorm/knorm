@@ -28,7 +28,7 @@ describe('KnormPaginate', () => {
 
     class Model extends orm.Model {}
     Model.fields = {
-      id: { type: 'integer', primary: true, updated: false }
+      id: { type: 'integer', primary: true, updated: false },
     };
 
     User = class extends Model {};
@@ -36,13 +36,13 @@ describe('KnormPaginate', () => {
     User.fields = {
       name: { type: 'string', required: true },
       age: { type: 'integer', default: null },
-      confirmed: 'boolean'
+      confirmed: 'boolean',
     };
 
     Image = class extends Model {};
     Image.table = 'image';
     Image.fields = {
-      user: { type: 'integer', references: User.fields.id }
+      user: { type: 'integer', references: User.fields.id },
     };
   });
 
@@ -62,7 +62,7 @@ describe('KnormPaginate', () => {
     });
     await User.insert([
       { id: 1, name: 'User 1', age: 10 },
-      { id: 2, name: 'User 2', age: 10 }
+      { id: 2, name: 'User 2', age: 10 },
     ]);
     await Image.insert([{ id: 1, user: 1 }]);
   });
@@ -129,7 +129,7 @@ describe('KnormPaginate', () => {
       it("does not support counting multiple 'fields'", async () => {
         const query = new Query(User).fields(['id', 'name']);
         await expect(query.count(), 'to be rejected with error satisfying', {
-          name: 'FetchError'
+          name: 'FetchError',
         });
       });
 
@@ -203,14 +203,14 @@ describe('KnormPaginate', () => {
             new Query(User).count(),
             'to be rejected with error satisfying',
             expect.it('to satisfy', {
-              stack: expect.it('not to contain', 'test/KnormPaginate.spec.js')
+              stack: expect.it('not to contain', 'test/KnormPaginate.spec.js'),
             })
           );
           await expect(
             new Query(User).debug(true).count(),
             'to be rejected with error satisfying',
             expect.it('to satisfy', {
-              stack: expect.it('to contain', 'test/KnormPaginate.spec.js')
+              stack: expect.it('to contain', 'test/KnormPaginate.spec.js'),
             })
           );
           stub.restore();
@@ -228,7 +228,7 @@ describe('KnormPaginate', () => {
           { id: 7, name: 'User 7', age: 10 },
           { id: 8, name: 'User 8', age: 10 },
           { id: 9, name: 'User 9', age: 10 },
-          { id: 10, name: 'User 10', age: 10 }
+          { id: 10, name: 'User 10', age: 10 },
         ])
       );
 
@@ -261,7 +261,7 @@ describe('KnormPaginate', () => {
               new User({ name: 'User 7' }),
               new User({ name: 'User 8' }),
               new User({ name: 'User 9' }),
-              new User({ name: 'User 10' })
+              new User({ name: 'User 10' }),
             ]
           );
         });
@@ -276,8 +276,8 @@ describe('KnormPaginate', () => {
             perPage: 2,
             rows: [
               { id: 3, name: 'User 3' },
-              { id: 4, name: 'User 4' }
-            ]
+              { id: 4, name: 'User 4' },
+            ],
           });
         });
 
@@ -296,8 +296,8 @@ describe('KnormPaginate', () => {
               rows: [
                 new User({ name: 'User 7' }),
                 new User({ name: 'User 8' }),
-                new User({ name: 'User 9' })
-              ]
+                new User({ name: 'User 9' }),
+              ],
             }
           );
         });
@@ -311,7 +311,7 @@ describe('KnormPaginate', () => {
             total: 3,
             page: 2,
             perPage: 1,
-            rows: [{ id: 2, name: 'User 2' }]
+            rows: [{ id: 2, name: 'User 2' }],
           });
         });
 
@@ -324,7 +324,7 @@ describe('KnormPaginate', () => {
             total: 1,
             page: 1,
             perPage: 1,
-            rows: [{ age: 10 }]
+            rows: [{ age: 10 }],
           });
         });
 
@@ -341,8 +341,8 @@ describe('KnormPaginate', () => {
             rows: [
               { id: 7, name: 'User 7' },
               { id: 8, name: 'User 8' },
-              { id: 9, name: 'User 9' }
-            ]
+              { id: 9, name: 'User 9' },
+            ],
           });
         });
 
@@ -352,7 +352,7 @@ describe('KnormPaginate', () => {
             .perPage(1)
             .fields(['max(age)']);
           await expect(query.fetch(), 'to be fulfilled with value satisfying', {
-            total: 10
+            total: 10,
           });
         });
 
@@ -363,7 +363,7 @@ describe('KnormPaginate', () => {
             .fields(['max(age)'])
             .groupBy('id');
           await expect(query.fetch(), 'to be fulfilled with value satisfying', {
-            total: 10
+            total: 10,
           });
         });
 
@@ -374,7 +374,7 @@ describe('KnormPaginate', () => {
             .perPage(1)
             .orderBy('age');
           await expect(query.fetch(), 'to be fulfilled with value satisfying', {
-            total: 10
+            total: 10,
           });
           await expect(spy, 'to have calls satisfying', () => {
             spy(
@@ -397,8 +397,8 @@ describe('KnormPaginate', () => {
             perPage: 2,
             rows: [
               { id: 1, name: 'User 1' },
-              { id: 2, name: 'User 2' }
-            ]
+              { id: 2, name: 'User 2' },
+            ],
           });
         });
 
@@ -408,7 +408,7 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 4,
             perPage: 3,
-            rows: [{ id: 10, name: 'User 10' }]
+            rows: [{ id: 10, name: 'User 10' }],
           });
         });
 
@@ -420,8 +420,8 @@ describe('KnormPaginate', () => {
             perPage: 2,
             rows: [
               { id: 9, name: 'User 9' },
-              { id: 10, name: 'User 10' }
-            ]
+              { id: 10, name: 'User 10' },
+            ],
           });
         });
 
@@ -431,7 +431,7 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 5,
             perPage: 1,
-            rows: [{ id: 5, name: 'User 5' }]
+            rows: [{ id: 5, name: 'User 5' }],
           });
         });
       });
@@ -446,7 +446,7 @@ describe('KnormPaginate', () => {
               query,
               error: new Query.QueryError(
                 new Error('OFFSET must not be negative')
-              )
+              ),
             })
           );
         });
@@ -460,7 +460,7 @@ describe('KnormPaginate', () => {
               query,
               error: new Query.QueryError(
                 new Error('OFFSET must not be negative')
-              )
+              ),
             })
           );
         });
@@ -471,7 +471,7 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 100,
             perPage: 1,
-            rows: []
+            rows: [],
           });
         });
       });
@@ -483,7 +483,7 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 1,
             perPage: 0,
-            rows: []
+            rows: [],
           });
         });
 
@@ -496,7 +496,7 @@ describe('KnormPaginate', () => {
               query,
               error: new Query.QueryError(
                 new Error('LIMIT must not be negative')
-              )
+              ),
             })
           );
         });
@@ -507,7 +507,7 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 1,
             perPage: 100,
-            rows: expect.it('to have length', 10)
+            rows: expect.it('to have length', 10),
           });
         });
       });
@@ -521,8 +521,8 @@ describe('KnormPaginate', () => {
             perPage: 2,
             rows: [
               { id: 3, name: 'User 3' },
-              { id: 4, name: 'User 4' }
-            ]
+              { id: 4, name: 'User 4' },
+            ],
           });
         });
       });
@@ -534,7 +534,7 @@ describe('KnormPaginate', () => {
             total: 10,
             page: 2,
             perPage: 1,
-            rows: [{ id: 2, name: 'User 2' }]
+            rows: [{ id: 2, name: 'User 2' }],
           });
         });
       });
@@ -546,7 +546,7 @@ describe('KnormPaginate', () => {
             .perPage(1)
             .withPaginationData(false);
           await expect(query.fetch(), 'to be fulfilled with value satisfying', [
-            { id: 10, name: 'User 10' }
+            { id: 10, name: 'User 10' },
           ]);
         });
       });

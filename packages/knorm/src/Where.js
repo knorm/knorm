@@ -71,7 +71,7 @@ const whereOptions = {
   lessThanSome: 'ltSome',
   lessThanOrEqualSome: 'lteSome',
   greaterThanSome: 'gtSome',
-  greaterThanOrEqualSome: 'gteSome'
+  greaterThanOrEqualSome: 'gteSome',
 };
 
 Object.entries(whereOptions).forEach(([option, alias]) => {

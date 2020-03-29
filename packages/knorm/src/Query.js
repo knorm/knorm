@@ -53,7 +53,7 @@ class Query {
       fieldsToColumns: modelConfig.fieldsToColumns,
       fieldNames: modelConfig.fieldNames,
       notUpdated: modelConfig.notUpdated,
-      unique: modelConfig.unique
+      unique: modelConfig.unique,
     };
   }
 

@@ -9,13 +9,13 @@ class KnormTimestamps {
       type: 'dateTime',
       column: createdAt.column || 'created_at',
       default: () => new Date(),
-      updated: false
+      updated: false,
     };
     this.updatedAtFieldName = updatedAt.name || 'updatedAt';
     this.fields[this.updatedAtFieldName] = {
       type: 'dateTime',
       column: updatedAt.column || 'updated_at',
-      default: () => new Date()
+      default: () => new Date(),
     };
   }
 

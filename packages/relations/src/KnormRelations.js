@@ -104,7 +104,7 @@ class KnormRelations {
               resolvedReferences.push({
                 // TODO: v3: Model.getField()
                 from: this._config._fields[fieldName],
-                to: reference
+                to: reference,
               });
             }
           }

@@ -79,7 +79,7 @@ describe('Knorm', () => {
         const { Model } = new Knorm({
           fieldToColumn(field) {
             return field.toLowerCase();
-          }
+          },
         });
         Model.fields = { firstName: { type: 'string' } };
         expect(Model.fields.firstName.column, 'to be', 'firstname');
@@ -91,7 +91,7 @@ describe('Knorm', () => {
           fieldToColumn() {
             wasCalled = true;
             expect(this.constructor.name, 'to be', 'Field');
-          }
+          },
         });
         Model.fields = { firstName: { type: 'string' } };
         expect(wasCalled, 'to be true');
@@ -154,7 +154,7 @@ describe('Knorm', () => {
         init(knorm) {
           expect(knorm.plugins.foo, 'to be', plugin);
           ran = true;
-        }
+        },
       };
       expect(ran, 'to be false');
       knorm.use(plugin);

@@ -33,13 +33,13 @@ describe('KnormToJSON', () => {
         id: 1,
         name: 'Foo Foo',
         email: 'foo@foo.com',
-        foo: 'foo'
+        foo: 'foo',
       });
       expect(foo.toJSON(), 'to exhaustively satisfy', {
         id: 1,
         name: 'Foo Foo',
         email: 'foo@foo.com',
-        foo: 'foo'
+        foo: 'foo',
       });
     });
 
@@ -51,7 +51,7 @@ describe('KnormToJSON', () => {
         const foo = new Foo({ id: 1, name: 'Foo Foo', email: 'foo@foo.com' });
         expect(foo.toJSON(), 'to exhaustively satisfy', {
           name: 'Foo Foo',
-          email: 'foo@foo.com'
+          email: 'foo@foo.com',
         });
       });
 
@@ -61,7 +61,7 @@ describe('KnormToJSON', () => {
         Foo.fields = { id: 'integer', name: 'string', email: 'email' };
         const foo = new Foo({ id: 1, name: 'Foo Foo', email: 'foo@foo.com' });
         expect(foo.toJSON(), 'to exhaustively satisfy', {
-          email: 'foo@foo.com'
+          email: 'foo@foo.com',
         });
       });
 
@@ -73,12 +73,12 @@ describe('KnormToJSON', () => {
           id: 1,
           name: 'Foo Foo',
           email: 'foo@foo.com',
-          foo: 'foo'
+          foo: 'foo',
         });
         expect(foo.toJSON(), 'to exhaustively satisfy', {
           id: 1,
           name: 'Foo Foo',
-          email: 'foo@foo.com'
+          email: 'foo@foo.com',
         });
       });
 
@@ -92,13 +92,13 @@ describe('KnormToJSON', () => {
           id: 1,
           name: 'Foo Foo',
           email: 'foo@foo.com',
-          extra: 'bar'
+          extra: 'bar',
         });
 
         expect(foo.toJSON(), 'to exhaustively satisfy', {
           name: 'Foo Foo',
           email: 'foo@foo.com',
-          extra: 'bar'
+          extra: 'bar',
         });
       });
 
@@ -110,7 +110,7 @@ describe('KnormToJSON', () => {
           id: 1,
           name: 'Foo Foo',
           email: 'foo@foo.com',
-          extra: 'bar'
+          extra: 'bar',
         });
         expect(
           JSON.stringify(foo),
@@ -129,7 +129,7 @@ describe('KnormToJSON', () => {
         const foo = new Foo({ id: 1, name: 'Foo Foo', email: 'foo@foo.com' });
         expect(foo.toJSON(), 'to exhaustively satisfy', {
           name: 'Foo Foo',
-          email: 'foo@foo.com'
+          email: 'foo@foo.com',
         });
       });
 
@@ -151,12 +151,12 @@ describe('KnormToJSON', () => {
           id: 1,
           name: 'Foo Foo',
           email: 'foo@foo.com',
-          foo: 'foo'
+          foo: 'foo',
         });
         expect(foo.toJSON(), 'to exhaustively satisfy', {
           id: 1,
           name: 'Foo Foo',
-          email: 'foo@foo.com'
+          email: 'foo@foo.com',
         });
       });
 
@@ -169,7 +169,7 @@ describe('KnormToJSON', () => {
         const bar = new Bar({ id: 1, name: 'Foo Foo', email: 'foo@foo.com' });
         expect(bar.toJSON(), 'to exhaustively satisfy', {
           name: 'Foo Foo',
-          email: 'foo@foo.com'
+          email: 'foo@foo.com',
         });
       });
 
@@ -183,7 +183,7 @@ describe('KnormToJSON', () => {
         const bar = new Bar({ id: 1, name: 'Foo Foo', email: 'foo@foo.com' });
         expect(bar.toJSON(), 'to exhaustively satisfy', {
           id: 1,
-          name: 'Foo Foo'
+          name: 'Foo Foo',
         });
       });
 

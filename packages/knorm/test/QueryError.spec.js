@@ -17,7 +17,7 @@ describe('QueryError', () => {
     it('stores the passed error as `originalError`', () => {
       const error = new Error('connect ECONNREFUSED 127.0.0.1:5616');
       expect(new QueryError(error), 'to satisfy', {
-        originalError: error
+        originalError: error,
       });
     });
 
@@ -34,7 +34,7 @@ describe('QueryError', () => {
     it('stores the passed error as `originalError`', () => {
       const error = new Error('connect ECONNREFUSED 127.0.0.1:5616');
       expect(new QueryError({ error, query: new Query(User) }), 'to satisfy', {
-        originalError: error
+        originalError: error,
       });
     });
 
@@ -44,7 +44,7 @@ describe('QueryError', () => {
       );
       expect(new QueryError({ error, query: new Query(User) }), 'to satisfy', {
         message:
-          'User: insert into "user" ("foo") values ($1) - column "foo" of relation "user" does not exist'
+          'User: insert into "user" ("foo") values ($1) - column "foo" of relation "user" does not exist',
       });
     });
   });

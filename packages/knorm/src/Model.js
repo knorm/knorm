@@ -588,7 +588,7 @@ class Model {
       fieldsToColumns: {},
       unique: [],
       notUpdated: [],
-      fieldNames: []
+      fieldNames: [],
     };
 
     Object.defineProperties(config, {
@@ -598,7 +598,7 @@ class Model {
             throw new Error(`\`${model.name}\` has no primary field`);
           }
           return config._primary;
-        }
+        },
       },
       fields: {
         get() {
@@ -618,7 +618,7 @@ class Model {
 
             model.addField(new model.Field(config));
           });
-        }
+        },
       },
       virtuals: {
         get() {
@@ -628,7 +628,7 @@ class Model {
           Object.entries(virtuals).forEach(([name, descriptor]) => {
             model.addVirtual(new model.Virtual({ name, model, descriptor }));
           });
-        }
+        },
       },
       options: {
         get() {
@@ -636,8 +636,8 @@ class Model {
         },
         set(options) {
           config._options = merge(config._options, options);
-        }
-      }
+        },
+      },
     });
 
     return config;

@@ -9,14 +9,14 @@ class KnormSoftDelete {
     this.fields[this.deletedFieldName] = {
       type: 'boolean',
       column: deleted.column || 'deleted',
-      default: false
+      default: false,
     };
 
     if (deletedAt) {
       this.deletedAtFieldName = deletedAt.name || 'deletedAt';
       this.fields[this.deletedAtFieldName] = {
         type: 'dateTime',
-        column: deletedAt.column || 'deleted_at'
+        column: deletedAt.column || 'deleted_at',
       };
     }
   }

@@ -10,7 +10,7 @@ class Virtual {
 
     if (typeof descriptor === 'function') {
       descriptor = {
-        get: descriptor
+        get: descriptor,
       };
     }
 

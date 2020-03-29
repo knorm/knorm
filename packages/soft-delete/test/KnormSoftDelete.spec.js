@@ -11,7 +11,7 @@ const expect = require('unexpected')
   .use(require('unexpected-knex'));
 
 const {
-  Knorm: { Query: KnormQuery }
+  Knorm: { Query: KnormQuery },
 } = knorm;
 const { KnormSoftDeleteError } = KnormSoftDelete;
 const knex = createKnex('knorm-soft-delete');
@@ -43,8 +43,8 @@ describe('KnormSoftDelete', () => {
       expect(Model.fields, 'to satisfy', {
         deleted: {
           type: 'boolean',
-          column: 'deleted'
-        }
+          column: 'deleted',
+        },
       });
     });
 
@@ -54,8 +54,8 @@ describe('KnormSoftDelete', () => {
         expect(Model.fields, 'to satisfy', {
           deleted: undefined,
           isDeleted: {
-            type: 'boolean'
-          }
+            type: 'boolean',
+          },
         });
       });
 
@@ -63,8 +63,8 @@ describe('KnormSoftDelete', () => {
         const { Model } = updateModel({ deleted: { column: 'is_deleted' } });
         expect(Model.fields, 'to satisfy', {
           deleted: {
-            column: 'is_deleted'
-          }
+            column: 'is_deleted',
+          },
         });
       });
     });
@@ -75,8 +75,8 @@ describe('KnormSoftDelete', () => {
         expect(Model.fields, 'to satisfy', {
           deletedAt: {
             type: 'dateTime',
-            column: 'deleted_at'
-          }
+            column: 'deleted_at',
+          },
         });
       });
 
@@ -85,8 +85,8 @@ describe('KnormSoftDelete', () => {
         expect(Model.fields, 'to satisfy', {
           deletedAt: undefined,
           deleted: {
-            type: 'dateTime'
-          }
+            type: 'dateTime',
+          },
         });
       });
 
@@ -94,8 +94,8 @@ describe('KnormSoftDelete', () => {
         const { Model } = updateModel({ deletedAt: { column: 'deleted' } });
         expect(Model.fields, 'to satisfy', {
           deletedAt: {
-            column: 'deleted'
-          }
+            column: 'deleted',
+          },
         });
       });
     });
@@ -121,11 +121,11 @@ describe('KnormSoftDelete', () => {
           type: 'integer',
           required: true,
           primary: true,
-          updated: false
+          updated: false,
         },
         name: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
     });
 
@@ -218,14 +218,14 @@ describe('KnormSoftDelete', () => {
               id: 1,
               name: 'one',
               deleted: true,
-              deletedAt: expect.it('to be a date')
+              deletedAt: expect.it('to be a date'),
             }),
             new User({
               id: 2,
               name: 'two',
               deleted: true,
-              deletedAt: expect.it('to be a date')
-            })
+              deletedAt: expect.it('to be a date'),
+            }),
           ]
         );
       });
@@ -243,7 +243,7 @@ describe('KnormSoftDelete', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, deleted_at: new Date(1000) },
-            { id: 2, deleted_at: new Date(2000) }
+            { id: 2, deleted_at: new Date(2000) },
           ]
         );
         clock.restore();
@@ -279,7 +279,7 @@ describe('KnormSoftDelete', () => {
             id: 1,
             name: 'one',
             deleted: true,
-            deletedAt: new Date()
+            deletedAt: new Date(),
           })
         );
         await new Query(User).insert(new User({ id: 2, name: 'two' }));
@@ -294,7 +294,7 @@ describe('KnormSoftDelete', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, deleted: false },
-            { id: 2, deleted: false }
+            { id: 2, deleted: false },
           ]
         );
       });
@@ -308,7 +308,7 @@ describe('KnormSoftDelete', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, deleted_at: null },
-            { id: 2, deleted_at: null }
+            { id: 2, deleted_at: null },
           ]
         );
       });
@@ -337,7 +337,7 @@ describe('KnormSoftDelete', () => {
           'to be fulfilled with sorted rows satisfying',
           [
             new User({ id: 1, name: 'one', deleted: false, deletedAt: null }),
-            new User({ id: 2, name: 'two', deleted: false, deletedAt: null })
+            new User({ id: 2, name: 'two', deleted: false, deletedAt: null }),
           ]
         );
       });
@@ -425,7 +425,7 @@ describe('KnormSoftDelete', () => {
             id: 1,
             name: 'one',
             deleted: true,
-            deletedAt: new Date()
+            deletedAt: new Date(),
           })
         );
         await new Query(User).insert(new User({ id: 2, name: 'two' }));
@@ -587,7 +587,7 @@ describe('KnormSoftDelete', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, name: 'one' },
-            { id: 2, name: 'foo' }
+            { id: 2, name: 'foo' },
           ]
         );
       });
@@ -602,7 +602,7 @@ describe('KnormSoftDelete', () => {
           'to have rows satisfying',
           [
             { id: 1, deleted_at: new Date(2000) },
-            { id: 2, deleted_at: new Date(2000) }
+            { id: 2, deleted_at: new Date(2000) },
           ]
         );
         clock.restore();
@@ -612,7 +612,7 @@ describe('KnormSoftDelete', () => {
         const clock = sinon.useFakeTimers({ now: 2000, toFake: ['Date'] });
         await new Query(User).update({
           deleted: true,
-          deletedAt: new Date(3000)
+          deletedAt: new Date(3000),
         });
         await expect(
           knex,
@@ -621,7 +621,7 @@ describe('KnormSoftDelete', () => {
           'to have rows satisfying',
           [
             { id: 1, deleted_at: new Date(3000) },
-            { id: 2, deleted_at: new Date(3000) }
+            { id: 2, deleted_at: new Date(3000) },
           ]
         );
         clock.restore();
@@ -659,7 +659,7 @@ describe('KnormSoftDelete', () => {
           id: 1,
           name: 'one',
           deleted: true,
-          deletedAt: new Date()
+          deletedAt: new Date(),
         }).insert();
         await user.restore();
         await expect(
@@ -676,7 +676,7 @@ describe('KnormSoftDelete', () => {
           id: 1,
           name: 'one',
           deleted: true,
-          deletedAt: new Date()
+          deletedAt: new Date(),
         }).insert();
         const execute = sinon.spy(Query.prototype, 'execute');
         await user.restore({ returning: 'id' });
@@ -700,7 +700,7 @@ describe('KnormSoftDelete', () => {
           id: 1,
           name: 'one',
           deleted: true,
-          deletedAt: new Date()
+          deletedAt: new Date(),
         });
         await User.restore();
         await expect(
@@ -734,7 +734,7 @@ describe('KnormSoftDelete', () => {
           id: 1,
           name: 'one',
           deleted: true,
-          deletedAt: new Date()
+          deletedAt: new Date(),
         }).insert();
         await user.hardDelete();
         await expect(knex, 'with table', User.table, 'to be empty');
@@ -770,7 +770,7 @@ describe('KnormSoftDelete', () => {
           id: 1,
           name: 'one',
           deleted: true,
-          deletedAt: new Date()
+          deletedAt: new Date(),
         });
         await User.hardDelete();
         await expect(knex, 'with table', User.table, 'to be empty');

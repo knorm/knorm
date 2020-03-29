@@ -26,8 +26,8 @@ describe('Model', () => {
           foo: {
             get() {
               return 'foo';
-            }
-          }
+            },
+          },
         };
 
         const foo = new Foo();
@@ -42,8 +42,8 @@ describe('Model', () => {
           foo: {
             get() {
               return this.theValue;
-            }
-          }
+            },
+          },
         };
 
         const foo = new Foo();
@@ -59,8 +59,8 @@ describe('Model', () => {
           foo: {
             set(value) {
               this.theValue = value;
-            }
-          }
+            },
+          },
         };
 
         const foo = new Foo();
@@ -76,8 +76,8 @@ describe('Model', () => {
 
         Foo.fields = {
           id: {
-            type: 'integer'
-          }
+            type: 'integer',
+          },
         };
 
         const spy = sinon.spy(Foo.prototype, 'setData');
@@ -86,7 +86,7 @@ describe('Model', () => {
 
         expect(spy, 'to have calls satisfying', () => {
           spy({
-            id: 1
+            id: 1,
           });
         });
 
@@ -101,8 +101,8 @@ describe('Model', () => {
 
       Foo.fields = {
         foo: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const foo = new Foo();
@@ -116,8 +116,8 @@ describe('Model', () => {
 
       Foo.fields = {
         foo: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const foo = new Foo();
@@ -129,13 +129,13 @@ describe('Model', () => {
 
       Foo.fields = {
         foo: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const foo = new Foo();
       expect(foo.getFields(['foo']), 'to satisfy', [
-        expect.it('to be a', Field)
+        expect.it('to be a', Field),
       ]);
     });
 
@@ -144,17 +144,17 @@ describe('Model', () => {
 
       Foo.fields = {
         foo: {
-          type: 'string'
+          type: 'string',
         },
         bar: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const foo = new Foo();
       expect(foo.getFields(['bar', 'foo']), 'to satisfy', [
         Foo.fields.bar,
-        Foo.fields.foo
+        Foo.fields.foo,
       ]);
     });
 
@@ -163,17 +163,17 @@ describe('Model', () => {
 
       Foo.fields = {
         foo: {
-          type: 'string'
+          type: 'string',
         },
         bar: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const foo = new Foo();
       expect(foo.getFields([Foo.fields.bar, Foo.fields.foo]), 'to satisfy', [
         Foo.fields.bar,
-        Foo.fields.foo
+        Foo.fields.foo,
       ]);
     });
   });
@@ -184,11 +184,11 @@ describe('Model', () => {
 
       Foo.fields = {
         foo: {
-          type: 'string'
+          type: 'string',
         },
         bar: {
-          type: 'integer'
-        }
+          type: 'integer',
+        },
       };
 
       const foo = new Foo();
@@ -197,7 +197,7 @@ describe('Model', () => {
       expect(foo.bar, 'to be undefined');
       foo.setData({
         foo: 'foo',
-        bar: 1
+        bar: 1,
       });
       expect(foo.foo, 'to equal', 'foo');
       expect(foo.bar, 'to equal', 1);
@@ -213,15 +213,15 @@ describe('Model', () => {
           },
           set(value) {
             this.setVirtualBarValue = value;
-          }
-        }
+          },
+        },
       };
 
       const foo = new Foo();
 
       expect(foo.bar, 'to be undefined');
       foo.setData({
-        bar: 1
+        bar: 1,
       });
       expect(foo.bar, 'to equal', 1);
     });
@@ -232,8 +232,8 @@ describe('Model', () => {
       const spy = sinon.spy();
       Foo.virtuals = {
         bar: {
-          set: spy
-        }
+          set: spy,
+        },
       };
 
       const foo = new Foo();
@@ -248,8 +248,8 @@ describe('Model', () => {
       Foo.fields = {
         foo: {
           required: true,
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const foo = new Foo();
@@ -265,8 +265,8 @@ describe('Model', () => {
         bar: {
           get() {
             return 'bar';
-          }
-        }
+          },
+        },
       };
 
       const foo = new Foo();
@@ -287,8 +287,8 @@ describe('Model', () => {
             if (value === undefined) {
               throw new Error('wat');
             }
-          }
-        }
+          },
+        },
       };
 
       const foo = new Foo();
@@ -304,12 +304,12 @@ describe('Model', () => {
       Foo.fields = {
         foo: {
           type: 'string',
-          default: 'foo'
+          default: 'foo',
         },
         bar: {
           type: 'string',
-          default: 'bar'
-        }
+          default: 'bar',
+        },
       };
 
       const foo = new Foo();
@@ -327,12 +327,12 @@ describe('Model', () => {
       Foo.fields = {
         foo: {
           type: 'string',
-          default: 'foo'
+          default: 'foo',
         },
         bar: {
           type: 'string',
-          default: 'bar'
-        }
+          default: 'bar',
+        },
       };
 
       const foo = new Foo();
@@ -350,8 +350,8 @@ describe('Model', () => {
       Foo.fields = {
         foo: {
           type: 'string',
-          default: 'foo'
-        }
+          default: 'foo',
+        },
       };
 
       const foo = new Foo();
@@ -371,8 +371,8 @@ describe('Model', () => {
             type: 'string',
             default() {
               return 'foo';
-            }
-          }
+            },
+          },
         };
 
         const foo = new Foo();
@@ -388,18 +388,18 @@ describe('Model', () => {
         Foo.fields = {
           foo: {
             type: 'string',
-            required: true
+            required: true,
           },
           bar: {
             type: 'string',
-            required: true
+            required: true,
           },
           computed: {
             type: 'string',
             default(model) {
               return model.foo + model.bar;
-            }
-          }
+            },
+          },
         };
 
         const foo = new Foo();
@@ -418,8 +418,8 @@ describe('Model', () => {
       Foo.fields = {
         foo: {
           type: 'string',
-          default: true
-        }
+          default: true,
+        },
       };
 
       const foo = new Foo();
@@ -444,7 +444,7 @@ describe('Model', () => {
 
       expect(foo.getFieldData(), 'to equal', {
         foo: 'foo',
-        bar: null
+        bar: null,
       });
     });
 
@@ -455,7 +455,7 @@ describe('Model', () => {
 
       expect(foo.getFieldData(), 'to equal', {
         foo: 'foo',
-        bar: undefined
+        bar: undefined,
       });
     });
 
@@ -467,7 +467,7 @@ describe('Model', () => {
 
       expect(foo.getFieldData(), 'to equal', {
         foo: 'foo',
-        quux: undefined
+        quux: undefined,
       });
     });
 
@@ -479,7 +479,7 @@ describe('Model', () => {
         foo.bar = 'bar';
 
         expect(foo.getFieldData({ fields: ['bar'] }), 'to equal', {
-          bar: 'bar'
+          bar: 'bar',
         });
       });
 
@@ -500,7 +500,7 @@ describe('Model', () => {
       Foo.virtuals = {
         bar() {
           return 'bar';
-        }
+        },
       };
 
       const foo = new Foo();
@@ -518,7 +518,7 @@ describe('Model', () => {
       Foo.virtuals = {
         bar() {
           return Promise.resolve('bar');
-        }
+        },
       };
 
       const foo = new Foo();
@@ -535,8 +535,8 @@ describe('Model', () => {
 
       Foo.virtuals = {
         quux: {
-          set() {}
-        }
+          set() {},
+        },
       };
 
       const foo = new Foo();
@@ -570,13 +570,13 @@ describe('Model', () => {
         bar: {
           get() {
             return 'bar';
-          }
+          },
         },
         quux: {
           get() {
             return 'quux';
-          }
-        }
+          },
+        },
       };
 
       const foo = new Foo();
@@ -593,8 +593,8 @@ describe('Model', () => {
 
       Foo.virtuals = {
         bar: {
-          set() {}
-        }
+          set() {},
+        },
       };
 
       const foo = new Foo();
@@ -618,7 +618,7 @@ describe('Model', () => {
         },
         async bar() {
           return 'bar';
-        }
+        },
       };
     });
 
@@ -648,7 +648,7 @@ describe('Model', () => {
         },
         async quux() {
           return 'quux';
-        }
+        },
       };
     });
 
@@ -708,7 +708,7 @@ describe('Model', () => {
         },
         async quux() {
           return 'quux';
-        }
+        },
       };
     });
 
@@ -721,7 +721,7 @@ describe('Model', () => {
       expect(foo.getDataSync(), 'to equal', {
         foo: 'foo',
         bar: 'bar',
-        baz: 'baz'
+        baz: 'baz',
       });
     });
 
@@ -734,7 +734,7 @@ describe('Model', () => {
 
         expect(foo.getDataSync({ fields: ['bar'] }), 'to equal', {
           bar: 'bar',
-          baz: 'baz'
+          baz: 'baz',
         });
       });
     });
@@ -749,7 +749,7 @@ describe('Model', () => {
         expect(foo.getDataSync({ virtuals: ['baz'] }), 'to equal', {
           foo: 'foo',
           bar: 'bar',
-          baz: 'baz'
+          baz: 'baz',
         });
       });
     });
@@ -762,12 +762,12 @@ describe('Model', () => {
       Foo.fields = {
         foo: {
           required: true,
-          type: 'string'
+          type: 'string',
         },
         bar: {
           required: true,
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const fooValidationSpy = sinon.spy(Foo.fields.foo, 'validate');
@@ -777,7 +777,7 @@ describe('Model', () => {
 
       await expect(foo.validate(), 'to be rejected with', {
         name: 'ValidationError',
-        type: 'RequiredError'
+        type: 'RequiredError',
       });
 
       await expect(fooValidationSpy, 'was called once');
@@ -794,12 +794,12 @@ describe('Model', () => {
         Foo.fields = {
           foo: {
             required: true,
-            type: 'string'
+            type: 'string',
           },
           bar: {
             required: true,
-            type: 'string'
-          }
+            type: 'string',
+          },
         };
 
         const fooValidationSpy = sinon.spy(Foo.fields.foo, 'validate');
@@ -809,7 +809,7 @@ describe('Model', () => {
 
         await expect(foo.validate({ fields: ['bar'] }), 'to be rejected with', {
           name: 'ValidationError',
-          type: 'RequiredError'
+          type: 'RequiredError',
         });
 
         await expect(fooValidationSpy, 'was not called');
@@ -825,12 +825,12 @@ describe('Model', () => {
         Foo.fields = {
           foo: {
             required: true,
-            type: 'string'
+            type: 'string',
           },
           bar: {
             required: true,
-            type: 'string'
-          }
+            type: 'string',
+          },
         };
 
         const fooValidationSpy = sinon.spy(Foo.fields.foo, 'validate');
@@ -843,7 +843,7 @@ describe('Model', () => {
           'to be rejected with',
           {
             name: 'ValidationError',
-            type: 'RequiredError'
+            type: 'RequiredError',
           }
         );
 
@@ -860,8 +860,8 @@ describe('Model', () => {
 
       Foo.fields = {
         bar: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const barValidationSpy = sinon.spy(Foo.fields.bar, 'validate');
@@ -882,8 +882,8 @@ describe('Model', () => {
 
       Foo.fields = {
         bar: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const barValidationStub = sinon.stub(Foo.fields.bar, 'validate');
@@ -906,8 +906,8 @@ describe('Model', () => {
       Foo.fields = {
         bar: {
           default: true,
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const foo = new Foo();
@@ -931,13 +931,13 @@ describe('Model', () => {
           required: true,
           type: 'string',
           cast: {
-            forSave: fooSaveCast
-          }
+            forSave: fooSaveCast,
+          },
         },
         bar: {
           required: true,
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
 
       const foo = new Foo();
@@ -960,16 +960,16 @@ describe('Model', () => {
             required: true,
             type: 'string',
             cast: {
-              forSave: fooSaveCast
-            }
+              forSave: fooSaveCast,
+            },
           },
           bar: {
             required: true,
             type: 'string',
             cast: {
-              forSave: barSaveCast
-            }
-          }
+              forSave: barSaveCast,
+            },
+          },
         };
 
         const foo = new Foo();
@@ -992,16 +992,16 @@ describe('Model', () => {
             required: true,
             type: 'string',
             cast: {
-              forSave: fooSaveCast
-            }
+              forSave: fooSaveCast,
+            },
           },
           bar: {
             required: true,
             type: 'string',
             cast: {
-              forSave: barSaveCast
-            }
-          }
+              forSave: barSaveCast,
+            },
+          },
         };
 
         const foo = new Foo();
@@ -1022,9 +1022,9 @@ describe('Model', () => {
           required: true,
           type: 'string',
           cast: {
-            forSave() {}
-          }
-        }
+            forSave() {},
+          },
+        },
       };
 
       const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
@@ -1048,9 +1048,9 @@ describe('Model', () => {
           required: true,
           type: 'string',
           cast: {
-            forSave() {}
-          }
-        }
+            forSave() {},
+          },
+        },
       };
 
       const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
@@ -1070,9 +1070,9 @@ describe('Model', () => {
           required: true,
           type: 'string',
           cast: {
-            forSave() {}
-          }
-        }
+            forSave() {},
+          },
+        },
       };
 
       const barCastSpy = sinon.spy(Foo.fields.bar, 'cast');
@@ -1094,9 +1094,9 @@ describe('Model', () => {
           cast: {
             forSave() {
               return 'new value';
-            }
-          }
-        }
+            },
+          },
+        },
       };
 
       const foo = new Foo();
@@ -1114,9 +1114,9 @@ describe('Model', () => {
           required: true,
           type: 'string',
           cast: {
-            forSave() {}
-          }
-        }
+            forSave() {},
+          },
+        },
       };
 
       const foo = new Foo();
@@ -1136,9 +1136,9 @@ describe('Model', () => {
           cast: {
             forSave() {
               return null;
-            }
-          }
-        }
+            },
+          },
+        },
       };
 
       const foo = new Foo();
@@ -1156,9 +1156,9 @@ describe('Model', () => {
           default: true,
           type: 'string',
           cast: {
-            forSave() {}
-          }
-        }
+            forSave() {},
+          },
+        },
       };
 
       const foo = new Foo();
@@ -1181,11 +1181,11 @@ describe('Model', () => {
       Foo.fields = {
         id: {
           type: 'integer',
-          primary: true
+          primary: true,
         },
         name: {
-          type: 'string'
-        }
+          type: 'string',
+        },
       };
     });
 
@@ -1258,16 +1258,16 @@ describe('Model', () => {
         Foo.fields = {
           id: {
             type: 'integer',
-            primary: true
+            primary: true,
           },
           name: {
             type: 'string',
-            unique: true
+            unique: true,
           },
           number: {
             type: 'integer',
-            unique: true
-          }
+            unique: true,
+          },
         };
 
         whereStub = sinon.stub(Query.prototype, 'where').returnsThis();
@@ -1456,16 +1456,16 @@ describe('Model', () => {
         class User extends Model {}
         User.fields = {
           firstName: {
-            type: 'string'
-          }
+            type: 'string',
+          },
         };
 
         expect(User.fields, 'to exhaustively satisfy', {
           firstName: new Field({
             name: 'firstName',
             model: User,
-            type: 'string'
-          })
+            type: 'string',
+          }),
         });
       });
     });
@@ -1475,16 +1475,16 @@ describe('Model', () => {
         class User extends Model {}
         User.fields = {
           firstName: {
-            type: 'string'
-          }
+            type: 'string',
+          },
         };
 
         expect(User.fields, 'to exhaustively satisfy', {
           firstName: new Field({
             name: 'firstName',
             model: User,
-            type: 'string'
-          })
+            type: 'string',
+          }),
         });
       });
 
@@ -1496,8 +1496,8 @@ describe('Model', () => {
           firstName: new Field({
             name: 'firstName',
             model: User,
-            type: 'string'
-          })
+            type: 'string',
+          }),
         });
       });
 
@@ -1510,8 +1510,8 @@ describe('Model', () => {
           () =>
             (Foo.fields = {
               bar: {
-                type: 'string'
-              }
+                type: 'string',
+              },
             }),
           'to throw',
           new Error(
@@ -1525,16 +1525,16 @@ describe('Model', () => {
 
         Foo.virtuals = {
           bar: {
-            get() {}
-          }
+            get() {},
+          },
         };
 
         expect(
           () =>
             (Foo.fields = {
               bar: {
-                type: 'string'
-              }
+                type: 'string',
+              },
             }),
           'to throw',
           new Error('Foo: cannot add field `bar` (`bar` is a virtual)')
@@ -1546,31 +1546,31 @@ describe('Model', () => {
           class User extends Model {}
           User.fields = {
             id: {
-              type: 'string'
-            }
+              type: 'string',
+            },
           };
 
           expect(User.fields, 'to exhaustively satisfy', {
             id: new Field({
               name: 'id',
               model: User,
-              type: 'string'
-            })
+              type: 'string',
+            }),
           });
 
           class OtherUser extends User {}
           OtherUser.fields = {
             id: {
-              type: 'text'
-            }
+              type: 'text',
+            },
           };
 
           expect(OtherUser.fields, 'to exhaustively satisfy', {
             id: new Field({
               name: 'id',
               model: OtherUser,
-              type: 'text'
-            })
+              type: 'text',
+            }),
           });
         });
 
@@ -1578,8 +1578,8 @@ describe('Model', () => {
           class User extends Model {}
           User.fields = {
             id: {
-              type: 'string'
-            }
+              type: 'string',
+            },
           };
 
           expect(User.config.fieldNames, 'to equal', ['id']);
@@ -1587,8 +1587,8 @@ describe('Model', () => {
           class OtherUser extends User {}
           OtherUser.fields = {
             id: {
-              type: 'text'
-            }
+              type: 'text',
+            },
           };
 
           expect(User.config.fieldNames, 'to equal', ['id']);
@@ -1599,31 +1599,31 @@ describe('Model', () => {
           class User extends Model {}
           User.fields = {
             firstName: {
-              type: 'string'
-            }
+              type: 'string',
+            },
           };
 
           expect(User.fields, 'to satisfy', {
             firstName: new Field({
               name: 'firstName',
               model: User,
-              type: 'string'
-            })
+              type: 'string',
+            }),
           });
 
           class Student extends User {}
           Student.fields = {
             studentId: {
-              type: 'integer'
-            }
+              type: 'integer',
+            },
           };
 
           expect(Student.fields, 'to satisfy', {
             firstName: new Field({
               name: 'firstName',
               model: Student,
-              type: 'string'
-            })
+              type: 'string',
+            }),
           });
         });
 
@@ -1633,8 +1633,8 @@ describe('Model', () => {
           User.fields = {
             id: {
               type: 'integer',
-              required: true
-            }
+              required: true,
+            },
           };
 
           expect(User.fields, 'to exhaustively satisfy', {
@@ -1642,15 +1642,15 @@ describe('Model', () => {
               name: 'id',
               model: User,
               required: true,
-              type: 'integer'
-            })
+              type: 'integer',
+            }),
           });
 
           class OtherUser extends User {}
           OtherUser.fields = {
             firstName: {
-              type: 'string'
-            }
+              type: 'string',
+            },
           };
 
           expect(User.fields, 'to exhaustively satisfy', {
@@ -1658,21 +1658,21 @@ describe('Model', () => {
               name: 'id',
               model: User,
               required: true,
-              type: 'integer'
-            })
+              type: 'integer',
+            }),
           });
           expect(OtherUser.fields, 'to exhaustively satisfy', {
             id: new Field({
               name: 'id',
               model: OtherUser,
               required: true,
-              type: 'integer'
+              type: 'integer',
             }),
             firstName: new Field({
               name: 'firstName',
               model: OtherUser,
-              type: 'string'
-            })
+              type: 'string',
+            }),
           });
         });
       });
@@ -1684,8 +1684,8 @@ describe('Model', () => {
           User.fields = {
             id: {
               type: 'string',
-              methods: true
-            }
+              methods: true,
+            },
           };
 
           expect(User.fetchById, 'to be a function');
@@ -1700,8 +1700,8 @@ describe('Model', () => {
             someFieldName: {
               type: 'string',
               unique: true,
-              methods: true
-            }
+              methods: true,
+            },
           };
 
           expect(User.fetchBySomeFieldName, 'to be a function');
@@ -1717,8 +1717,8 @@ describe('Model', () => {
             id: {
               type: 'string',
               primary: true,
-              methods: true
-            }
+              methods: true,
+            },
           };
 
           expect(OtherUser.fetchById, 'to be a function');
@@ -1745,8 +1745,8 @@ describe('Model', () => {
           firstName: new Field({
             name: 'firstName',
             model: User,
-            type: 'string'
-          })
+            type: 'string',
+          }),
         });
       });
 
@@ -1762,21 +1762,21 @@ describe('Model', () => {
           firstName: new Field({
             name: 'firstName',
             model: User,
-            type: 'string'
-          })
+            type: 'string',
+          }),
         });
 
         expect(Student.fields, 'to exhaustively satisfy', {
           firstName: new Field({
             name: 'firstName',
             model: Student,
-            type: 'string'
+            type: 'string',
           }),
           studentId: new Field({
             name: 'studentId',
             model: Student,
-            type: 'integer'
-          })
+            type: 'integer',
+          }),
         });
       });
     });
@@ -1790,8 +1790,8 @@ describe('Model', () => {
         User.virtuals = {
           firstName: {
             get() {},
-            set() {}
-          }
+            set() {},
+          },
         };
 
         expect(User.virtuals, 'to exhaustively satisfy', {
@@ -1800,9 +1800,9 @@ describe('Model', () => {
             model: User,
             descriptor: {
               get: expect.it('to be a function'),
-              set: expect.it('to be a function')
-            }
-          })
+              set: expect.it('to be a function'),
+            },
+          }),
         });
       });
 
@@ -1815,8 +1815,8 @@ describe('Model', () => {
           () =>
             (Foo.virtuals = {
               bar: {
-                get() {}
-              }
+                get() {},
+              },
             }),
           'to throw',
           new Error(
@@ -1830,16 +1830,16 @@ describe('Model', () => {
 
         Foo.fields = {
           bar: {
-            type: 'string'
-          }
+            type: 'string',
+          },
         };
 
         expect(
           () =>
             (Foo.virtuals = {
               bar: {
-                get() {}
-              }
+                get() {},
+              },
             }),
           'to throw',
           new Error('Foo: cannot add virtual `bar` (`bar` is a field)')
@@ -1853,8 +1853,8 @@ describe('Model', () => {
             firstName: {
               get() {
                 return 'foo';
-              }
-            }
+              },
+            },
           };
 
           expect(User.virtuals, 'to exhaustively satisfy', {
@@ -1862,9 +1862,9 @@ describe('Model', () => {
               name: 'firstName',
               model: User,
               descriptor: {
-                get: expect.it('to be a function')
-              }
-            })
+                get: expect.it('to be a function'),
+              },
+            }),
           });
 
           class OtherUser extends User {}
@@ -1872,8 +1872,8 @@ describe('Model', () => {
             firstName: {
               get() {
                 return 'bar';
-              }
-            }
+              },
+            },
           };
 
           expect(OtherUser.virtuals, 'to satisfy', {
@@ -1881,9 +1881,9 @@ describe('Model', () => {
               name: 'firstName',
               model: OtherUser,
               descriptor: {
-                get: expect.it('to be a function')
-              }
-            })
+                get: expect.it('to be a function'),
+              },
+            }),
           });
         });
 
@@ -1893,8 +1893,8 @@ describe('Model', () => {
             firstName: {
               get() {
                 return 'foo';
-              }
-            }
+              },
+            },
           };
 
           expect(User.virtuals, 'to satisfy', {
@@ -1902,9 +1902,9 @@ describe('Model', () => {
               name: 'firstName',
               model: User,
               descriptor: {
-                get: expect.it('to be a function')
-              }
-            })
+                get: expect.it('to be a function'),
+              },
+            }),
           });
 
           class Student extends User {}
@@ -1912,8 +1912,8 @@ describe('Model', () => {
             lastName: {
               get() {
                 return 'bar';
-              }
-            }
+              },
+            },
           };
 
           expect(Student.virtuals, 'to satisfy', {
@@ -1921,9 +1921,9 @@ describe('Model', () => {
               name: 'firstName',
               model: Student,
               descriptor: {
-                get: expect.it('to be a function')
-              }
-            })
+                get: expect.it('to be a function'),
+              },
+            }),
           });
         });
 
@@ -1934,8 +1934,8 @@ describe('Model', () => {
             firstName: {
               get() {
                 return 'foo';
-              }
-            }
+              },
+            },
           };
 
           expect(User.virtuals, 'to exhaustively satisfy', {
@@ -1943,9 +1943,9 @@ describe('Model', () => {
               name: 'firstName',
               model: User,
               descriptor: {
-                get: expect.it('to be a function')
-              }
-            })
+                get: expect.it('to be a function'),
+              },
+            }),
           });
 
           class OtherUser extends User {}
@@ -1953,8 +1953,8 @@ describe('Model', () => {
             lastName: {
               get() {
                 return 'bar';
-              }
-            }
+              },
+            },
           };
 
           expect(User.virtuals, 'to exhaustively satisfy', {
@@ -1962,25 +1962,25 @@ describe('Model', () => {
               name: 'firstName',
               model: User,
               descriptor: {
-                get: expect.it('to be a function')
-              }
-            })
+                get: expect.it('to be a function'),
+              },
+            }),
           });
           expect(OtherUser.virtuals, 'to exhaustively satisfy', {
             firstName: new Virtual({
               name: 'firstName',
               model: OtherUser,
               descriptor: {
-                get: expect.it('to be a function')
-              }
+                get: expect.it('to be a function'),
+              },
             }),
             lastName: new Virtual({
               name: 'lastName',
               model: OtherUser,
               descriptor: {
-                get: expect.it('to be a function')
-              }
-            })
+                get: expect.it('to be a function'),
+              },
+            }),
           });
         });
       });
@@ -1994,8 +1994,8 @@ describe('Model', () => {
           firstName: {
             get() {
               return 'foo';
-            }
-          }
+            },
+          },
         };
 
         expect(User.virtuals, 'to exhaustively satisfy', {
@@ -2003,9 +2003,9 @@ describe('Model', () => {
             name: 'firstName',
             model: User,
             descriptor: {
-              get: expect.it('to be a function')
-            }
-          })
+              get: expect.it('to be a function'),
+            },
+          }),
         });
       });
     });
@@ -2017,12 +2017,12 @@ describe('Model', () => {
         class User extends Model {}
         User.options = {
           query: { where: { id: 1 } },
-          plugins: { toJSON: { exclude: 'id' } }
+          plugins: { toJSON: { exclude: 'id' } },
         };
 
         expect(User.options, 'to exhaustively satisfy', {
           query: { where: { id: 1 } },
-          plugins: { toJSON: { exclude: 'id' } }
+          plugins: { toJSON: { exclude: 'id' } },
         });
       });
     });
@@ -2032,12 +2032,12 @@ describe('Model', () => {
         class User extends Model {}
         User.options = {
           query: { where: { id: 1 } },
-          plugins: { toJSON: { exclude: 'id' } }
+          plugins: { toJSON: { exclude: 'id' } },
         };
 
         expect(User.options, 'to exhaustively satisfy', {
           query: { where: { id: 1 } },
-          plugins: { toJSON: { exclude: 'id' } }
+          plugins: { toJSON: { exclude: 'id' } },
         });
       });
 
@@ -2046,26 +2046,26 @@ describe('Model', () => {
           class User extends Model {}
           User.options = {
             query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: 'id' } }
+            plugins: { toJSON: { exclude: 'id' } },
           };
 
           expect(User.options, 'to exhaustively satisfy', {
             query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: 'id' } }
+            plugins: { toJSON: { exclude: 'id' } },
           });
 
           class OtherUser extends User {}
           OtherUser.options = {
             query: { fields: ['id'] },
-            plugins: { timestamps: { createdAt: true } }
+            plugins: { timestamps: { createdAt: true } },
           };
 
           expect(OtherUser.options, 'to exhaustively satisfy', {
             query: { where: { id: 1 }, fields: ['id'] },
             plugins: {
               toJSON: { exclude: 'id' },
-              timestamps: { createdAt: true }
-            }
+              timestamps: { createdAt: true },
+            },
           });
         });
 
@@ -2073,23 +2073,23 @@ describe('Model', () => {
           class User extends Model {}
           User.options = {
             query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
+            plugins: { toJSON: { exclude: ['id'] } },
           };
 
           expect(User.options, 'to exhaustively satisfy', {
             query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
+            plugins: { toJSON: { exclude: ['id'] } },
           });
 
           class OtherUser extends User {}
           OtherUser.options = {
             query: { where: { id: 2 } },
-            plugins: { toJSON: { exclude: ['name'] } }
+            plugins: { toJSON: { exclude: ['name'] } },
           };
 
           expect(OtherUser.options, 'to exhaustively satisfy', {
             query: { where: { id: 2 } },
-            plugins: { toJSON: { exclude: ['name'] } }
+            plugins: { toJSON: { exclude: ['name'] } },
           });
         });
 
@@ -2097,28 +2097,28 @@ describe('Model', () => {
           class User extends Model {}
           User.options = {
             query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
+            plugins: { toJSON: { exclude: ['id'] } },
           };
 
           expect(User.options, 'to exhaustively satisfy', {
             query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
+            plugins: { toJSON: { exclude: ['id'] } },
           });
 
           class OtherUser extends User {}
           OtherUser.options = {
             query: { where: { id: 2 } },
-            plugins: { toJSON: { exclude: 'name' } }
+            plugins: { toJSON: { exclude: 'name' } },
           };
 
           expect(User.options, 'to exhaustively satisfy', {
             query: { where: { id: 1 } },
-            plugins: { toJSON: { exclude: ['id'] } }
+            plugins: { toJSON: { exclude: ['id'] } },
           });
 
           expect(OtherUser.options, 'to exhaustively satisfy', {
             query: { where: { id: 2 } },
-            plugins: { toJSON: { exclude: 'name' } }
+            plugins: { toJSON: { exclude: 'name' } },
           });
         });
       });
@@ -2357,7 +2357,7 @@ describe('Model', () => {
 
       it('sets configured default query options on the instance', () => {
         expect(User.query, 'to satisfy', {
-          options: { fields: { id: 'id' }, where: [[{ id: 1 }]] }
+          options: { fields: { id: 'id' }, where: [[{ id: 1 }]] },
         });
       });
     });
@@ -2391,12 +2391,12 @@ describe('Model', () => {
           type: 'integer',
           required: true,
           primary: true,
-          methods: true
+          methods: true,
         },
         name: {
           type: 'string',
-          required: true
-        }
+          required: true,
+        },
       };
     });
 
@@ -2510,9 +2510,9 @@ describe('Model', () => {
             cast: {
               forFetch() {
                 return 'cast name';
-              }
-            }
-          }
+              },
+            },
+          },
         };
         await expect(
           new OtherUser({ name: 'John Doe' }).insert(),
@@ -2569,9 +2569,9 @@ describe('Model', () => {
             cast: {
               forFetch() {
                 return 'cast name';
-              }
-            }
-          }
+              },
+            },
+          },
         };
         const user = await new OtherUser({ name: 'John Doe' }).insert();
         user.name = 'Jane Doe';
@@ -2612,9 +2612,9 @@ describe('Model', () => {
             cast: {
               forFetch() {
                 return 'cast name';
-              }
-            }
-          }
+              },
+            },
+          },
         };
         const user = await new OtherUser({ name: 'John Doe' }).insert();
         await expect(
@@ -2654,9 +2654,9 @@ describe('Model', () => {
             cast: {
               forFetch() {
                 return 'cast name';
-              }
-            }
-          }
+              },
+            },
+          },
         };
         const user = await new OtherUser({ name: 'John Doe' }).insert();
         await expect(

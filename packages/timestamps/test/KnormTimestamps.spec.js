@@ -38,14 +38,14 @@ describe('KnormTimestamps', () => {
         const { Model } = updateModel({ createdAt: { name: 'created' } });
         expect(Model.fields, 'to satisfy', {
           createdAt: undefined,
-          created: { type: 'dateTime' }
+          created: { type: 'dateTime' },
         });
       });
 
       it('allows configuring the `createdAt` field column-name', () => {
         const { Model } = updateModel({ createdAt: { column: 'created' } });
         expect(Model.fields, 'to satisfy', {
-          createdAt: { column: 'created' }
+          createdAt: { column: 'created' },
         });
       });
     });
@@ -55,14 +55,14 @@ describe('KnormTimestamps', () => {
         const { Model } = updateModel({ updatedAt: { name: 'updated' } });
         expect(Model.fields, 'to satisfy', {
           updatedAt: undefined,
-          updated: { type: 'dateTime' }
+          updated: { type: 'dateTime' },
         });
       });
 
       it('allows configuring the `updatedAt` field column-name', () => {
         const { Model } = updateModel({ updatedAt: { column: 'updated' } });
         expect(Model.fields, 'to satisfy', {
-          updatedAt: { column: 'updated' }
+          updatedAt: { column: 'updated' },
         });
       });
     });
@@ -84,8 +84,8 @@ describe('KnormTimestamps', () => {
           type: 'integer',
           required: true,
           primary: true,
-          updated: false
-        }
+          updated: false,
+        },
       };
     });
 
@@ -143,7 +143,7 @@ describe('KnormTimestamps', () => {
           'to have sorted rows satisfying',
           [
             { id: 1, created_at: new Date(0), updated_at: new Date(2000) },
-            { id: 2, created_at: new Date(0), updated_at: new Date(2000) }
+            { id: 2, created_at: new Date(0), updated_at: new Date(2000) },
           ]
         );
       });

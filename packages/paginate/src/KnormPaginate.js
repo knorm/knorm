@@ -68,7 +68,7 @@ class KnormPaginate {
             'groupBy',
             'orderBy',
             'limit',
-            'offset'
+            'offset',
           ]);
 
           if (!clone.hasOption('distinct')) {
@@ -86,7 +86,7 @@ class KnormPaginate {
 
         const rows = await super.fetch({
           limit: perPage,
-          offset: perPage * (page - 1)
+          offset: perPage * (page - 1),
         });
 
         return withPaginationData ? { total, page, perPage, rows } : rows;
