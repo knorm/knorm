@@ -294,9 +294,9 @@ class Transaction {
    *
    * @returns {Promise}
    */
-  async then() {
+  async then(...args) {
     const promise = this.execute();
-    return promise.then.apply(promise, arguments);
+    return promise.then(...args);
   }
 
   /**
@@ -325,9 +325,9 @@ class Transaction {
    *
    * @returns {Promise}
    */
-  async catch() {
+  async catch(...args) {
     const promise = this.execute();
-    return promise.catch.apply(promise, arguments);
+    return promise.catch(...args);
   }
 }
 

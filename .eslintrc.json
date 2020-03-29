@@ -1,4 +1,5 @@
 {
+  "parser": "@typescript-eslint/parser",
   "env": {
     "mocha": true,
     "node": true,
@@ -10,9 +11,12 @@
   "extends": [
     "eslint:recommended",
     "standard",
+    "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
     "plugin:mocha/recommended",
-    "prettier/standard"
+    "prettier/standard",
+    "prettier/@typescript-eslint",
+    "plugin:prettier/recommended"
   ],
   "rules": {
     "curly": [
@@ -35,14 +39,16 @@
     ],
     "prefer-const": "error",
     "prettier/prettier": [
-      "error",
-      {
-        "singleQuote": true
-      }
+      "error"
     ],
     "mocha/no-mocha-arrows": "off",
     "mocha/no-sibling-hooks": "off",
     "mocha/no-hooks-for-single-case": "off",
-    "require-atomic-updates": "off"
+    "require-atomic-updates": "off",
+    "@typescript-eslint/no-var-requires": "warn",
+    "@typescript-eslint/no-use-before-define": "warn",
+    "@typescript-eslint/no-this-alias": "warn",
+    "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/camelcase": "warn"
   }
 }

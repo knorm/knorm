@@ -498,7 +498,7 @@ class Query {
             if (where instanceof this.sql) {
               expressions.push(where);
             } else {
-              expressions.push(this.sql[type].apply(this.sql, where));
+              expressions.push(this.sql[type](...where));
             }
           } else {
             const [column] = this.getWhere([field, value], options);
@@ -514,11 +514,11 @@ class Query {
   }
 
   prepareWhere(sql, fields) {
-    return sql.where.apply(sql, this.getWhere(fields, { forWhere: true }));
+    return sql.where(...this.getWhere(fields, { forWhere: true }));
   }
 
   prepareHaving(sql, fields) {
-    return sql.having.apply(sql, this.getWhere(fields, { forHaving: true }));
+    return sql.having(...this.getWhere(fields, { forHaving: true }));
   }
 
   // TODO: strict mode: warn if invalid options are used depending on the method
