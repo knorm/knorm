@@ -1,0 +1,41 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: PostgreSQL 9.6
+
+on:
+  push:
+    branches: [ master, v* ]
+  pull_request:
+    branches: [ master, v* ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x]
+
+    services:
+      postgres:
+        image: postgres:9.6
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --volumes ./util/create-databases.sql:/docker-entrypoint-initdb.d/create-databases.sql
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: yarn --frozen-lockfile
+    - run: yarn mocha
+      env:
+        CI: true
+        PGHOST: postgres
