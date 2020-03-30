@@ -15,7 +15,7 @@
   "scripts": {
     "clean": "rimraf lib",
     "build": "tsc -p tsconfig.build.json",
-    "prepublishOnly": "yarn clean && yarn build"
+    "prepublish": "yarn clean && yarn build"
   },
   "keywords": [
     "orm",
