@@ -14,7 +14,7 @@ const { KnormPostgresError } = KnormPostgres;
 
 const knex = createKnex('knorm-postgres');
 const connection = knex.client.config.connection;
-const host = connection.host;
+const { host, port, user, password, database } = connection;
 
 describe('KnormPostgres', () => {
   before(async () =>
@@ -28,7 +28,7 @@ describe('KnormPostgres', () => {
 
   it('supports passing `connection` config as a string', async () => {
     const knormPostgres = new KnormPostgres({
-      connection: `postgres://postgres@${host}:5432/postgres`,
+      connection: `postgres://${user}:${password}@${host}:${port}/${database}`,
     });
     await expect(
       knormPostgres.pool.connect(),
@@ -43,7 +43,7 @@ describe('KnormPostgres', () => {
 
   it('supports options in the connection string', async () => {
     const knormPostgres = new KnormPostgres({
-      connection: `postgres://postgres@${host}:5432/postgres?max=5`,
+      connection: `postgres://${user}:${password}@${host}:${port}/${database}?max=5`,
     });
 
     // TODO: pg-connection-string should parseInt on the `max` option
@@ -67,10 +67,10 @@ describe('KnormPostgres', () => {
     const PGDATABASE = process.env.PGDATABASE;
 
     process.env.PGHOST = host;
-    process.env.PGPORT = 5432;
-    process.env.PGUSER = 'postgres';
-    process.env.PGPASSWORD = '';
-    process.env.PGDATABASE = 'postgres';
+    process.env.PGPORT = port;
+    process.env.PGUSER = user;
+    process.env.PGPASSWORD = password;
+    process.env.PGDATABASE = database;
 
     const knormPostgres = new KnormPostgres();
 
