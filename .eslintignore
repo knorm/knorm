@@ -1,9 +1,14 @@
 node_modules
-# nyc output
+
+# nyc output directories
 .nyc_output
+coverage
+
 # local yarn install
 .yarn
+
 # documentation site
 website
-# typescript build output
+
+# typescript build output directories
 packages/*/lib

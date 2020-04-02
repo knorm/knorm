@@ -1,8 +1,9 @@
 # node.js modules
 node_modules
 
-# nyc coverage output
+# nyc coverage output directories
 .nyc_output
+coverage
 
 # typescript output directories
 packages/*/lib

@@ -3,5 +3,9 @@
   "cache": true,
   "include": [
     "packages/*/src"
+  ],
+  "reporter": [
+    "lcov",
+    "text-summary"
   ]
 }
