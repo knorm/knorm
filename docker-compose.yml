@@ -17,3 +17,4 @@ services:
       - postgres
     env:
       PGHOST: postgres
+      PGPORT: 5432
