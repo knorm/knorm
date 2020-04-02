@@ -23,9 +23,19 @@ class Transaction {
 
     this.models = Object.entries(this.models).reduce(
       (models, [name, model]) => {
-        // extending this way doesn't overwrite the model's name
-        models[name] = class extends model {};
-        models[name].Query = class extends model.Query {};
+        class TransactionModel extends model {
+          static get name() {
+            return model.name;
+          }
+        }
+        class TransactionQuery extends model.Query {
+          static get name() {
+            return model.Query.name;
+          }
+        }
+
+        models[name] = TransactionModel;
+        models[name].Query = TransactionQuery;
 
         [models[name], models[name].Query].forEach(scopedClass => {
           scopedClass.prototype.models = scopedClass.models = models;
