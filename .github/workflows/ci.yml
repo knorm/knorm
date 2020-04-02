@@ -147,8 +147,10 @@ jobs:
           PGHOST: localhost
           PGPORT: 5434
 
-      - name: Run tests on PostgreSQL 12
-        run: yarn mocha
+      - name: Run coverage on PostgreSQL 12
+        run: |
+          yarn nyc
+          yarn coveralls
         env:
           PGHOST: localhost
           PGPORT: 5435
