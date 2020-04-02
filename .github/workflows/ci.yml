@@ -148,9 +148,11 @@ jobs:
           PGPORT: 5434
 
       - name: Run coverage on PostgreSQL 12
-        run: |
-          yarn nyc
-          yarn coveralls
+        run: yarn nyc
         env:
           PGHOST: localhost
           PGPORT: 5435
+
+      - name: Send coverage to coveralls
+        if: matrix.node-version == '12.x'
+        run: yarn coveralls
