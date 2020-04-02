@@ -155,4 +155,6 @@ jobs:
 
       - name: Send coverage to coveralls
         if: matrix.node-version == '12.x'
-        run: yarn coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
