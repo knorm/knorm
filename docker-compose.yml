@@ -15,3 +15,5 @@ services:
       - .:/usr/src/app
     depends_on:
       - postgres
+    env:
+      PGHOST: postgres
