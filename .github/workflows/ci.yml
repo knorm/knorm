@@ -43,7 +43,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [8.x, 10.x, 12.x]
 
     services:
       postgres9:
@@ -126,7 +126,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Install dependencies
+      - name: Install dependencies on Node.js 8
+        if: matrix.node-version == '8.x'
+        # @docusaurus/core requires node >= 10 but since we don't use it in
+        # tests, we can ignore that check here
+        run: yarn --frozen-lockfile --ignore-engines
+
+      - name: Install dependencies on Node.js != 8
+        if: matrix.node-version != '8.x'
         run: yarn --frozen-lockfile
 
       - name: Run tests on PostgreSQL 9.6
