@@ -27,10 +27,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/knorm/timestamps.git"
+    "url": "git+ssh://git@github.com/knorm/knorm.git"
   },
   "bugs": {
-    "url": "https://github.com/knorm/timestamps/issues"
+    "url": "https://github.com/knorm/knorm/issues"
   },
-  "homepage": "https://github.com/knorm/timestamps#readme"
+  "homepage": "https://github.com/knorm/knorm/tree/master/timestamps#readme"
 }

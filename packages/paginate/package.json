@@ -32,10 +32,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/knorm/paginate.git"
+    "url": "git+ssh://git@github.com/knorm/knorm.git"
   },
   "bugs": {
-    "url": "https://github.com/knorm/paginate/issues"
+    "url": "https://github.com/knorm/knorm/issues"
   },
-  "homepage": "https://github.com/knorm/paginate#readme"
+  "homepage": "https://github.com/knorm/knorm/tree/master/paginate#readme"
 }

@@ -31,12 +31,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/knorm/postgres.git"
+    "url": "git+ssh://git@github.com/knorm/knorm.git"
   },
   "bugs": {
-    "url": "https://github.com/knorm/postgres/issues"
+    "url": "https://github.com/knorm/knorm/issues"
   },
-  "homepage": "https://github.com/knorm/postgres#readme",
+  "homepage": "https://github.com/knorm/knorm/tree/master/postgres#readme",
   "dependencies": {
     "pg": "^7.5.0",
     "pg-connection-string": "^2.0.0",

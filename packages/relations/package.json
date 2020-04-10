@@ -29,10 +29,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/knorm/relations.git"
+    "url": "git+ssh://git@github.com/knorm/knorm.git"
   },
   "bugs": {
-    "url": "https://github.com/knorm/relations/issues"
+    "url": "https://github.com/knorm/knorm/issues"
   },
-  "homepage": "https://github.com/knorm/relations#readme"
+  "homepage": "https://github.com/knorm/knorm/tree/master/relations#readme"
 }
