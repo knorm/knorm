@@ -1,0 +1,44 @@
+{
+  "name": "@knorm/example",
+  "version": "0.0.1",
+  "description": "An example project showcasing how to use Knorm",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "start": "docker-compose run --rm knorm-example",
+    "start:ci": "npm run migrate && node index",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "knex migrate:latest",
+    "rollback": "knex migrate:rollback"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/knorm/example.git"
+  },
+  "keywords": [
+    "knorm",
+    "example",
+    "orm",
+    "database"
+  ],
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/knorm/example/issues"
+  },
+  "homepage": "https://github.com/knorm/example#readme",
+  "devDependencies": {
+    "eslint": "6.8.0",
+    "eslint-config-ganintegrity": "4.0.2",
+    "prettier": "1.19.1"
+  },
+  "dependencies": {
+    "@knorm/knorm": "2.1.4",
+    "@knorm/postgres": "2.0.5",
+    "@knorm/relations": "3.0.0",
+    "@knorm/timestamps": "2.0.0",
+    "knex": "0.19.5",
+    "pg": "7.18.1"
+  }
+}
