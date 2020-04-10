@@ -1246,16 +1246,6 @@
     update-notifier "^2.2.0"
     yargs "^8.0.2"
 
-"@knorm/knorm@file:packages/knorm":
-  version "2.1.4"
-  dependencies:
-    lodash "^4.17.5"
-    sql-bricks "^2.0.4"
-    validator "^10.1.0"
-
-"@knorm/paginate@file:packages/paginate":
-  version "2.0.0"
-
 "@knorm/postgres@file:packages/postgres":
   version "2.0.5"
   dependencies:
@@ -1265,15 +1255,6 @@
 
 "@knorm/relations@file:packages/relations":
   version "3.0.0"
-
-"@knorm/soft-delete@file:packages/soft-delete":
-  version "2.0.0"
-
-"@knorm/timestamps@file:packages/timestamps":
-  version "2.0.0"
-
-"@knorm/to-json@file:packages/to-json":
-  version "2.0.0"
 
 "@lerna/add@3.20.0":
   version "3.20.0"
