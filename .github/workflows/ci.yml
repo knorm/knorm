@@ -160,6 +160,30 @@ jobs:
           PGHOST: localhost
           PGPORT: 5435
 
+      - name: Run example on PostgreSQL 9.6
+        run: yarn workspace postgres-example yarn start
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+
+      - name: Run example on PostgreSQL 10
+        run: yarn workspace postgres-example yarn start
+        env:
+          PGHOST: localhost
+          PGPORT: 5433
+
+      - name: Run example on PostgreSQL 11
+        run: yarn workspace postgres-example yarn start
+        env:
+          PGHOST: localhost
+          PGPORT: 5434
+
+      - name: Run example on PostgreSQL 12
+        run: yarn workspace postgres-example yarn start
+        env:
+          PGHOST: localhost
+          PGPORT: 5435
+
       - name: Send coverage to coveralls
         if: matrix.node-version == '12.x'
         uses: coverallsapp/github-action@master
