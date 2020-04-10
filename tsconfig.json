@@ -25,8 +25,6 @@
     "noImplicitReturns": true,
     // don't allow unused function parameters
     "noUnusedParameters": true,
-    // don't emit any code on type errors
-    "noEmitOnError": true,
     // generate *.d.ts files
     "declaration": true,
     // disallow inconsistently-cased references to the same file
