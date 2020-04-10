@@ -7,6 +7,10 @@ module.exports = {
   organizationName: 'knorm',
   projectName: 'knorm',
   themeConfig: {
+    algolia: {
+      apiKey: '455465791b223509420751d41ab69165',
+      indexName: 'knorm'
+    },
     navbar: {
       title: 'Knorm',
       logo: {
