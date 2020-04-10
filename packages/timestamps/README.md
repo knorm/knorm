@@ -5,7 +5,8 @@
 [![coverage status](https://coveralls.io/repos/github/knorm/timestamps/badge.svg?branch=master)](https://coveralls.io/github/knorm/timestamps?branch=master)
 [![dependency status](https://david-dm.org/knorm/timestamps.svg)](https://david-dm.org/knorm/timestamps)
 
-Timestamps plugin for [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
+Knorm plugin that automates working with `created_at` and `updated_at` table
+fields.
 
 ## [Documentation](https://knorm.netlify.com/plugins/timestamps.html)
 
