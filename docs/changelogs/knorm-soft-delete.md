@@ -1,1 +1,0 @@
-../../packages/knorm-soft-delete/CHANGELOG.md

@@ -1,1 +1,0 @@
-../../packages/knorm-to-json/CHANGELOG.md

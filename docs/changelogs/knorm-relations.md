@@ -1,1 +1,0 @@
-../../packages/knorm-relations/CHANGELOG.md
