@@ -21,9 +21,6 @@
     "@knorm/knorm": "^2.0.0",
     "@knorm/relations": "^2.0.0 || ^3.0.0"
   },
-  "devDependencies": {
-    "@knorm/relations": "file:../relations"
-  },
   "keywords": [
     "knorm",
     "plugin",

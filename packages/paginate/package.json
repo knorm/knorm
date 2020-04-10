@@ -20,10 +20,6 @@
   "peerDependencies": {
     "@knorm/knorm": "^2.0.0"
   },
-  "devDependencies": {
-    "@knorm/postgres": "file:../postgres",
-    "@knorm/relations": "file:../relations"
-  },
   "keywords": [
     "knorm",
     "plugin",
