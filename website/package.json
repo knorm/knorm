@@ -1,7 +1,8 @@
 {
   "name": "website",
   "private": true,
-  "version": "3.0.0",
+  "version": "1.0.0",
+  "description": "Knorm's documentation site",
   "scripts": {
     "start": "docusaurus start",
     "build": "docusaurus build",
