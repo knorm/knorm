@@ -2,7 +2,7 @@
 title: '@knorm/relations'
 ---
 
-Relations plugin for Knorm.
+Knorm plugin that adds ability to fetch data from multiple tables via SQL joins.
 
 ## Installation
 
@@ -47,7 +47,7 @@ Loading this plugin adds the following methods to the `Query` class:
   the returned data
 
 Which enables using them as [Query
-options](/guides/queries.md?id=setting-options).
+options](../guides/queries.md#setting-options).
 
 ### One-to-many relations
 

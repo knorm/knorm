@@ -5,7 +5,7 @@ title: Debugging
 Debug mode turns on features that help with debugging but at a cost to
 performance or even security in some cases.
 
-::: warning
+:::warning
 Debug mode is not meant to be used in production. Read on for reasons why.
 :::
 

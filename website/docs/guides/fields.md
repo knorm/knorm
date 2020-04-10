@@ -26,7 +26,7 @@ class User extends Model {
 :::important note
 Field names should be unique. The `Model.fields` setter will throw if a field
 name is already a `Model.prototype` property or is already added as a
-[virtual](/guides/virtuals.md).
+[virtual](./virtuals.md).
 :::
 
 Knorm uses field names as column names when running queries. To transform field
@@ -60,8 +60,8 @@ For object configs, these options are supported:
 | Validators:  |                       |                |                                                                                                                                                                                          |
 | `type`       | string                | none           | The field type is also used as a validator.                                                                                                                                              |
 | `required`   | boolean               | `false`        | Validates that the field's value is neither `undefined` nor `null`.                                                                                                                      |
-| `minLength`  | integer               | none           | Validates that the field-value's `length` is at least as long as this value. Supported only for `string`, `text` and `array` (for [JSON validation](#json-validation)) field types.      |
-| `maxLength`  | integer               | none           | Validates that the field-value's `length` is not longer than this value. Supported only for `string`, `text` and `array` (for [JSON validation](#json-validation)) field types.          |
+| `minLength`  | integer               | none           | Validates that the field-value's `length` is at least as long as this value. Supported only for `string`, `text` and `array` (for [JSON validation](./validation.md#json-validation)) field types.      |
+| `maxLength`  | integer               | none           | Validates that the field-value's `length` is not longer than this value. Supported only for `string`, `text` and `array` (for [JSON validation](./validation.md#json-validation)) field types.          |
 | `oneOf`      | array                 | none           | Validates that the field's value is one of the values in this array. Uses strict equality and case-sensitive matching for strings.                                                       |
 | `equals`     | mixed                 | none           | Validates that the field's value is equal to this value. Uses strict equality and case-sensitive matching for strings.                                                                   |
 | `regex`      | RegExp / object       | none           | Validates that the field's value either matches or does not match a regular expression, or both. See [regex validation](guides/validation.md#regex-validation)                           |

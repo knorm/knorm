@@ -2,7 +2,8 @@
 title: '@knorm/timestamps'
 ---
 
-Timestamps plugin for Knorm .
+Knorm plugin that automates working with `created_at` and `updated_at` table
+fields.
 
 ## Installation
 

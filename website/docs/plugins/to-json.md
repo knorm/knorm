@@ -5,8 +5,10 @@ title: '@knorm/to-json'
 [toJSON](<https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior>)
 plugin for Knorm.
 
-This plugin adds a `toJSON` method to Knorm's `Model` class and allows
-configuring what fields should be excluded from the output.
+Knorm plugin that adds a
+[toJSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior)
+method to Knorm's `Model` class and allows configuring what fields should be
+excluded from the output.
 
 ## Installation
 

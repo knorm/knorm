@@ -5,7 +5,7 @@
 
 Knorm plugin that adds a
 [toJSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#toJSON()_behavior)
-method to model classes.
+method to Knorm's Model class.
 
 ## Documentation
 

@@ -14,8 +14,8 @@ Models are configured through these static properties:
 | ---------------- | --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Model.table`    | string (**required**) | none    | Configures the model's table-name. **NOTE:** this config can be omitted if the model is not used for performing any database operations (i.e. fetching, saving, deleting etc) |
 | `Model.schema`   | string                | none    | Configures the model's schema-name                                                                                                                                            |
-| `Model.fields`   | object                | none    | Configures the model's fields. See the [fields guide](/guides/fields.md) for more info                                                                                        |
-| `Model.virtuals` | object                | none    | Configures the model's virtual fields. See the [virtuals guide](/guides/virtuals.md) for more info                                                                            |
+| `Model.fields`   | object                | none    | Configures the model's fields. See the [fields guide](./fields.md) for more info                                                                                        |
+| `Model.virtuals` | object                | none    | Configures the model's virtual fields. See the [virtuals guide](./virtuals.md) for more info                                                                            |
 | `Model.options`  | object                | none    | Configures the model's default query and plugin options (for some plugins). See [customizing queries per model](#customizing-queries-per-model) for more info                 |
 | `Model.Query`    | `Query`               | `Query` | The `Query` class that the model uses to perform database operations. This allows [customizing queries per model](#customizing-queries-per-model).                            |
 | `Model.Field`    | `Field`               | `Field` | The `Field` class that the model uses to create field instances. Also allows customizing fields per model.                                                                    |
@@ -133,7 +133,7 @@ the `Query.prototype.returning` query option though).
 The `Model.prototype.update`, `Model.prototype.fetch` and
 `Model.prototype.delete` methods require a primary or unique field to be set on
 the model in order to find the row in the database. See the
-[primary and unique fields guide](/guides/field.md#primary-and-unique-fields)
+[primary and unique fields guide](./fields.md#primary-and-unique-fields)
 for more info.
 
 All the methods also have static variants that instead enable working with
@@ -168,8 +168,8 @@ in the database (for fetch, delete and update operations).
 :::
 
 In addition, you can configure [generated
-methods](/guides/fields.md#generated-methods)
-with the `methods` [field config option](/guides/fields.md#field-config):
+methods](./fields.md#generated-methods)
+with the `methods` [field config option](./fields.md#field-config):
 
 ```js
 User.fields = { email: { type: 'email', unique: true, methods: true } };
@@ -208,7 +208,7 @@ User.fetch().then(console.log); // will not contain system users
 
 :::tip info
 These options will also be inherited when the model is inherited. <br />
-Read more on [setting query options](/guides/queries.md#setting-options)
+Read more on [setting query options](./queries.md#setting-options)
 :::
 
 You could then have a `SystemUser` model for interacting only with system users:
@@ -278,7 +278,7 @@ console.log(orm.models); // => { User: [Function: User] }
 When accessing other models from within instance and class methods, it's
 recommended to use the `models` instance or class property, rather than
 accessing them via Node's `require` function. This allows [runnning queries
-within transactions](/guides/transactions.md#nested-queries-in-instance-or-class-methods)
+within transactions](./transactions.md#nested-queries-in-instance-or-class-methods)
 without having to make any further code changes.
 
 Note that for models to be automatically added to the registry, they must be

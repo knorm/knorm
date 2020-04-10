@@ -2,7 +2,7 @@
 title: '@knorm/paginate'
 ---
 
-Pagination plugin for @knorm/knorm.
+Knorm plugin that adds pagination features when fetching rows from the database.
 
 ## Installation
 
@@ -32,8 +32,8 @@ const orm = knorm({
 | Option    | Type   | Default    | Description                                                                                                          |
 | --------- | ------ | ---------- | -------------------------------------------------------------------------------------------------------------------- |
 | [name]    | string | `paginate` | The name of the plugin, allows accessing the plugin instance via Knorm's plugin registry (`Knorm.prototype.plugins`) |
-| [page]    | number | `1`        | The default `page` value to use if only `perPage` is set in [query options](/guides/queries.md?id=setting-options)   |
-| [perPage] | number | `10`       | The default `perPage` value to use if only `page` is set in [query options](/guides/queries.md?id=setting-options)   |
+| [page]    | number | `1`        | The default `page` value to use if only `perPage` is set in [query options](../guides/queries.md#setting-options)    |
+| [perPage] | number | `10`       | The default `perPage` value to use if only `page` is set in [query options](../guides/queries.md#setting-options)    |
 
 ## Features
 

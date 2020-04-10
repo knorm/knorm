@@ -2,7 +2,7 @@
 title: '@knorm/postgres'
 ---
 
-Postgres plugin for Knorm that enables running queries against PostgreSQL.
+Postgres plugin for Knorm that enables connecting to and running queries against PostgreSQL.
 
 ## Installation
 

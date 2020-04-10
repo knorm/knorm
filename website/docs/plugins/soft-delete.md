@@ -2,7 +2,8 @@
 title: '@knorm/soft-delete'
 ---
 
-Soft-delete plugin for Knorm. This plugin adds soft-deletion fields to the
+Knorm plugin that enables soft-deletion and automates working with `deleted` and
+`deleted_at` table fields. This plugin adds soft-deletion fields to the
 `Model` class and updates `Query` methods to enable soft-deletion.
 
 ## Installation

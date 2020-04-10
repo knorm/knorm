@@ -3,7 +3,7 @@ title: Validation
 ---
 
 Validation is configured per field using the
-[field config](/guides/fields.md#field-config).
+[field config](./fields.md#field-config).
 
 A model instance is validated before
 `Model.prototype.insert` and `Model.prototype.update`. Before inserts, all
@@ -13,9 +13,9 @@ whereas before updates, only the fields that have values set will be validated.
 You can trigger validation any time on a model instance via
 `Model.prototype.validate`.
 
-::: tip
+:::tip info
 Validation can be configured for each field via the [field
-configs](/guides/fields.md#field-config).
+configs](./fields.md#field-config).
 :::
 
 ## Regex validation
@@ -140,7 +140,7 @@ that field fails with that error (or the rejection error). However, if it return
 `Field.ValidationError`.
 
 You can also continue validating by returning an object with the regular
-[validators](/guides/fields.md#field-config) (or resolving the `Promise` with an
+[validators](./fields.md#field-config) (or resolving the `Promise` with an
 object with validators), including another custom validator function!
 
 ```js {11,12,13,14,15,16,17,18,19,24,25,26,27,28,29,30}
@@ -231,11 +231,11 @@ new Upload({
 
 :::tip info
 JSON `shape` validators support all the
-[validators](/guides/fields.md#field-config), including nested `shape`
+[validators](./fields.md#field-config), including nested `shape`
 validators [for nested objects](#nested-objects).
 :::
 
-::: tip
+:::tip info
 You may also define the shape with the `fieldName: fieldType` shorthand:
 :::
 
@@ -257,7 +257,7 @@ User.fields = {
 
 For JSON arrays, use the `array` field type. You can also define the shape of a
 single array item by passing a `shape` validation object with the regular
-[validators](/guides/fields.md#field-config).
+[validators](./fields.md#field-config).
 
 ```js {12,14,15,16,17}
 class SomeData extends Model {}
@@ -383,7 +383,7 @@ instead of adding a `maxLength` validator for every field of type `string`, you
 could override the `string` validator to add max-length validation for every
 `string` field.
 
-This can be easily done with a [plugin](/guides/plugins.md):
+This can be easily done with a [plugin](./plugins.md):
 
 ```js
 const stringsMaxLength500 = orm => {

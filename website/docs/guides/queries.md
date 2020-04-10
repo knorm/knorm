@@ -12,7 +12,7 @@ Queries are configured through these properties:
 
 | Property              | Type     | Default                                         | Description                                                                                                                                                                                                            |
 | --------------------- | -------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Query.prototype.sql` | function | [sql-bricks](https://csnw.github.io/sql-bricks) | The function used to generate SQL. This allows plugins to add more features for example with [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres), which is what [@knorm/postgres](/plugins/postgres) does. |
+| `Query.prototype.sql` | function | [sql-bricks](https://csnw.github.io/sql-bricks) | The function used to generate SQL. This allows plugins to add more features for example with [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres), which is what [@knorm/postgres](../plugins/postgres.md) does. |
 
 ## Initializing queries
 
@@ -97,9 +97,9 @@ const sql = sqlBricks.select(
 const rows = await query.execute(sql);
 ```
 
-::: tip
-with the [@knorm/postgres](../plugins/postgres.md) plugin loaded, then
-`Query.prototype.sql` is overridden with
+:::tip info
+With the [@knorm/postgres](../plugins/postgres.md) plugin loaded, then
+`Query.prototype.sql` is overloaded with
 [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
 :::
 

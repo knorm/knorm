@@ -169,7 +169,7 @@ all.
 
 For this reason, when using models in instance and static methods, it's
 recommended to always access models via the [model
-registry](/guides/models.md#model-registry) instead of requiring them with
+registry](./models.md#model-registry) instead of requiring them with
 Node's `require` method.
 
 ## Running queries with transaction models after transactions are ended
