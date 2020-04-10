@@ -24,13 +24,5 @@
   "bugs": {
     "url": "https://github.com/knorm/knorm/issues"
   },
-  "homepage": "https://github.com/knorm/tree/master/example#readme",
-  "dependencies": {
-    "@knorm/knorm": "2.1.4",
-    "@knorm/postgres": "2.0.5",
-    "@knorm/relations": "3.0.0",
-    "@knorm/timestamps": "2.0.0",
-    "knex": "0.19.5",
-    "pg": "7.18.1"
-  }
+  "homepage": "https://github.com/knorm/tree/master/example#readme"
 }
