@@ -18,3 +18,14 @@ services:
     environment:
       PGHOST: postgres
       PGPORT: 5432
+
+  postgres-example:
+    build: .
+    command: yarn workspace postgres-example start
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - postgres
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432

@@ -9,7 +9,7 @@ class User extends Model {
     const message = new Message({
       text,
       sender: this.id,
-      receiver: to
+      receiver: to,
     });
 
     return message.insert();
@@ -20,12 +20,12 @@ User.table = 'user';
 User.fields = {
   email: {
     type: 'email', // ensure `email` is a valid email address before insert and update operations
-    required: true // ensure `email` is set before insert
+    required: true, // ensure `email` is set before insert
   },
   name: {
     type: 'string',
-    required: true // ensure `name` is set before insert operations
-  }
+    required: true, // ensure `name` is set before insert operations
+  },
 };
 
 module.exports = User;

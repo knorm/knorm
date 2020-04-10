@@ -1,28 +1,25 @@
-# knorm-example
+# postgres-example
 
-[![build status](https://travis-ci.org/knorm/example.svg?branch=master)](https://travis-ci.org/knorm/example)
+> An example project showcasing how to use Knorm with PostgreSQL.
 
-> An example project showcasing how to use
-> [@knorm/knorm](https://www.npmjs.com/package/@knorm/knorm).
+This example connects to a postgres database, creates `user` and `message`
+tables and then inserts and fetches rows from those tables.
 
-## Requirements
-
-[docker](https://docs.docker.com/install/) and
-[docker-compose](https://docs.docker.com/compose/install/) for creating a new
-postgres container.
-
-Alternatively, you can edit the [knexfile.js](./knexfile.js) and
-[orm.js](./orm.js) to connect to an already existing postgres database. However,
-note that migrations will be run agaisnt that database to create the example
-tables.
+The tables are created via [Knex.js](https://knexjs.org/) migrations while rows
+are inserted and fetched with Knorm.
 
 ## Usage
 
-Clone this repository then run the `start` command:
+Run the following commands to clone this repository, install dependencies and
+run the example:
 
 ```bash
-git clone git@github.com:knorm/example.git knorm-example
-cd knorm-example
-npm install
-npm start # also runs migrations against the newly created postgres container
+git clone git@github.com:knorm/knorm.git knorm
+cd knorm
+yarn install
+yarn examples:postgres
 ```
+
+The example runs in a docker container. This requires that you have
+[docker](https://docs.docker.com/install/) and
+[docker-compose](https://docs.docker.com/compose/install/) installed locally.

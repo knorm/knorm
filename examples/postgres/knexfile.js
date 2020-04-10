@@ -1,8 +1,10 @@
 module.exports = {
   client: 'pg',
   connection: {
-    database: 'postgres',
+    host: process.env.PGHOST,
+    port: process.env.PGPORT,
     user: 'postgres',
-    password: ''
-  }
+    password: 'postgres',
+    database: 'knorm-example',
+  },
 };

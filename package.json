@@ -5,8 +5,9 @@
   "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
   "license": "MIT",
   "workspaces": [
+    "website",
     "packages/*",
-    "website"
+    "examples/*"
   ],
   "scripts": {
     "lint": "tsc --noEmit && eslint '*/**/*.{js,ts}'",
@@ -18,7 +19,8 @@
     "nyc": "nyc mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "test": "docker-compose run --rm tests",
-    "coverage": "docker-compose run --rm tests sh -c 'yarn nyc'"
+    "coverage": "docker-compose run --rm tests sh -c 'yarn nyc'",
+    "examples:postgres": "docker-compose run --rm postgres-example"
   },
   "devDependencies": {
     "@semantic-release/changelog": "3.0.4",
@@ -66,7 +68,6 @@
     "@knorm/relations": "file:packages/relations",
     "@knorm/soft-delete": "file:packages/soft-delete",
     "@knorm/timestamps": "file:packages/timestamps",
-    "@knorm/to-json": "file:packages/to-json",
-    "knorm-website": "file:website"
+    "@knorm/to-json": "file:packages/to-json"
   }
 }

@@ -6,7 +6,7 @@ const { inspect } = require('util');
 const runExample = async () => {
   const [foo, bar] = await User.insert([
     { name: 'Foo', email: 'foo@example.com' },
-    { name: 'Bar', email: 'bar@example.com' }
+    { name: 'Bar', email: 'bar@example.com' },
   ]);
 
   await foo.sendMessage({ to: bar, text: 'Hi Bar!' });
@@ -28,7 +28,7 @@ const runExample = async () => {
   console.log(
     inspect(
       await User.fetch({
-        leftJoin: Message.query.on('receiver').as('receivedMessages')
+        leftJoin: Message.query.on('receiver').as('receivedMessages'),
       }),
       { depth: null }
     )
@@ -39,7 +39,7 @@ const runExample = async () => {
   console.log(
     inspect(
       await User.fetch({
-        leftJoin: Message.query.on('sender').as('sentMessages')
+        leftJoin: Message.query.on('sender').as('sentMessages'),
       }),
       { depth: null }
     )
