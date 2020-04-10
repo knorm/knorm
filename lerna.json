@@ -8,11 +8,9 @@
   "useWorkspaces": true,
   "version": "independent",
   "ignoreChanges": [
-    ".github",
-    ".yarn",
-    "examples",
-    "util",
-    "website",
+    ".github/**/*",
+    ".yarn/**/*",
+    "util/**/*",
     "**/*.spec.{js,ts}",
     "**/*.md"
   ],
