@@ -4,21 +4,21 @@ title: Models
 
 Models are synonymous to database tables. They provide the core functionality
 for setting, getting, validating, casting, saving, updating and deleting data.
-All models inherit the base [Model](/api.md#model) class.
+All models inherit the base `Model` class.
 
 ## Model config
 
 Models are configured through these static properties:
 
-| Property         | Type                        | Default                     | Description                                                                                                                                                                   |
-| ---------------- | --------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Model.table`    | string (**required**)       | none                        | Configures the model's table-name. **NOTE:** this config can be omitted if the model is not used for performing any database operations (i.e. fetching, saving, deleting etc) |
-| `Model.schema`   | string                      | none                        | Configures the model's schema-name                                                                                                                                            |
-| `Model.fields`   | object                      | none                        | Configures the model's fields. See the [fields guide](/guides/fields.md#fields) for more info                                                                                  |
-| `Model.virtuals` | object                      | none                        | Configures the model's virtual fields. See the [virtuals guide](/guides/virtuals.md#virtuals) for more info                                                                    |
-| `Model.options`  | object                      | none                        | Configures the model's default query and plugin options (for some plugins). See [customizing queries per model](#customizing-queries-per-model) for more info                 |
-| `Model.Query`    | [Query](/api.md#query) | [Query](/api.md#query) | The `Query` class that the model uses to perform database operations. This allows [customizing queries per model](#customizing-queries-per-model).                            |
-| `Model.Field`    | [Field](/api.md#field) | [Field](/api.md#field) | The `Field` class that the model uses to create field instances. Also allows customizing fields per model.                                                                    |
+| Property         | Type                  | Default | Description                                                                                                                                                                   |
+| ---------------- | --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Model.table`    | string (**required**) | none    | Configures the model's table-name. **NOTE:** this config can be omitted if the model is not used for performing any database operations (i.e. fetching, saving, deleting etc) |
+| `Model.schema`   | string                | none    | Configures the model's schema-name                                                                                                                                            |
+| `Model.fields`   | object                | none    | Configures the model's fields. See the [fields guide](/guides/fields.md) for more info                                                                                        |
+| `Model.virtuals` | object                | none    | Configures the model's virtual fields. See the [virtuals guide](/guides/virtuals.md) for more info                                                                            |
+| `Model.options`  | object                | none    | Configures the model's default query and plugin options (for some plugins). See [customizing queries per model](#customizing-queries-per-model) for more info                 |
+| `Model.Query`    | `Query`               | `Query` | The `Query` class that the model uses to perform database operations. This allows [customizing queries per model](#customizing-queries-per-model).                            |
+| `Model.Field`    | `Field`               | `Field` | The `Field` class that the model uses to create field instances. Also allows customizing fields per model.                                                                    |
 
 ## Setting data
 
@@ -71,7 +71,7 @@ const user = new User();
 user.names = 'Foo Bar';
 ```
 
-> See the [Model](/api.md#model) docs for more info
+> See the `Model` class for more info
 
 ## Getting data
 
@@ -104,7 +104,7 @@ sync variants to ignore async virtual data.
 
 ## Saving, fetching and deleting data
 
-For all [Model](/api.md#model) instances, you can save, retrieve or delete
+For all `Model` instances, you can save, retrieve or delete
 data in the database with these methods:
 
 ```js
@@ -122,23 +122,17 @@ user.fetch(options);
 user.delete(options);
 ```
 
-> See [model.save](/api.md#model-save-options-%E2%87%92-promise-model),
-> [model.insert](/api.md#model-insert-options-%E2%87%92-promise-model),
-> [model.update](/api.md#model-update-options-%E2%87%92-promise-model),
-> [model.fetch](/api.md#model-fetch-options-%E2%87%92-promise-model) and
-> [model.delete](/api.md#model-delete-options-%E2%87%92-promise-model) for more
-> info
+> See `Model.prototype.save`, `Model.prototype.insert`,
+> `Model.prototype.update`, `Model.prototype.fetch` and `Model.prototype.delete`
+> for more info
 
 All the methods update the instance with the latest data from the database, so
 after an update you do not need to re-fetch the row (this can be disabled with
-the [returning](/api.md#query-returning-fields-%E2%87%92-query) query option
-though).
+the `Query.prototype.returning` query option though).
 
-The [model.update](/api.md#model-update-options-%E2%87%92-promise-model),
-[model.fetch](/api.md#model-fetch-options-%E2%87%92-promise-model) and
-[model.delete](/api.md#model-delete-options-%E2%87%92-promise-model) methods
-require a primary or unique field to be set on the model in order to find the
-row in the database. See the
+The `Model.prototype.update`, `Model.prototype.fetch` and
+`Model.prototype.delete` methods require a primary or unique field to be set on
+the model in order to find the row in the database. See the
 [primary and unique fields guide](/guides/field.md#primary-and-unique-fields)
 for more info.
 
@@ -160,12 +154,8 @@ User.fetch(options);
 User.delete(options);
 ```
 
-> See [Model.save](/api.md#model-save-data-options-%E2%87%92-promise),
-> [Model.insert](/api.md#model-insert-data-options-%E2%87%92-promise),
-> [Model.update](/api.md#model-update-data-options-%E2%87%92-promise),
-> [Model.fetch](/api.md#model-fetch-data-options-%E2%87%92-promise) and
-> [Model.delete](/api.md#model-delete-data-options-%E2%87%92-promise) for more
-> info
+> See `Model.save`, `Model.insert`, `Model.update`, `Model.fetch` and
+> `Model.delete` for more info
 
 :::tip info
 Static methods work on multiple rows while the instance methods only work on
@@ -196,12 +186,10 @@ since they are intended to work with single records.
 
 ## Customizing queries per model
 
-You can set default query options per model via the
-[Model.options](/api.md#Model.fields) setter.
+You can set default query options per model via the `Model.options` setter.
 
 For example, if your users table has some system users that should not be
-fetched/updated/deleted, you can add a default
-[where](/api.md#query-where-fields-%E2%87%92-query) option:
+fetched/updated/deleted, you can add a default `Query.prototype.where` option:
 
 ```js
 class User extends Model {}
@@ -295,8 +283,7 @@ without having to make any further code changes.
 
 Note that for models to be automatically added to the registry, they must be
 loaded (i.e. `require`d) and [configured](#model-config). If a model is not
-configured, you can add it to the registry via
-[addModel](/api.md#knorm-addmodel-model):
+configured, you can add it to the registry via `Knorm.prototype.addModel`:
 
 ```js
 const knorm = require('@knorm/knorm');

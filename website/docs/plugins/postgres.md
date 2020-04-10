@@ -31,7 +31,7 @@ const orm = knorm({
 
 | Option       | Type                 | Default    | Description                                                                                                                                                                                                                    |
 | ------------ | -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [name]       | `string`             | `postgres` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object)                                                                                                       |
+| [name]       | `string`             | `postgres` | The name of the plugin, allows accessing the plugin instance via Knorm's plugin registry (`Knorm.prototype.plugins`)                                                                                                           |
 | [connection] | `object` \| `string` | none       | Passed directly to [pg](https://node-postgres.com/features/connecting#programmatic). However, connections can also be configured via [environment variables](https://www.postgresql.org/docs/current/static/libpq-envars.html) |
 
 ## Features

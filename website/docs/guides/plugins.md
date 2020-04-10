@@ -5,8 +5,7 @@ title: Plugins
 Plugins modify the behaviour of `Field`, `Model` and `Query` classes simply by
 overloading their methods.
 
-To load plugins into the ORM, use
-[knorm.use](/api.md#knorm-use-plugin-%E2%87%92-knorm):
+To load plugins into the ORM, use `Knorm.prototype.use`:
 
 ```js
 const knorm = require('@knorm/knorm');
@@ -38,12 +37,11 @@ const { Model, Query } = knorm({
 
 A Knorm plugin can be any _named_ function or an object with an `init` function
 and a `name` property. See
-[Knorm.prototype.use](/api.md#knorm-use-plugin-%E2%87%92-knorm) more info.
+`Knorm.prototype.use` more info.
 
-When a plugin is loaded via
-[Knorm.prototype.use](/api.md#knorm-use-plugin-%E2%87%92-knorm), the function
-(or object's `init` function) is called with the `knorm` instance. The plugin
-can then modify the classes on the instance:
+When a plugin is loaded via `Knorm.prototype.use`, the function (or object's
+`init` function) is called with the `knorm` instance. The plugin can then modify
+the classes on the instance:
 
 ```js
 const preventDelete = knorm => {
@@ -64,13 +62,13 @@ Model.delete().catch(console.log);
 ```
 
 :::tip info
-[Knorm](/api.md#knorm) provides some utility methods for plugins to update the
-instance's classes:
+`Knorm` provides some utility methods for plugins to update the instance's
+classes:
 
-- [Knorm.prototype.updateTransaction](/api.md#knorm-updatetransaction-transaction-%E2%87%92-knorm)
-- [Knorm.prototype.updateModel](/api.md#knorm-updatemodel-model-%E2%87%92-knorm)
-- [Knorm.prototype.updateQuery](/api.md#knorm-updatequery-query-%E2%87%92-knorm)
-- [Knorm.prototype.updateField](/api.md#knorm-updatefield-field-%E2%87%92-knorm)
-- [Knorm.prototype.updateConnection](/api.md#knorm-updateconnection-connection-%E2%87%92-knorm)
+- `Knorm.prototype.updateTransaction`
+- `Knorm.prototype.updateModel`
+- `Knorm.prototype.updateQuery`
+- `Knorm.prototype.updateField`
+- `Knorm.prototype.updateConnection`
 
 :::

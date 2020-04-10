@@ -29,13 +29,13 @@ const orm = knorm({
 
 ### Options
 
-| Option | Type     | Default     | Description                                                                                                              |
-| ------ | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [name] | `string` | `relations` | The name of the plugin, allows accessing the plugin instance via Knorm's [plugin registry](/api.md#knorm-plugins-object) |
+| Option | Type     | Default     | Description                                                                                                          |
+| ------ | -------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| [name] | `string` | `relations` | The name of the plugin, allows accessing the plugin instance via Knorm's plugin registry (`Knorm.prototype.plugins`) |
 
 ## Features
 
-Loading this plugin adds the following methods to the [Query](/api.md/query) class:
+Loading this plugin adds the following methods to the `Query` class:
 
 - `Query.prototype.join` - fetches a related model via a `JOIN` statement
 - `Query.prototype.innerJoin` - fetches a related model via an `INNER JOIN`
@@ -156,8 +156,7 @@ const usersWithBothReceivedAndSentMessages = await User.query
 ### One-to-one relations
 
 These are similar to one-to-many joins, but you can configure the join to only
-return the first row via the [first](/api.md#query-first-first-%E2%87%92-query)
-Query option:
+return the first row via the `Query.prototype.first` Query option:
 
 ```js
 const usersWithAReceivedMessage = await User.query

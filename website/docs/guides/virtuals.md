@@ -3,7 +3,7 @@ title: Virtuals
 ---
 
 Virtuals are computed fields. To add virtuals to a model, assign an object to
-[Model.virtuals](api/model.md#modelvirtuals):
+`Model.virtuals`:
 
 ```js
 class User extends Model {}
@@ -30,7 +30,7 @@ in [setting](guides/models.md#setting-data) and
 
 !> Virtual names should be unique. The `Model.virtuals` setter will throw if the
 virtual's name is already a `Model.prototype` property or is already defined as
-a [field](guides/fields.md#fields).
+a [field](guides/fields.md).
 
 ## Virtual config
 

@@ -2,10 +2,9 @@
 title: Queries
 ---
 
-For all database operations that [Model](/api.md#model) performs, the
-[Query](/api.md#query) class does all the heavy lifting. It transforms
-JavaScript function calls into SQL and parses the data from the database into
-Model instances.
+For all database operations that `Model` performs, the `Query` class does all
+the heavy lifting. It transforms JavaScript function calls into SQL and parses
+the data from the database into Model instances.
 
 ## Query config
 
@@ -28,24 +27,23 @@ User.table = 'user';
 User.fields = { id: { type: 'integer', primary: true }, names: 'string' };
 ```
 
-You can initialise query instances with the
-[Model.query](/api.md#model-query-query) getter:
+You can initialise query instances with the `Model.query` getter:
 
 ```js
 const query = User.query;
 ```
 
 :::important note
-Query instances are not reusable! That is, you cannot use a query instance for
+`Query` instances are not reusable! That is, you cannot use a query instance for
 one operation e.g. a fetch and then reuse it for another e.g. an insert.
 However, cloning query instances is supported via
-[query.clone](/api.md#query-clone-%E2%87%92-query).
+`Query.prototype.clone`.
 :::
 
 ## Running queries
 
-Similar to [Model](/api.md#model), you can save, retrieve or delete data in
-the database with the same CRUD methods:
+Similar to `Model`, you can save, retrieve or delete data in the database with
+the same CRUD methods:
 
 ```js
 // either insert or update (if the instance has a primary field-value set):
@@ -62,17 +60,14 @@ User.query.fetch(options);
 User.query.delete(options);
 ```
 
-> See [query.save](/api.md#query-save-options-%E2%87%92-promise),
-> [query.insert](/api.md#query-insert-options-%E2%87%92-promise),
-> [query.update](/api.md#query-update-options-%E2%87%92-promise),
-> [query.fetch](/api.md#query-fetch-options-%E2%87%92-promise) and
-> [query.delete](/api.md#query-delete-options-%E2%87%92-promise) for more
-> info
+> See `Query.prototype.save`, `Query.prototype.insert`,
+> `Query.prototype.update`, `Query.prototype.fetch` and `Query.prototype.delete`
+> for more info
 
 :::important note
 The Query CRUD methods operate on multiple rows (similar to the Model statics).
-Only [update](/api.md#query-update-data-options-%E2%87%92-promise)
-behaves differently when passed an object with the primary field-value set:
+Only `Query.prototype.update` behaves differently when passed an object with the
+primary field-value set:
 :::
 
 ```js
@@ -82,16 +77,16 @@ User.query.update({ id: 1, names: 'foo' }); // updates only the row with id 1
 
 ## Running raw queries
 
-Raw queries can be run by directly invoking the
-[execute](api.md#query-execute-sql-%E2%87%92-promise) method:
+Raw queries can be run by directly invoking the `Query.prototype.execute`
+method:
 
 ```js
 const rows = await User.query.execute('select now()');
 ```
 
-To run queries with parameter bindings, you may use the
-[sql](/api.md#query-sql-sqlbricks) helper to construct an
-[sql-bricks](https://csnw.github.io/sql-bricks/) instance:
+To run queries with parameter bindings, you may use the `Query.prototype.sql`
+helper to construct an [sql-bricks](https://csnw.github.io/sql-bricks/)
+instance:
 
 ```js
 const query = User.query;
@@ -103,8 +98,8 @@ const rows = await query.execute(sql);
 ```
 
 ::: tip
-with the [@knorm/postgres](https://github.com/knorm/postgres) plugin loaded,
-then `Query.prototype.sql` is overridden with
+with the [@knorm/postgres](../plugins/postgres.md) plugin loaded, then
+`Query.prototype.sql` is overridden with
 [sql-bricks-postgres](https://github.com/Suor/sql-bricks-postgres)
 :::
 
@@ -139,7 +134,7 @@ User.query.fetch({
 });
 ```
 
-Which is a proxy to [query.setOptions](/api.md#query-setoptions-options-%E2%87%92-query):
+Which is a proxy to `Query.prototype.setOptions`:
 
 ```js
 User.query
@@ -175,8 +170,7 @@ User.query
   });
 ```
 
-You can set default query options per model via the
-[Model.options](/api.md#model-options-object) setter:
+You can set default query options per model via the `Model.options` setter:
 
 ```js
 User.options = {
@@ -188,7 +182,7 @@ User.fetch(); // instances returned will only contain the `id` field
 
 ## Where expressions
 
-To create more complicated `where` queries, use where expressions:
+To create more complicated `WHERE` queries, use where expressions:
 
 ```js
 User.query
@@ -259,10 +253,9 @@ User.query.insert({ id: 1 });
 // => User.InsertError(new Error('duplicate primary key error'));
 ```
 
-In addition, if the [require](/api.md#query-require-require-%E2%87%92-query)
-option is set to `true` on a query and no rows are
-inserted/updated/fetched/deleted, then the promise is rejected with a
-[Query.NoRowsError](/api.md#query-norowserror):
+In addition, if the `Query.prototype.require` option is set to `true` on a query
+and no rows are inserted/updated/fetched/deleted, then the promise is rejected
+with a `Query.NoRowsError`:
 
 ```js
 User.query
@@ -277,44 +270,34 @@ User.query
 // => User.NoRowsUpdatedError();
 ```
 
-> See the [Query](/api.md#query) docs for more info on all the query errors
+> See the `Query` docs for more info on all the query errors
 
 ## Query life-cycle
 
 Database connections are created lazily; that is, connections are not created
-until a database operation is called (e.g a
-[fetch](/api.md#query-fetch-options-%E2%87%92-promise)). When a database
-operation is started, the following [Query](/api.md#query) methods are called:
+until a database operation is called (e.g a `Query.prototype.fetch`). When a
+database operation is started, the following `Query` methods are called:
 
-* **[Query.prototype.execute](/api.md#query-execute-sql-%E2%87%92-promise)**:
-  handles the entire query life-cycle
-* **[Query.prototype.connect](/api.md#query-connect-%E2%87%92-promise)**:
-  creates a connection to the database, via [Connection.prototype.create](/api.md#connection-create-%E2%87%92-promise).
-* **[Query.prototype.formatSql](/api.md#query-formatsql-sql-%E2%87%92-object)**:
-  formats the SQL to be run. If multiple queries are to be run, this is called
-  to format each of them.
-* **[Query.prototype.query](/api.md#query-query-sql-%E2%87%92-promise)**: runs
-  the SQL against the database, via
-  [Connection.prototype.query](/api.md#connection-query-sql-%E2%87%92-promise).
-  If multiple queries are to be run, this is called to run each of them.
-* **[Query.prototype.disconnect](/api.md#query-disconnect-%E2%87%92-promise)**:
-  closes the connection to the database, via [Connection.prototype.close](/api.md#connection-close-%E2%87%92-promise).
+* **`Query.prototype.execute`**: handles the entire query life-cycle
+* **`Query.prototype.connect`**: creates a connection to the database, via
+  `Connection.prototype.create`.
+* **`Query.prototype.formatSql`object)**: formats the SQL to be run. If multiple
+  queries are to be run, this is called to format each of them.
+* **`Query.prototype.query`**: runs the SQL against the database, via
+  `Connection.prototype.query`. If multiple queries are to be run, this is
+  called to run each of them.
+* **`Query.prototype.disconnect`**: closes the connection to the database, via
+  `Connection.prototype.close`.
 
 :::tip info
 When multiple queries are run, they are run in parallel and the rows returned
 from each are merged into a single array that is resolved from
-[Query.prototype.execute](/api.md#query-execute-sql-%E2%87%92-promise).
+`Query.prototype.execute`.
 :::
 
-When queries are run within transactions,
-[Query.prototype.connect](/api.md#query-connect-%E2%87%92-promise) and
-[Query.prototype.disconnect](/api.md#query-disconnect-%E2%87%92-promise) are
-overriden to ensure only a single connection is used for all the queries. In
-this case
-[Transaction.prototype.connect](/api.md#transaction-connect-%E2%87%92-promise)
-and
-[Transaction.prototype.disconnect](/api.md#transaction-disconnect-%E2%87%92-promise)
-control the connection handling.
-[Transaction.prototype.connect](/api.md#transaction-connect-%E2%87%92-promise)
-is only called once the first
-[Query.prototype.connect](/api.md#query-connect-%E2%87%92-promise) is called.
+When queries are run within transactions, `Query.prototype.connect` and
+`Query.prototype.disconnect` are overloaded to ensure only a single connection
+is used for all the queries. In this case `Transaction.prototype.connect` and
+`Transaction.prototype.disconnect` control the connection handling.
+`Transaction.prototype.connect`  is only called once the first
+`Query.prototype.connect` is called.

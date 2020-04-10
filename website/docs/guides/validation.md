@@ -6,14 +6,12 @@ Validation is configured per field using the
 [field config](/guides/fields.md#field-config).
 
 A model instance is validated before
-[model.insert](/api.md#model-insert-options-%E2%87%92-promise-model) and
-[model.update](/api.md#model-update-options-%E2%87%92-promise-model). Before
-inserts, all fields will be validated (**_except the primary field if it's
-`undefined`_**) whereas before updates, only the fields that have values set
-will be validated.
+`Model.prototype.insert` and `Model.prototype.update`. Before inserts, all
+fields will be validated (**_except the primary field if it's `undefined`_**)
+whereas before updates, only the fields that have values set will be validated.
 
 You can trigger validation any time on a model instance via
-[model.validate](/api.md#model-validate-options-%E2%87%92-promise)
+`Model.prototype.validate`.
 
 ::: tip
 Validation can be configured for each field via the [field
@@ -124,9 +122,9 @@ new User({ username: 'foo.' }); // not valid
 ## Custom validation
 
 To add custom validation, supply a `validate` function to the field config. The
-validator is called with the field's value and the [Model](/api.md#Model)
-instance as parameters, so you're able to access other values on the instance.
-This is handy for validating fields based on the input of other fields.
+validator is called with the field's value and the `Model` instance as
+parameters, so you're able to access other values on the instance. This is handy
+for validating fields based on the input of other fields.
 
 Async validators (validators that return a `Promise`) are also supported.
 Validation for the field fails if the function:
@@ -139,7 +137,7 @@ Validation for the field fails if the function:
 If the validator throws an error or returns a rejected `Promise`, validation for
 that field fails with that error (or the rejection error). However, if it returns
 `false` or resolves the `Promise` with `false`, then validation fails with a
-[ValidationError](/api.md#field-validationerror).
+`Field.ValidationError`.
 
 You can also continue validating by returning an object with the regular
 [validators](/guides/fields.md#field-config) (or resolving the `Promise` with an
@@ -326,8 +324,7 @@ const someData = new SomeData({
 ```
 
 :::important note
-Nested object fields **should** contain a `type`, just like regular
-[Field](/api.md#field) instances.
+Nested object fields **should** contain a `type`, just like regular `Field` instances.
 :::
 
 ### Root-level JSON fields

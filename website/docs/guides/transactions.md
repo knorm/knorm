@@ -2,7 +2,7 @@
 title: Transactions
 ---
 
-Transactions are supported via the [Transaction](/api.md#transaction) class.
+Transactions are supported via the `Transaction` class.
 
 Creating a new transaction creates a new set of models whose queries will be run
 inside the transaction:
@@ -43,8 +43,8 @@ const transaction = new Transaction(async transaction => {
 transaction.execute().then(console.log);
 ```
 
-Instead of calling [transaction.execute](/api.md#transaction-execute-promise),
-you can also simply `await` the `Transaction` instance:
+Instead of calling `Transaction.prototype.execute`, you can also simply `await`
+the `Transaction` instance:
 
 ```js
 const users = await new Transaction(async transaction => {
@@ -72,9 +72,8 @@ const fetchedUsers = await User.fetch();
 await transaction.commit();
 ```
 
-:::important note
-[transaction.commit](/api.md#transaction-commit-promise) **must** be called when
-it's time to commit the transaction.
+:::important note `Transaction.prototype.commit` **must** be called when it's
+time to commit the transaction.
 :::
 
 :::tip info
@@ -96,13 +95,11 @@ const fetchedUsers = await User.fetch();
 await transaction.commit();
 ```
 
-> the second `User.insert` will be rejected with an
-> [InsertError](/api.md#query-inserterror-insert-error) and the transaction will
-> be rolled back, such that no rows will end up being inserted.
+> the second `User.insert` will be rejected with an `Query.InsertError` and the transaction will be rolled back, such that no rows will end up being inserted.
 
 To ensure transactions are rolled back due to other errors besides query errors,
 use a `try..catch` (or `Promise.prototype.catch`) and call
-[transaction.rollback](/api.md#transaction-rollback-promise) if an error occurs:
+`Transaction.prototype.rollback` if an error occurs:
 
 ```js
 const transaction = new Transaction();
@@ -124,9 +121,8 @@ try {
 ## Running queries inside other methods within transactions
 
 If you have instance methods that run nested queries using other models, access
-those models via [model.models](/api.md#model-models-models) (or
-[Model.models](/api/model.md#models-models-object-2) in static methods) to
-ensure that those queries are run within transactions.
+those models via `Model.prototype.models` (or `Model.models` in static methods)
+to ensure that those queries are run within transactions.
 
 :::tip info
 In transactions, the model regstry is replaced with a new set of models whose
