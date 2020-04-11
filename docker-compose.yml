@@ -1,15 +1,31 @@
 version: '3'
 services:
   postgres:
-    image: postgres:9.6
+    image: postgres:10
     container_name: knorm
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./util/create-databases.sql:/docker-entrypoint-initdb.d/create-databases.sql
 
-  knorm:
+  tests:
     build: .
-    command: npm run test:mocha
+    command: yarn mocha
     volumes:
       - .:/usr/src/app
     depends_on:
       - postgres
     environment:
       PGHOST: postgres
+      PGPORT: 5432
+
+  postgres-example:
+    build: .
+    command: yarn workspace postgres-example start
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - postgres
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432

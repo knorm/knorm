@@ -1,0 +1,40 @@
+{
+  "name": "@knorm/knorm",
+  "version": "2.1.4",
+  "description": "A JavaScript ORM written using ES6 classes",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
+  "files": [
+    "lib"
+  ],
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "build": "tsc -p tsconfig.build.json",
+    "prepublish": "yarn clean && yarn build"
+  },
+  "keywords": [
+    "orm",
+    "erm",
+    "sql",
+    "db",
+    "database"
+  ],
+  "dependencies": {
+    "lodash": "^4.17.5",
+    "sql-bricks": "^2.0.4",
+    "validator": "^10.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/knorm/knorm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/knorm/knorm/issues"
+  },
+  "homepage": "https://github.com/knorm/knorm#readme"
+}

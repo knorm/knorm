@@ -1,0 +1,36 @@
+{
+  "name": "@knorm/soft-delete",
+  "version": "2.0.0",
+  "description": "Soft-delete plugin for @knorm/knorm",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "author": "Joel Mukuthu <joelmukuthu@gmail.com>",
+  "license": "MIT",
+  "files": [
+    "lib"
+  ],
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "build": "tsc -p tsconfig.build.json",
+    "prepublish": "yarn clean && yarn build"
+  },
+  "peerDependencies": {
+    "@knorm/knorm": "^2.0.0"
+  },
+  "keywords": [
+    "knorm",
+    "plugin",
+    "soft-delete"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/knorm/knorm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/knorm/knorm/issues"
+  },
+  "homepage": "https://github.com/knorm/knorm/tree/master/soft-delete#readme"
+}

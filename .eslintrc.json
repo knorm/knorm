@@ -1,5 +1,54 @@
 {
+  "parser": "@typescript-eslint/parser",
+  "env": {
+    "mocha": true,
+    "node": true,
+    "es6": true
+  },
+  "plugins": [
+    "mocha"
+  ],
   "extends": [
-    "ganintegrity"
-  ]
+    "eslint:recommended",
+    "standard",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:mocha/recommended",
+    "prettier/standard",
+    "prettier/@typescript-eslint",
+    "plugin:prettier/recommended"
+  ],
+  "rules": {
+    "curly": [
+      "error",
+      "all"
+    ],
+    "eqeqeq": [
+      "error",
+      "always"
+    ],
+    "no-var": "error",
+    "no-console": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "args": "after-used",
+        "ignoreRestSiblings": true
+      }
+    ],
+    "prefer-const": "error",
+    "prettier/prettier": [
+      "error"
+    ],
+    "mocha/no-mocha-arrows": "off",
+    "mocha/no-sibling-hooks": "off",
+    "mocha/no-hooks-for-single-case": "off",
+    "require-atomic-updates": "off",
+    "@typescript-eslint/no-var-requires": "warn",
+    "@typescript-eslint/no-use-before-define": "warn",
+    "@typescript-eslint/no-this-alias": "warn",
+    "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/camelcase": "warn"
+  }
 }

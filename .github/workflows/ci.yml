@@ -1,0 +1,204 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, v* ]
+  pull_request:
+    branches: [ master, v* ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Use Node.js 12.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Use yarn cache
+        uses: actions/cache@v1
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Run lint
+        run: yarn lint
+
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x, 12.x]
+
+    services:
+      postgres9:
+        image: postgres:9.6-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres10:
+        image: postgres:9.6-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres11:
+        image: postgres:9.6-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres12:
+        image: postgres:9.6-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Create test databases
+        run: |
+          psql -Atx postgres://postgres:postgres@localhost:5432/postgres -f util/create-databases.sql
+          psql -Atx postgres://postgres:postgres@localhost:5433/postgres -f util/create-databases.sql
+          psql -Atx postgres://postgres:postgres@localhost:5434/postgres -f util/create-databases.sql
+          psql -Atx postgres://postgres:postgres@localhost:5435/postgres -f util/create-databases.sql
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Use yarn cache
+        uses: actions/cache@v1
+        id: yarn-cache
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies on Node.js 8
+        if: matrix.node-version == '8.x'
+        # @docusaurus/core requires node >= 10 but since we don't use it in
+        # tests, we can ignore that check here
+        run: yarn --frozen-lockfile --ignore-engines
+
+      - name: Install dependencies on Node.js != 8
+        if: matrix.node-version != '8.x'
+        run: yarn --frozen-lockfile
+
+      - name: Run tests on PostgreSQL 9.6
+        run: yarn mocha
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+
+      - name: Run tests on PostgreSQL 10
+        run: yarn mocha
+        env:
+          PGHOST: localhost
+          PGPORT: 5433
+
+      - name: Run tests on PostgreSQL 11
+        run: yarn mocha
+        env:
+          PGHOST: localhost
+          PGPORT: 5434
+
+      - name: Run coverage on PostgreSQL 12
+        run: yarn nyc
+        env:
+          PGHOST: localhost
+          PGPORT: 5435
+
+      - name: Run example on PostgreSQL 9.6
+        run: yarn workspace postgres-example start
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+
+      - name: Run example on PostgreSQL 10
+        run: yarn workspace postgres-example start
+        env:
+          PGHOST: localhost
+          PGPORT: 5433
+
+      - name: Run example on PostgreSQL 11
+        run: yarn workspace postgres-example start
+        env:
+          PGHOST: localhost
+          PGPORT: 5434
+
+      - name: Run example on PostgreSQL 12
+        run: yarn workspace postgres-example start
+        env:
+          PGHOST: localhost
+          PGPORT: 5435
+
+      - name: Send coverage to coveralls
+        if: matrix.node-version == '12.x'
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+
+      - name: Publish docs
+        uses: netlify/actions/build@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

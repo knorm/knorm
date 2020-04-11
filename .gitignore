@@ -1,3 +1,16 @@
+# node.js modules
 node_modules
-coverage
+
+# nyc coverage output directories
 .nyc_output
+coverage
+
+# typescript output directories
+packages/*/lib
+
+# typescript build files
+tsconfig.tsbuildinfo
+
+# yarn log output files
+yarn-debug.log
+yarn-error.log

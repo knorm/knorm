@@ -1,0 +1,25 @@
+{
+  "packages": [
+    "website",
+    "packages/*",
+    "examples/*"
+  ],
+  "npmClient": "yarn",
+  "useWorkspaces": true,
+  "version": "independent",
+  "ignoreChanges": [
+    ".github/**/*",
+    ".yarn/**/*",
+    "util/**/*",
+    "**/*.spec.{js,ts}",
+    "**/*.md"
+  ],
+  "command": {
+    "version": {
+      "allowBranch": "master",
+      "conventionalCommits": true,
+      "createRelease": "github",
+      "message": "chore(release): release [skip ci]"
+    }
+  }
+}

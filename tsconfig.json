@@ -1,0 +1,33 @@
+{
+  "exclude": [
+    "website",
+    "node_modules"
+  ],
+  "compilerOptions": {
+    // TODO: convert all files to TS files and remove allowJs
+    "allowJs": true,
+    // compile for ES6
+    "target": "ES6",
+    // base directory to resolve "paths" from
+    "baseUrl": ".",
+    // import @knorm/* packages directly from source
+    "paths": {
+      "@knorm/*": [
+        "packages/*/src"
+      ]
+    },
+    // resolve modules the way Node.js does it
+    "moduleResolution": "node",
+    // enable noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply,
+    // strictNullChecks, strictFunctionTypes and strictPropertyInitialization
+    "strict": true,
+    // ensure all code paths return a value if one does
+    "noImplicitReturns": true,
+    // don't allow unused function parameters
+    "noUnusedParameters": true,
+    // generate *.d.ts files
+    "declaration": true,
+    // disallow inconsistently-cased references to the same file
+    "forceConsistentCasingInFileNames": true
+  }
+}

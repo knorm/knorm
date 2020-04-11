@@ -1,0 +1,14 @@
+{
+  "exit": true,
+  "extension": [
+    "js",
+    "ts"
+  ],
+  "spec": [
+    "packages/*/test/*.spec.*"
+  ],
+  "require": [
+    "tsconfig-paths/register",
+    "ts-node/register"
+  ]
+}
