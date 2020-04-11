@@ -52,7 +52,7 @@
     "tsconfig-paths": "3.9.0",
     "typescript": "3.8.3",
     "unexpected": "11.8.0",
-    "unexpected-knex": "2.0.0",
+    "unexpected-knex": "3.0.0",
     "unexpected-sinon": "10.11.2"
   }
 }
