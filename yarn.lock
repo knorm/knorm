@@ -4063,18 +4063,6 @@ cosmiconfig@^5.0.0, cosmiconfig@^5.1.0:
     js-yaml "^3.13.1"
     parse-json "^4.0.0"
 
-coveralls@3.0.6:
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/coveralls/-/coveralls-3.0.6.tgz#5c63b2759b6781118e7439bd870ba5e9ee428b25"
-  integrity sha512-Pgh4v3gCI4T/9VijVrm8Ym5v0OgjvGLKj3zTUwkvsCiwqae/p6VLzpsFNjQS2i6ewV7ef+DjFJ5TSKxYt/mCrA==
-  dependencies:
-    growl "~> 1.10.0"
-    js-yaml "^3.13.1"
-    lcov-parse "^0.0.10"
-    log-driver "^1.2.7"
-    minimist "^1.2.0"
-    request "^2.86.0"
-
 cp-file@^6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/cp-file/-/cp-file-6.2.0.tgz#40d5ea4a1def2a9acdd07ba5c0b0246ef73dc10d"
@@ -6158,7 +6146,7 @@ greedy-interval-packer@1.2.0:
   resolved "https://registry.yarnpkg.com/greedy-interval-packer/-/greedy-interval-packer-1.2.0.tgz#d6da11f3661bb797812da78a1ea510678a2a8739"
   integrity sha1-1toR82Ybt5eBLaeKHqUQZ4oqhzk=
 
-growl@1.10.5, "growl@~> 1.10.0":
+growl@1.10.5:
   version "1.10.5"
   resolved "https://registry.yarnpkg.com/growl/-/growl-1.10.5.tgz#f2735dc2283674fa67478b10181059355c369e5e"
   integrity sha512-qBr4OuELkhPenW6goKVXiv47US3clb3/IbuWF9KNKEijAy9oeHxU9IgzjvJhHkUzhaj7rOUD7+YGWqUjLp5oSA==
@@ -7584,11 +7572,6 @@ lcid@^2.0.0:
   dependencies:
     invert-kv "^2.0.0"
 
-lcov-parse@^0.0.10:
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/lcov-parse/-/lcov-parse-0.0.10.tgz#1b0b8ff9ac9c7889250582b70b71315d9da6d9a3"
-  integrity sha1-GwuP+ayceIklBYK3C3ExXZ2m2aM=
-
 lerna@3.20.2:
   version "3.20.2"
   resolved "https://registry.yarnpkg.com/lerna/-/lerna-3.20.2.tgz#abf84e73055fe84ee21b46e64baf37b496c24864"
@@ -7889,11 +7872,6 @@ lodash@4.17.15, lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.12, lodash@^4.17.
   version "4.17.15"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
   integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
-
-log-driver@^1.2.7:
-  version "1.2.7"
-  resolved "https://registry.yarnpkg.com/log-driver/-/log-driver-1.2.7.tgz#63b95021f0702fedfa2c9bb0a24e7797d71871d8"
-  integrity sha512-U7KCmLdqsGHBLeWqYlFA0V0Sl6P08EE1ZrmA9cxjUE0WVqT9qnyVDPz1kzpFEP0jdJuFnasWIfSd7fsaNXkpbg==
 
 log-symbols@3.0.0:
   version "3.0.0"
@@ -11132,7 +11110,7 @@ replace-ext@1.0.0:
   resolved "https://registry.yarnpkg.com/replace-ext/-/replace-ext-1.0.0.tgz#de63128373fcbf7c3ccfa4de5a480c45a67958eb"
   integrity sha1-3mMSg3P8v3w8z6TeWkgMRaZ5WOs=
 
-request@^2.86.0, request@^2.87.0, request@^2.88.0:
+request@^2.87.0, request@^2.88.0:
   version "2.88.2"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.2.tgz#d73c918731cb5a87da047e207234146f664d12b3"
   integrity sha512-MsvtOrfG9ZcrOwAW+Qi+F6HbD0CWXEh9ou77uOb7FM2WPhwT7smM833PzanhJLsgXjN89Ir6V2PczXNnMpwKhw==
