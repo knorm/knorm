@@ -2,9 +2,9 @@ const { difference } = require('lodash');
 const sqlBricks = require('sql-bricks');
 
 const isArray = Array.isArray;
-const isObject = value => typeof value === 'object' && value !== null;
-const isString = value => typeof value === 'string';
-const isEmpty = value =>
+const isObject = (value) => typeof value === 'object' && value !== null;
+const isString = (value) => typeof value === 'string';
+const isEmpty = (value) =>
   (isArray(value) && !value.length) ||
   (isObject(value) && !Object.keys(value).length);
 
@@ -99,7 +99,7 @@ class Query {
   }
 
   unsetOptions(options) {
-    options.forEach(option => {
+    options.forEach((option) => {
       this.options[option] = undefined;
     });
 
@@ -179,9 +179,9 @@ class Query {
 
     this.options.fields = this.options.fields || {};
 
-    fields.forEach(field => {
+    fields.forEach((field) => {
       if (isArray(field)) {
-        field.forEach(field => {
+        field.forEach((field) => {
           this.options.fields[field] = field;
         });
       } else if (isObject(field)) {
@@ -297,7 +297,7 @@ class Query {
   // TODO: add support for multiple option values i.e. array that gets transformed to var args
   // TODO: strict mode: validate option against allowed options
   setOptions(options = {}) {
-    Object.keys(options).forEach(option => {
+    Object.keys(options).forEach((option) => {
       if (typeof this[option] !== 'function') {
         throw new this.constructor.QueryError(
           `${this.model.name}: unknown option \`${option}\``
@@ -401,7 +401,7 @@ class Query {
   }
 
   prepareGroupBy(sql, groupBy) {
-    groupBy.forEach(fields => {
+    groupBy.forEach((fields) => {
       if (!isArray(fields)) {
         fields = [fields];
       }
@@ -413,9 +413,9 @@ class Query {
   // TODO: strict mode: throw if order direction is unknown
   prepareOrderBy(sql, orderBy) {
     const columns = [];
-    orderBy.forEach(fields => {
+    orderBy.forEach((fields) => {
       if (isArray(fields)) {
-        fields.forEach(field => {
+        fields.forEach((field) => {
           columns.push(this.getColumn(field));
         });
       } else if (isObject(fields)) {
@@ -484,7 +484,7 @@ class Query {
 
     const expressions = [];
 
-    where.forEach(field => {
+    where.forEach((field) => {
       if (field instanceof this.sql) {
         expressions.push(field);
       } else if (isObject(field)) {
@@ -552,7 +552,7 @@ class Query {
         return;
       }
 
-      values.forEach(value => {
+      values.forEach((value) => {
         switch (option) {
           case 'of':
             return sql.of(this.quote(value));
@@ -611,7 +611,7 @@ class Query {
 
     if (this.config.forUpdate) {
       const filledFields = this.config.fieldNames.filter(
-        name => instance[name] !== undefined
+        (name) => instance[name] !== undefined
       );
       fields = difference(filledFields, this.config.notUpdated);
     }
@@ -645,7 +645,7 @@ class Query {
     let fieldCount;
 
     await Promise.all(
-      data.map(async data => {
+      data.map(async (data) => {
         const instance = this.getInstance(data);
         const row = await this.getRow(instance);
         const rowFieldCount = Object.values(row).length;
@@ -699,7 +699,7 @@ class Query {
     const batches = await this.prepareData(data);
 
     return Promise.all(
-      batches.map(async batch => {
+      batches.map(async (batch) => {
         const sql = this.sql.insert(this.getTable(), batch).values();
         return this.prepareSql(sql);
       })
@@ -721,7 +721,7 @@ class Query {
     const batches = await this.prepareData(data);
 
     return Promise.all(
-      batches.map(async batch => {
+      batches.map(async (batch) => {
         const sql = this.prepareUpdateBatch(batch);
         return this.prepareSql(sql);
       })
@@ -770,7 +770,7 @@ class Query {
     const parsedRow = this.getParsedRow(row);
     const fields = [];
 
-    Object.keys(this.options.fields).forEach(alias => {
+    Object.keys(this.options.fields).forEach((alias) => {
       const value = row[this.formatFieldAlias(alias, { quote: false })];
 
       if (value === undefined) {
@@ -890,7 +890,7 @@ class Query {
 
     try {
       await Promise.all(
-        sqls.map(async sql => {
+        sqls.map(async (sql) => {
           const formattedSql = this.formatSql(sql);
           let batchRows;
 
@@ -1063,7 +1063,7 @@ class Query {
     if (!isEmpty(data)) {
       const sqls = await this.prepareInsert(data, options);
 
-      rows = await this.execute(sqls).catch(error => {
+      rows = await this.execute(sqls).catch((error) => {
         throw this._attachErrorStack(
           new this.constructor.InsertError({ error, query: this }),
           stack
@@ -1141,7 +1141,7 @@ class Query {
 
       const sqls = await this.prepareUpdate(data, options);
 
-      rows = await this.execute(sqls).catch(error => {
+      rows = await this.execute(sqls).catch((error) => {
         throw this._attachErrorStack(
           new this.constructor.UpdateError({ error, query: this }),
           stack
@@ -1216,7 +1216,7 @@ class Query {
   async fetch(options) {
     const stack = this.options.debug ? new Error().stack : undefined;
     const sql = await this.prepareFetch(options);
-    const rows = await this.execute(sql).catch(error => {
+    const rows = await this.execute(sql).catch((error) => {
       throw this._attachErrorStack(
         new this.constructor.FetchError({ error, query: this }),
         stack
@@ -1260,7 +1260,7 @@ class Query {
   async delete(options) {
     const stack = this.options.debug ? new Error().stack : undefined;
     const sql = await this.prepareDelete(options);
-    const rows = await this.execute(sql).catch(error => {
+    const rows = await this.execute(sql).catch((error) => {
       throw this._attachErrorStack(
         new this.constructor.DeleteError({ error, query: this }),
         stack

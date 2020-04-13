@@ -43,7 +43,7 @@ class Model {
       return Object.values(this._config.fields);
     }
 
-    return fields.map(field => {
+    return fields.map((field) => {
       if (typeof field === 'string') {
         return this.getField(field);
       }
@@ -53,7 +53,7 @@ class Model {
 
   // TODO: v2: make async
   setDefaults({ fields } = {}) {
-    this.getFields(fields).forEach(field => {
+    this.getFields(fields).forEach((field) => {
       const name = field.name;
 
       if (this[name] === undefined) {
@@ -116,8 +116,8 @@ class Model {
   _getVirtualGetters(virtuals) {
     if (!virtuals || !virtuals.length) {
       virtuals = Object.values(this._config.virtuals)
-        .filter(virtual => !!virtual.get)
-        .map(virtual => virtual.name);
+        .filter((virtual) => !!virtual.get)
+        .map((virtual) => virtual.name);
     }
 
     return virtuals;
@@ -143,7 +143,7 @@ class Model {
     const data = {};
 
     await Promise.all(
-      virtuals.map(async name => {
+      virtuals.map(async (name) => {
         data[name] = await this._getVirtualData(name);
       })
     );
@@ -185,7 +185,7 @@ class Model {
 
   async validate({ fields } = {}) {
     await Promise.all(
-      this.getFields(fields).map(async field => {
+      this.getFields(fields).map(async (field) => {
         const name = field.name;
         const value = this[name];
         await field.validate(value, this);
@@ -197,7 +197,7 @@ class Model {
 
   // TODO: v2: make async
   cast({ fields, forSave, forFetch } = {}) {
-    this.getFields(fields).forEach(field => {
+    this.getFields(fields).forEach((field) => {
       const name = field.name;
       const value = this[name];
 
@@ -234,7 +234,7 @@ class Model {
 
     const uniqueFields = this._config.unique;
     if (uniqueFields.length) {
-      const uniqueFieldAdded = uniqueFields.some(field => {
+      const uniqueFieldAdded = uniqueFields.some((field) => {
         const value = this[field];
         if (value !== undefined) {
           query.where({ [field]: value });
@@ -491,18 +491,18 @@ class Model {
     if (field.methods) {
       const formattedName = upperFirst(name);
 
-      this[`fetchBy${formattedName}`] = async function(value, options) {
+      this[`fetchBy${formattedName}`] = async function (value, options) {
         // eslint-disable-next-line new-cap
         return new this({ [name]: value }).fetch(options);
       };
 
-      this[`updateBy${formattedName}`] = async function(value, data, options) {
+      this[`updateBy${formattedName}`] = async function (value, data, options) {
         data = Object.assign({}, data, { [name]: value });
         // eslint-disable-next-line new-cap
         return new this(data).update(options);
       };
 
-      this[`deleteBy${formattedName}`] = async function(value, options) {
+      this[`deleteBy${formattedName}`] = async function (value, options) {
         // eslint-disable-next-line new-cap
         return new this({ [name]: value }).delete(options);
       };

@@ -69,7 +69,7 @@ class KnormPostgres {
         super(model);
         this.config.originalNotUpdated = this.config.notUpdated;
         this.config.notUpdated = this.config.originalNotUpdated.filter(
-          field => field !== this.config.primary
+          (field) => field !== this.config.primary
         );
 
         const columnsToTypes = {};
@@ -201,7 +201,7 @@ class KnormPostgres {
           return fields;
         }
 
-        return fields.filter(field => !this.isPatchedField(field));
+        return fields.filter((field) => !this.isPatchedField(field));
       }
 
       getRowValue({ field, column, value }) {
@@ -225,7 +225,7 @@ class KnormPostgres {
         const isJson = this.config.fields[field].type === 'json';
         let patch = isJson ? `${column}::jsonb` : column;
         const values = [];
-        const addValue = value => `$${values.push(value)}`;
+        const addValue = (value) => `$${values.push(value)}`;
 
         Object.entries(value).forEach(([key, value]) => {
           if (value !== undefined) {
@@ -292,7 +292,7 @@ class KnormPostgres {
         const inserts = [];
         const updates = [];
 
-        (Array.isArray(data) ? data : [data]).forEach(data => {
+        (Array.isArray(data) ? data : [data]).forEach((data) => {
           if (data[this.config.primary] === undefined) {
             inserts.push(data);
           } else {

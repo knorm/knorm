@@ -33,7 +33,7 @@ class KnormTimestamps {
     class TimestampsQuery extends knorm.Query {
       async update(data, options) {
         if (data) {
-          (Array.isArray(data) ? data : [data]).forEach(data => {
+          (Array.isArray(data) ? data : [data]).forEach((data) => {
             data[updatedAtFieldName] = new Date();
           });
         }

@@ -1,6 +1,6 @@
 const knex = require('knex');
 
-module.exports = database =>
+module.exports = (database) =>
   knex({
     client: 'pg',
     connection: {

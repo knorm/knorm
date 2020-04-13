@@ -1381,7 +1381,7 @@ describe('Model', () => {
         expect(Bar.schema, 'to be', 'foo');
       });
 
-      it("inherits the parent's schema when other configs are set", function() {
+      it("inherits the parent's schema when other configs are set", function () {
         class Foo extends Model {}
         Foo.schema = 'foo';
 
@@ -1426,7 +1426,7 @@ describe('Model', () => {
         expect(Bar.table, 'to be', 'foo');
       });
 
-      it("inherits the parent's table when other configs are set", function() {
+      it("inherits the parent's table when other configs are set", function () {
         class Foo extends Model {}
         Foo.table = 'foo';
 
@@ -2403,7 +2403,7 @@ describe('Model', () => {
     before(async () => knex.schema.dropTableIfExists(User.table));
 
     before(async () =>
-      knex.schema.createTable(User.table, table => {
+      knex.schema.createTable(User.table, (table) => {
         table.increments();
         table.string('name').notNullable();
       })

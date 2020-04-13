@@ -2,7 +2,7 @@ const { Knorm } = require('@knorm/knorm');
 const { camelCase } = require('lodash');
 
 const isArray = Array.isArray;
-const asArray = value => (Array.isArray(value) ? value : [value]);
+const asArray = (value) => (Array.isArray(value) ? value : [value]);
 
 const addReference = (references, field, reference) => {
   const toModel = reference.model;
@@ -55,7 +55,7 @@ class KnormRelations {
             this._config.referenceFunctions[field.name] = references;
           } else {
             (isArray(references) ? references : [references]).forEach(
-              reference => {
+              (reference) => {
                 addReference(this._config.references, field, reference);
               }
             );
@@ -137,7 +137,7 @@ class KnormRelations {
         // TODO: use appendOption
         this.options.joins = this.options.joins || [];
 
-        joins.forEach(join => {
+        joins.forEach((join) => {
           if (join.prototype instanceof Model) {
             join = join.query;
           }
@@ -260,7 +260,7 @@ class KnormRelations {
         const fields = Object.values(this.options.fields);
         let unique;
 
-        [this.config.primary].concat(this.config.unique).some(field => {
+        [this.config.primary].concat(this.config.unique).some((field) => {
           const index = fields.indexOf(field);
           if (index > -1) {
             unique = aliases[index];
@@ -280,7 +280,7 @@ class KnormRelations {
 
       async prepareJoins(sql) {
         return Promise.all(
-          this.options.joins.map(async join => {
+          this.options.joins.map(async (join) => {
             this.ensureUniqueField(join);
 
             join.parent = this;
@@ -320,7 +320,7 @@ class KnormRelations {
         super.throwFetchRequireError();
 
         if (this.options.joins) {
-          this.options.joins.forEach(join => join.throwFetchRequireError());
+          this.options.joins.forEach((join) => join.throwFetchRequireError());
         }
       }
 
@@ -355,7 +355,7 @@ class KnormRelations {
         const parsedRow = super.parseRow(row);
 
         if (this.options.joins) {
-          this.options.joins.forEach(join => {
+          this.options.joins.forEach((join) => {
             const as = join.options.as;
             const first = join.options.first;
 
@@ -365,7 +365,7 @@ class KnormRelations {
             const isEmpty = Object.values(data).every(
               // TODO: the array check will also deem empty postgres arrays or
               // JSON arrays as empty/null values. do we want that?
-              value => value === null || (isArray(value) && !value.length)
+              (value) => value === null || (isArray(value) && !value.length)
             );
 
             // TODO: strict mode: warn if joined data replaces already existing

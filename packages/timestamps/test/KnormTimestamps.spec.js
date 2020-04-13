@@ -4,9 +4,7 @@ const KnormTimestamps = require('../src/KnormTimestamps');
 const knormTimestamps = require('../src/');
 const createKnex = require('../../../util/create-knex');
 const sinon = require('sinon');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-knex'));
+const expect = require('unexpected').clone().use(require('unexpected-knex'));
 
 const { KnormTimestampsError } = KnormTimestamps;
 const knex = createKnex('knorm-timestamps');
@@ -31,7 +29,7 @@ describe('KnormTimestamps', () => {
   });
 
   describe('updateModel', () => {
-    const updateModel = config => knorm().use(knormTimestamps(config));
+    const updateModel = (config) => knorm().use(knormTimestamps(config));
 
     describe('with a `createdAt` config', () => {
       it('allows configuring the `createdAt` field-name', () => {
@@ -90,7 +88,7 @@ describe('KnormTimestamps', () => {
     });
 
     before(async () =>
-      knex.schema.createTable(User.table, table => {
+      knex.schema.createTable(User.table, (table) => {
         table.increments();
         table.timestamps();
       })

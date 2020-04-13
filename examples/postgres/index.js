@@ -49,6 +49,4 @@ const runExample = async () => {
   await User.delete();
 };
 
-runExample()
-  .catch(console.log)
-  .then(process.exit);
+runExample().catch(console.log).then(process.exit);

@@ -18,7 +18,7 @@ const { host, port, user, password, database } = connection;
 
 describe('KnormPostgres', () => {
   before(async () =>
-    knex.schema.createTable('user', table => {
+    knex.schema.createTable('user', (table) => {
       table.increments().primary();
       table.string('name');
     })
@@ -35,7 +35,7 @@ describe('KnormPostgres', () => {
       'to be fulfilled with',
       expect.it('to be a', Client).and(
         'when passed as parameter to',
-        client => client.release(),
+        (client) => client.release(),
         'to be undefined' // but not to throw
       )
     );
@@ -53,7 +53,7 @@ describe('KnormPostgres', () => {
       'to be fulfilled with',
       expect.it('to be a', Client).and(
         'when passed as parameter to',
-        client => client.release(),
+        (client) => client.release(),
         'to be undefined' // but not to throw
       )
     );
@@ -79,7 +79,7 @@ describe('KnormPostgres', () => {
       'to be fulfilled with',
       expect.it('to be a', Client).and(
         'when passed as parameter to',
-        client => client.release(),
+        (client) => client.release(),
         'to be undefined' // but not to throw
       )
     );
@@ -206,7 +206,7 @@ describe('KnormPostgres', () => {
             );
           });
 
-          it('calls the function with raw sql values', function() {
+          it('calls the function with raw sql values', function () {
             const forSave = sinon.spy();
             const field = new Field({
               name: 'foo',
@@ -493,12 +493,9 @@ describe('KnormPostgres', () => {
         userId: { type: 'integer', references: User.fields.id },
       };
 
-      await knex.schema.createTable('image', table => {
+      await knex.schema.createTable('image', (table) => {
         table.increments().primary();
-        table
-          .integer('userId')
-          .references('id')
-          .inTable('user');
+        table.integer('userId').references('id').inTable('user');
       });
     });
 
@@ -587,7 +584,7 @@ describe('KnormPostgres', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            query => query.toString(),
+            (query) => query.toString(),
             'to contain',
             'OFFSET 0'
           )
@@ -608,7 +605,7 @@ describe('KnormPostgres', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            query => query.toString(),
+            (query) => query.toString(),
             'to contain',
             'LIMIT 1'
           )
@@ -674,7 +671,7 @@ describe('KnormPostgres', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            query => query.toString(),
+            (query) => query.toString(),
             'to begin with',
             'UPDATE "user" AS "user" SET "name" = "v"."name" FROM'
           )
@@ -733,8 +730,8 @@ describe('KnormPostgres', () => {
       let Model;
       let Query;
 
-      const createTable = addFields =>
-        knex.schema.createTable('foo', table => {
+      const createTable = (addFields) =>
+        knex.schema.createTable('foo', (table) => {
           table.increments().primary();
           addFields(table);
         });
@@ -751,7 +748,7 @@ describe('KnormPostgres', () => {
       afterEach(async () => knex.schema.dropTable('foo'));
 
       it('allows updating `date` fields', async () => {
-        const toUtc = date =>
+        const toUtc = (date) =>
           new Date(
             date.getUTCFullYear(),
             date.getUTCMonth(),
@@ -761,7 +758,7 @@ describe('KnormPostgres', () => {
             date.getUTCSeconds()
           );
 
-        await createTable(table => {
+        await createTable((table) => {
           table.date('date');
         });
 
@@ -783,7 +780,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `dateTime` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.dateTime('dateTime');
         });
 
@@ -805,7 +802,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `integer` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.integer('integer');
         });
 
@@ -827,7 +824,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `json` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.json('json');
         });
 
@@ -863,7 +860,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `jsonb` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.jsonb('jsonb');
         });
 
@@ -885,7 +882,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `text` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.text('text');
         });
 
@@ -907,7 +904,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `string` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.string('string');
         });
 
@@ -929,7 +926,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `binary` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.binary('binary');
         });
 
@@ -951,7 +948,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `decimal` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.decimal('decimal');
         });
 
@@ -973,7 +970,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `boolean` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.boolean('boolean');
         });
 
@@ -995,7 +992,7 @@ describe('KnormPostgres', () => {
       });
 
       it('allows updating `uuid` and `uuid4` fields', async () => {
-        await createTable(table => {
+        await createTable((table) => {
           table.uuid('uuid');
           table.uuid('uuid4');
         });
@@ -1112,7 +1109,7 @@ describe('KnormPostgres', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              query => query.toString(),
+              (query) => query.toString(),
               'to begin with',
               'UPDATE "user" AS "user" SET "name" = "v"."name" FROM'
             )
@@ -1196,7 +1193,7 @@ describe('KnormPostgres', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              sql => sql.toString(),
+              (sql) => sql.toString(),
               'to contain',
               '"public"."user"'
             )
@@ -1505,7 +1502,7 @@ describe('KnormPostgres', () => {
       });
     });
 
-    describe('for json/jsonb field updates', function() {
+    describe('for json/jsonb field updates', function () {
       let Foo;
 
       before(() => {
@@ -1521,7 +1518,7 @@ describe('KnormPostgres', () => {
       });
 
       before(async () => {
-        await knex.schema.createTable(Foo.table, table => {
+        await knex.schema.createTable(Foo.table, (table) => {
           table.increments().primary();
           table.jsonb('jsonb');
           table.json('json');
@@ -1557,11 +1554,7 @@ describe('KnormPostgres', () => {
 
       describe('with `patch` configured', () => {
         it('updates a single path', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch()
-            .debug();
+          const query = new Query(Foo).where({ id: 1 }).first().patch().debug();
           const data = {
             string: 'bar',
             number: 1,
@@ -1576,10 +1569,7 @@ describe('KnormPostgres', () => {
         });
 
         it('updates multiple paths', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch();
+          const query = new Query(Foo).where({ id: 1 }).first().patch();
           const data = {
             string: 'bar',
             number: 2,
@@ -1594,10 +1584,7 @@ describe('KnormPostgres', () => {
         });
 
         it('creates missing paths', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch();
+          const query = new Query(Foo).where({ id: 1 }).first().patch();
           const data = {
             string: 'foo',
             number: 1,
@@ -1616,10 +1603,7 @@ describe('KnormPostgres', () => {
         });
 
         it('ignores paths whose value is `undefined`', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch();
+          const query = new Query(Foo).where({ id: 1 }).first().patch();
           const data = { string: undefined, number: undefined };
           const expected = {
             string: 'foo',
@@ -1635,10 +1619,7 @@ describe('KnormPostgres', () => {
         });
 
         it('allows specifying a single field to patch', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch('json');
+          const query = new Query(Foo).where({ id: 1 }).first().patch('json');
           await expect(
             query.update({
               jsonb: { array: ['bar'] },
@@ -1690,10 +1671,7 @@ describe('KnormPostgres', () => {
         });
 
         it('allows patching with `jsonb_set` raw sql', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch();
+          const query = new Query(Foo).where({ id: 1 }).first().patch();
           await expect(
             query.update({
               jsonb: query.sql(
@@ -1731,10 +1709,7 @@ describe('KnormPostgres', () => {
         });
 
         it('rejects if the patch value is a non-object', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch();
+          const query = new Query(Foo).where({ id: 1 }).first().patch();
           await expect(
             query.update({
               jsonb: 'string',
@@ -1748,10 +1723,7 @@ describe('KnormPostgres', () => {
         });
 
         it('rejects if the patch value is an array', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch();
+          const query = new Query(Foo).where({ id: 1 }).first().patch();
           await expect(
             query.update({
               jsonb: { array: ['foo'] },
@@ -1765,10 +1737,7 @@ describe('KnormPostgres', () => {
         });
 
         it('updates the json object containing single quotes', async () => {
-          const query = new Query(Foo)
-            .where({ id: 1 })
-            .first()
-            .patch();
+          const query = new Query(Foo).where({ id: 1 }).first().patch();
           await expect(
             query.update({
               jsonb: { string: `bar ' ` },

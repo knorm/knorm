@@ -89,7 +89,7 @@ describe('Query', () => {
   before(async () => knex.schema.dropTableIfExists(User.table));
 
   before(async () =>
-    knex.schema.createTable(User.table, table => {
+    knex.schema.createTable(User.table, (table) => {
       table.increments();
       table.string('name').notNullable();
       table.text('description');
@@ -177,10 +177,7 @@ describe('Query', () => {
     });
 
     it('copies added options to the clone', () => {
-      const query = new Query(User)
-        .fields(['id'])
-        .forUpdate()
-        .groupBy('id');
+      const query = new Query(User).fields(['id']).forUpdate().groupBy('id');
       expect(query.clone(), 'to satisfy', {
         options: { fields: { id: 'id' }, forUpdate: true, groupBy: [['id']] },
       });
@@ -784,7 +781,7 @@ describe('Query', () => {
         beforeEach(() => {
           query = new Query(User);
           const originalQuery = query.query;
-          query.query = async function(sql) {
+          query.query = async function (sql) {
             await this.transaction.rollback();
             return originalQuery.call(this, sql);
           };
@@ -932,7 +929,7 @@ describe('Query', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            sql => sql.toString(),
+            (sql) => sql.toString(),
             'to contain',
             '"public"."user"'
           )
@@ -1193,10 +1190,7 @@ describe('Query', () => {
 
       it('supports `fields`', async () => {
         await expect(
-          new Query(User)
-            .distinct('name')
-            .field('id')
-            .fetch(),
+          new Query(User).distinct('name').field('id').fetch(),
           'to be fulfilled with sorted rows exhaustively satisfying',
           [
             new User({ id: 1, name: 'User 1' }),
@@ -1962,7 +1956,7 @@ describe('Query', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              sql => sql.toString(),
+              (sql) => sql.toString(),
               'to contain',
               'FOR UPDATE'
             )
@@ -1982,7 +1976,7 @@ describe('Query', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              sql => sql.toString(),
+              (sql) => sql.toString(),
               'to contain',
               'OF "user"'
             )
@@ -2002,7 +1996,7 @@ describe('Query', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              sql => sql.toString(),
+              (sql) => sql.toString(),
               'to contain',
               'OF "user", "user"'
             )
@@ -2013,10 +2007,7 @@ describe('Query', () => {
 
       it('supports multiple `of` invocations', async () => {
         const execute = sinon.spy(Query.prototype, 'execute');
-        const query = new Query(User)
-          .forUpdate()
-          .of('user')
-          .of(['user']);
+        const query = new Query(User).forUpdate().of('user').of(['user']);
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' }),
@@ -2025,7 +2016,7 @@ describe('Query', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              sql => sql.toString(),
+              (sql) => sql.toString(),
               'to contain',
               'OF "user", "user"'
             )
@@ -2045,7 +2036,7 @@ describe('Query', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              sql => sql.toString(),
+              (sql) => sql.toString(),
               'to contain',
               'NOWAIT'
             )
@@ -2056,10 +2047,7 @@ describe('Query', () => {
 
       it('supports `of` with `noWait`', async () => {
         const execute = sinon.spy(Query.prototype, 'execute');
-        const query = new Query(User)
-          .forUpdate()
-          .of('user')
-          .noWait();
+        const query = new Query(User).forUpdate().of('user').noWait();
         await expect(query.fetch(), 'to be fulfilled with value satisfying', [
           new User({ id: 1, name: 'User 1' }),
           new User({ id: 2, name: 'User 2' }),
@@ -2068,7 +2056,7 @@ describe('Query', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              sql => sql.toString(),
+              (sql) => sql.toString(),
               'to contain',
               'OF "user" NOWAIT'
             )
@@ -2319,7 +2307,7 @@ describe('Query', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            query => query.toString(),
+            (query) => query.toString(),
             expect.it('to contain', '"name"')
           )
         );
@@ -2350,7 +2338,7 @@ describe('Query', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            sql => sql.toString(),
+            (sql) => sql.toString(),
             'to contain',
             '"public"."user"'
           )
@@ -3009,7 +2997,7 @@ describe('Query', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            query => query.toString(),
+            (query) => query.toString(),
             expect.it('to contain', '"name" =')
           )
         );
@@ -3063,7 +3051,7 @@ describe('Query', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            sql => sql.toString(),
+            (sql) => sql.toString(),
             'to contain',
             '"public"."user"'
           )
@@ -3576,7 +3564,7 @@ describe('Query', () => {
         execute(
           expect.it(
             'when passed as parameter to',
-            sql => sql.toString(),
+            (sql) => sql.toString(),
             'to contain',
             '"public"."user"'
           )

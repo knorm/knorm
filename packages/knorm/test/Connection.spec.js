@@ -1,19 +1,19 @@
 const Knorm = require('../src/Knorm');
 const expect = require('unexpected').clone();
 
-describe('Connection', function() {
+describe('Connection', function () {
   let Connection;
   let ConnectionError;
 
-  before(function() {
+  before(function () {
     const knorm = new Knorm();
 
     Connection = knorm.Connection;
     ConnectionError = Connection.ConnectionError;
   });
 
-  describe('Connection.prototype.create', function() {
-    it('throws if not overridden', async function() {
+  describe('Connection.prototype.create', function () {
+    it('throws if not overridden', async function () {
       const connection = new Connection();
       await expect(
         () => connection.create(),
@@ -23,8 +23,8 @@ describe('Connection', function() {
     });
   });
 
-  describe('Connection.prototype.query', function() {
-    it('throws if not overridden', async function() {
+  describe('Connection.prototype.query', function () {
+    it('throws if not overridden', async function () {
       const connection = new Connection();
       await expect(
         () => connection.query(),
@@ -34,8 +34,8 @@ describe('Connection', function() {
     });
   });
 
-  describe('Connection.prototype.close', function() {
-    it('throws if not overridden', async function() {
+  describe('Connection.prototype.close', function () {
+    it('throws if not overridden', async function () {
       const connection = new Connection();
       await expect(
         () => connection.close(),

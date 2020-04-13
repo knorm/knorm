@@ -1,7 +1,5 @@
 const sinon = require('sinon');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-sinon'));
+const expect = require('unexpected').clone().use(require('unexpected-sinon'));
 const Knorm = require('../src/Knorm');
 const KnormError = require('../src/KnormError');
 const Field = require('../src/Field');
@@ -37,7 +35,7 @@ describe('Knorm', () => {
       expect(knorm.Transaction.Connection, 'to be', knorm.Connection);
     });
 
-    it('adds an accessor to the knorm instance', function() {
+    it('adds an accessor to the knorm instance', function () {
       const knorm = new Knorm();
 
       class User extends knorm.Model {}
@@ -147,7 +145,7 @@ describe('Knorm', () => {
       );
     });
 
-    it('allows plugins to access themselves by name', function() {
+    it('allows plugins to access themselves by name', function () {
       let ran = false;
       const plugin = {
         name: 'foo',
@@ -161,7 +159,7 @@ describe('Knorm', () => {
       expect(ran, 'to be true');
     });
 
-    describe('when called with a function', function() {
+    describe('when called with a function', function () {
       it('passes itself to the function', () => {
         const plugin = sinon.spy().named('plugin');
         knorm.use(plugin);
@@ -180,7 +178,7 @@ describe('Knorm', () => {
       });
     });
 
-    describe('when called with an object with an `init` function', function() {
+    describe('when called with an object with an `init` function', function () {
       it('passes itself to the `init` function', () => {
         const init = sinon.spy().named('init');
         knorm.use({ name: 'foo', init });

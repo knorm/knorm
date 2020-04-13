@@ -1,5 +1,5 @@
 const KnormRelations = require('./KnormRelations');
-const knormRelations = config => new KnormRelations(config);
+const knormRelations = (config) => new KnormRelations(config);
 
 knormRelations.KnormRelations = KnormRelations;
 
