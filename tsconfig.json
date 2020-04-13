@@ -1,6 +1,7 @@
 {
   "exclude": [
     "website",
+    "coverage",
     "node_modules"
   ],
   "compilerOptions": {
