@@ -15,8 +15,8 @@ npm install --save @knorm/knorm @knorm/relations
 ## Usage
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormRelations = require('@knorm/relations');
+const { knorm } = require('@knorm/knorm');
+const { knormRelations } = require('@knorm/relations');
 
 const orm = knorm({
   /* knorm options */

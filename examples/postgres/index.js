@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-import { User } from './lib/User';
-import { Message } from './lib/Message';
+import { Message } from './src/Message';
+import { User } from './src/User';
 import { inspect } from 'util';
 
 const runExample = async () => {

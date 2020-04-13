@@ -1,7 +1,7 @@
-import Model from './Model';
-import Message from './Message';
+import { Model } from './Model';
+import { Message } from './Message';
 
-export class User extends Model {
+class User extends Model {
   static table = 'user';
 
   static fields = {
@@ -29,3 +29,5 @@ export class User extends Model {
     return message.insert();
   }
 }
+
+export { User };

@@ -1,7 +1,7 @@
 import { Model } from './Model';
 import { User } from './User';
 
-export class Message extends Model {
+class Message extends Model {
   static table = 'message';
 
   static fields = {
@@ -23,3 +23,5 @@ export class Message extends Model {
     },
   };
 }
+
+export { Message };

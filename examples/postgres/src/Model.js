@@ -1,6 +1,6 @@
-import { orm } from '../orm';
+import { orm } from './orm';
 
-export class Model extends orm.Model {
+class Model extends orm.Model {
   static fields = {
     id: {
       type: 'integer',
@@ -10,3 +10,5 @@ export class Model extends orm.Model {
     },
   };
 }
+
+export { Model };

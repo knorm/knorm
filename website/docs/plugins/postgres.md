@@ -15,8 +15,8 @@ npm install --save @knorm/knorm @knorm/postgres
 ## Usage
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormPostgres = require('@knorm/postgres');
+const { knorm } = require('@knorm/knorm');
+const { knormPostgres } = require('@knorm/postgres');
 
 const orm = knorm({
   // knorm options

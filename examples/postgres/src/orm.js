@@ -4,7 +4,9 @@ import { knormPostgres } from '@knorm/postgres';
 import { knormRelations } from '@knorm/relations';
 import { connection } from '../knexfile';
 
-export const orm = knorm()
+const orm = knorm()
   .use(knormPostgres({ connection }))
   .use(knormRelations())
   .use(knormTimestamps());
+
+export { orm };
