@@ -83,4 +83,4 @@ Object.entries(whereOptions).forEach(([option, alias]) => {
   }
 });
 
-module.exports = Where;
+export { Where };

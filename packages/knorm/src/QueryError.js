@@ -1,4 +1,4 @@
-const KnormError = require('./KnormError');
+import { KnormError } from './KnormError';
 
 class QueryError extends KnormError {
   constructor(...args) {
@@ -39,4 +39,4 @@ class QueryError extends KnormError {
   }
 }
 
-module.exports = QueryError;
+export { QueryError };

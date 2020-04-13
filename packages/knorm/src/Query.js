@@ -1,5 +1,10 @@
-const { difference } = require('lodash');
-const sqlBricks = require('sql-bricks');
+import { difference } from 'lodash';
+import sqlBricks from 'sql-bricks';
+import { Model } from './Model';
+import { Connection } from './Connection';
+import { QueryError } from './QueryError';
+import { NoRowsError } from './NoRowsError';
+import { Where } from './Where';
 
 const isArray = Array.isArray;
 const isObject = (value) => typeof value === 'object' && value !== null;
@@ -1283,12 +1288,6 @@ class Query {
   }
 }
 
-module.exports = Query;
-
-// circular deps
-const Model = require('./Model');
-const Where = require('./Where');
-
 Where.prototype.sql = sqlBricks;
 Query.prototype.sql = sqlBricks;
 
@@ -1296,10 +1295,8 @@ Query.Where = Where;
 
 /**
  * A reference to {@link Connection}, for use within {@link Query}.
- *
- * @type {Connection}
  */
-Query.Connection = require('./Connection');
+Query.Connection = Connection;
 
 /**
  * Alias for {@link Query#fields}, improves code readability when configuring a
@@ -1320,7 +1317,7 @@ Query.prototype.field = Query.prototype.fields;
 /**
  * The base error that all errors thrown by {@link Query} inherit from.
  */
-Query.QueryError = require('./QueryError');
+Query.QueryError = QueryError;
 
 /**
  * The rejection error from {@link Query#fetch} on error.
@@ -1354,7 +1351,7 @@ Query.DeleteError = class DeleteError extends Query.QueryError {};
  * The base error for all errors thrown by {@link Query} when the
  * {@link Query#require} option is set.
  */
-Query.NoRowsError = require('./NoRowsError');
+Query.NoRowsError = NoRowsError;
 
 /**
  * The rejection error from {@link Query#fetch} when no rows are fetched and the
@@ -1395,8 +1392,6 @@ Query.NoRowsDeletedError = class NoRowsDeletedError extends Query.NoRowsError {}
  * This is the same instance assigned to the {@link Query.knorm} static
  * property, just added as a convenience for use in instance methods.
  * :::
- *
- * @type {Knorm}
  */
 Query.prototype.knorm = null;
 
@@ -1407,8 +1402,6 @@ Query.prototype.knorm = null;
  * This is the same instance assigned to the {@link Query#knorm} instance
  * property, just added as a convenience for use in static methods.
  * :::
- *
- * @type {Knorm}
  */
 Query.knorm = null;
 
@@ -1454,7 +1447,6 @@ Query.models = {};
  * property, just added as a convenience for use in static methods.
  * :::
  *
- * @type {Transaction}
  */
 Query.prototype.transaction = null;
 
@@ -1472,6 +1464,7 @@ Query.prototype.transaction = null;
  * property, just added as a convenience for use in static methods.
  * :::
  *
- * @type {Transaction}
  */
 Query.transaction = null;
+
+export { Query };

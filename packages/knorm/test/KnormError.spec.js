@@ -1,5 +1,7 @@
-const expect = require('unexpected').clone();
-const KnormError = require('../src/KnormError');
+import unexpected from 'unexpected';
+import { KnormError } from '../src/KnormError';
+
+const expect = unexpected.clone();
 
 describe('KnormError', () => {
   it('extends Error', () => {

@@ -1,6 +1,5 @@
-const KnormTimestamps = require('./KnormTimestamps');
+import { KnormTimestamps } from './KnormTimestamps';
+
 const knormTimestamps = (config) => new KnormTimestamps(config);
 
-knormTimestamps.KnormTimestamps = KnormTimestamps;
-
-module.exports = knormTimestamps;
+export { knormTimestamps, KnormTimestamps };

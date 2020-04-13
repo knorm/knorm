@@ -1,4 +1,4 @@
-const { Knorm } = require('@knorm/knorm');
+import { Knorm } from '@knorm/knorm';
 
 class KnormSoftDelete {
   constructor({ deleted = {}, deletedAt, name = 'soft-delete' } = {}) {
@@ -211,4 +211,4 @@ class KnormSoftDelete {
 
 KnormSoftDelete.KnormSoftDeleteError = class KnormSoftDeleteError extends Knorm.KnormError {};
 
-module.exports = KnormSoftDelete;
+export { KnormSoftDelete };

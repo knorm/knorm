@@ -8,6 +8,8 @@
     "allowJs": true,
     // compile for ES6
     "target": "ES6",
+    // but for Node.js
+    "module": "CommonJS",
     // base directory to resolve "paths" from
     "baseUrl": ".",
     // import @knorm/* packages directly from source
@@ -16,6 +18,9 @@
         "packages/*/src"
       ]
     },
+    // enable `import`ing commonjs modules
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     // resolve modules the way Node.js does it
     "moduleResolution": "node",
     // enable noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply,

@@ -1,5 +1,5 @@
-const { Knorm } = require('@knorm/knorm');
-const { camelCase } = require('lodash');
+import { Knorm } from '@knorm/knorm';
+import { camelCase } from 'lodash';
 
 const isArray = Array.isArray;
 const asArray = (value) => (Array.isArray(value) ? value : [value]);
@@ -423,4 +423,4 @@ class KnormRelations {
 
 KnormRelations.KnormRelationsError = class KnormRelationsError extends Knorm.KnormError {};
 
-module.exports = KnormRelations;
+export { KnormRelations };

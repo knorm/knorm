@@ -1,6 +1,5 @@
-const Knorm = require('./Knorm');
+import { Knorm } from './Knorm';
+
 const knorm = (config) => new Knorm(config);
 
-knorm.Knorm = Knorm;
-
-module.exports = knorm;
+export { knorm, Knorm };

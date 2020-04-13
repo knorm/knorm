@@ -1,9 +1,12 @@
-const knorm = require('@knorm/knorm');
-const KnormToJSON = require('../src/KnormToJSON');
-const knormToJSON = require('../src/');
-const expect = require('unexpected').clone();
+import unexpected from 'unexpected';
+import unexpectedSinon from 'unexpected-sinon';
+import unexpectedKnex from 'unexpected-knex';
+import { knorm } from '@knorm/knorm';
+import { knormToJSON } from '../src/index';
+import { KnormToJSON } from '../src/KnormToJSON';
 
 const { KnormToJSONError } = KnormToJSON;
+const expect = unexpected.clone().use(unexpectedSinon).use(unexpectedKnex);
 
 describe('KnormToJSON', () => {
   describe('init', () => {

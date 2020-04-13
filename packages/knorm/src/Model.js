@@ -1,4 +1,7 @@
-const { upperFirst, merge } = require('lodash');
+import { upperFirst, merge } from 'lodash';
+import { Field } from './Field';
+import { Virtual } from './Virtual';
+import { Query } from './Query';
 
 /**
  * Creates model instances and allows setting, getting, validating and casting
@@ -756,8 +759,6 @@ class Model {
  * This is the same instance assigned to the {@link Model.knorm} static
  * property, just added as a convenience for use in instance methods.
  * :::
- *
- * @type {Knorm}
  */
 Model.prototype.knorm = null;
 
@@ -768,8 +769,6 @@ Model.prototype.knorm = null;
  * This is the same instance assigned to the {@link Model#knorm} instance
  * property, just added as a convenience for use in static methods.
  * :::
- *
- * @type {Knorm}
  */
 Model.knorm = null;
 
@@ -814,8 +813,6 @@ Model.models = {};
  * This is the same instance assigned to the {@link Model.transaction} static
  * property, just added as a convenience for use in static methods.
  * :::
- *
- * @type {Transaction}
  */
 Model.prototype.transaction = null;
 
@@ -832,14 +829,11 @@ Model.prototype.transaction = null;
  * This is the same instance assigned to the {@link Model#transaction} instance
  * property, just added as a convenience for use in static methods.
  * :::
- *
- * @type {Transaction}
  */
 Model.transaction = null;
 
-module.exports = Model;
+Model.Field = Field;
+Model.Virtual = Virtual;
+Model.Query = Query;
 
-// circular deps
-Model.Field = require('./Field');
-Model.Virtual = require('./Virtual');
-Model.Query = require('./Query');
+export { Model };

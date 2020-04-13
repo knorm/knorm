@@ -1,3 +1,5 @@
+import { Model } from './Model';
+
 class Virtual {
   constructor({ name, model, descriptor } = {}) {
     if (!name) {
@@ -43,6 +45,4 @@ class Virtual {
   }
 }
 
-module.exports = Virtual;
-
-const Model = require('./Model'); // circular dep
+export { Virtual };

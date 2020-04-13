@@ -1,3 +1,10 @@
+import { Model } from './Model';
+import { Field } from './Field';
+import { Connection } from './Connection';
+import { Query } from './Query';
+import { Transaction } from './Transaction';
+import { KnormError } from './KnormError';
+
 /**
  * Creates and configures ORMs.
  */
@@ -192,8 +199,6 @@ class Knorm {
   updateTransaction(Transaction) {
     /**
      * The {@link Knorm} instance's {@link Transaction} class.
-     *
-     * @type {Transaction}
      */
     this.Transaction = Transaction;
 
@@ -212,8 +217,6 @@ class Knorm {
   updateModel(Model) {
     /**
      * The {@link Knorm} instance's {@link Model} class.
-     *
-     * @type {Model}
      */
     this.Model = Model;
 
@@ -232,8 +235,6 @@ class Knorm {
   updateField(Field) {
     /**
      * The {@link Knorm} instance's {@link Field} class.
-     *
-     * @type {Field}
      */
     this.Field = this.Model.Field = Field;
 
@@ -252,8 +253,6 @@ class Knorm {
   updateQuery(Query) {
     /**
      * The {@link Knorm} instance's {@link Query} class.
-     *
-     * @type {Query}
      */
     this.Query = this.Model.Query = Query;
 
@@ -273,8 +272,6 @@ class Knorm {
   updateConnection(Connection) {
     /**
      * The {@link Knorm} instance's {@link Connection} class.
-     *
-     * @type {Connection}
      */
     this.Connection = this.Query.Connection = this.Transaction.Connection = Connection;
 
@@ -282,56 +279,34 @@ class Knorm {
   }
 }
 
-module.exports = Knorm;
-
 /**
  * A reference to {@link Connection}.
- *
- * @type {Connection}
- *
- * @private
  */
-Knorm.Connection = require('./Connection');
+Knorm.Connection = Connection;
 
 /**
  * A reference to {@link Model}.
- *
- * @type {Model}
- *
- * @private
  */
-Knorm.Model = require('./Model');
+Knorm.Model = Model;
 
 /**
  * A reference to {@link Query}.
- *
- * @type {Query}
- *
- * @private
  */
-Knorm.Query = require('./Query');
+Knorm.Query = Query;
 
 /**
  * A reference to {@link Field}.
- *
- * @type {Field}
- *
- * @private
  */
-Knorm.Field = require('./Field');
+Knorm.Field = Field;
 
 /**
  * A reference to {@link Transaction}.
- *
- * @type {Transaction}
- *
- * @private
  */
-Knorm.Transaction = require('./Transaction');
+Knorm.Transaction = Transaction;
 
 /**
  * A reference to {@link KnormError}.
- *
- * @type {KnormError}
  */
-Knorm.KnormError = require('./KnormError');
+Knorm.KnormError = KnormError;
+
+export { Knorm };

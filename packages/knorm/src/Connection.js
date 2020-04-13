@@ -1,4 +1,4 @@
-const KnormError = require('./KnormError');
+import { KnormError } from './KnormError';
 
 class ConnectionError extends KnormError {}
 
@@ -54,8 +54,6 @@ class Connection {
   }
 }
 
-module.exports = Connection;
-
 /**
  * The base error that all errors thrown by {@link Connection} inherit from.
  */
@@ -68,8 +66,6 @@ Connection.ConnectionError = ConnectionError;
  * This is the same instance assigned to the {@link Connection.knorm} static
  * property, just added as a convenience for use in instance methods.
  * :::
- *
- * @type {Knorm}
  */
 Connection.prototype.knorm = null;
 
@@ -80,7 +76,7 @@ Connection.prototype.knorm = null;
  * This is the same instance assigned to the {@link Connection#knorm} instance
  * property, just added as a convenience for use in static methods.
  * :::
- *
- * @type {Knorm}
  */
 Connection.knorm = null;
+
+export { Connection };

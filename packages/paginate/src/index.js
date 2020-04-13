@@ -1,6 +1,5 @@
-const KnormPaginate = require('./KnormPaginate');
+import { KnormPaginate } from './KnormPaginate';
+
 const knormPaginate = (config) => new KnormPaginate(config);
 
-knormPaginate.KnormPaginate = KnormPaginate;
-
-module.exports = knormPaginate;
+export { knormPaginate, KnormPaginate };

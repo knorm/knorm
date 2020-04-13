@@ -1,12 +1,14 @@
-const knorm = require('@knorm/knorm');
-const knormPostgres = require('@knorm/postgres');
-const KnormTimestamps = require('../src/KnormTimestamps');
-const knormTimestamps = require('../src/');
-const createKnex = require('../../../util/create-knex');
-const sinon = require('sinon');
-const expect = require('unexpected').clone().use(require('unexpected-knex'));
+import sinon from 'sinon';
+import unexpected from 'unexpected';
+import unexpectedKnex from 'unexpected-knex';
+import { knorm } from '@knorm/knorm';
+import { knormPostgres } from '@knorm/postgres';
+import { knormTimestamps } from '../src/index';
+import { KnormTimestamps } from '../src/KnormTimestamps';
+import { createKnex } from '../../../util/createKnex';
 
 const { KnormTimestampsError } = KnormTimestamps;
+const expect = unexpected.clone().use(unexpectedKnex);
 const knex = createKnex('knorm-timestamps');
 
 describe('KnormTimestamps', () => {

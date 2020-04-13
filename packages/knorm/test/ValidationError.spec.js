@@ -1,14 +1,20 @@
-const expect = require('unexpected').clone();
-const ValidationError = require('../src/ValidationError');
-const KnormError = require('../src/KnormError');
-const AbstractModel = require('../src/Model');
-const AbstractField = require('../src/Field');
+import unexpected from 'unexpected';
+import { KnormError } from '../src/KnormError';
+import { ValidationError } from '../src/ValidationError';
+import { Model } from '../src/Model';
+import { Field as BaseField } from '../src/Field';
 
-class Field extends AbstractField {}
-
-class User extends AbstractModel {}
+const expect = unexpected.clone();
 
 describe('ValidationError', () => {
+  let Field;
+  let User;
+
+  before(() => {
+    Field = class extends BaseField {};
+    User = class extends Model {};
+  });
+
   it('extends KnormError', () => {
     expect(ValidationError.prototype, 'to be a', KnormError);
   });
