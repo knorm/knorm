@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-const User = require('./lib/User');
-const Message = require('./lib/Message');
-const { inspect } = require('util');
+import { User } from './lib/User';
+import { Message } from './lib/Message';
+import { inspect } from 'util';
 
 const runExample = async () => {
   const [foo, bar] = await User.insert([
