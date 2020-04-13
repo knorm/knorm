@@ -37,7 +37,7 @@ class Transaction {
         models[name] = TransactionModel;
         models[name].Query = TransactionQuery;
 
-        [models[name], models[name].Query].forEach(scopedClass => {
+        [models[name], models[name].Query].forEach((scopedClass) => {
           scopedClass.prototype.models = scopedClass.models = models;
           scopedClass.prototype.transaction = scopedClass.transaction = transaction;
         });

@@ -49,7 +49,7 @@ class Knorm {
     // TODO: move fieldToColumn to a separate plugin
     const { fieldToColumn } = config;
     if (typeof fieldToColumn === 'function') {
-      Field.prototype.getColumnName = function(fieldName) {
+      Field.prototype.getColumnName = function (fieldName) {
         return fieldToColumn.call(this, fieldName);
       };
     }
@@ -60,11 +60,11 @@ class Knorm {
     this.updateField(Field);
     this.updateConnection(Connection);
 
-    [Field, Model, Connection, Query, Transaction].forEach(scopedClass => {
+    [Field, Model, Connection, Query, Transaction].forEach((scopedClass) => {
       scopedClass.prototype.knorm = scopedClass.knorm = this;
     });
 
-    [Model, Query, Transaction].forEach(scopedClass => {
+    [Model, Query, Transaction].forEach((scopedClass) => {
       scopedClass.prototype.models = scopedClass.models = this.models;
     });
   }
@@ -168,7 +168,7 @@ class Knorm {
   clone() {
     const clone = new Knorm(this.config);
 
-    Object.values(this.plugins).forEach(plugin => {
+    Object.values(this.plugins).forEach((plugin) => {
       clone.use(plugin);
     });
 

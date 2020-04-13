@@ -924,7 +924,7 @@ describe('Transaction', () => {
     before(async () => knex.schema.dropTableIfExists(User.table));
 
     before(async () =>
-      knex.schema.createTable(User.table, table => {
+      knex.schema.createTable(User.table, (table) => {
         table.increments().primary();
         table.string('name');
       })
@@ -936,7 +936,7 @@ describe('Transaction', () => {
 
     describe('with a callback function', () => {
       it('enables transaction model operations', async () => {
-        await new Transaction(async transaction => {
+        await new Transaction(async (transaction) => {
           await transaction.models.User.insert({ id: 1, name: 'foo' });
         });
         await expect(
@@ -1039,14 +1039,14 @@ describe('Transaction', () => {
 
       it('allows Transaction.prototype.commit to be called within the callback', async () => {
         await expect(
-          new Transaction(async transaction => transaction.commit()),
+          new Transaction(async (transaction) => transaction.commit()),
           'to be fulfilled'
         );
       });
 
       it('allows Transaction.prototype.rollback to be called within the callback', async () => {
         await expect(
-          new Transaction(async transaction => transaction.rollback()),
+          new Transaction(async (transaction) => transaction.rollback()),
           'to be fulfilled'
         );
       });
@@ -1065,7 +1065,7 @@ describe('Transaction', () => {
         const close = sinon.spy(Connection.prototype, 'close');
         const query = sinon
           .stub(Connection.prototype, 'query')
-          .callsFake(sql => {
+          .callsFake((sql) => {
             if (sql === 'BEGIN') {
               throw new Error('begin error');
             }
@@ -1105,7 +1105,7 @@ describe('Transaction', () => {
         const close = sinon.spy(Connection.prototype, 'close');
         const query = sinon
           .stub(Connection.prototype, 'query')
-          .callsFake(sql => {
+          .callsFake((sql) => {
             if (sql === 'COMMIT') {
               throw new Error('commit error');
             }
@@ -1136,7 +1136,7 @@ describe('Transaction', () => {
         const close = sinon.spy(Connection.prototype, 'close');
         const query = sinon
           .stub(Connection.prototype, 'query')
-          .callsFake(sql => {
+          .callsFake((sql) => {
             if (sql === 'ROLLBACK') {
               throw new Error('rollback error');
             }
@@ -1357,7 +1357,7 @@ describe('Transaction', () => {
         const close = sinon.spy(Connection.prototype, 'close');
         const query = sinon
           .stub(Connection.prototype, 'query')
-          .callsFake(sql => {
+          .callsFake((sql) => {
             if (sql === 'BEGIN') {
               throw new Error('begin error');
             }
@@ -1383,7 +1383,7 @@ describe('Transaction', () => {
         const close = sinon.spy(Connection.prototype, 'close');
         const query = sinon
           .stub(Connection.prototype, 'query')
-          .callsFake(sql => {
+          .callsFake((sql) => {
             if (sql === 'COMMIT') {
               throw new Error('commit error');
             }
@@ -1413,7 +1413,7 @@ describe('Transaction', () => {
         const close = sinon.spy(Connection.prototype, 'close');
         const query = sinon
           .stub(Connection.prototype, 'query')
-          .callsFake(sql => {
+          .callsFake((sql) => {
             if (sql === 'ROLLBACK') {
               throw new Error('rollback error');
             }
@@ -1544,7 +1544,7 @@ describe('Transaction', () => {
         // ensure the connection is closed before running the second query
         await expect(idleTimeoutMillis, 'to be', 10);
         const afterConnectionClosed = idleTimeoutMillis + 1;
-        await new Promise(resolve =>
+        await new Promise((resolve) =>
           setTimeout(resolve, afterConnectionClosed)
         );
         await expect(user.update(), 'to be fulfilled with value satisfying', {

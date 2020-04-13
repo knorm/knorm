@@ -8,7 +8,7 @@ const pool = new Pool(
   Object.assign({ idleTimeoutMillis: 10 }, knex.client.config.connection)
 );
 
-const postgresPlugin = knorm => {
+const postgresPlugin = (knorm) => {
   knorm.updateConnection(
     class ConnectionForTests extends knorm.Connection {
       async create() {

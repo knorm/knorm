@@ -67,38 +67,29 @@ describe('KnormRelations', () => {
   });
 
   before(async () => {
-    await knex.schema.createTable(User.table, table => {
+    await knex.schema.createTable(User.table, (table) => {
       table.increments();
       table.string('name');
       table.boolean('confirmed');
       table.integer('creator');
     });
-    await knex.schema.createTable(ImageCategory.table, table => {
+    await knex.schema.createTable(ImageCategory.table, (table) => {
       table.increments();
       table.string('name').notNullable();
     });
-    await knex.schema.createTable(Image.table, table => {
+    await knex.schema.createTable(Image.table, (table) => {
       table.increments();
-      table
-        .integer('user_id')
-        .references('id')
-        .inTable(User.table);
+      table.integer('user_id').references('id').inTable(User.table);
       table
         .integer('category_id')
         .references('id')
         .inTable(ImageCategory.table);
     });
-    await knex.schema.createTable(Message.table, table => {
+    await knex.schema.createTable(Message.table, (table) => {
       table.increments();
       table.text('text').notNullable();
-      table
-        .integer('sender_id')
-        .references('id')
-        .inTable(User.table);
-      table
-        .integer('receiver_id')
-        .references('id')
-        .inTable(User.table);
+      table.integer('sender_id').references('id').inTable(User.table);
+      table.integer('receiver_id').references('id').inTable(User.table);
     });
 
     await User.insert([
@@ -138,9 +129,9 @@ describe('KnormRelations', () => {
     });
   });
 
-  describe('updateModel', function() {
-    describe('enables `Model.config.references`', function() {
-      it("returns the model's references", function() {
+  describe('updateModel', function () {
+    describe('enables `Model.config.references`', function () {
+      it("returns the model's references", function () {
         class Foo extends Model {}
         class Bar extends Model {}
 
@@ -152,15 +143,15 @@ describe('KnormRelations', () => {
         });
       });
 
-      describe('when a model is subclassed', function() {
+      describe('when a model is subclassed', function () {
         let Foo;
 
-        before(function() {
+        before(function () {
           Foo = class extends Model {};
           Foo.fields = { id: { type: 'integer' }, id2: { type: 'integer' } };
         });
 
-        it('overwrites references defined in the parent', function() {
+        it('overwrites references defined in the parent', function () {
           class Bar extends Model {}
           class Quux extends Bar {}
 
@@ -180,7 +171,7 @@ describe('KnormRelations', () => {
           });
         });
 
-        it('overwrites reference functions defined in the parent', function() {
+        it('overwrites reference functions defined in the parent', function () {
           class Bar extends Model {}
           class Quux extends Bar {}
 
@@ -209,7 +200,7 @@ describe('KnormRelations', () => {
           expect(Bar.config.referenceFunctions, 'to exhaustively satisfy', {
             fooId: expect.it(
               'when passed as parameter to',
-              f => f.toString(),
+              (f) => f.toString(),
               'to contain',
               'return Foo.fields.id;'
             ),
@@ -217,14 +208,14 @@ describe('KnormRelations', () => {
           expect(Quux.config.referenceFunctions, 'to exhaustively satisfy', {
             fooId: expect.it(
               'when passed as parameter to',
-              f => f.toString(),
+              (f) => f.toString(),
               'to contain',
               'return Foo.fields.id2;'
             ),
           });
         });
 
-        it("inherits but does not interfere with the parent's references", function() {
+        it("inherits but does not interfere with the parent's references", function () {
           class Bar extends Model {}
           class Quux extends Bar {}
 
@@ -244,7 +235,7 @@ describe('KnormRelations', () => {
           });
         });
 
-        it("inherits but does not interfere with the parent's reference functions", function() {
+        it("inherits but does not interfere with the parent's reference functions", function () {
           class Bar extends Model {}
           class Quux extends Bar {}
 
@@ -273,7 +264,7 @@ describe('KnormRelations', () => {
           expect(Bar.config.referenceFunctions, 'to exhaustively satisfy', {
             fooId: expect.it(
               'when passed as parameter to',
-              f => f.toString(),
+              (f) => f.toString(),
               'to contain',
               'return Foo.fields.id;'
             ),
@@ -281,13 +272,13 @@ describe('KnormRelations', () => {
           expect(Quux.config.referenceFunctions, 'to exhaustively satisfy', {
             fooId: expect.it(
               'when passed as parameter to',
-              f => f.toString(),
+              (f) => f.toString(),
               'to contain',
               'return Foo.fields.id;'
             ),
             fooId2: expect.it(
               'when passed as parameter to',
-              f => f.toString(),
+              (f) => f.toString(),
               'to contain',
               'return Foo.fields.id2;'
             ),
@@ -388,10 +379,7 @@ describe('KnormRelations', () => {
       describe("with 'distinct' configured", () => {
         it('supports `leftJoin`', async () => {
           await expect(
-            new Query(User)
-              .distinct(['id', 'name'])
-              .leftJoin(Image)
-              .fetch(),
+            new Query(User).distinct(['id', 'name']).leftJoin(Image).fetch(),
             'to be fulfilled with value satisfying',
             expect.it(
               'when sorted by',
@@ -413,10 +401,7 @@ describe('KnormRelations', () => {
           await Image.insert({ id: 2, userId: 1, categoryId: 1 });
 
           await expect(
-            new Query(User)
-              .distinct(['id', 'name'])
-              .innerJoin(Image)
-              .fetch(),
+            new Query(User).distinct(['id', 'name']).innerJoin(Image).fetch(),
             'to be fulfilled with sorted rows exhaustively satisfying',
             [
               new User({
@@ -1463,7 +1448,7 @@ describe('KnormRelations', () => {
             execute(
               expect.it(
                 'when passed as parameter to',
-                sql => sql.toString(),
+                (sql) => sql.toString(),
                 'to contain',
                 ' INNER JOIN '
               )
@@ -1496,7 +1481,7 @@ describe('KnormRelations', () => {
             execute(
               expect.it(
                 'when passed as parameter to',
-                sql => sql.toString(),
+                (sql) => sql.toString(),
                 'to contain',
                 ' JOIN '
               )
@@ -2460,10 +2445,7 @@ describe('KnormRelations', () => {
 
         it('supports `on` as a string', async () => {
           const query = new Query(User).leftJoin(
-            new Query(User)
-              .as('creator')
-              .on('creator')
-              .first()
+            new Query(User).as('creator').on('creator').first()
           );
           await expect(
             query.fetch(),
@@ -2479,10 +2461,7 @@ describe('KnormRelations', () => {
 
         it('supports `on` as a field instance', async () => {
           const query = new Query(User).leftJoin(
-            new Query(User)
-              .as('creator')
-              .on(User.fields.creator)
-              .first()
+            new Query(User).as('creator').on(User.fields.creator).first()
           );
           await expect(
             query.fetch(),
@@ -2498,10 +2477,7 @@ describe('KnormRelations', () => {
 
         it('supports `on` with the other field as a string', async () => {
           const query = new Query(User).leftJoin(
-            new Query(User)
-              .as('creator')
-              .on('id')
-              .first()
+            new Query(User).as('creator').on('id').first()
           );
           await expect(
             query.fetch(),
@@ -2517,10 +2493,7 @@ describe('KnormRelations', () => {
 
         it('supports `on` with the other field as a field instance', async () => {
           const query = new Query(User).leftJoin(
-            new Query(User)
-              .as('creator')
-              .on(User.fields.id)
-              .first()
+            new Query(User).as('creator').on(User.fields.id).first()
           );
           await expect(
             query.fetch(),
@@ -2547,7 +2520,7 @@ describe('KnormRelations', () => {
           await knex.schema.raw(`CREATE SCHEMA ${MessageInOtherSchema.schema}`);
           await knex.schema
             .withSchema(MessageInOtherSchema.schema)
-            .createTable(MessageInOtherSchema.table, table => {
+            .createTable(MessageInOtherSchema.table, (table) => {
               table.increments();
               table.text('text').notNullable();
               table

@@ -2,9 +2,9 @@ const Virtual = require('../src/Virtual');
 const Model = require('../src/Model');
 const expect = require('unexpected').clone();
 
-describe('Virtual', function() {
-  describe('constructor', function() {
-    it("throws an error if the virtual's name is not provided", function() {
+describe('Virtual', function () {
+  describe('constructor', function () {
+    it("throws an error if the virtual's name is not provided", function () {
       expect(
         () => new Virtual(),
         'to throw',
@@ -12,7 +12,7 @@ describe('Virtual', function() {
       );
     });
 
-    it('throws an error if the model is not provided', function() {
+    it('throws an error if the model is not provided', function () {
       expect(
         () => new Virtual({ name: 'foo' }),
         'to throw',
@@ -20,7 +20,7 @@ describe('Virtual', function() {
       );
     });
 
-    it('throws an error if the model is not a sublass of Model', function() {
+    it('throws an error if the model is not a sublass of Model', function () {
       expect(
         () => new Virtual({ name: 'foo', model: {} }),
         'to throw',
@@ -28,7 +28,7 @@ describe('Virtual', function() {
       );
     });
 
-    it('throws an error if the virtual has no getter or setter', function() {
+    it('throws an error if the virtual has no getter or setter', function () {
       class Foo extends Model {}
       expect(
         () =>
@@ -42,7 +42,7 @@ describe('Virtual', function() {
       );
     });
 
-    it("throws an error if the virtual's getter is not a function", function() {
+    it("throws an error if the virtual's getter is not a function", function () {
       class Foo extends Model {}
       expect(
         () =>
@@ -56,7 +56,7 @@ describe('Virtual', function() {
       );
     });
 
-    it("throws an error if the virtual's setter is not a function", function() {
+    it("throws an error if the virtual's setter is not a function", function () {
       class Foo extends Model {}
       expect(
         () =>
@@ -70,8 +70,8 @@ describe('Virtual', function() {
       );
     });
 
-    describe('with a descriptor given as a function', function() {
-      it("assumes the function to be the virtual's getter", function() {
+    describe('with a descriptor given as a function', function () {
+      it("assumes the function to be the virtual's getter", function () {
         class Foo extends Model {}
 
         const virtual = new Virtual({

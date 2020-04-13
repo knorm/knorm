@@ -72,7 +72,7 @@ class KnormSoftDelete {
           return true;
         }
 
-        return where.some(field => {
+        return where.some((field) => {
           if (field instanceof this.sql) {
             return false;
           }

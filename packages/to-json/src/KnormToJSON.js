@@ -34,7 +34,7 @@ class KnormToJSON {
           }
 
           excluded = Object.assign({}, excluded);
-          exclude.forEach(field => {
+          exclude.forEach((field) => {
             excluded[field] = true;
           });
         }

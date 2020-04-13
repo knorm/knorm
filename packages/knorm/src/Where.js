@@ -1,4 +1,4 @@
-const isObject = value => typeof value === 'object' && value !== null;
+const isObject = (value) => typeof value === 'object' && value !== null;
 
 // TODO: this adds support objects for where expressions i.e.
 // `where.equal({ foo: 'bar' })`. this is only a work-around till it's
@@ -9,7 +9,7 @@ class Where {
   _objectsToExpressions(option, args) {
     const expressions = [];
 
-    args.forEach(arg => {
+    args.forEach((arg) => {
       if (
         option !== 'and' && // `and` already supports objects
         option !== 'not' && // `not` already supports objects
@@ -76,7 +76,7 @@ const whereOptions = {
 
 Object.entries(whereOptions).forEach(([option, alias]) => {
   if (!Where.prototype[option] && !Where.prototype[alias]) {
-    Where.prototype[option] = function(...args) {
+    Where.prototype[option] = function (...args) {
       return this.addOption(alias, args);
     };
     Where.prototype[alias] = Where.prototype[option];

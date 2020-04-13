@@ -97,7 +97,7 @@ class KnormPaginate {
           const joins = this.getOption('joins');
 
           if (joins) {
-            joins.forEach(join => {
+            joins.forEach((join) => {
               // disable fields on joins if none have been set
               if (!join.hasOption('fields')) {
                 join.fields(false);

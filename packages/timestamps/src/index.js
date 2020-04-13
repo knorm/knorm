@@ -1,5 +1,5 @@
 const KnormTimestamps = require('./KnormTimestamps');
-const knormTimestamps = config => new KnormTimestamps(config);
+const knormTimestamps = (config) => new KnormTimestamps(config);
 
 knormTimestamps.KnormTimestamps = KnormTimestamps;
 

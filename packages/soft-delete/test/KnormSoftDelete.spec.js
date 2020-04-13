@@ -36,7 +36,7 @@ describe('KnormSoftDelete', () => {
   });
 
   describe('updateModel', () => {
-    const updateModel = config => knorm().use(knormSoftDelete(config));
+    const updateModel = (config) => knorm().use(knormSoftDelete(config));
 
     it('adds a `deleted` field by default', () => {
       const { Model } = updateModel();
@@ -130,7 +130,7 @@ describe('KnormSoftDelete', () => {
     });
 
     before(async () => {
-      await knex.schema.createTable(User.table, table => {
+      await knex.schema.createTable(User.table, (table) => {
         table.increments();
         table.string('name');
         table.boolean('deleted');
@@ -408,10 +408,7 @@ describe('KnormSoftDelete', () => {
       it('does not inadvertently include other rows by doing an OR WHERE match', async () => {
         await new Query(User).where({ id: 1 }).delete();
         await expect(
-          new Query(User)
-            .withDeleted()
-            .where({ id: 1 })
-            .fetch(),
+          new Query(User).withDeleted().where({ id: 1 }).fetch(),
           'to be fulfilled with value satisfying',
           [{ id: 1 }]
         );
@@ -684,7 +681,7 @@ describe('KnormSoftDelete', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              query => query.toString(),
+              (query) => query.toString(),
               'to end with',
               'RETURNING "user"."id" AS "user.id"'
             )
@@ -748,7 +745,7 @@ describe('KnormSoftDelete', () => {
           execute(
             expect.it(
               'when passed as parameter to',
-              query => query.toString(),
+              (query) => query.toString(),
               'to end with',
               'RETURNING "user"."id" AS "user.id"'
             )

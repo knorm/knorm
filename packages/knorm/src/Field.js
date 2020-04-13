@@ -1,6 +1,6 @@
 const { isUUID, isDecimal, isEmail } = require('validator');
 
-const isSet = value => value !== undefined && value !== null;
+const isSet = (value) => value !== undefined && value !== null;
 
 /**
  * Creates and holds configuration for fields, e.g. how to validate or cast
@@ -226,11 +226,11 @@ class Field {
   }
 
   validateIsNumber(value, type) {
-    this._validateTypeWith(value, type, value => typeof value === 'number');
+    this._validateTypeWith(value, type, (value) => typeof value === 'number');
   }
 
   _validateIsString(value, type) {
-    this._validateTypeWith(value, type, value => typeof value === 'string');
+    this._validateTypeWith(value, type, (value) => typeof value === 'string');
   }
 
   validateIsString(value, type) {
@@ -243,23 +243,23 @@ class Field {
 
   validateIsEmail(value, type) {
     this._validateIsString(value, 'string');
-    this._validateTypeWith(value, type, value => isEmail(value));
+    this._validateTypeWith(value, type, (value) => isEmail(value));
   }
 
   validateIsBinary(value, type) {
-    this._validateTypeWith(value, type, value => value instanceof Buffer);
+    this._validateTypeWith(value, type, (value) => value instanceof Buffer);
   }
 
   validateIsInteger(value, type) {
-    this._validateTypeWith(value, type, value => Number.isInteger(value));
+    this._validateTypeWith(value, type, (value) => Number.isInteger(value));
   }
 
   validateIsBoolean(value, type) {
-    this._validateTypeWith(value, type, value => typeof value === 'boolean');
+    this._validateTypeWith(value, type, (value) => typeof value === 'boolean');
   }
 
   _validateIsDate(value, type) {
-    this._validateTypeWith(value, type, value => value instanceof Date);
+    this._validateTypeWith(value, type, (value) => value instanceof Date);
   }
 
   validateIsDate(value, type) {
@@ -271,16 +271,16 @@ class Field {
   }
 
   validateIsUuid(value, type) {
-    this._validateTypeWith(value, type, value => isUUID(value));
+    this._validateTypeWith(value, type, (value) => isUUID(value));
   }
 
   validateIsUuidV4(value, type) {
-    this._validateTypeWith(value, type, value => isUUID(value, 4));
+    this._validateTypeWith(value, type, (value) => isUUID(value, 4));
   }
 
   validateIsDecimal(value, type) {
     // validator.isDecimal requires the value to be a string
-    this._validateTypeWith(value, type, value => isDecimal(String(value)));
+    this._validateTypeWith(value, type, (value) => isDecimal(String(value)));
   }
 
   validateIsJson(value, type) {
@@ -292,11 +292,11 @@ class Field {
   }
 
   validateIsObject(value, type) {
-    this._validateTypeWith(value, type, value => typeof value === 'object');
+    this._validateTypeWith(value, type, (value) => typeof value === 'object');
   }
 
   validateIsArray(value, type) {
-    this._validateTypeWith(value, type, value => Array.isArray(value));
+    this._validateTypeWith(value, type, (value) => Array.isArray(value));
   }
 
   validateTypeIs(value, type) {
@@ -521,7 +521,7 @@ class Field {
     }
 
     return Promise.all(
-      Object.values(shape).map(async field =>
+      Object.values(shape).map(async (field) =>
         field.validate(value[field.name], modelInstance)
       )
     );

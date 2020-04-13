@@ -47,18 +47,15 @@ describe('KnormPaginate', () => {
   });
 
   before(async () => {
-    await knex.schema.createTable(User.table, table => {
+    await knex.schema.createTable(User.table, (table) => {
       table.increments();
       table.string('name');
       table.integer('age');
       table.boolean('confirmed');
     });
-    await knex.schema.createTable(Image.table, table => {
+    await knex.schema.createTable(Image.table, (table) => {
       table.increments();
-      table
-        .integer('user')
-        .references('id')
-        .inTable(User.table);
+      table.integer('user').references('id').inTable(User.table);
     });
     await User.insert([
       { id: 1, name: 'User 1', age: 10 },
@@ -282,10 +279,7 @@ describe('KnormPaginate', () => {
         });
 
         it('passes options along', async () => {
-          const query = new Query(User)
-            .page(3)
-            .perPage(3)
-            .fields(['name']);
+          const query = new Query(User).page(3).perPage(3).fields(['name']);
           await expect(
             query.fetch(),
             'to be fulfilled with value exhaustively satisfying',
@@ -316,10 +310,7 @@ describe('KnormPaginate', () => {
         });
 
         it('supports `distinct`', async () => {
-          const query = new Query(User)
-            .page(1)
-            .perPage(1)
-            .distinct('age');
+          const query = new Query(User).page(1).perPage(1).distinct('age');
           await expect(query.fetch(), 'to be fulfilled with value satisfying', {
             total: 1,
             page: 1,
@@ -329,11 +320,7 @@ describe('KnormPaginate', () => {
         });
 
         it('overwrites any original `limit` and `offset` options passed', async () => {
-          const query = new Query(User)
-            .page(3)
-            .perPage(3)
-            .offset(1)
-            .limit(5);
+          const query = new Query(User).page(3).perPage(3).offset(1).limit(5);
           await expect(query.fetch(), 'to be fulfilled with value satisfying', {
             total: 10,
             page: 3,
@@ -347,10 +334,7 @@ describe('KnormPaginate', () => {
         });
 
         it('unsets `fields` when counting total rows', async () => {
-          const query = new Query(User)
-            .page(3)
-            .perPage(1)
-            .fields(['max(age)']);
+          const query = new Query(User).page(3).perPage(1).fields(['max(age)']);
           await expect(query.fetch(), 'to be fulfilled with value satisfying', {
             total: 10,
           });
@@ -369,10 +353,7 @@ describe('KnormPaginate', () => {
 
         it('unsets `orderBy` when counting total rows', async () => {
           const spy = sinon.spy(Query.prototype, 'query');
-          const query = new Query(User)
-            .page(3)
-            .perPage(1)
-            .orderBy('age');
+          const query = new Query(User).page(3).perPage(1).orderBy('age');
           await expect(query.fetch(), 'to be fulfilled with value satisfying', {
             total: 10,
           });
@@ -380,7 +361,7 @@ describe('KnormPaginate', () => {
             spy(
               expect.it(
                 'when passed as parameter to',
-                sql => sql.toString(),
+                (sql) => sql.toString(),
                 'not to contain',
                 'ORDER BY'
               )
@@ -554,12 +535,12 @@ describe('KnormPaginate', () => {
   });
 
   describe('updateModel', () => {
-    describe('Model.count', function() {
-      it('counts models', async function() {
+    describe('Model.count', function () {
+      it('counts models', async function () {
         await expect(User.count(), 'to be fulfilled with value satisfying', 2);
       });
 
-      it('passes options along', async function() {
+      it('passes options along', async function () {
         await expect(
           User.count({ field: 'id' }),
           'to be fulfilled with value satisfying',

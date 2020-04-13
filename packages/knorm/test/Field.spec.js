@@ -1,17 +1,15 @@
 const uuid = require('uuid');
 const Knorm = require('../src/Knorm');
 const sinon = require('sinon');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-sinon'));
+const expect = require('unexpected').clone().use(require('unexpected-sinon'));
 
-describe('Field', function() {
+describe('Field', function () {
   let Model;
   let Query;
   let Field;
   let sql;
 
-  before(function() {
+  before(function () {
     const orm = new Knorm();
     Model = orm.Model;
     Query = orm.Query;
@@ -19,12 +17,12 @@ describe('Field', function() {
     sql = Query.prototype.sql;
   });
 
-  describe('constructor', function() {
-    it('throws an error if the field name is not provided', function() {
+  describe('constructor', function () {
+    it('throws an error if the field name is not provided', function () {
       expect(() => new Field(), 'to throw', new Error('Field requires a name'));
     });
 
-    it('throws an error if the model is not provided', function() {
+    it('throws an error if the model is not provided', function () {
       expect(
         () => new Field({ name: 'foo' }),
         'to throw',
@@ -32,7 +30,7 @@ describe('Field', function() {
       );
     });
 
-    it('throws an error if the field type is not provided', function() {
+    it('throws an error if the field type is not provided', function () {
       class Foo extends Model {}
       expect(
         () =>
@@ -45,7 +43,7 @@ describe('Field', function() {
       );
     });
 
-    it('throws an error if the field type is not supported', function() {
+    it('throws an error if the field type is not supported', function () {
       class Foo extends Model {}
       expect(
         () =>
@@ -59,7 +57,7 @@ describe('Field', function() {
       );
     });
 
-    it("throws an error if 'validate' is provided and is not a function", function() {
+    it("throws an error if 'validate' is provided and is not a function", function () {
       class Foo extends Model {}
       expect(
         () =>
@@ -76,8 +74,8 @@ describe('Field', function() {
       );
     });
 
-    describe('with a column name configured', function() {
-      it("sets the field's column name from configured value", function() {
+    describe('with a column name configured', function () {
+      it("sets the field's column name from configured value", function () {
         class Foo extends Model {}
         const field = new Field({
           name: 'bar',
@@ -88,7 +86,7 @@ describe('Field', function() {
         expect(field.column, 'to be', 'the column name');
       });
 
-      it('does not call getColumnName', function() {
+      it('does not call getColumnName', function () {
         class Foo extends Model {}
         const spy = sinon.spy(Field.prototype, 'getColumnName');
         // eslint-disable-next-line no-unused-vars
@@ -103,8 +101,8 @@ describe('Field', function() {
       });
     });
 
-    describe('without a column name configured', function() {
-      it("calls getColumnName to set the field's column name", function() {
+    describe('without a column name configured', function () {
+      it("calls getColumnName to set the field's column name", function () {
         class Foo extends Model {}
         const stub = sinon
           .stub(Field.prototype, 'getColumnName')
@@ -122,8 +120,8 @@ describe('Field', function() {
       });
     });
 
-    describe('with `cast` options', function() {
-      it('throws if `cast.forSave` is not a function', function() {
+    describe('with `cast` options', function () {
+      it('throws if `cast.forSave` is not a function', function () {
         class Foo extends Model {}
         expect(
           () =>
@@ -142,7 +140,7 @@ describe('Field', function() {
         );
       });
 
-      it('throws if `cast.forFetch` is not a function', function() {
+      it('throws if `cast.forFetch` is not a function', function () {
         class Foo extends Model {}
         expect(
           () =>
@@ -162,15 +160,15 @@ describe('Field', function() {
       });
     });
 
-    describe('for `json` and `jsonb` fields with a `shape` config', function() {
+    describe('for `json` and `jsonb` fields with a `shape` config', function () {
       let Foo;
 
-      before(function() {
+      before(function () {
         Foo = class extends Model {};
       });
 
-      describe('with a root-level `shape`', function() {
-        it('throws the correct error if the shape config has no `type`', function() {
+      describe('with a root-level `shape`', function () {
+        it('throws the correct error if the shape config has no `type`', function () {
           expect(
             () =>
               new Field({
@@ -184,7 +182,7 @@ describe('Field', function() {
           );
         });
 
-        it('throws the correct error if a shape config has an invalid `type`', function() {
+        it('throws the correct error if a shape config has an invalid `type`', function () {
           expect(
             () =>
               new Field({
@@ -198,7 +196,7 @@ describe('Field', function() {
           );
         });
 
-        it("allows adding shape validators with the `shape: 'type'` shorthand", function() {
+        it("allows adding shape validators with the `shape: 'type'` shorthand", function () {
           expect(
             new Field({
               name: 'json',
@@ -221,8 +219,8 @@ describe('Field', function() {
         });
       });
 
-      describe('with a shape with nested fields', function() {
-        it('throws the correct error if a nested field has no `type`', function() {
+      describe('with a shape with nested fields', function () {
+        it('throws the correct error if a nested field has no `type`', function () {
           expect(
             () =>
               new Field({
@@ -236,7 +234,7 @@ describe('Field', function() {
           );
         });
 
-        it('throws the correct error if a nested field has an invalid `type`', function() {
+        it('throws the correct error if a nested field has an invalid `type`', function () {
           expect(
             () =>
               new Field({
@@ -250,7 +248,7 @@ describe('Field', function() {
           );
         });
 
-        it("allows adding shape validators with the `shape: 'type'` shorthand", function() {
+        it("allows adding shape validators with the `shape: 'type'` shorthand", function () {
           expect(
             new Field({
               name: 'json',
@@ -277,8 +275,8 @@ describe('Field', function() {
     });
   });
 
-  describe('Field.prototype.getColumnName', function() {
-    it('returns the field name passed as is', function() {
+  describe('Field.prototype.getColumnName', function () {
+    it('returns the field name passed as is', function () {
       class Foo extends Model {}
       const field = new Field({
         name: 'firstName',
@@ -289,8 +287,8 @@ describe('Field', function() {
     });
   });
 
-  describe('Field.prototype.throwValidationError', function() {
-    it('throws a `ValidationError`', function() {
+  describe('Field.prototype.throwValidationError', function () {
+    it('throws a `ValidationError`', function () {
       class Foo extends Model {}
       const field = new Field({
         name: 'firstName',
@@ -302,7 +300,7 @@ describe('Field', function() {
       });
     });
 
-    it('throws a validation error from `Field.ValidationError`', function() {
+    it('throws a validation error from `Field.ValidationError`', function () {
       // allows configuring the ValidationError class entirely
       class CustomValidationError {}
       const ValidationError = Field.ValidationError;
@@ -322,15 +320,15 @@ describe('Field', function() {
     });
   });
 
-  describe('Field.prototype.cast', function() {
+  describe('Field.prototype.cast', function () {
     let User;
 
-    before(function() {
+    before(function () {
       User = class extends Model {};
     });
 
-    describe('with no cast functions defined', function() {
-      it('returns undefined', function() {
+    describe('with no cast functions defined', function () {
+      it('returns undefined', function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -343,8 +341,8 @@ describe('Field', function() {
       });
     });
 
-    describe('with a `forSave` cast function and the `forSave` option set to `true`', function() {
-      it('calls the function with the value and the model instance', function() {
+    describe('with a `forSave` cast function and the `forSave` option set to `true`', function () {
+      it('calls the function with the value and the model instance', function () {
         const forSave = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -358,7 +356,7 @@ describe('Field', function() {
         );
       });
 
-      it('calls the function with raw sql values', function() {
+      it('calls the function with raw sql values', function () {
         const forSave = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -373,8 +371,8 @@ describe('Field', function() {
       });
     });
 
-    describe('with a `forFetch` cast function and the `forFetch` option set to `true`', function() {
-      it('calls the function with the value and the model instance', function() {
+    describe('with a `forFetch` cast function and the `forFetch` option set to `true`', function () {
+      it('calls the function with the value and the model instance', function () {
         const forFetch = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -389,8 +387,8 @@ describe('Field', function() {
       });
     });
 
-    describe('with both `forFetch` and `forSave` cast functions', function() {
-      it('calls only the `forFetch` cast function if the `forFetch` option is enabled', function() {
+    describe('with both `forFetch` and `forSave` cast functions', function () {
+      it('calls only the `forFetch` cast function if the `forFetch` option is enabled', function () {
         const forSave = sinon.spy();
         const forFetch = sinon.spy();
         const field = new Field({
@@ -404,7 +402,7 @@ describe('Field', function() {
         expect(forSave, 'was not called');
       });
 
-      it('calls only the `forSave` cast function if the `forSave` option is enabled', function() {
+      it('calls only the `forSave` cast function if the `forSave` option is enabled', function () {
         const forSave = sinon.spy();
         const forFetch = sinon.spy();
         const field = new Field({
@@ -420,14 +418,14 @@ describe('Field', function() {
     });
   });
 
-  describe('Field.prototype.getDefault', function() {
+  describe('Field.prototype.getDefault', function () {
     let User;
 
-    before(function() {
+    before(function () {
       User = class extends Model {};
     });
 
-    it('returns the default value configured', function() {
+    it('returns the default value configured', function () {
       const field = new Field({
         name: 'firstName',
         model: User,
@@ -437,7 +435,7 @@ describe('Field', function() {
       expect(field.getDefault(), 'to be', 'foo');
     });
 
-    it('returns `undefined` if there is no the default value configured', function() {
+    it('returns `undefined` if there is no the default value configured', function () {
       const field = new Field({
         name: 'firstName',
         model: User,
@@ -446,8 +444,8 @@ describe('Field', function() {
       expect(field.getDefault(), 'to be undefined');
     });
 
-    describe('when the default value is a function', function() {
-      it('returns the return value of the function', function() {
+    describe('when the default value is a function', function () {
+      it('returns the return value of the function', function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -457,7 +455,7 @@ describe('Field', function() {
         expect(field.getDefault(), 'to be', 'bar');
       });
 
-      it('calls the function with the mode instance as a parameter', function() {
+      it('calls the function with the mode instance as a parameter', function () {
         const getDefault = sinon.stub().returns('bar');
         const field = new Field({
           name: 'firstName',
@@ -473,14 +471,14 @@ describe('Field', function() {
     });
   });
 
-  describe('Field.prototype.validate', function() {
+  describe('Field.prototype.validate', function () {
     let User;
 
-    before(function() {
+    before(function () {
       User = class extends Model {};
     });
 
-    it('returns a Promise', async function() {
+    it('returns a Promise', async function () {
       const field = new Field({
         name: 'firstName',
         model: User,
@@ -489,8 +487,8 @@ describe('Field', function() {
       await expect(field.validate(), 'to be fulfilled');
     });
 
-    describe('required', function() {
-      it('rejects with a RequiredError if no value is passed', async function() {
+    describe('required', function () {
+      it('rejects with a RequiredError if no value is passed', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -503,7 +501,7 @@ describe('Field', function() {
         });
       });
 
-      it("rejects if the value is 'undefined'", async function() {
+      it("rejects if the value is 'undefined'", async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -516,7 +514,7 @@ describe('Field', function() {
         });
       });
 
-      it("rejects if the value is 'null'", async function() {
+      it("rejects if the value is 'null'", async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -529,7 +527,7 @@ describe('Field', function() {
         });
       });
 
-      it('resolves if the value is set', async function() {
+      it('resolves if the value is set', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -540,8 +538,8 @@ describe('Field', function() {
       });
     });
 
-    describe('type', function() {
-      it('rejects with a TypeError if an invalid value is set', async function() {
+    describe('type', function () {
+      it('rejects with a TypeError if an invalid value is set', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -553,7 +551,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not type-validate if the value is `undefined`', async function() {
+      it('does not type-validate if the value is `undefined`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -562,7 +560,7 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it('does not type-validate if the value is `null`', async function() {
+      it('does not type-validate if the value is `null`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -571,8 +569,8 @@ describe('Field', function() {
         await expect(field.validate(null), 'to be fulfilled');
       });
 
-      describe('resolves for valid types', function() {
-        it("any value type against the 'any' type", async function() {
+      describe('resolves for valid types', function () {
+        it("any value type against the 'any' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -585,7 +583,7 @@ describe('Field', function() {
           await expect(field.validate(new Date()), 'to be fulfilled');
         });
 
-        it("integers against the 'number' type", async function() {
+        it("integers against the 'number' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -594,7 +592,7 @@ describe('Field', function() {
           await expect(field.validate(1), 'to be fulfilled');
         });
 
-        it("decimals against the 'number' type", async function() {
+        it("decimals against the 'number' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -603,7 +601,7 @@ describe('Field', function() {
           await expect(field.validate(1.2), 'to be fulfilled');
         });
 
-        it("strings against the 'string' type", async function() {
+        it("strings against the 'string' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -612,7 +610,7 @@ describe('Field', function() {
           await expect(field.validate('foo'), 'to be fulfilled');
         });
 
-        it("strings against the 'text' type", async function() {
+        it("strings against the 'text' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -621,7 +619,7 @@ describe('Field', function() {
           await expect(field.validate('foo'), 'to be fulfilled');
         });
 
-        it("integers against the 'integer' type", async function() {
+        it("integers against the 'integer' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -630,7 +628,7 @@ describe('Field', function() {
           await expect(field.validate(1), 'to be fulfilled');
         });
 
-        it("dates against the 'dateTime' type", async function() {
+        it("dates against the 'dateTime' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -639,7 +637,7 @@ describe('Field', function() {
           await expect(field.validate(new Date()), 'to be fulfilled');
         });
 
-        it("dates against the 'date' type", async function() {
+        it("dates against the 'date' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -648,7 +646,7 @@ describe('Field', function() {
           await expect(field.validate(new Date()), 'to be fulfilled');
         });
 
-        it("true against the 'boolean' type", async function() {
+        it("true against the 'boolean' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -657,7 +655,7 @@ describe('Field', function() {
           await expect(field.validate(true), 'to be fulfilled');
         });
 
-        it("false against the 'boolean' type", async function() {
+        it("false against the 'boolean' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -666,7 +664,7 @@ describe('Field', function() {
           await expect(field.validate(false), 'to be fulfilled');
         });
 
-        it("uuid.v4 against the 'uuid' type", async function() {
+        it("uuid.v4 against the 'uuid' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -675,7 +673,7 @@ describe('Field', function() {
           await expect(field.validate(uuid.v4()), 'to be fulfilled');
         });
 
-        it("uuid.v1 against the 'uuid' type", async function() {
+        it("uuid.v1 against the 'uuid' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -684,7 +682,7 @@ describe('Field', function() {
           await expect(field.validate(uuid.v1()), 'to be fulfilled');
         });
 
-        it("uuid.v4 against the 'uuid4' type", async function() {
+        it("uuid.v4 against the 'uuid4' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -693,7 +691,7 @@ describe('Field', function() {
           await expect(field.validate(uuid.v4()), 'to be fulfilled');
         });
 
-        it("floating point values against the 'decimal' type", async function() {
+        it("floating point values against the 'decimal' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -702,7 +700,7 @@ describe('Field', function() {
           await expect(field.validate(10.56), 'to be fulfilled');
         });
 
-        it("floating point values without whole numbers against the 'decimal' type", async function() {
+        it("floating point values without whole numbers against the 'decimal' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -711,7 +709,7 @@ describe('Field', function() {
           await expect(field.validate(0.5600976), 'to be fulfilled');
         });
 
-        it("integer values against the 'decimal' type", async function() {
+        it("integer values against the 'decimal' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -720,7 +718,7 @@ describe('Field', function() {
           await expect(field.validate(30), 'to be fulfilled');
         });
 
-        it("zero against the 'decimal' type", async function() {
+        it("zero against the 'decimal' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -729,7 +727,7 @@ describe('Field', function() {
           await expect(field.validate(0), 'to be fulfilled');
         });
 
-        it("string floating point values against the 'decimal' type", async function() {
+        it("string floating point values against the 'decimal' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -738,7 +736,7 @@ describe('Field', function() {
           await expect(field.validate('10.00'), 'to be fulfilled');
         });
 
-        it("positive string floating point values against the 'decimal' type", async function() {
+        it("positive string floating point values against the 'decimal' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -747,7 +745,7 @@ describe('Field', function() {
           await expect(field.validate('+10.00345'), 'to be fulfilled');
         });
 
-        it("negative floating point values against the 'decimal' type", async function() {
+        it("negative floating point values against the 'decimal' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -756,7 +754,7 @@ describe('Field', function() {
           await expect(field.validate(-9923410.03), 'to be fulfilled');
         });
 
-        it("buffer values against the 'binary' type", async function() {
+        it("buffer values against the 'binary' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -765,7 +763,7 @@ describe('Field', function() {
           await expect(field.validate(Buffer.from('')), 'to be fulfilled');
         });
 
-        it("email values against the 'email' type", async function() {
+        it("email values against the 'email' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -775,8 +773,8 @@ describe('Field', function() {
         });
       });
 
-      describe('rejects for invalid types', function() {
-        it("true against the 'number' type", async function() {
+      describe('rejects for invalid types', function () {
+        it("true against the 'number' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -788,7 +786,7 @@ describe('Field', function() {
           });
         });
 
-        it("for fractions against the 'integer' type", async function() {
+        it("for fractions against the 'integer' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -800,7 +798,7 @@ describe('Field', function() {
           });
         });
 
-        it("for string numbers against the 'integer' type", async function() {
+        it("for string numbers against the 'integer' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -812,7 +810,7 @@ describe('Field', function() {
           });
         });
 
-        it("for date strings against the 'dateTime' type", async function() {
+        it("for date strings against the 'dateTime' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -825,7 +823,7 @@ describe('Field', function() {
           });
         });
 
-        it("for date strings against the 'date' type", async function() {
+        it("for date strings against the 'date' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -838,7 +836,7 @@ describe('Field', function() {
           });
         });
 
-        it("for truthy values against the 'boolean' type", async function() {
+        it("for truthy values against the 'boolean' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -850,7 +848,7 @@ describe('Field', function() {
           });
         });
 
-        it("for falsy values against the 'boolean' type", async function() {
+        it("for falsy values against the 'boolean' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -862,7 +860,7 @@ describe('Field', function() {
           });
         });
 
-        it("invalid uuid's against the 'uuid' type", async function() {
+        it("invalid uuid's against the 'uuid' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -875,7 +873,7 @@ describe('Field', function() {
           );
         });
 
-        it("uuid.v1 against the 'uuid4' type", async function() {
+        it("uuid.v1 against the 'uuid4' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -888,7 +886,7 @@ describe('Field', function() {
           });
         });
 
-        it("strings against the 'decimal' type", async function() {
+        it("strings against the 'decimal' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -900,7 +898,7 @@ describe('Field', function() {
           });
         });
 
-        it("string values against the 'binary' type", async function() {
+        it("string values against the 'binary' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -912,7 +910,7 @@ describe('Field', function() {
           });
         });
 
-        it("object values against the 'binary' type", async function() {
+        it("object values against the 'binary' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -924,7 +922,7 @@ describe('Field', function() {
           });
         });
 
-        it("invalid email values against the 'email' type", async function() {
+        it("invalid email values against the 'email' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -936,7 +934,7 @@ describe('Field', function() {
           });
         });
 
-        it("integer values against the 'email' type", async function() {
+        it("integer values against the 'email' type", async function () {
           const field = new Field({
             name: 'firstName',
             model: User,
@@ -950,8 +948,8 @@ describe('Field', function() {
       });
     });
 
-    describe('minLength', function() {
-      it('rejects with a `MinLengthError` if the value is shorter than the minLength', async function() {
+    describe('minLength', function () {
+      it('rejects with a `MinLengthError` if the value is shorter than the minLength', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -964,7 +962,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not reject an if the value is the same lenth as the minLength', async function() {
+      it('does not reject an if the value is the same lenth as the minLength', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -974,7 +972,7 @@ describe('Field', function() {
         await expect(field.validate('123456'), 'to be fulfilled');
       });
 
-      it('does not reject an if the value is longer than the minLength', async function() {
+      it('does not reject an if the value is longer than the minLength', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -984,7 +982,7 @@ describe('Field', function() {
         await expect(field.validate('1234567'), 'to be fulfilled');
       });
 
-      it('does not reject if the value is `undefined`', async function() {
+      it('does not reject if the value is `undefined`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -994,7 +992,7 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it('does not reject if the passed value is `null`', async function() {
+      it('does not reject if the passed value is `null`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1005,8 +1003,8 @@ describe('Field', function() {
       });
     });
 
-    describe('maxLength', function() {
-      it('rejects with a `MaxLengthError` if the value is longer than the maxLength', async function() {
+    describe('maxLength', function () {
+      it('rejects with a `MaxLengthError` if the value is longer than the maxLength', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1019,7 +1017,7 @@ describe('Field', function() {
         });
       });
 
-      it('allows a `minLength` of zero', async function() {
+      it('allows a `minLength` of zero', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1033,7 +1031,7 @@ describe('Field', function() {
         await expect(field.validate(''), 'to be fulfilled');
       });
 
-      it('does not reject an if the value is the same lenth as the maxLength', async function() {
+      it('does not reject an if the value is the same lenth as the maxLength', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1043,7 +1041,7 @@ describe('Field', function() {
         await expect(field.validate('123456'), 'to be fulfilled');
       });
 
-      it('does not reject an if the value is shorter than the maxLength', async function() {
+      it('does not reject an if the value is shorter than the maxLength', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1053,7 +1051,7 @@ describe('Field', function() {
         await expect(field.validate('12345'), 'to be fulfilled');
       });
 
-      it('does not reject if the value is `undefined`', async function() {
+      it('does not reject if the value is `undefined`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1063,7 +1061,7 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it('does not reject if the passed value is `null`', async function() {
+      it('does not reject if the passed value is `null`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1074,8 +1072,8 @@ describe('Field', function() {
       });
     });
 
-    describe('oneOf', function() {
-      it('rejects with a OneOfError if the value is not included in oneOf', async function() {
+    describe('oneOf', function () {
+      it('rejects with a OneOfError if the value is not included in oneOf', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1088,7 +1086,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not reject if the value is included in oneOf', async function() {
+      it('does not reject if the value is included in oneOf', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1098,7 +1096,7 @@ describe('Field', function() {
         await expect(field.validate(1), 'to be fulfilled');
       });
 
-      it('checks against the casing of strings', async function() {
+      it('checks against the casing of strings', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1111,7 +1109,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not reject if the value is `undefined`', async function() {
+      it('does not reject if the value is `undefined`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1121,7 +1119,7 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it('does not reject if the passed value is `null`', async function() {
+      it('does not reject if the passed value is `null`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1132,8 +1130,8 @@ describe('Field', function() {
       });
     });
 
-    describe('equals', function() {
-      it('rejects with an `EqualsError` if the value does not equal the expected value', async function() {
+    describe('equals', function () {
+      it('rejects with an `EqualsError` if the value does not equal the expected value', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1146,7 +1144,7 @@ describe('Field', function() {
         });
       });
 
-      it('allows `equals` with a value of zero', async function() {
+      it('allows `equals` with a value of zero', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1160,7 +1158,7 @@ describe('Field', function() {
         await expect(field.validate(0), 'to be fulfilled');
       });
 
-      it('does not reject if the value equals the expected value', async function() {
+      it('does not reject if the value equals the expected value', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1170,7 +1168,7 @@ describe('Field', function() {
         await expect(field.validate(1), 'to be fulfilled');
       });
 
-      it('checks against the casing of strings', async function() {
+      it('checks against the casing of strings', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1183,7 +1181,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not reject if the value is `undefined`', async function() {
+      it('does not reject if the value is `undefined`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1193,7 +1191,7 @@ describe('Field', function() {
         await expect(field.validate(undefined), 'to be fulfilled');
       });
 
-      it('does not reject if the passed value is `null`', async function() {
+      it('does not reject if the passed value is `null`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1204,7 +1202,7 @@ describe('Field', function() {
       });
     });
 
-    describe('regex', function() {
+    describe('regex', function () {
       describe('when configured directly as a RegExp', () => {
         let field;
 
@@ -1217,22 +1215,22 @@ describe('Field', function() {
           });
         });
 
-        it('rejects with a RegexError if the value does not match the regex', async function() {
+        it('rejects with a RegexError if the value does not match the regex', async function () {
           await expect(field.validate(3), 'to be rejected with', {
             name: 'ValidationError',
             type: 'RegexError',
           });
         });
 
-        it('does not reject if the value matches the regex', async function() {
+        it('does not reject if the value matches the regex', async function () {
           await expect(field.validate(2), 'to be fulfilled');
         });
 
-        it('does not reject if the value is `undefined`', async function() {
+        it('does not reject if the value is `undefined`', async function () {
           await expect(field.validate(undefined), 'to be fulfilled');
         });
 
-        it('does not reject if the passed value is `null`', async function() {
+        it('does not reject if the passed value is `null`', async function () {
           await expect(field.validate(null), 'to be fulfilled');
         });
       });
@@ -1250,22 +1248,22 @@ describe('Field', function() {
             },
           });
         });
-        it('rejects with a RegexError if the value does not match the regex', async function() {
+        it('rejects with a RegexError if the value does not match the regex', async function () {
           await expect(field.validate('hi'), 'to be rejected with', {
             name: 'ValidationError',
             type: 'RegexError',
           });
         });
 
-        it('does not reject if the value matches the regex', async function() {
+        it('does not reject if the value matches the regex', async function () {
           await expect(field.validate('hello world'), 'to be fulfilled');
         });
 
-        it('does not reject if the value is `undefined`', async function() {
+        it('does not reject if the value is `undefined`', async function () {
           await expect(field.validate(undefined), 'to be fulfilled');
         });
 
-        it('does not reject if the passed value is `null`', async function() {
+        it('does not reject if the passed value is `null`', async function () {
           await expect(field.validate(null), 'to be fulfilled');
         });
       });
@@ -1284,22 +1282,22 @@ describe('Field', function() {
           });
         });
 
-        it('rejects with a RegexError if the value does match the regex', async function() {
+        it('rejects with a RegexError if the value does match the regex', async function () {
           await expect(field.validate('hello there.'), 'to be rejected with', {
             name: 'ValidationError',
             type: 'RegexError',
           });
         });
 
-        it('does not reject if the value does not match the regex', async function() {
+        it('does not reject if the value does not match the regex', async function () {
           await expect(field.validate('hello world'), 'to be fulfilled');
         });
 
-        it('does not reject if the value is `undefined`', async function() {
+        it('does not reject if the value is `undefined`', async function () {
           await expect(field.validate(undefined), 'to be fulfilled');
         });
 
-        it('does not reject if the passed value is `null`', async function() {
+        it('does not reject if the passed value is `null`', async function () {
           await expect(field.validate(null), 'to be fulfilled');
         });
       });
@@ -1319,40 +1317,40 @@ describe('Field', function() {
           });
         });
 
-        it('rejects with a RegexError if the value does not match the `matching` regex', async function() {
+        it('rejects with a RegexError if the value does not match the `matching` regex', async function () {
           await expect(field.validate('HELLO'), 'to be rejected with', {
             name: 'ValidationError',
             type: 'RegexError',
           });
         });
 
-        it('rejects with a RegexError if the value matches the `notMatching` regex', async function() {
+        it('rejects with a RegexError if the value matches the `notMatching` regex', async function () {
           await expect(field.validate('hello.'), 'to be rejected with', {
             name: 'ValidationError',
             type: 'RegexError',
           });
         });
 
-        it('does not reject if the value matches the `matching` regex', async function() {
+        it('does not reject if the value matches the `matching` regex', async function () {
           await expect(field.validate('hello world'), 'to be fulfilled');
         });
 
-        it('does not reject if the value does not match the `notMatching` regex', async function() {
+        it('does not reject if the value does not match the `notMatching` regex', async function () {
           await expect(field.validate('hello world'), 'to be fulfilled');
         });
 
-        it('does not reject if the value is `undefined`', async function() {
+        it('does not reject if the value is `undefined`', async function () {
           await expect(field.validate(undefined), 'to be fulfilled');
         });
 
-        it('does not reject if the passed value is `null`', async function() {
+        it('does not reject if the passed value is `null`', async function () {
           await expect(field.validate(null), 'to be fulfilled');
         });
       });
     });
 
-    describe('with a custom validator', function() {
-      it('calls the validator with the passed value and model instance', async function() {
+    describe('with a custom validator', function () {
+      it('calls the validator with the passed value and model instance', async function () {
         const validate = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -1366,7 +1364,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not call the validator if the value is `undefined`', async function() {
+      it('does not call the validator if the value is `undefined`', async function () {
         const validate = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -1378,7 +1376,7 @@ describe('Field', function() {
         await expect(validate, 'was not called');
       });
 
-      it('calls the validator if the passed value is `null`', async function() {
+      it('calls the validator if the passed value is `null`', async function () {
         const validate = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -1390,7 +1388,7 @@ describe('Field', function() {
         await expect(validate, 'was called once');
       });
 
-      it('rejects with the error thrown from the validator', async function() {
+      it('rejects with the error thrown from the validator', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1406,7 +1404,7 @@ describe('Field', function() {
         );
       });
 
-      it('rejects with the rejection reason returned from the validator', async function() {
+      it('rejects with the rejection reason returned from the validator', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1422,7 +1420,7 @@ describe('Field', function() {
         );
       });
 
-      it('rejects with a ValidatorError if the validator returns `false`', async function() {
+      it('rejects with a ValidatorError if the validator returns `false`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1437,7 +1435,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not reject if the validator returns nothing', async function() {
+      it('does not reject if the validator returns nothing', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -1447,9 +1445,9 @@ describe('Field', function() {
         await expect(field.validate(), 'to be fulfilled');
       });
 
-      describe('when the validator returns an object', function() {
-        describe('with valid validators', function() {
-          it('runs the new validators', async function() {
+      describe('when the validator returns an object', function () {
+        describe('with valid validators', function () {
+          it('runs the new validators', async function () {
             const field = new Field({
               name: 'firstName',
               model: User,
@@ -1467,8 +1465,8 @@ describe('Field', function() {
           });
         });
 
-        describe('with a `validate` function', function() {
-          it('runs the new custom validator with the passed value and model instance', async function() {
+        describe('with a `validate` function', function () {
+          it('runs the new custom validator with the passed value and model instance', async function () {
             const secondValidateSpy = sinon.spy();
             const field = new Field({
               name: 'firstName',
@@ -1486,7 +1484,7 @@ describe('Field', function() {
             });
           });
 
-          it('runs the new validator asynchronously', async function() {
+          it('runs the new validator asynchronously', async function () {
             let called;
             const field = new Field({
               name: 'firstName',
@@ -1507,8 +1505,8 @@ describe('Field', function() {
           });
         });
 
-        describe('with no validators', function() {
-          it('does nothing', async function() {
+        describe('with no validators', function () {
+          it('does nothing', async function () {
             const field = new Field({
               name: 'firstName',
               model: User,
@@ -1523,12 +1521,12 @@ describe('Field', function() {
       });
     });
 
-    describe('for `json` and `jsonb` fields', function() {
-      describe('without a `shape` configured', function() {
+    describe('for `json` and `jsonb` fields', function () {
+      describe('without a `shape` configured', function () {
         let json;
         let jsonb;
 
-        before(function() {
+        before(function () {
           json = new Field({
             name: 'json',
             model: User,
@@ -1542,44 +1540,44 @@ describe('Field', function() {
           });
         });
 
-        it('fulfils if the value is `undefined`', async function() {
+        it('fulfils if the value is `undefined`', async function () {
           await expect(json.validate(undefined), 'to be fulfilled');
         });
 
-        it('fulfils if the value is `null`', async function() {
+        it('fulfils if the value is `null`', async function () {
           await expect(jsonb.validate(null), 'to be fulfilled');
         });
 
-        it('fulfils for arrays', async function() {
+        it('fulfils for arrays', async function () {
           await expect(json.validate([1, 2, 3]), 'to be fulfilled');
         });
 
-        it('fulfils for objects', async function() {
+        it('fulfils for objects', async function () {
           await expect(jsonb.validate({ a: 'b' }), 'to be fulfilled');
         });
 
-        it('fulfils for integers', async function() {
+        it('fulfils for integers', async function () {
           await expect(json.validate(1), 'to be fulfilled');
         });
 
-        it('fulfils for boolean valuess', async function() {
+        it('fulfils for boolean valuess', async function () {
           await expect(jsonb.validate(true), 'to be fulfilled');
         });
 
-        it('fulfils for valid json strings', async function() {
+        it('fulfils for valid json strings', async function () {
           await expect(json.validate('[{ "foo": "foo" }]'), 'to be fulfilled');
         });
 
-        it('fulfils for invalid json strings', async function() {
+        it('fulfils for invalid json strings', async function () {
           // i.e it doesn't validate the json string
           await expect(jsonb.validate('{not: "valid"}'), 'to be fulfilled');
         });
       });
 
-      describe('when passed a string value', function() {
+      describe('when passed a string value', function () {
         let field;
 
-        before(function() {
+        before(function () {
           field = new Field({
             name: 'json',
             model: User,
@@ -1588,7 +1586,7 @@ describe('Field', function() {
           });
         });
 
-        it('JSON.parses the value and runs validators on the parsed value', async function() {
+        it('JSON.parses the value and runs validators on the parsed value', async function () {
           await expect(field.validate('{"foo":1}'), 'to be rejected with', {
             name: 'ValidationError',
             type: 'TypeError',
@@ -1596,7 +1594,7 @@ describe('Field', function() {
           await expect(field.validate('{"foo":"1"}'), 'to be fulfilled');
         });
 
-        it('converts JSON.parse errors to `type` errors', async function() {
+        it('converts JSON.parse errors to `type` errors', async function () {
           await expect(field.validate('{foo:"foo"}'), 'to be rejected with', {
             name: 'ValidationError',
             type: 'TypeError',
@@ -1604,8 +1602,8 @@ describe('Field', function() {
           await expect(field.validate('{"foo":"foo"}'), 'to be fulfilled');
         });
 
-        describe('with a root-level `string` shape', function() {
-          it('does not JSON.parse the value', async function() {
+        describe('with a root-level `string` shape', function () {
+          it('does not JSON.parse the value', async function () {
             const field = new Field({
               name: 'json',
               model: User,
@@ -1617,10 +1615,10 @@ describe('Field', function() {
         });
       });
 
-      describe('with a root-level `shape` object', function() {
+      describe('with a root-level `shape` object', function () {
         let field;
 
-        before(function() {
+        before(function () {
           field = new Field({
             name: 'json',
             model: User,
@@ -1629,40 +1627,40 @@ describe('Field', function() {
           });
         });
 
-        it('fulfils for valid values', async function() {
+        it('fulfils for valid values', async function () {
           await expect(field.validate('foo'), 'to be fulfilled');
         });
 
-        it('rejects for invalid values', async function() {
+        it('rejects for invalid values', async function () {
           await expect(field.validate(1), 'to be rejected with', {
             name: 'ValidationError',
             type: 'TypeError',
           });
         });
 
-        it('rejects if passed an array value', async function() {
+        it('rejects if passed an array value', async function () {
           await expect(field.validate(['bar']), 'to be rejected with', {
             name: 'ValidationError',
             type: 'TypeError',
           });
         });
 
-        it('rejects if passed an object value', async function() {
+        it('rejects if passed an object value', async function () {
           await expect(field.validate({ foo: 'bar' }), 'to be rejected with', {
             name: 'ValidationError',
             type: 'TypeError',
           });
         });
 
-        describe('with `required` set to true', function() {
-          it('rejects if the value is `undefined`', async function() {
+        describe('with `required` set to true', function () {
+          it('rejects if the value is `undefined`', async function () {
             await expect(field.validate(undefined), 'to be rejected with', {
               name: 'ValidationError',
               type: 'RequiredError',
             });
           });
 
-          it('rejects if the value is `null`', async function() {
+          it('rejects if the value is `null`', async function () {
             await expect(field.validate(null), 'to be rejected with', {
               name: 'ValidationError',
               type: 'RequiredError',
@@ -1674,7 +1672,7 @@ describe('Field', function() {
           let field;
           let validate;
 
-          before(function() {
+          before(function () {
             validate = sinon.spy();
             field = new Field({
               name: 'firstName',
@@ -1684,19 +1682,19 @@ describe('Field', function() {
             });
           });
 
-          beforeEach(function() {
+          beforeEach(function () {
             validate.resetHistory();
           });
 
-          it('calls the validator with the passed value and model instance', async function() {
+          it('calls the validator with the passed value and model instance', async function () {
             await field.validate('foo', 'a model instance');
             await expect(validate, 'to have calls satisfying', () => {
               validate('foo', 'a model instance');
             });
           });
 
-          describe('that returns new validators', function() {
-            it('runs the new validators', async function() {
+          describe('that returns new validators', function () {
+            it('runs the new validators', async function () {
               const field = new Field({
                 name: 'firstName',
                 model: User,
@@ -1710,7 +1708,7 @@ describe('Field', function() {
               });
             });
 
-            it('supports new `shape` validators', async function() {
+            it('supports new `shape` validators', async function () {
               const field = new Field({
                 name: 'firstName',
                 model: User,
@@ -1733,7 +1731,7 @@ describe('Field', function() {
               );
             });
 
-            it('supports new `shape` validators without a `type`', async function() {
+            it('supports new `shape` validators without a `type`', async function () {
               const field = new Field({
                 name: 'firstName',
                 model: User,
@@ -1753,10 +1751,10 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `array` field with an item `shape`', function() {
+        describe('with a root-level `array` field with an item `shape`', function () {
           let field;
 
-          before(function() {
+          before(function () {
             field = new Field({
               name: 'json',
               model: User,
@@ -1769,14 +1767,14 @@ describe('Field', function() {
             });
           });
 
-          it('rejects if passed a non-array value', async function() {
+          it('rejects if passed a non-array value', async function () {
             await expect(field.validate('bar'), 'to be rejected with', {
               name: 'ValidationError',
               type: 'TypeError',
             });
           });
 
-          it('rejects if the value fails the `length` validators', async function() {
+          it('rejects if the value fails the `length` validators', async function () {
             await expect(
               field.validate(['foo', 'bar', 'quux']),
               'to be rejected with',
@@ -1784,27 +1782,27 @@ describe('Field', function() {
             );
           });
 
-          it('fulfils if every item in the value passes validation', async function() {
+          it('fulfils if every item in the value passes validation', async function () {
             await expect(field.validate(['foo', 'bar']), 'to be fulfilled');
           });
 
-          it('rejects if one item in the value fails validation', async function() {
+          it('rejects if one item in the value fails validation', async function () {
             await expect(field.validate(['foo', 1]), 'to be rejected with', {
               name: 'ValidationError',
               type: 'TypeError',
             });
           });
 
-          it('fulfils if called with no array value', async function() {
+          it('fulfils if called with no array value', async function () {
             await expect(field.validate(), 'to be fulfilled');
           });
 
-          it('fulfils if called with an empty array', async function() {
+          it('fulfils if called with an empty array', async function () {
             await expect(field.validate([]), 'to be fulfilled');
           });
 
-          describe('with the item shape specifying `required`', function() {
-            before(function() {
+          describe('with the item shape specifying `required`', function () {
+            before(function () {
               field = new Field({
                 name: 'json',
                 model: User,
@@ -1817,21 +1815,21 @@ describe('Field', function() {
               });
             });
 
-            it('rejects if an array value is `undefined`', async function() {
+            it('rejects if an array value is `undefined`', async function () {
               await expect(field.validate([undefined]), 'to be rejected with', {
                 name: 'ValidationError',
                 type: 'RequiredError',
               });
             });
 
-            it('rejects if an array value is `null`', async function() {
+            it('rejects if an array value is `null`', async function () {
               await expect(field.validate([null]), 'to be rejected with', {
                 name: 'ValidationError',
                 type: 'RequiredError',
               });
             });
 
-            it('rejects if the array is empty', async function() {
+            it('rejects if the array is empty', async function () {
               await expect(field.validate([]), 'to be rejected with', {
                 name: 'ValidationError',
                 type: 'RequiredError',
@@ -1840,10 +1838,10 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `array` field with no item `shape`', function() {
+        describe('with a root-level `array` field with no item `shape`', function () {
           let field;
 
-          before(function() {
+          before(function () {
             field = new Field({
               name: 'json',
               model: User,
@@ -1852,30 +1850,30 @@ describe('Field', function() {
             });
           });
 
-          it('rejects if passed a non-array value', async function() {
+          it('rejects if passed a non-array value', async function () {
             await expect(field.validate('bar'), 'to be rejected with', {
               name: 'ValidationError',
               type: 'TypeError',
             });
           });
 
-          it('rejects if the value fails the `length` validators', async function() {
+          it('rejects if the value fails the `length` validators', async function () {
             await expect(field.validate(['foo']), 'to be rejected with', {
               name: 'ValidationError',
               type: 'MinLengthError',
             });
           });
 
-          it('fulfils for any array values', async function() {
+          it('fulfils for any array values', async function () {
             await expect(field.validate([{}, {}, {}]), 'to be fulfilled');
             await expect(field.validate(['foo', 1, false]), 'to be fulfilled');
           });
         });
 
-        describe('with a root-level `array` field with a nested `shape`', function() {
+        describe('with a root-level `array` field with a nested `shape`', function () {
           let field;
 
-          before(function() {
+          before(function () {
             field = new Field({
               name: 'json',
               model: User,
@@ -1890,32 +1888,32 @@ describe('Field', function() {
             });
           });
 
-          it('fulfils if the nested object value is `undefined`', async function() {
+          it('fulfils if the nested object value is `undefined`', async function () {
             await expect(
               field.validate([{ foo: undefined }]),
               'to be fulfilled'
             );
           });
 
-          it('fulfils if the value is `null`', async function() {
+          it('fulfils if the value is `null`', async function () {
             await expect(field.validate([{ foo: null }]), 'to be fulfilled');
           });
 
-          it('fulfils if every item in the value passes validation', async function() {
+          it('fulfils if every item in the value passes validation', async function () {
             await expect(
               field.validate([{ foo: 'foo' }, { foo: 'bar' }]),
               'to be fulfilled'
             );
           });
 
-          it('ignores nested keys that are not defined in the shape', async function() {
+          it('ignores nested keys that are not defined in the shape', async function () {
             await expect(
               field.validate([{ foo: 'foo', bar: 1 }]),
               'to be fulfilled'
             );
           });
 
-          it('rejects if one object in the array fails validation', async function() {
+          it('rejects if one object in the array fails validation', async function () {
             await expect(
               field.validate([{ foo: 'foo' }, { foo: 1 }]),
               'to be rejected with',
@@ -1924,10 +1922,10 @@ describe('Field', function() {
           });
         });
 
-        describe('with a root-level `object` field with a nested `shape`', function() {
+        describe('with a root-level `object` field with a nested `shape`', function () {
           let field;
 
-          before(function() {
+          before(function () {
             field = new Field({
               name: 'json',
               model: User,
@@ -1942,60 +1940,60 @@ describe('Field', function() {
             });
           });
 
-          it('fulfils if the value is `undefined`', async function() {
+          it('fulfils if the value is `undefined`', async function () {
             await expect(field.validate(undefined), 'to be fulfilled');
           });
 
-          it('fulfils if the value is `null`', async function() {
+          it('fulfils if the value is `null`', async function () {
             await expect(field.validate(null), 'to be fulfilled');
           });
 
-          it('rejects if the value is a number', async function() {
+          it('rejects if the value is a number', async function () {
             await expect(field.validate(1), 'to be rejected with', {
               name: 'ValidationError',
               type: 'TypeError',
             });
           });
 
-          it('rejects if the value is a boolean', async function() {
+          it('rejects if the value is a boolean', async function () {
             await expect(field.validate(false), 'to be rejected with', {
               name: 'ValidationError',
               type: 'TypeError',
             });
           });
 
-          it('ignores nested keys that are not defined in the shape', async function() {
+          it('ignores nested keys that are not defined in the shape', async function () {
             await expect(
               field.validate({ foo: 'foo', bar: 1 }),
               'to be fulfilled'
             );
           });
 
-          it('rejects if the key value fails validation', async function() {
+          it('rejects if the key value fails validation', async function () {
             await expect(field.validate({ foo: 1 }), 'to be rejected with', {
               name: 'ValidationError',
               type: 'TypeError',
             });
           });
 
-          describe('without a `required` option', function() {
-            it('fulfils if the nested key value is `undefined`', async function() {
+          describe('without a `required` option', function () {
+            it('fulfils if the nested key value is `undefined`', async function () {
               await expect(
                 field.validate({ foo: undefined }),
                 'to be fulfilled'
               );
             });
 
-            it('fulfils if the nested key value is `null`', async function() {
+            it('fulfils if the nested key value is `null`', async function () {
               await expect(field.validate({ foo: null }), 'to be fulfilled');
             });
           });
         });
 
-        describe('with a root-level `object` field  with no nested `shape`', function() {
+        describe('with a root-level `object` field  with no nested `shape`', function () {
           let field;
 
-          before(function() {
+          before(function () {
             field = new Field({
               name: 'json',
               model: User,
@@ -2004,35 +2002,35 @@ describe('Field', function() {
             });
           });
 
-          it('rejects if passed a non-object value', async function() {
+          it('rejects if passed a non-object value', async function () {
             await expect(field.validate('bar'), 'to be rejected with', {
               name: 'ValidationError',
               type: 'TypeError',
             });
           });
 
-          it('fulfils if passed an array value', async function() {
+          it('fulfils if passed an array value', async function () {
             await expect(field.validate(['foo', 'bar']), 'to be fulfilled');
           });
 
-          it('fulfils if passed an object value', async function() {
+          it('fulfils if passed an object value', async function () {
             await expect(field.validate({}), 'to be fulfilled');
           });
 
-          it('fulfils if the value is `undefined`', async function() {
+          it('fulfils if the value is `undefined`', async function () {
             await expect(field.validate(undefined), 'to be fulfilled');
           });
 
-          it('fulfils if the value is `null`', async function() {
+          it('fulfils if the value is `null`', async function () {
             await expect(field.validate(null), 'to be fulfilled');
           });
         });
       });
 
-      describe('with a `shape` object with nested fields', function() {
+      describe('with a `shape` object with nested fields', function () {
         let field;
 
-        before(function() {
+        before(function () {
           field = new Field({
             name: 'json',
             model: User,
@@ -2041,7 +2039,7 @@ describe('Field', function() {
           });
         });
 
-        it('rejects if passed an array value', async function() {
+        it('rejects if passed an array value', async function () {
           // Missing required value for field `User.json.foo`
           await expect(
             field.validate([{ foo: 'bar' }]),
@@ -2050,29 +2048,29 @@ describe('Field', function() {
           );
         });
 
-        it('rejects for invalid object values', async function() {
+        it('rejects for invalid object values', async function () {
           await expect(field.validate({ foo: 1 }), 'to be rejected with', {
             name: 'ValidationError',
             type: 'TypeError',
           });
         });
 
-        it('fulfils for valid object values', async function() {
+        it('fulfils for valid object values', async function () {
           await expect(field.validate({ foo: 'bar' }), 'to be fulfilled');
         });
 
-        it('ignores object keys that are not specified in the shape', async function() {
+        it('ignores object keys that are not specified in the shape', async function () {
           await expect(
             field.validate({ foo: 'foo', bar: [] }),
             'to be fulfilled'
           );
         });
 
-        it('fulfils if the value is `undefined`', async function() {
+        it('fulfils if the value is `undefined`', async function () {
           await expect(field.validate(undefined), 'to be fulfilled');
         });
 
-        it('fulfils if the value is `null`', async function() {
+        it('fulfils if the value is `null`', async function () {
           await expect(field.validate(null), 'to be fulfilled');
         });
 
@@ -2080,7 +2078,7 @@ describe('Field', function() {
           let field;
           let validate;
 
-          before(function() {
+          before(function () {
             validate = sinon.spy();
             field = new Field({
               name: 'firstName',
@@ -2090,19 +2088,19 @@ describe('Field', function() {
             });
           });
 
-          beforeEach(function() {
+          beforeEach(function () {
             validate.resetHistory();
           });
 
-          it('calls the validator with the passed value and model instance', async function() {
+          it('calls the validator with the passed value and model instance', async function () {
             await field.validate({ foo: 'bar' }, 'a model instance');
             await expect(validate, 'to have calls satisfying', () => {
               validate('bar', 'a model instance');
             });
           });
 
-          describe('that returns new validators', function() {
-            it('runs the new validators', async function() {
+          describe('that returns new validators', function () {
+            it('runs the new validators', async function () {
               const field = new Field({
                 name: 'firstName',
                 model: User,
@@ -2118,7 +2116,7 @@ describe('Field', function() {
               );
             });
 
-            it('supports new `shape` validators', async function() {
+            it('supports new `shape` validators', async function () {
               const field = new Field({
                 name: 'firstName',
                 model: User,
@@ -2146,7 +2144,7 @@ describe('Field', function() {
               );
             });
 
-            it('supports new `shape` validators without a `type`', async function() {
+            it('supports new `shape` validators without a `type`', async function () {
               const field = new Field({
                 name: 'firstName',
                 model: User,
@@ -2171,10 +2169,10 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `array` field with an item `shape`', function() {
+        describe('with a nested `array` field with an item `shape`', function () {
           let field;
 
-          before(function() {
+          before(function () {
             field = new Field({
               name: 'json',
               model: User,
@@ -2189,7 +2187,7 @@ describe('Field', function() {
             });
           });
 
-          it('rejects if passed a non-array value', async function() {
+          it('rejects if passed a non-array value', async function () {
             await expect(
               field.validate({ foo: 'bar' }),
               'to be rejected with',
@@ -2197,7 +2195,7 @@ describe('Field', function() {
             );
           });
 
-          it('rejects if the value fails the `length` validators', async function() {
+          it('rejects if the value fails the `length` validators', async function () {
             await expect(
               field.validate({ foo: ['foo', 'bar', 'quux'] }),
               'to be rejected with',
@@ -2205,29 +2203,29 @@ describe('Field', function() {
             );
           });
 
-          it('fulfils if the value is `undefined`', async function() {
+          it('fulfils if the value is `undefined`', async function () {
             await expect(field.validate(undefined), 'to be fulfilled');
           });
 
-          it('fulfils if the value is `null`', async function() {
+          it('fulfils if the value is `null`', async function () {
             await expect(field.validate(null), 'to be fulfilled');
           });
 
-          it('fulfils if every item in the value passes validation', async function() {
+          it('fulfils if every item in the value passes validation', async function () {
             await expect(
               field.validate({ foo: ['foo', 'bar'] }),
               'to be fulfilled'
             );
           });
 
-          it('ignores keys in the array items that are not specified in the shape', async function() {
+          it('ignores keys in the array items that are not specified in the shape', async function () {
             await expect(
               field.validate({ foo: ['foo'], bar: [] }),
               'to be fulfilled'
             );
           });
 
-          it('rejects if one item in the value fails validation', async function() {
+          it('rejects if one item in the value fails validation', async function () {
             await expect(
               field.validate({ foo: ['foo', 1] }),
               'to be rejected with',
@@ -2236,10 +2234,10 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `array` field with no item `shape`', function() {
+        describe('with a nested `array` field with no item `shape`', function () {
           let field;
 
-          before(function() {
+          before(function () {
             field = new Field({
               name: 'json',
               model: User,
@@ -2248,7 +2246,7 @@ describe('Field', function() {
             });
           });
 
-          it('rejects if passed a non-array value', async function() {
+          it('rejects if passed a non-array value', async function () {
             await expect(
               field.validate({ foo: 'bar' }),
               'to be rejected with',
@@ -2256,7 +2254,7 @@ describe('Field', function() {
             );
           });
 
-          it('rejects if the value fails the `length` validators', async function() {
+          it('rejects if the value fails the `length` validators', async function () {
             await expect(
               field.validate({ foo: ['foo'] }),
               'to be rejected with',
@@ -2264,7 +2262,7 @@ describe('Field', function() {
             );
           });
 
-          it('fulfils for any array values', async function() {
+          it('fulfils for any array values', async function () {
             await expect(
               field.validate({ foo: ['foo', 1, false, {}] }),
               'to be fulfilled'
@@ -2272,10 +2270,10 @@ describe('Field', function() {
           });
         });
 
-        describe('with a nested `object` field', function() {
+        describe('with a nested `object` field', function () {
           let field;
 
-          before(function() {
+          before(function () {
             field = new Field({
               name: 'json',
               model: User,
@@ -2289,7 +2287,7 @@ describe('Field', function() {
             });
           });
 
-          it('rejects if passed a nested array value', async function() {
+          it('rejects if passed a nested array value', async function () {
             await expect(
               field.validate({ foo: { bar: [1] } }),
               'to be rejected with',
@@ -2297,7 +2295,7 @@ describe('Field', function() {
             );
           });
 
-          it('rejects for invalid nested object values', async function() {
+          it('rejects for invalid nested object values', async function () {
             await expect(
               field.validate({ foo: { bar: 'bar' } }),
               'to be rejected with',
@@ -2305,22 +2303,22 @@ describe('Field', function() {
             );
           });
 
-          it('fulfils for valid nested object values', async function() {
+          it('fulfils for valid nested object values', async function () {
             await expect(
               field.validate({ foo: { bar: 1 } }),
               'to be fulfilled'
             );
           });
 
-          it('ignores object keys that are not specified in the nested shape', async function() {
+          it('ignores object keys that are not specified in the nested shape', async function () {
             await expect(
               field.validate({ foo: { bar: 1, quux: 'quux' } }),
               'to be fulfilled'
             );
           });
 
-          describe('with the nested shape specifying `required`', function() {
-            it('rejects if the value is `undefined`', async function() {
+          describe('with the nested shape specifying `required`', function () {
+            it('rejects if the value is `undefined`', async function () {
               await expect(
                 field.validate({ foo: { bar: undefined } }),
                 'to be rejected with',
@@ -2328,7 +2326,7 @@ describe('Field', function() {
               );
             });
 
-            it('rejects if the value is `null`', async function() {
+            it('rejects if the value is `null`', async function () {
               await expect(
                 field.validate({ foo: { bar: null } }),
                 'to be rejected with',
@@ -2340,8 +2338,8 @@ describe('Field', function() {
       });
     });
 
-    describe('for raw sql values', function() {
-      it('does not validate `type`', async function() {
+    describe('for raw sql values', function () {
+      it('does not validate `type`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -2350,7 +2348,7 @@ describe('Field', function() {
         await expect(field.validate(sql(1)), 'to be fulfilled');
       });
 
-      it('does not validate `maxLength`', async function() {
+      it('does not validate `maxLength`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -2360,7 +2358,7 @@ describe('Field', function() {
         await expect(field.validate(sql('aa')), 'to be fulfilled');
       });
 
-      it('does not validate `minLength`', async function() {
+      it('does not validate `minLength`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -2370,7 +2368,7 @@ describe('Field', function() {
         await expect(field.validate(sql('a')), 'to be fulfilled');
       });
 
-      it('does not validate `oneOf`', async function() {
+      it('does not validate `oneOf`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -2380,7 +2378,7 @@ describe('Field', function() {
         await expect(field.validate(sql('a')), 'to be fulfilled');
       });
 
-      it('does not validate `equals`', async function() {
+      it('does not validate `equals`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -2390,7 +2388,7 @@ describe('Field', function() {
         await expect(field.validate(sql('b')), 'to be fulfilled');
       });
 
-      it('does not validate `regex`', async function() {
+      it('does not validate `regex`', async function () {
         const field = new Field({
           name: 'firstName',
           model: User,
@@ -2400,7 +2398,7 @@ describe('Field', function() {
         await expect(field.validate(sql('b')), 'to be fulfilled');
       });
 
-      it('does not validate `shape` for json(b) fields', async function() {
+      it('does not validate `shape` for json(b) fields', async function () {
         const field = new Field({
           name: 'json',
           model: User,
@@ -2410,7 +2408,7 @@ describe('Field', function() {
         await expect(field.validate(sql('b')), 'to be fulfilled');
       });
 
-      it('passes the value to a custom validator', async function() {
+      it('passes the value to a custom validator', async function () {
         const validate = sinon.spy();
         const field = new Field({
           name: 'firstName',
@@ -2424,7 +2422,7 @@ describe('Field', function() {
         });
       });
 
-      it('does not run validators when Query.prototype.sql is overloaded', async function() {
+      it('does not run validators when Query.prototype.sql is overloaded', async function () {
         class Foo {}
         Query.prototype.sql = Foo;
         const field = new Field({
