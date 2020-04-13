@@ -4649,12 +4649,7 @@ diff@3.5.0, diff@^3.5.0:
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.5.0.tgz#800c0dd1e0a8bfbc95835c202ad220fe317e5a12"
   integrity sha512-A46qtFgd+g7pDZinpnwiRJtxbC1hpgf0uzP3iG89scHk0AUC7A1TGxf5OiiOUv/JMZR8GOt8hL900hV0bOy5xA==
 
-diff@4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.1.tgz#0c667cb467ebbb5cea7f14f135cc2dba7780a8ff"
-  integrity sha512-s2+XdvhPCOF01LRQBC8hf4vhbVmI2CGS5aZnxLJlT5FtdhPCDFq80q++zK2KlrVorVDdL5BOGZ/VfLrVtYNF+Q==
-
-diff@^4.0.1:
+diff@4.0.2, diff@^4.0.1:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/diff/-/diff-4.0.2.tgz#60f3aecb89d5fae520c11aa19efc2bb982aade7d"
   integrity sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
@@ -7669,11 +7664,6 @@ lerna@3.20.2:
     import-local "^2.0.0"
     npmlog "^4.1.2"
 
-leven@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/leven/-/leven-2.1.0.tgz#c2e7a9f772094dee9d34202ae8acce4687875580"
-  integrity sha1-wuep93IJTe6dNCAq6KzORoeHVYA=
-
 leven@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/leven/-/leven-3.1.0.tgz#77891de834064cccba82ae7842bb6b14a13ed7f2"
@@ -8004,7 +7994,7 @@ macos-release@^2.2.0:
   resolved "https://registry.yarnpkg.com/macos-release/-/macos-release-2.3.0.tgz#eb1930b036c0800adebccd5f17bc4c12de8bb71f"
   integrity sha512-OHhSbtcviqMPt7yfw5ef5aghS2jzFVKEFyCJndQt2YpSQ9qRVSEv2axSJI1paVThEu+FFGs584h/1YhxjVqajA==
 
-magicpen@^6.1.0:
+magicpen@^6.2.1:
   version "6.2.1"
   resolved "https://registry.yarnpkg.com/magicpen/-/magicpen-6.2.1.tgz#8ead56fc9550b93b5420342481d803eaecf52e36"
   integrity sha512-JEkzC2hJmoCRTC8v1lgLIi75aF8pAz72kYZ9l/EorRnBXavPErnBywm/ec3xTDjCPBonsdhNZoRzj+TUfbCYJg==
@@ -12618,6 +12608,11 @@ uid-number@0.0.6:
   resolved "https://registry.yarnpkg.com/uid-number/-/uid-number-0.0.6.tgz#0ea10e8035e8eb5b8e4449f06da1c730663baa81"
   integrity sha1-DqEOgDXo61uOREnwbaHHMGY7qoE=
 
+ukkonen@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/ukkonen/-/ukkonen-1.4.0.tgz#594629234ceccbf7e44187ad9fedbeb4866a2e5f"
+  integrity sha512-g8SLGxflI0/VNH2C8j66KcfJXrU5StJglRQBYPNiChXFlOrqqYM1icOykOAAUgTeBpktaEuCm9hjpPinQ080PA==
+
 umask@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/umask/-/umask-1.1.0.tgz#f29cebf01df517912bb58ff9c4e50fde8e33320d"
@@ -12655,18 +12650,18 @@ unexpected-sinon@10.11.2:
   resolved "https://registry.yarnpkg.com/unexpected-sinon/-/unexpected-sinon-10.11.2.tgz#43005d659068c393964397168271597757d62176"
   integrity sha512-N2KIKPweTVs6AK8cDKQTUwu0fGWyGt+cI/UJZ/eltAyOKgsHL9eILttdGfpZjI/iMYcHcbtUwIlXoHfmh6EcBw==
 
-unexpected@11.8.0:
-  version "11.8.0"
-  resolved "https://registry.yarnpkg.com/unexpected/-/unexpected-11.8.0.tgz#4cbdfa26fb625304012db15d24e1f2dc33cc7f7e"
-  integrity sha512-HzITth7arGkdoNH59gHS+4jUUKWcj5olKtm2/dquBbbU4J2l3Y5x1EyzWbHRJZYHr0xY/8tCThTAcDDNkof/VQ==
+unexpected@11.14.0:
+  version "11.14.0"
+  resolved "https://registry.yarnpkg.com/unexpected/-/unexpected-11.14.0.tgz#0a021a3210d50b395e8832a0d7aa83855fe65466"
+  integrity sha512-N4+XQRZjonRVue6ESYt3Hkt9e5p+mQJeoM8vNaQNae+RaWC0KjC81SAEXnDWdWXzH2N2To11eIDgE7ByVOjecQ==
   dependencies:
     array-changes "3.0.1"
     array-changes-async "3.0.1"
     detect-indent "3.0.1"
-    diff "4.0.1"
+    diff "4.0.2"
     greedy-interval-packer "1.2.0"
-    leven "2.1.0"
-    magicpen "^6.1.0"
+    magicpen "^6.2.1"
+    ukkonen "^1.4.0"
     unexpected-bluebird "2.9.34-longstack2"
 
 unherit@^1.0.4:
