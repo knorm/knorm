@@ -1,6 +1,6 @@
-const { Knorm } = require('@knorm/knorm');
+import { Knorm } from '@knorm/knorm';
 
-class KnormToJSON {
+export class KnormToJSON {
   constructor({ exclude = [], name = 'toJSON' } = {}) {
     this.name = name;
 
@@ -72,5 +72,3 @@ class KnormToJSON {
 }
 
 KnormToJSON.KnormToJSONError = class KnormToJSONError extends Knorm.KnormError {};
-
-module.exports = KnormToJSON;

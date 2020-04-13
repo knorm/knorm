@@ -1,19 +1,17 @@
-const knorm = require('@knorm/knorm');
-const knormPaginate = require('@knorm/paginate');
-const knormPostgres = require('@knorm/postgres');
-const KnormSoftDelete = require('../src/KnormSoftDelete');
-const knormSoftDelete = require('../src/');
-const sinon = require('sinon');
-const createKnex = require('../../../util/create-knex');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'));
+import sinon from 'sinon';
+import unexpected from 'unexpected';
+import unexpectedSinon from 'unexpected-sinon';
+import unexpectedKnex from 'unexpected-knex';
+import { knorm, Knorm } from '@knorm/knorm';
+import { knormPostgres } from '@knorm/postgres';
+import { knormPaginate } from '@knorm/paginate';
+import { knormSoftDelete } from '../src/index';
+import { KnormSoftDelete } from '../src/KnormSoftDelete';
+import { createKnex } from '../../../util/createKnex';
 
-const {
-  Knorm: { Query: KnormQuery },
-} = knorm;
+const { Query: KnormQuery } = Knorm;
 const { KnormSoftDeleteError } = KnormSoftDelete;
+const expect = unexpected.clone().use(unexpectedSinon).use(unexpectedKnex);
 const knex = createKnex('knorm-soft-delete');
 
 describe('KnormSoftDelete', () => {

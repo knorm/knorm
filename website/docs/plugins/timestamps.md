@@ -16,8 +16,8 @@ npm install --save @knorm/knorm @knorm/timestamps
 ## Usage
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormTimestamps = require('@knorm/timestamps');
+const { knorm } = require('@knorm/knorm');
+const { knormTimestamps } = require('@knorm/timestamps');
 
 const orm = knorm({
   // knorm options

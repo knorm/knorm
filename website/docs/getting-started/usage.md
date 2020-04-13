@@ -29,7 +29,7 @@ database on the same PostgreSQL server or even to a MySQL database.
 There are two ways of creating an ORM. You may use the factory method:
 
 ```js
-const knorm = require('@knorm/knorm');
+const { knorm } = require('@knorm/knorm');
 const orm = knorm(/* options */);
 ```
 
@@ -58,7 +58,7 @@ models:
 
 <!-- TODO: update shape of Model.fields -->
 ```js
-const knorm = require('@knorm/knorm');
+const { knorm } = require('@knorm/knorm');
 const orm = knorm();
 const { Model } = orm;
 
@@ -90,8 +90,8 @@ npm install --save @knorm/postgres
 Then load it into the ORM:
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormPostgres = require('@knorm/postgres');
+const { knorm } = require('@knorm/knorm');
+const { knormPostgres } = require('@knorm/postgres');
 const orm = knorm()
   .use(knormPostgres({
     connection: 'postgres://user:password@host/database-name'
@@ -166,8 +166,8 @@ having to add the same fields to each model, one could create a base
 For example, if all models have an "id" field that is the primary field:
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormPostgres = require('@knorm/postgres');
+const { knorm } = require('@knorm/knorm');
+const { knormPostgres } = require('@knorm/postgres');
 const orm = knorm()
   .use(knormPostgres({
     connection: 'postgres://user:password@host/database-name'

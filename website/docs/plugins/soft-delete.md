@@ -17,8 +17,8 @@ npm install --save @knorm/knorm @knorm/soft-delete
 ## Usage
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormSoftDelete = require('@knorm/soft-delete');
+const { knorm } = require('@knorm/knorm');
+const { knormSoftDelete } = require('@knorm/soft-delete');
 
 const orm = knorm({
   // knorm options

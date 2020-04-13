@@ -1,7 +1,7 @@
-const { Knorm } = require('@knorm/knorm');
-const { Pool } = require('pg');
-const { parse } = require('pg-connection-string');
-const sqlBricksPostgres = require('sql-bricks-postgres');
+import { Knorm } from '@knorm/knorm';
+import { Pool } from 'pg';
+import { parse } from 'pg-connection-string';
+import sqlBricksPostgres from 'sql-bricks-postgres';
 
 class KnormPostgres {
   constructor({ connection, name = 'postgres' } = {}) {
@@ -350,4 +350,4 @@ class KnormPostgres {
 
 KnormPostgres.KnormPostgresError = class KnormPostgresError extends Knorm.KnormError {};
 
-module.exports = KnormPostgres;
+export { KnormPostgres };

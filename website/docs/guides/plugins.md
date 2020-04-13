@@ -8,8 +8,8 @@ overloading their methods.
 To load plugins into the ORM, use `Knorm.prototype.use`:
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormRelations = require('@knorm/relations');
+const { knorm } = require('@knorm/knorm');
+const { knormRelations } = require('@knorm/relations');
 
 const { Model, Query } = knorm({
   /* knorm options */

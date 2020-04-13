@@ -1,7 +1,10 @@
-const uuid = require('uuid');
-const Knorm = require('../src/Knorm');
-const sinon = require('sinon');
-const expect = require('unexpected').clone().use(require('unexpected-sinon'));
+import uuid from 'uuid';
+import sinon from 'sinon';
+import unexpected from 'unexpected';
+import unexpectedSinon from 'unexpected-sinon';
+import { Knorm } from '../src/Knorm';
+
+const expect = unexpected.clone().use(unexpectedSinon);
 
 describe('Field', function () {
   let Model;

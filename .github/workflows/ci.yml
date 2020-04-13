@@ -136,23 +136,23 @@ jobs:
         if: matrix.node-version != '8.x'
         run: yarn --frozen-lockfile
 
-      - name: Run tests on PostgreSQL 9.6
-        run: yarn mocha
-        env:
-          PGHOST: localhost
-          PGPORT: 5432
+      # - name: Run tests on PostgreSQL 9.6
+      #   run: yarn mocha
+      #   env:
+      #     PGHOST: localhost
+      #     PGPORT: 5432
 
-      - name: Run tests on PostgreSQL 10
-        run: yarn mocha
-        env:
-          PGHOST: localhost
-          PGPORT: 5433
+      # - name: Run tests on PostgreSQL 10
+      #   run: yarn mocha
+      #   env:
+      #     PGHOST: localhost
+      #     PGPORT: 5433
 
-      - name: Run tests on PostgreSQL 11
-        run: yarn mocha
-        env:
-          PGHOST: localhost
-          PGPORT: 5434
+      # - name: Run tests on PostgreSQL 11
+      #   run: yarn mocha
+      #   env:
+      #     PGHOST: localhost
+      #     PGPORT: 5434
 
       - name: Run coverage on PostgreSQL 12
         run: yarn nyc
@@ -160,23 +160,23 @@ jobs:
           PGHOST: localhost
           PGPORT: 5435
 
-      - name: Run example on PostgreSQL 9.6
-        run: yarn workspace postgres-example start
-        env:
-          PGHOST: localhost
-          PGPORT: 5432
+      # - name: Run example on PostgreSQL 9.6
+      #   run: yarn workspace postgres-example start
+      #   env:
+      #     PGHOST: localhost
+      #     PGPORT: 5432
 
-      - name: Run example on PostgreSQL 10
-        run: yarn workspace postgres-example start
-        env:
-          PGHOST: localhost
-          PGPORT: 5433
+      # - name: Run example on PostgreSQL 10
+      #   run: yarn workspace postgres-example start
+      #   env:
+      #     PGHOST: localhost
+      #     PGPORT: 5433
 
-      - name: Run example on PostgreSQL 11
-        run: yarn workspace postgres-example start
-        env:
-          PGHOST: localhost
-          PGPORT: 5434
+      # - name: Run example on PostgreSQL 11
+      #   run: yarn workspace postgres-example start
+      #   env:
+      #     PGHOST: localhost
+      #     PGPORT: 5434
 
       - name: Run example on PostgreSQL 12
         run: yarn workspace postgres-example start

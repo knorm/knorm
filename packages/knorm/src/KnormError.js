@@ -23,4 +23,4 @@ class KnormError extends Error {
   }
 }
 
-module.exports = KnormError;
+export { KnormError };

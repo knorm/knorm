@@ -1,4 +1,6 @@
-const { isUUID, isDecimal, isEmail } = require('validator');
+import { isUUID, isDecimal, isEmail } from 'validator';
+import { Model } from './Model';
+import { ValidationError } from './ValidationError';
 
 const isSet = (value) => value !== undefined && value !== null;
 
@@ -644,8 +646,6 @@ class Field {
 
 Field.knorm = Field.prototype.knorm = null;
 
-module.exports = Field;
-
 // TODO: add password type
 // TODO: add all the types supported by knex
 // TODO: document how to share validation logic with existing types
@@ -671,6 +671,6 @@ Field.types = [
   'array',
 ];
 
-Field.ValidationError = require('./ValidationError');
+Field.ValidationError = ValidationError;
 
-const Model = require('./Model'); // circular dep
+export { Field };

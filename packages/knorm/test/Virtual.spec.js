@@ -1,6 +1,8 @@
-const Virtual = require('../src/Virtual');
-const Model = require('../src/Model');
-const expect = require('unexpected').clone();
+import unexpected from 'unexpected';
+import { Model } from '../src/Model';
+import { Virtual } from '../src/Virtual';
+
+const expect = unexpected.clone();
 
 describe('Virtual', function () {
   describe('constructor', function () {

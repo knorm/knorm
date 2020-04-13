@@ -1,6 +1,6 @@
-const knex = require('knex');
+import knex from 'knex';
 
-module.exports = (database) =>
+export const createKnex = (database) =>
   knex({
     client: 'pg',
     connection: {

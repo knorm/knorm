@@ -1,12 +1,13 @@
-const Knorm = require('../src/Knorm');
-const Virtual = require('../src/Virtual');
-const knex = require('../util/knex');
-const postgresPlugin = require('../util/postgresPlugin');
-const sinon = require('sinon');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'));
+import sinon from 'sinon';
+import unexpected from 'unexpected';
+import unexpectedSinon from 'unexpected-sinon';
+import unexpectedKnex from 'unexpected-knex';
+import { Knorm } from '../src/Knorm';
+import { Virtual } from '../src/Virtual';
+import { knex } from '../util/knex';
+import { postgresPlugin } from '../util/postgresPlugin';
+
+const expect = unexpected.clone().use(unexpectedSinon).use(unexpectedKnex);
 
 describe('Model', () => {
   let Model;

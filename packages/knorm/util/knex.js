@@ -1,3 +1,3 @@
-const createKnex = require('../../../util/create-knex');
+import { createKnex } from '../../../util/createKnex';
 
-module.exports = createKnex('knorm');
+export const knex = createKnex('knorm');

@@ -1,5 +1,5 @@
-const KnormError = require('./KnormError');
-const { inspect } = require('util');
+import { inspect } from 'util';
+import { KnormError } from './KnormError';
 
 class ValidationError extends KnormError {
   constructor({ field, value, validator = {} }) {
@@ -67,4 +67,4 @@ class ValidationError extends KnormError {
   }
 }
 
-module.exports = ValidationError;
+export { ValidationError };

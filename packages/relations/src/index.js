@@ -1,6 +1,5 @@
-const KnormRelations = require('./KnormRelations');
+import { KnormRelations } from './KnormRelations';
+
 const knormRelations = (config) => new KnormRelations(config);
 
-knormRelations.KnormRelations = KnormRelations;
-
-module.exports = knormRelations;
+export { knormRelations, KnormRelations };

@@ -1,17 +1,16 @@
-const knorm = require('@knorm/knorm');
-const knormRelations = require('@knorm/relations');
-const { Client } = require('pg');
-const KnormPostgres = require('../src/KnormPostgres');
-const knormPostgres = require('../src/');
-const createKnex = require('../../../util/create-knex');
-const sinon = require('sinon');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'));
+import sinon from 'sinon';
+import unexpected from 'unexpected';
+import unexpectedSinon from 'unexpected-sinon';
+import unexpectedKnex from 'unexpected-knex';
+import { Client } from 'pg';
+import { knorm } from '@knorm/knorm';
+import { knormRelations } from '@knorm/relations';
+import { knormPostgres } from '../src/index';
+import { KnormPostgres } from '../src/KnormPostgres';
+import { createKnex } from '../../../util/createKnex';
 
 const { KnormPostgresError } = KnormPostgres;
-
+const expect = unexpected.clone().use(unexpectedSinon).use(unexpectedKnex);
 const knex = createKnex('knorm-postgres');
 const connection = knex.client.config.connection;
 const { host, port, user, password, database } = connection;

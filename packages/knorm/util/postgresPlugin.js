@@ -1,6 +1,6 @@
-const { Pool } = require('pg');
-const sqlBricksPostgres = require('sql-bricks-postgres');
-const knex = require('./knex');
+import { Pool } from 'pg';
+import sqlBricksPostgres from 'sql-bricks-postgres';
+import { knex } from './knex';
 
 const pool = new Pool(
   // a test in packages/knorm/test/Transaction.spec.js depends on
@@ -54,4 +54,4 @@ const postgresPlugin = (knorm) => {
 
 postgresPlugin.pool = pool;
 
-module.exports = postgresPlugin;
+export { postgresPlugin };

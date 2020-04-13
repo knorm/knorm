@@ -1,16 +1,16 @@
-const knorm = require('@knorm/knorm');
-const knormPostgres = require('@knorm/postgres');
-const knormRelations = require('@knorm/relations');
-const KnormPaginate = require('../src/KnormPaginate');
-const knormPaginate = require('../src/');
-const createKnex = require('../../../util/create-knex');
-const sinon = require('sinon');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-sinon'))
-  .use(require('unexpected-knex'));
+import sinon from 'sinon';
+import unexpected from 'unexpected';
+import unexpectedSinon from 'unexpected-sinon';
+import unexpectedKnex from 'unexpected-knex';
+import { knorm } from '@knorm/knorm';
+import { knormPostgres } from '@knorm/postgres';
+import { knormRelations } from '@knorm/relations';
+import { knormPaginate } from '../src/index';
+import { KnormPaginate } from '../src/KnormPaginate';
+import { createKnex } from '../../../util/createKnex';
 
 const { KnormPaginateError } = KnormPaginate;
+const expect = unexpected.clone().use(unexpectedSinon).use(unexpectedKnex);
 const knex = createKnex('knorm-paginate');
 
 describe('KnormPaginate', () => {

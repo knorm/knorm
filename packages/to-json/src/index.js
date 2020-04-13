@@ -1,6 +1,5 @@
-const KnormToJSON = require('./KnormToJSON');
+import { KnormToJSON } from './KnormToJSON';
+
 const knormToJSON = (config) => new KnormToJSON(config);
 
-knormToJSON.KnormToJSON = KnormToJSON;
-
-module.exports = knormToJSON;
+export { knormToJSON, KnormToJSON };

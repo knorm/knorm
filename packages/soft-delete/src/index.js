@@ -1,6 +1,5 @@
-const KnormSoftDelete = require('./KnormSoftDelete');
+import { KnormSoftDelete } from './KnormSoftDelete';
+
 const knormSoftDelete = (config) => new KnormSoftDelete(config);
 
-knormSoftDelete.KnormSoftDelete = KnormSoftDelete;
-
-module.exports = knormSoftDelete;
+export { knormSoftDelete, KnormSoftDelete };

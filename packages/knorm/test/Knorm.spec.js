@@ -1,12 +1,15 @@
-const sinon = require('sinon');
-const expect = require('unexpected').clone().use(require('unexpected-sinon'));
-const Knorm = require('../src/Knorm');
-const KnormError = require('../src/KnormError');
-const Field = require('../src/Field');
-const Model = require('../src/Model');
-const Query = require('../src/Query');
-const Connection = require('../src/Connection');
-const Transaction = require('../src/Transaction');
+import sinon from 'sinon';
+import unexpected from 'unexpected';
+import unexpectedSinon from 'unexpected-sinon';
+import { Knorm } from '../src/Knorm';
+import { Field } from '../src/Field';
+import { Query } from '../src/Query';
+import { Model } from '../src/Model';
+import { Connection } from '../src/Connection';
+import { Transaction } from '../src/Transaction';
+import { KnormError } from '../src/KnormError';
+
+const expect = unexpected.clone().use(unexpectedSinon);
 
 describe('Knorm', () => {
   it('exposes Field, Model, Query, Transaction as statics', () => {

@@ -1,4 +1,5 @@
-const KnormError = require('./KnormError');
+import { KnormError } from './KnormError';
+import { Connection } from './Connection';
 
 class TransactionError extends KnormError {}
 
@@ -341,8 +342,6 @@ class Transaction {
   }
 }
 
-module.exports = Transaction;
-
 /**
  * The base error that all errors thrown by {@link Transaction} inherit from.
  */
@@ -355,8 +354,6 @@ Transaction.TransactionError = TransactionError;
  * This is the same instance assigned to the {@link Transaction.knorm} static
  * property, just added as a convenience for use in instance methods.
  * :::
- *
- * @type {Knorm}
  */
 Transaction.prototype.knorm = null;
 
@@ -367,8 +364,6 @@ Transaction.prototype.knorm = null;
  * This is the same instance assigned to the {@link Transaction#knorm} instance
  * property, just added as a convenience for use in static methods.
  * :::
- *
- * @type {Knorm}
  */
 Transaction.knorm = null;
 
@@ -402,7 +397,7 @@ Transaction.models = {};
 
 /**
  * A reference to {@link Connection}, for use within {@link Transaction}.
- *
- * @type {Connection}
  */
-Transaction.Connection = require('./Connection');
+Transaction.Connection = Connection;
+
+export { Transaction };

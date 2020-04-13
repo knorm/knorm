@@ -1,15 +1,15 @@
-const { snakeCase: fieldToColumn } = require('lodash');
-const knorm = require('@knorm/knorm');
-const knormPostgres = require('@knorm/postgres');
-const KnormRelations = require('../src/KnormRelations');
-const knormRelations = require('../src/');
-const createKnex = require('../../../util/create-knex');
-const sinon = require('sinon');
-const expect = require('unexpected')
-  .clone()
-  .use(require('unexpected-knex'))
-  .use(require('unexpected-sinon'));
+import sinon from 'sinon';
+import unexpected from 'unexpected';
+import unexpectedSinon from 'unexpected-sinon';
+import unexpectedKnex from 'unexpected-knex';
+import { snakeCase as fieldToColumn } from 'lodash';
+import { knorm } from '@knorm/knorm';
+import { knormPostgres } from '@knorm/postgres';
+import { knormRelations } from '../src/index';
+import { KnormRelations } from '../src/KnormRelations';
+import { createKnex } from '../../../util/createKnex';
 
+const expect = unexpected.clone().use(unexpectedSinon).use(unexpectedKnex);
 const { KnormRelationsError } = KnormRelations;
 const knex = createKnex('knorm-relations');
 

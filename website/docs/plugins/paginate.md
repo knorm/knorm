@@ -15,8 +15,8 @@ npm install --save @knorm/knorm @knorm/paginate
 ## Usage
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormPaginate = require('@knorm/paginate');
+const { knorm } = require('@knorm/knorm');
+const { knormPaginate } = require('@knorm/paginate');
 
 const orm = knorm({
   // knorm options

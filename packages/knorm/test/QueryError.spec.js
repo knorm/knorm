@@ -1,14 +1,22 @@
-const expect = require('unexpected').clone();
-const QueryError = require('../src/QueryError');
-const KnormError = require('../src/KnormError');
-const Knorm = require('../src/Knorm');
+import unexpected from 'unexpected';
+import { Knorm } from '../src/Knorm';
+import { KnormError } from '../src/KnormError';
+import { QueryError } from '../src/QueryError';
 
-const { Query, Model } = new Knorm();
-class User extends Model {}
-User.table = 'user';
-User.fields = { id: { type: 'integer', primary: true } };
+const expect = unexpected.clone();
 
 describe('QueryError', () => {
+  let Query;
+  let Model;
+  let User;
+
+  before(() => {
+    ({ Query, Model } = new Knorm());
+    User = class extends Model {};
+    User.table = 'user';
+    User.fields = { id: { type: 'integer', primary: true } };
+  });
+
   it('extends KnormError', () => {
     expect(QueryError.prototype, 'to be a', KnormError);
   });

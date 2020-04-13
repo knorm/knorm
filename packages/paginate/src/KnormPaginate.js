@@ -1,4 +1,4 @@
-const { Knorm } = require('@knorm/knorm');
+import { Knorm } from '@knorm/knorm';
 
 class KnormPaginate {
   constructor({ name = 'paginate', page = 1, perPage = 10 } = {}) {
@@ -174,4 +174,4 @@ class KnormPaginate {
 
 KnormPaginate.KnormPaginateError = class KnormPaginateError extends Knorm.KnormError {};
 
-module.exports = KnormPaginate;
+export { KnormPaginate };

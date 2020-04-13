@@ -1,5 +1,5 @@
-const KnormError = require('./KnormError');
-const { lowerCase } = require('lodash');
+import { KnormError } from './KnormError';
+import { lowerCase } from 'lodash';
 
 class NoRowsError extends KnormError {
   constructor({ query }) {
@@ -18,4 +18,4 @@ class NoRowsError extends KnormError {
   }
 }
 
-module.exports = NoRowsError;
+export { NoRowsError };

@@ -21,8 +21,8 @@ npm install --save @knorm/knorm @knorm/to-json
 ## Usage
 
 ```js
-const knorm = require('@knorm/knorm');
-const knormToJSON = require('@knorm/to-json');
+const { knorm } = require('@knorm/knorm');
+const { knormToJSON } = require('@knorm/to-json');
 
 const orm = knorm({
   // knorm options

@@ -1,5 +1,7 @@
-const Knorm = require('../src/Knorm');
-const expect = require('unexpected').clone();
+import { Knorm } from '../src/Knorm';
+import unexpected from 'unexpected';
+
+const expect = unexpected.clone();
 
 describe('Connection', function () {
   let Connection;

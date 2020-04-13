@@ -1,4 +1,4 @@
-const { Knorm } = require('@knorm/knorm');
+import { Knorm } from '@knorm/knorm';
 
 class KnormTimestamps {
   constructor({ createdAt = {}, updatedAt = {}, name = 'timestamps' } = {}) {
@@ -64,4 +64,4 @@ class KnormTimestamps {
 
 KnormTimestamps.KnormTimestampsError = class KnormTimestampsError extends Knorm.KnormError {};
 
-module.exports = KnormTimestamps;
+export { KnormTimestamps };
