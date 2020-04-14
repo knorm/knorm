@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [4.0.0-alpha.1](https://github.com/knorm/knorm/compare/@knorm/relations@4.0.0-alpha.0...@knorm/relations@4.0.0-alpha.1) (2020-04-14)
+
+
+### Bug Fixes
+
+* update @knorm/knorm's peer dependency version ([c489b79](https://github.com/knorm/knorm/commit/c489b79e1b46efe92b2a483b6ddd7a80e5f27152))
+* update @knorm/postgres's peer dependency version ([5c56ddc](https://github.com/knorm/knorm/commit/5c56ddc7f1a9a942a70bef3ba16a059d4c52fb40))
+
+
+
+
+
 # 4.0.0-alpha.0 (2020-04-14)
 
 
