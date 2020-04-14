@@ -14,3 +14,6 @@ tsconfig.tsbuildinfo
 # yarn log output files
 yarn-debug.log
 yarn-error.log
+
+# lerna log output files
+lerna-debug.log
