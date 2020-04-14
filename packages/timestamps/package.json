@@ -15,7 +15,7 @@
   "scripts": {
     "clean": "rimraf lib",
     "build": "tsc -p tsconfig.build.json",
-    "prepublish": "yarn clean && yarn build"
+    "prepublishOnly": "yarn clean && yarn build"
   },
   "peerDependencies": {
     "@knorm/knorm": "^2.0.0"
