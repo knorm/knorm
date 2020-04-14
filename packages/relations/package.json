@@ -19,7 +19,7 @@
   },
   "peerDependencies": {
     "@knorm/knorm": "^3.0.0",
-    "@knorm/postgres": "^2.0.0"
+    "@knorm/postgres": "^2.0.0 || ^3.0.0"
   },
   "keywords": [
     "knorm",
