@@ -18,7 +18,7 @@
     "prepublishOnly": "yarn clean && yarn build"
   },
   "peerDependencies": {
-    "@knorm/knorm": "^2.0.0",
+    "@knorm/knorm": "^3.0.0",
     "@knorm/relations": "^2.0.0 || ^3.0.0"
   },
   "keywords": [
