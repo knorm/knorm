@@ -1,6 +1,6 @@
 {
   "name": "postgres-example",
-  "version": "1.0.0",
+  "version": "1.0.1-alpha.0",
   "private": true,
   "description": "An example project showcasing how to use Knorm with PostgreSQL",
   "main": "index.js",

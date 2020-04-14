@@ -1,3 +1,50 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+# 3.0.0-alpha.0 (2020-04-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency validator to v13 ([5a618a8](https://github.com/knorm/knorm/commit/5a618a8685caab6722c5945f99b887ba6d4e1a42))
+* **Transaction:** explicitly set Model and Query class names ([1e312b9](https://github.com/knorm/knorm/commit/1e312b98b89077740dccb1de022bb5ead778d8e6))
+
+
+### Features
+
+* add typescript type definitions ([2a97c00](https://github.com/knorm/knorm/commit/2a97c006725f8f79f744870f7ec7abeff6caa9f5))
+
+
+### BREAKING CHANGES
+
+* **deps:** Updated dependency validator from v10 to v13
+* Replaced default exports with named exports. This
+affects the factory functions that are the main package exports and
+applies to @knorm/knorm and ALL plugins.
+
+Instead of:
+
+```js
+const knorm = require('@knorm/knorm');
+const knormPostgres = require('@knorm/postgres');
+
+const { Knorm } = knorm;
+const { KnormPostgres } = knormPostgres;
+```
+
+Do:
+
+```js
+const { knorm, Knorm } = require('@knorm/knorm');
+const { knormPostgres, KnormPostgres } = require('@knorm/postgres');
+```
+
+
+
+
+
 ## [2.1.4](https://github.com/knorm/knorm/compare/v2.1.3...v2.1.4) (2019-09-07)
 
 

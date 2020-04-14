@@ -1,3 +1,49 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+# 3.0.0-alpha.0 (2020-04-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency pg to v8 ([7cf5599](https://github.com/knorm/knorm/commit/7cf5599a082c2c0dee099b3054025ee598eddf21))
+
+
+### Features
+
+* add typescript type definitions ([2a97c00](https://github.com/knorm/knorm/commit/2a97c006725f8f79f744870f7ec7abeff6caa9f5))
+
+
+### BREAKING CHANGES
+
+* **deps:** Updated dependency pg from v7 to v8
+* Replaced default exports with named exports. This
+affects the factory functions that are the main package exports and
+applies to @knorm/knorm and ALL plugins.
+
+Instead of:
+
+```js
+const knorm = require('@knorm/knorm');
+const knormPostgres = require('@knorm/postgres');
+
+const { Knorm } = knorm;
+const { KnormPostgres } = knormPostgres;
+```
+
+Do:
+
+```js
+const { knorm, Knorm } = require('@knorm/knorm');
+const { knormPostgres, KnormPostgres } = require('@knorm/postgres');
+```
+
+
+
+
+
 ## [2.0.5](https://github.com/knorm/postgres/compare/v2.0.4...v2.0.5) (2019-07-29)
 
 
