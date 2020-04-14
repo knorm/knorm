@@ -19,7 +19,7 @@
   },
   "peerDependencies": {
     "@knorm/knorm": "^3.0.0",
-    "@knorm/relations": "^2.0.0 || ^3.0.0"
+    "@knorm/relations": "^2.0.0 || ^3.0.0 || ^4.0.0"
   },
   "keywords": [
     "knorm",
