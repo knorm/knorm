@@ -7,6 +7,13 @@
   "compilerOptions": {
     // TODO: convert all files to TS files and remove allowJs
     "allowJs": true,
+    // where to find typescript definition files (*.d.ts)
+    "typeRoots": [
+      // include any types installed via dependencies
+      "node_modules/@types",
+      // include custom types defined for tests
+      "util/types"
+    ],
     // compile for ES6
     "target": "ES6",
     // but for Node.js

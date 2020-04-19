@@ -8,6 +8,7 @@ import { Model } from '../src/Model';
 import { Connection } from '../src/Connection';
 import { Transaction } from '../src/Transaction';
 import { KnormError } from '../src/KnormError';
+import { Plugin } from '../src/Plugin';
 
 const expect = unexpected.clone().use(unexpectedSinon);
 
@@ -78,7 +79,7 @@ describe('Knorm', () => {
     describe('with the `fieldToColumn` option provided', () => {
       it('configures it as the field-to-column-name mapping function', () => {
         const { Model } = new Knorm({
-          fieldToColumn(field) {
+          fieldToColumn(field): string {
             return field.toLowerCase();
           },
         });
@@ -89,9 +90,10 @@ describe('Knorm', () => {
       it('calls it with `this` set to the field instance', () => {
         let wasCalled;
         const { Model } = new Knorm({
-          fieldToColumn() {
+          fieldToColumn(fieldName): string {
             wasCalled = true;
             expect(this.constructor.name, 'to be', 'Field');
+            return fieldName;
           },
         });
         Model.fields = { firstName: { type: 'string' } };
@@ -109,112 +111,55 @@ describe('Knorm', () => {
   });
 
   describe('use', () => {
-    let knorm;
+    let knorm: Knorm;
+    let plugin: Plugin;
 
     beforeEach(() => {
       knorm = new Knorm();
+
+      class FooPlugin extends Plugin {
+        init(): FooPlugin {
+          return this;
+        }
+      }
+
+      plugin = new FooPlugin();
     });
 
-    it('throws if not provided a plugin', () => {
-      expect(
-        () => knorm.use(),
-        'to throw',
-        new KnormError('no plugin provided')
-      );
-    });
-
-    it('throws an error if provided an invalid plugin', () => {
-      expect(
-        () => knorm.use('foo'),
-        'to throw',
-        new KnormError('invalid plugin provided')
-      );
-    });
-
-    it('throws an error if the plugin has no name', () => {
-      expect(
-        () => knorm.use({ init() {} }),
-        'to throw',
-        new KnormError('plugins should have a `name`')
-      );
+    it("calls a plugin's init method", () => {
+      const spy = sinon.spy(plugin, 'init');
+      knorm.use(plugin);
+      expect(spy, 'to have calls satisfying', () => spy(knorm));
     });
 
     it('throws an error if a plugin by the same name is already added', () => {
       expect(
-        () =>
-          knorm.use({ name: 'foo', init() {} }).use({ name: 'foo', init() {} }),
+        () => knorm.use(plugin).use(plugin),
         'to throw',
-        new KnormError('plugin `foo` has already been added')
+        new KnormError('plugin `FooPlugin` has already been added')
       );
     });
 
     it('allows plugins to access themselves by name', function () {
       let ran = false;
-      const plugin = {
-        name: 'foo',
-        init(knorm) {
-          expect(knorm.plugins.foo, 'to be', plugin);
-          ran = true;
-        },
+
+      plugin.init = function (knorm: Knorm): Plugin {
+        expect(knorm.plugins.FooPlugin, 'to be', plugin);
+        ran = true;
+        return this;
       };
+
       expect(ran, 'to be false');
       knorm.use(plugin);
       expect(ran, 'to be true');
     });
-
-    describe('when called with a function', function () {
-      it('passes itself to the function', () => {
-        const plugin = sinon.spy().named('plugin');
-        knorm.use(plugin);
-        expect(plugin, 'to have calls satisfying', () => plugin(knorm));
-      });
-
-      it("registers the plugin by the function's name", () => {
-        const foo = () => {};
-        knorm.use(foo);
-        expect(knorm.plugins.foo, 'to be', foo);
-      });
-
-      it('allows chaining', () => {
-        const foo = () => {};
-        expect(knorm.use(foo), 'to equal', knorm);
-      });
-    });
-
-    describe('when called with an object with an `init` function', function () {
-      it('passes itself to the `init` function', () => {
-        const init = sinon.spy().named('init');
-        knorm.use({ name: 'foo', init });
-        expect(init, 'to have calls satisfying', () => init(knorm));
-      });
-
-      it('allows chaining', () => {
-        expect(knorm.use({ name: 'foo', init() {} }), 'to equal', knorm);
-      });
-    });
   });
 
   describe('addModel', () => {
-    let knorm;
+    let knorm: Knorm;
 
     beforeEach(() => {
       knorm = new Knorm();
-    });
-
-    it('throws if not provided a model', () => {
-      expect(
-        () => knorm.addModel(),
-        'to throw',
-        new KnormError('no model provided')
-      );
-    });
-
-    it('throws if the model is not a subclass of Model', () => {
-      expect(
-        () => knorm.addModel(class Foo {}),
-        'to throw',
-        new KnormError('model should be a subclass of `knorm.Model`')
-      );
     });
 
     it('throws if the model extends a model from a different Knorm instance', () => {
@@ -274,7 +219,7 @@ describe('Knorm', () => {
   });
 
   describe('clone', () => {
-    let knorm;
+    let knorm: Knorm;
 
     beforeEach(() => {
       knorm = new Knorm();
@@ -296,14 +241,19 @@ describe('Knorm', () => {
     });
 
     it('adds plugins on the original instance to the clone', () => {
-      function foo(knorm) {
-        knorm.Model = class Foo extends knorm.Model {};
+      class FooPlugin extends Plugin {
+        init(knorm: Knorm): FooPlugin {
+          knorm.Model = class Foo extends knorm.Model {};
+          return this;
+        }
       }
 
-      knorm.use(foo);
+      const plugin = new FooPlugin();
+
+      knorm.use(plugin);
       const clone = knorm.clone();
 
-      expect(clone.plugins.foo, 'to be', foo);
+      expect(clone.plugins.FooPlugin, 'to be', plugin);
       expect(clone.Model.name, 'to be', 'Foo');
     });
 
@@ -318,15 +268,19 @@ describe('Knorm', () => {
     });
 
     it('allows adding new plugins to the clone only', () => {
-      const clone = knorm.clone();
-
-      function foo(knorm) {
-        knorm.Model = class Foo extends knorm.Model {};
+      class FooPlugin extends Plugin {
+        init(knorm: Knorm): FooPlugin {
+          knorm.Model = class Foo extends knorm.Model {};
+          return this;
+        }
       }
 
-      clone.use(foo);
+      const clone = knorm.clone();
+      const fooPlugin = new FooPlugin();
 
-      expect(clone.plugins.foo, 'to be', foo);
+      clone.use(fooPlugin);
+
+      expect(clone.plugins.FooPlugin, 'to be', fooPlugin);
       expect(clone.Model.name, 'to be', 'Foo');
 
       expect(knorm.plugins, 'to be empty');
@@ -335,96 +289,117 @@ describe('Knorm', () => {
   });
 
   describe('updateTransaction', () => {
+    let knorm: Knorm;
+    let FooTransaction: typeof Transaction;
+
+    beforeEach(() => {
+      knorm = new Knorm();
+      FooTransaction = class extends Transaction {};
+    });
+
     it('updates Knorm.prototype.Transaction', () => {
-      class Foo {}
-      const knorm = new Knorm().updateTransaction(Foo);
-      expect(knorm.Transaction, 'to be', Foo);
+      knorm.updateTransaction(FooTransaction);
+      expect(knorm.Transaction, 'to be', FooTransaction);
     });
 
     it('allows chaining', () => {
-      class Foo {}
-      const knorm = new Knorm();
-      expect(knorm.updateTransaction(Foo), 'to be', knorm);
+      expect(knorm.updateTransaction(FooTransaction), 'to be', knorm);
     });
   });
 
   describe('updateModel', () => {
+    let knorm: Knorm;
+    let FooModel: typeof Model;
+
+    beforeEach(() => {
+      knorm = new Knorm();
+      FooModel = class extends Model {};
+    });
+
     it('updates Knorm.prototype.Model', () => {
-      class Foo {}
-      const knorm = new Knorm().updateModel(Foo);
-      expect(knorm.Model, 'to be', Foo);
+      knorm.updateModel(FooModel);
+      expect(knorm.Model, 'to be', FooModel);
     });
 
     it('allows chaining', () => {
-      class Foo {}
-      const knorm = new Knorm();
-      expect(knorm.updateModel(Foo), 'to be', knorm);
+      expect(knorm.updateModel(FooModel), 'to be', knorm);
     });
   });
 
   describe('updateQuery', () => {
+    let knorm: Knorm;
+    let FooQuery: typeof Query;
+
+    beforeEach(() => {
+      knorm = new Knorm();
+      FooQuery = class extends Query {};
+    });
+
     it('updates Knorm.prototype.Query', () => {
-      class Foo {}
-      const knorm = new Knorm().updateQuery(Foo);
-      expect(knorm.Query, 'to be', Foo);
+      knorm.updateQuery(FooQuery);
+      expect(knorm.Query, 'to be', FooQuery);
     });
 
     it('updates Knorm.Model.Query', () => {
-      class Foo {}
-      const knorm = new Knorm().updateQuery(Foo);
-      expect(knorm.Model.Query, 'to be', Foo);
+      knorm.updateQuery(FooQuery);
+      expect(knorm.Model.Query, 'to be', FooQuery);
     });
 
     it('allows chaining', () => {
-      class Foo {}
-      const knorm = new Knorm();
-      expect(knorm.updateQuery(Foo), 'to be', knorm);
+      expect(knorm.updateQuery(FooQuery), 'to be', knorm);
     });
   });
 
   describe('updateField', () => {
+    let knorm: Knorm;
+    let FooField: typeof Field;
+
+    beforeEach(() => {
+      knorm = new Knorm();
+      FooField = class extends Field {};
+    });
+
     it('updates Knorm.prototype.Field', () => {
-      class Foo {}
-      const knorm = new Knorm().updateField(Foo);
-      expect(knorm.Field, 'to be', Foo);
+      knorm.updateField(FooField);
+      expect(knorm.Field, 'to be', FooField);
     });
 
     it('updates Knorm.Model.Field', () => {
-      class Foo {}
-      const knorm = new Knorm().updateField(Foo);
-      expect(knorm.Model.Field, 'to be', Foo);
+      knorm.updateField(FooField);
+      expect(knorm.Model.Field, 'to be', FooField);
     });
 
     it('allows chaining', () => {
-      class Foo {}
-      const knorm = new Knorm();
-      expect(knorm.updateField(Foo), 'to be', knorm);
+      expect(knorm.updateField(FooField), 'to be', knorm);
     });
   });
 
   describe('updateConnection', () => {
+    let knorm: Knorm;
+    let FooConnection: typeof Connection;
+
+    beforeEach(() => {
+      knorm = new Knorm();
+      FooConnection = class extends Connection {};
+    });
+
     it('updates Knorm.prototype.Connection', () => {
-      class Foo {}
-      const knorm = new Knorm().updateConnection(Foo);
-      expect(knorm.Connection, 'to be', Foo);
+      knorm.updateConnection(FooConnection);
+      expect(knorm.Connection, 'to be', FooConnection);
     });
 
     it('updates Knorm.Query.Connection', () => {
-      class Foo {}
-      const knorm = new Knorm().updateConnection(Foo);
-      expect(knorm.Query.Connection, 'to be', Foo);
+      knorm.updateConnection(FooConnection);
+      expect(knorm.Query.Connection, 'to be', FooConnection);
     });
 
     it('updates Knorm.Transaction.Connection', () => {
-      class Foo {}
-      const knorm = new Knorm().updateConnection(Foo);
-      expect(knorm.Transaction.Connection, 'to be', Foo);
+      knorm.updateConnection(FooConnection);
+      expect(knorm.Transaction.Connection, 'to be', FooConnection);
     });
 
     it('allows chaining', () => {
-      class Foo {}
-      const knorm = new Knorm();
-      expect(knorm.updateConnection(Foo), 'to be', knorm);
+      expect(knorm.updateConnection(FooConnection), 'to be', knorm);
     });
   });
 });
