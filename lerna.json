@@ -1,11 +1,7 @@
 {
-  "packages": [
-    "website",
-    "packages/*",
-    "examples/*"
-  ],
+  "$schema": "node_modules/lerna/schemas/lerna-schema.json",
+  "packages": ["website", "packages/*", "examples/*"],
   "npmClient": "yarn",
-  "useWorkspaces": true,
   "version": "independent",
   "ignoreChanges": [
     ".github/**/*",
