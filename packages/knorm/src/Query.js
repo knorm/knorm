@@ -1288,7 +1288,9 @@ class Query {
   }
 }
 
+/** @type {typeof import("sql-bricks")} */
 Where.prototype.sql = sqlBricks;
+/** @type {typeof import("sql-bricks")} */
 Query.prototype.sql = sqlBricks;
 
 Query.Where = Where;
