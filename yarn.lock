@@ -11886,9 +11886,9 @@ sql-bricks-postgres@0.5.0, sql-bricks-postgres@^0.5.0:
     underscore "^1.4.x"
 
 sql-bricks@^2, sql-bricks@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/sql-bricks/-/sql-bricks-2.0.4.tgz#14ba0d7373977eced37f847f0a1017008350c444"
-  integrity sha512-H5E+5i0XgNzdihovSABpk1G4kOoxaQTQzYlhWefsiVhR9/bXrsC91DTG/NcTQ9E/JSjC7L9WNe8A5+3dfCwdtA==
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/sql-bricks/-/sql-bricks-2.0.5.tgz#96db7c9044cb07811f61218737a9761344156962"
+  integrity sha512-Q9qpODBZPMaPb+bjlmFYKMNk/6zpXSv1VNjJmGd9LvoqXwxd8TmE39s79wzrgAfw2lzohr4eNEpWRhHT5UYAfQ==
   dependencies:
     underscore "1.4.x"
 
