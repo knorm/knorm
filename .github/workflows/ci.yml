@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master, v* ]
+    branches: [master, v*]
   pull_request:
-    branches: [ master, v* ]
+    branches: [master, v*]
 
 jobs:
   lint:
@@ -14,10 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Use Node.js 12.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v1
         with:
-          node-version: 12.x
+          node-version: 18.x
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -43,7 +43,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [8.x, 10.x, 12.x]
+        node-version: [8.x, 10.x, 12.x, 14.x, 16.x, 18.x, 20.x]
 
     services:
       postgres9:
@@ -185,18 +185,15 @@ jobs:
           PGPORT: 5435
 
       - name: Send coverage to coveralls
-        if: matrix.node-version == '12.x'
+        if: matrix.node-version == '18.x'
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
   # docs:
   #   runs-on: ubuntu-latest
-
   #   steps:
   #     - name: Checkout code
   #       uses: actions/checkout@master
-
   #     - name: Publish docs
   #       uses: netlify/actions/build@master
   #       env:
