@@ -11885,14 +11885,7 @@ sql-bricks-postgres@0.6.0, sql-bricks-postgres@^0.6.0:
     sql-bricks "^3"
     underscore "^1.4.x"
 
-sql-bricks@^2.0.4:
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/sql-bricks/-/sql-bricks-2.0.5.tgz#96db7c9044cb07811f61218737a9761344156962"
-  integrity sha512-Q9qpODBZPMaPb+bjlmFYKMNk/6zpXSv1VNjJmGd9LvoqXwxd8TmE39s79wzrgAfw2lzohr4eNEpWRhHT5UYAfQ==
-  dependencies:
-    underscore "1.4.x"
-
-sql-bricks@^3:
+sql-bricks@^3, sql-bricks@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/sql-bricks/-/sql-bricks-3.0.1.tgz#14938fabef1f9683c12b0284d39dad5a5c601bfe"
   integrity sha512-ZkU/R+bwf7d9FxlwMJp/31P5bluVCjUuftutkqJjQKH1QMCE1iaEc0xeY0aVepc38fxC+ljUrqausGCzzcHzHQ==
@@ -12661,11 +12654,6 @@ unc-path-regex@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/unc-path-regex/-/unc-path-regex-0.1.2.tgz#e73dd3d7b0d7c5ed86fbac6b0ae7d8c6a69d50fa"
   integrity sha1-5z3T17DXxe2G+6xrCufYxqadUPo=
-
-underscore@1.4.x:
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.4.4.tgz#61a6a32010622afa07963bf325203cf12239d604"
-  integrity sha1-YaajIBBiKvoHljvzJSA88SI51gQ=
 
 underscore@^1.4.x:
   version "1.9.2"
