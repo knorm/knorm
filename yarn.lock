@@ -9908,9 +9908,7 @@ pg@8.0.3:
     semver "4.3.2"
 
 pg@^8.0.0:
-  version "8.0.2"
-  resolved "https://registry.yarnpkg.com/pg/-/pg-8.0.2.tgz#883f869f61ab074ded386d305ad3f99056d0073e"
-  integrity sha512-ngOUEDk69kLdH/k/YLT2NRIBcUiPFRcY4l51dviqn79P5qIa5jBIGIFTIGXh4OlT/6gpiCAza5a9uy08izpFQQ==
+  version "8.16.3"
   dependencies:
     buffer-writer "2.0.0"
     packet-reader "1.0.0"
